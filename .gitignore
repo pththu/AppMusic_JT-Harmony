@@ -1,0 +1,4 @@
+back_end/node_modules/
+back_end/.env.development
+
+frontendmusic/node_modules/
