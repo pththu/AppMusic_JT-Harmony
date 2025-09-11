@@ -8,6 +8,8 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/reset-password', authController.resetPassword);
+router.post('/verify-otp', authController.verifyOtpEmail);
+router.post('/resend-otp', authController.reSendOtpEmail);
 
 // Protected routes
 router.get('/me', authenticateToken, authController.me);

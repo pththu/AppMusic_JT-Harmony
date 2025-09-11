@@ -53,8 +53,6 @@ const decodeToken = async (token, secretKey) => {
   }
 }
 
-const API_PREFIX = '/api/v1'
-
 const SALT_KEY = 7
 
 const REFRESH_TOKEN_SIZE = 100
@@ -64,7 +62,6 @@ module.exports = {
   generateToken,
   decodeToken,
   verifyToken,
-  API_PREFIX,
   REFRESH_TOKEN_SIZE,
   SALT_KEY
 }

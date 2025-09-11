@@ -1,6 +1,7 @@
 const { User } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { sendMail } = require('../utils/mailer');
 const Op = require('sequelize').Op;
 
 exports.register = async (req, res) => {
@@ -46,6 +47,15 @@ exports.register = async (req, res) => {
       otp,
       expireOtp: Date.now() + 10 * 60 * 1000 // 10 minutes
     });
+
+    sendMail(
+      email,
+      'Welcome to JT-Harmony',
+      `Hello ${username}, welcome to JT-Harmony!`,
+      `<h1>Hello ${username}, welcome to JT-Harmony!</h1>
+        <p><h2>Your OTP is: ${otp}.</h2></p>
+        <p>This OTP will expire in 10 minutes.</p>`,
+    )
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -101,7 +111,12 @@ exports.login = async (req, res) => {
 
     // Update token in database
     await User.update(
-      { accessToken, refreshToken, expiry: jwt.decode(refreshToken).exp, lastLogin: new Date() },
+      {
+        accessToken,
+        refreshToken,
+        expiry: jwt.decode(refreshToken).exp,
+        lastLogin: new Date()
+      },
       { where: { id: user.id } }
     );
 
@@ -250,6 +265,15 @@ exports.reSendOtpEmail = async (req, res) => {
     user.otp = otp;
     user.expireOtp = expireOtp;
     await user.save();
+
+    sendMail(
+      email,
+      'Resend OTP - JT-Harmony',
+      `Hello ${user.username}, your new OTP is: ${otp}. This OTP will expire in 10 minutes.`,
+      `<h1>Hello ${user.username}</h1>
+        <p><h2>Your new OTP is: ${otp}.</h2></p>
+        <p>This OTP will expire in 10 minutes.</p>`,
+    );
 
     return res.json({
       message: 'OTP resent successfully',
