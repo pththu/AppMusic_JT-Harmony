@@ -1,45 +1,47 @@
 const { DataTypes } = require('sequelize')
-const sequelize = require('./init')
+const sequelize = require('../configs/database')
 
 const Song = sequelize.define(
   'Song',
   {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       allowNull: false,
       primaryKey: true
-    },
-    jamendoId: {
-      type: DataTypes.STRING,
-      allowNull: false
     },
     title: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    artistName: { // tên nghệ sĩ từ Jamendo (string)
-      type: DataTypes.STRING
+    lyrics: {
+      type: DataTypes.TEXT,
+      allowNull: true
     },
-    albumName: { // tên album từ Jamendo (string)
-      type: DataTypes.STRING
-    },
-    audioUrl: {
-      type: DataTypes.STRING
-    },
-    imageUrl: {
-      type: DataTypes.STRING
+    fileUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: 'file_url'
     },
     duration: {
       type: DataTypes.INTEGER
     },
-    artistId: { // foreign key -> Artist
-      type: DataTypes.BIGINT,
-      allowNull: true
+    playCount: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      field: 'play_count'
     },
-    albumId: { // foreign key -> Album
-      type: DataTypes.BIGINT,
-      allowNull: true
+    shareCount: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      field: 'share_count'
+    },
+    releaseDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'release_date'
     }
   },
   {
