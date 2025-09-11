@@ -1,40 +1,33 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
 
-const Album = sequelize.define(
-  'Album',
+const SearchHistory = sequelize.define(
+  'SearchHistory',
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
-      allowNull: false,
-      unique: true,
       primaryKey: true
     },
-    title: {
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'user_id'
+    },
+    query: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    artistId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'artist_id'
-    },
-    coverUrl: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      field: 'cover_url'
-    },
-    releaseDate: {
+    searchedAt: {
       type: DataTypes.DATE,
       allowNull: false,
-      field: 'release_date'
+      field: 'searched_at'
     }
   },
   {
-    tableName: 'albums',
+    tableName: 'search_histories',
     timestamps: true
   }
 )
 
-module.exports = Album
+module.exports = SearchHistory

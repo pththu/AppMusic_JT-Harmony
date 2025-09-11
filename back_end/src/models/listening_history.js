@@ -1,14 +1,13 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
 
-const PlaylistSong = sequelize.define(
-  'PlaylistSong',
+const ListeningHistory = sequelize.define(
+  'ListeningHistory',
   {
-
-    playlistId: {
+    userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'playlist_id',
+      field: 'user_id',
       primaryKey: true
     },
     songId: {
@@ -17,16 +16,21 @@ const PlaylistSong = sequelize.define(
       field: 'song_id',
       primaryKey: true
     },
-    orderIndex: {
+    listenedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: 'listened_at'
+    },
+    durationListened: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'order_index'
+      field: 'duration_listened'
     }
   },
   {
-    tableName: 'playlist_songs',
+    tableName: 'listening_histories',
     timestamps: true
   }
 )
 
-module.exports = PlaylistSong
+module.exports = ListeningHistory

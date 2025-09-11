@@ -1,30 +1,28 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
 
-const Artist = sequelize.define(
-  'Artist',
+const Role = sequelize.define(
+  'Role',
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
+      allowNull: false,
+      unique: true,
       primaryKey: true
     },
     name: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    imageUrl: {
-      type: DataTypes.STRING,
-      field: 'image_url'
-    },
-    bio: {
-      type: DataTypes.TEXT
+    description: {
+      type: DataTypes.STRING
     }
   },
   {
-    tableName: 'artists',
+    tableName: 'roles',
     timestamps: true
   }
 )
 
-module.exports = Artist
+module.exports = Role
