@@ -12,6 +12,6 @@ router.put('/update-profile', userController.updateInforUser)
 router.put('/change-password', userController.changePassword)
 
 // admin authorization
-router.delete('/remove/:id', userController.deleteUser)
+router.delete('/remove/:id', authorizeRole, userController.deleteUser)
 
 module.exports = router
