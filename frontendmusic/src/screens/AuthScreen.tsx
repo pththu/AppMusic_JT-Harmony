@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function AuthScreen({ navigation }: { navigation: any }) {
   return (
-    <View className="flex-1 bg-black items-center justify-center px-6">
+    <View className="flex-1  bg-[#0E0C1F] items-center justify-center px-6">
       <View className="flex-row items-center mb-6">
         <Text className="text-4xl font-extrabold text-white mr-4">Musico</Text>
         <View className="flex-row space-x-2">

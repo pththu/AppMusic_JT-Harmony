@@ -10,6 +10,7 @@ import {
 import HeaderBackButton from '../components/HeaderBackButton';
 import SongItem from '../components/SongItem';
 import CustomButton from '../components/CustomButton';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const sampleArtist = {
   id: '1',
@@ -70,29 +71,50 @@ export default function ArtistScreen({ navigation, route }: any) {
   );
 
   return (
-    <ScrollView className="flex-1 bg-black">
-      <HeaderBackButton onPress={() => navigation.goBack()} />
-      <Image source={{ uri: artist.image }} className="w-full h-56" />
-      <View className="p-4">
-        <Text className="text-white text-3xl font-bold mb-1">
+    <ScrollView className="flex-1  bg-[#0E0C1F]">
+      {/* Container cho ảnh và overlay */}
+      <View className="relative w-full h-72">
+        <Image
+          source={{ uri: artist.image }}
+          className="w-full h-full object-cover"
+        />
+        <View className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+
+        {/* Header */}
+        <View className="absolute top-0 left-0 right-0 p-4 z-10 flex-row items-center">
+          <HeaderBackButton onPress={() => navigation.goBack()} />
+          <View className="flex-1" />
+          <TouchableOpacity className="ml-4">
+            <Icon name="ellipsis-vertical" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Tên nghệ sĩ */}
+        <Text className="absolute bottom-4 left-4 text-white text-4xl font-extrabold">
           {artist.name}
         </Text>
+      </View>
+      {/* <HeaderBackButton onPress={() => navigation.goBack()} />
+      <Image source={{ uri: artist.image }} className="w-full h-full object-cover" /> */}
+      <View className="p-4">
+        {/* <Text className="text-white text-3xl font-bold mb-1">
+          {artist.name}
+        </Text> */}
         <Text className="text-gray-400 mb-4">
           {artist.monthlyListeners} monthly listeners
         </Text>
         <View className="flex-row space-x-4 mb-4">
           <CustomButton
-            title="Follow"
+            title=""
             onPress={() => {}}
-            className="bg-gray-800 rounded-full px-5 py-2"
-            textClassName="text-white font-semibold"
+            iconName="person-add"
+            className="bg-gray-800 rounded-full px-5 py-2 mr-4 flex-row items-center"
           />
           <CustomButton
-            title="Share"
+            title=""
             onPress={() => {}}
             iconName="share-outline"
-            className="bg-gray-800 rounded-full px-5 py-2 flex-row items-center"
-            textClassName="text-white font-semibold ml-2"
+            className="bg-gray-800 rounded-full px-5 py-2 flex-row items-center mr-4"
           />
           <CustomButton
             title=""

@@ -78,7 +78,7 @@ export default function SongScreen({ route, navigation }: Props) {
   );
 
   return (
-    <ScrollView className="flex-1 bg-black px-4 pt-4">
+    <ScrollView className="flex-1  bg-[#0E0C1F] px-4 pt-4">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-4">
         <TouchableOpacity onPress={() => navigation.goBack()}>

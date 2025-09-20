@@ -8,6 +8,7 @@ interface CustomButtonProps {
   iconName?: string;
   variant?: 'primary' | 'secondary' | 'outline';
   size?: 'small' | 'medium' | 'large';
+  className?: string;
 }
 
 export default function CustomButton({
@@ -16,9 +17,10 @@ export default function CustomButton({
   iconName,
   variant = 'primary',
   size = 'medium',
+  className = '',
 }: CustomButtonProps) {
   const getButtonStyles = () => {
-    let baseStyles = 'rounded-full px-5 py-2 flex-row items-center justify-center';
+    let baseStyles = 'rounded-full flex-row items-center justify-center';
     let textStyles = 'font-semibold';
 
     switch (variant) {
@@ -45,16 +47,28 @@ export default function CustomButton({
         baseStyles += ' px-6 py-3';
         textStyles += ' text-lg';
         break;
-    }
+    } // Thêm className tùy chỉnh từ props
 
-    return { baseStyles, textStyles };
+    baseStyles += ` ${className}`; // Xác định màu icon
+
+    const iconColor = variant === 'outline' ? '#9CA3AF' : 'white'; // Thêm margin cho icon nếu có title
+    const iconMargin = title ? 'mr-2' : '';
+
+    return { baseStyles, textStyles, iconColor, iconMargin };
   };
 
-  const { baseStyles, textStyles } = getButtonStyles();
+  const { baseStyles, textStyles, iconColor, iconMargin } = getButtonStyles();
 
   return (
     <TouchableOpacity className={baseStyles} onPress={onPress}>
-      {iconName && <Icon name={iconName} size={18} color="white" className="mr-2" />}
+      {iconName && (
+        <Icon
+          name={iconName}
+          size={18}
+          color={iconColor}
+          className={iconMargin}
+        />
+      )}
       <Text className={textStyles}>{title}</Text>
     </TouchableOpacity>
   );

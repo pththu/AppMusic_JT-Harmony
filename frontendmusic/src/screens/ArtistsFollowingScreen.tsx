@@ -73,7 +73,7 @@ export default function ArtistsFollowingScreen({ route }: { route: any }) {
   };
 
   return (
-    <View className="flex-1 bg-black px-4 pt-4">
+    <View className="flex-1  bg-[#0E0C1F] px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={handleBackPress} className="mr-4">
           <Icon name="chevron-down" size={24} color="white" />

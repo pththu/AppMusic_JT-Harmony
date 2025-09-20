@@ -17,7 +17,7 @@ export default function DownloadsScreen() {
   const navigation = useNavigation();
 
   return (
-    <View className="flex-1 bg-black px-4 pt-4">
+    <View className="flex-1  bg-[#0E0C1F] px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <Icon name="arrow-back" size={24} color="white" />

@@ -212,7 +212,7 @@ export default function HomeScreen() {
     : 0;
 
   return (
-    <View className="flex-1 bg-[#121212]">
+    <View className="flex-1  bg-[#0E0C1F]">
       {/* Header */}
       <View className="flex-row justify-between items-center mx-5 mt-5 mb-2">
         <Animated.Text
@@ -320,12 +320,16 @@ export default function HomeScreen() {
                 textClassName="text-green-500 font-semibold"
               />
             </View>
-          <FlatList
+            <FlatList
               horizontal
               data={forYouData[1].horizontalData}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <AlbumItem title={item.title} image={item.image} onPress={() => {}} />
+                <AlbumItem
+                  title={item.title}
+                  image={item.image}
+                  onPress={() => {}}
+                />
               )}
               showsHorizontalScrollIndicator={false}
             />
@@ -341,7 +345,11 @@ export default function HomeScreen() {
               data={forYouData[2].mixes}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <AlbumItem title={item.title} image={item.image} onPress={() => {}} />
+                <AlbumItem
+                  title={item.title}
+                  image={item.image}
+                  onPress={() => {}}
+                />
               )}
               showsHorizontalScrollIndicator={false}
             />

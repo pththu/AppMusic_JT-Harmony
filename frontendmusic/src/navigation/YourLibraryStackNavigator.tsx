@@ -8,7 +8,9 @@ import QueueScreen from '../screens/QueueScreen';
 export type YourLibraryStackParamList = {
   YourLibraryScreen: undefined;
   DownloadsScreen: undefined;
-  SongScreen: { song: { id: string; title: string; artist: string; image: string } };
+  SongScreen: {
+    song: { id: string; title: string; artist: string; image: string };
+  };
   QueueScreen: undefined;
 };
 

@@ -4,20 +4,21 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { SettingsContext } from '../context/SettingsContext';
 import CustomButton from '../components/CustomButton';
 import SettingItem from '../components/SettingItem';
+import LibraryItemButton from '../components/LibraryItemButton'; // Import component mới
 
 export default function ProfileScreen({ navigation }: { navigation: any }) {
   const settings = useContext(SettingsContext);
 
   return (
-    <View className="flex-1 bg-black p-6">
+    <View className="flex-1  bg-[#0E0C1F] p-6">
       <View className="flex-row justify-between items-center my-4">
         <Text className="text-white text-3xl font-bold">My Profile</Text>
         <CustomButton
           title="Edit"
           onPress={() => navigation.navigate('EditProfile')}
           iconName="pencil"
-          className="bg-gray-600 rounded-full px-4 py-1 flex-row items-center"
-          textClassName="text-white font-semibold"
+          // className="bg-gray-600 rounded-full px-4 py-1 flex-row items-center"
+          // textClassName="text-white font-semibold"
         />
       </View>
 
@@ -55,27 +56,25 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
         <Text className="text-white">...</Text>
       </View>
 
+      {/* Thay thế CustomButton bằng LibraryItemButton */}
       <View className="flex-row justify-between my-4">
-        <CustomButton
-          title="... songs"
+        <LibraryItemButton
+          title="... Songs"
+          icon="favorite"
           onPress={() => navigation.navigate('LikedSongsScreen')}
-          iconName="heart"
-          className="bg-gray-900 rounded-lg p-4 flex-1 mr-2 items-center"
-          textClassName="text-white font-semibold mt-2"
+          color="#ffb5b5"
         />
-        <CustomButton
-          title="... playlists"
+        <LibraryItemButton
+          title="... Playlists"
+          icon="list"
           onPress={() => navigation.navigate('PlaylistsScreen')}
-          iconName="list"
-          className="bg-gray-900 rounded-lg p-4 flex-1 mx-1 items-center"
-          textClassName="text-white font-semibold mt-2"
+          color="#82d8ff"
         />
-        <CustomButton
-          title="... artists"
+        <LibraryItemButton
+          title="... Artists"
+          icon="person"
           onPress={() => navigation.navigate('ArtistsFollowingScreen')}
-          iconName="person"
-          className="bg-gray-900 rounded-lg p-4 flex-1 ml-2 items-center"
-          textClassName="text-white font-semibold mt-2"
+          color="#fff999"
         />
       </View>
 
@@ -96,7 +95,7 @@ export default function ProfileScreen({ navigation }: { navigation: any }) {
         <SettingItem
           title="Log out"
           onPress={() => navigation.navigate('Login')}
-          textClassName="text-red-400 font-semibold"
+          // textClassName="text-red-400 font-semibold"
         />
       </View>
     </View>

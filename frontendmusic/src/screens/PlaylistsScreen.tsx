@@ -71,7 +71,7 @@ export default function PlaylistsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-black px-4 pt-6">
+    <View className="flex-1  bg-[#0E0C1F] px-4 pt-6">
       <View className="flex-row items-center mb-6">
         <TouchableOpacity onPress={handleBackPress} className="mr-4 p-1">
           <Icon name="chevron-down" size={32} color="white" />

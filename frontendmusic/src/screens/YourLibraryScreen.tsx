@@ -1,14 +1,45 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { YourLibraryStackParamList } from '../navigation/YourLibraryStackNavigator';
 import SongItem from '../components/SongItem';
+import LibraryItemButton from '../components/LibraryItemButton';
 
 const libraryItems = [
-  { id: '1', title: 'Liked Songs', icon: '❤️', screen: 'LikedSongsScreen' },
-  { id: '2', title: 'Downloads', icon: '⬇️', screen: 'DownloadsScreen' },
-  { id: '3', title: 'Playlists', icon: '🎵', screen: 'PlaylistsScreen' },
-  { id: '4', title: 'Artists', icon: '👤', screen: 'ArtistsFollowingScreen' },
+  {
+    id: '1',
+    title: 'Favorite Songs',
+    icon: 'favorite',
+    screen: 'LikedSongsScreen',
+    color: '#ffb5b5',
+  },
+  {
+    id: '2',
+    title: 'Artists',
+    icon: 'person',
+    screen: 'ArtistsFollowingScreen',
+    color: '#fff999',
+  },
+  {
+    id: '3',
+    title: 'Playlists',
+    icon: 'list',
+    screen: 'PlaylistsScreen',
+    color: '#82d8ff',
+  },
+  {
+    id: '4',
+    title: 'Downloaded',
+    icon: 'cloud-download',
+    screen: 'DownloadsScreen',
+    color: '#88d89a',
+  },
 ];
 
 const recentlyPlayed = [
@@ -54,19 +85,39 @@ const recentlyPlayed = [
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
   },
+  {
+    id: '7',
+    title: 'Somebody',
+    artist: 'Chainsmokers, Drew',
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  },
+  {
+    id: '8',
+    title: 'Somebody',
+    artist: 'Chainsmokers, Drew',
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  },
+  {
+    id: '9',
+    title: 'Somebody',
+    artist: 'Chainsmokers, Drew',
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  },
 ];
 
 export default function YourLibraryScreen() {
   const navigation = useNavigation<NavigationProp<YourLibraryStackParamList>>();
 
   const renderLibraryItem = ({ item }: { item: (typeof libraryItems)[0] }) => (
-    <TouchableOpacity
-      className="bg-gray-900 rounded-lg p-4 flex-1 m-2"
+    <LibraryItemButton
+      title={item.title}
+      icon={item.icon}
       onPress={() => navigation.navigate(item.screen as any)}
-    >
-      <Text className="text-white text-lg font-semibold">{item.icon}</Text>
-      <Text className="text-white font-semibold mt-2">{item.title}</Text>
-    </TouchableOpacity>
+      color={item.color}
+    />
   );
 
   const renderRecentlyPlayedItem = ({
@@ -84,7 +135,10 @@ export default function YourLibraryScreen() {
   );
 
   return (
-    <View className="flex-1 bg-black px-4 pt-4">
+    <ScrollView
+      className="flex-1  bg-[#0E0C1F]"
+      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16 }}
+    >
       <Text className="text-white text-2xl font-semibold mb-4">
         Your Library
       </Text>
@@ -95,6 +149,7 @@ export default function YourLibraryScreen() {
         numColumns={2}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         className="mb-6"
+        scrollEnabled={false} // Tắt cuộn của FlatList để nó không xung đột với ScrollView
       />
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-white text-lg font-semibold">
@@ -117,7 +172,8 @@ export default function YourLibraryScreen() {
         renderItem={renderRecentlyPlayedItem}
         keyExtractor={item => item.id}
         className="mb-4"
+        scrollEnabled={false} // Tắt cuộn của FlatList
       />
-    </View>
+    </ScrollView>
   );
 }

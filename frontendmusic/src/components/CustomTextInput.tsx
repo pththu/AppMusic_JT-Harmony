@@ -35,30 +35,35 @@ export default function CustomTextInput({
 
   return (
     <View className="mb-4">
-      <View className="flex-row items-center bg-gray-800 rounded-md p-3">
-        <Icon name={iconName} size={20} color="#888" className="mr-3" />
+      {/* View chính bao quanh TextInput */}
+      <View className="flex-row items-center bg-[#1A1A1A] rounded-lg border border-[#3A3A3A] px-4 py-3">
+        {/* Icon */}
+        <Icon name={iconName} size={20} color="#888888" className="mr-3" />
+        {/* TextInput */}
         <TextInput
-          className="flex-1 text-white"
-          placeholder={placeholder}
-          placeholderTextColor="#888"
-          value={value}
-          onChangeText={onChangeText}
-          secureTextEntry={secureTextEntry && !isPasswordVisible}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          multiline={multiline}
-          numberOfLines={numberOfLines}
+          className="flex-1 text-white font-semibold text-base"
+          placeholder={placeholder}
+          placeholderTextColor="#888888"
+          value={value}
+          onChangeText={onChangeText}
+          secureTextEntry={secureTextEntry && !isPasswordVisible}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
         />
+        {/* Nút hiển thị/ẩn mật khẩu */}
         {secureTextEntry && (
           <TouchableOpacity onPress={togglePasswordVisibility}>
             <Icon
               name={isPasswordVisible ? 'visibility' : 'visibility-off'}
               size={20}
-              color="#888"
+              color="#6B7280"
             />
           </TouchableOpacity>
         )}
       </View>
+      {/* Hiển thị lỗi nếu có */}
       {error && <Text className="text-red-500 text-sm mt-1">{error}</Text>}
     </View>
   );

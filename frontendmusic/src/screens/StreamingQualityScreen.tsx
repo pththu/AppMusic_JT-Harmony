@@ -18,7 +18,7 @@ export default function StreamingQualityScreen({ navigation }: { navigation: any
   };
 
   return (
-    <View className="flex-1 bg-black p-6">
+    <View className="flex-1  bg-[#0E0C1F] p-6">
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-white text-xl font-bold">Select Streaming Quality</Text>
         <TouchableOpacity onPress={() => navigation.goBack()}>

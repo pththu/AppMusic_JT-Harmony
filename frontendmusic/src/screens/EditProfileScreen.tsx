@@ -53,7 +53,7 @@ export default function EditProfileScreen({ navigation }: { navigation: any }) {
   };
 
   return (
-    <ScrollView className="flex-1 bg-black px-4 pt-4">
+    <ScrollView className="flex-1  bg-[#0E0C1F] px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <Icon name="arrow-back" size={24} color="white" />
@@ -120,11 +120,11 @@ export default function EditProfileScreen({ navigation }: { navigation: any }) {
       />
 
       <TouchableOpacity
-        className="bg-white rounded-full py-4 items-center"
+        className="bg-[#089b0d] rounded-full py-4 items-center"
         onPress={onSave}
         activeOpacity={0.7}
       >
-        <Text className="text-black font-semibold text-lg">Save</Text>
+        <Text className="text-white font-bold text-lg">Save</Text>
       </TouchableOpacity>
     </ScrollView>
   );

@@ -61,7 +61,7 @@ export default function QueueScreen() {
   );
 
   return (
-    <View className="flex-1 bg-black p-4">
+    <View className="flex-1  bg-[#0E0C1F] p-4">
       <Text className="text-white text-xl font-semibold mb-4">In Queue</Text>
       <FlatList
         data={queueSongs}
