@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming MaterialIcons is available
 
 interface CustomTextInputProps {
@@ -50,13 +50,13 @@ export default function CustomTextInput({
           numberOfLines={numberOfLines}
         />
         {secureTextEntry && (
-          <TouchableOpacity onPress={togglePasswordVisibility}>
+          <Pressable onPress={togglePasswordVisibility}>
             <Icon
               name={isPasswordVisible ? 'visibility' : 'visibility-off'}
               size={20}
               color="#888"
             />
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
       {error && <Text className="text-red-500 text-sm mt-1">{error}</Text>}

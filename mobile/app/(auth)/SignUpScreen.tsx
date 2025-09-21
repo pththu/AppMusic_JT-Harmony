@@ -7,7 +7,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import CustomTextInput from '@/components/CustomTextInput';
+import CustomTextInput from '@/components/custom/CustomTextInput';
 import GenderSelector from '@/components/GenderSelector';
 // import DateTimePicker from '@react-native-community/datetimepicker';
 import DateTimePicker, { DateType } from "react-native-ui-datepicker";

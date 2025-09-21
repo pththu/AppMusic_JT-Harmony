@@ -124,6 +124,7 @@ exports.login = async (req, res) => {
 
     res.json({
       message: "Login successful",
+      statusCode: 200,
       user: {
         id: user.id,
         username: user.username,
