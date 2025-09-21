@@ -1,6 +1,9 @@
+import AllSongsScreen from "@/app/(screens)/AllSongsScreen";
+import QueueScreen from "@/app/(screens)/QueueScreen";
+import SongScreen from "@/app/(screens)/SongScreen";
 import { useRouter } from "expo-router";
 
-const routeMap: Record<string, string> = {
+const routeMap: Record<any, any> = {
   Auth: '(auth)/AuthScreen',
   SignUp: '(auth)/SignUpScreen',
   Login: '(auth)/LoginScreen',
@@ -15,20 +18,28 @@ const routeMap: Record<string, string> = {
   StreamingQuality: '(screens)/StreamingQualityScreen',
   MusicLanguage: '(screens)/MusicLanguageScreen',
 
+  ArtistScreen: '(screens)/ArtistScreen',
   ArtistsFollowingScreen: '(screens)/ArtistsFollowingScreen',
   PlaylistsScreen: '(screens)/PlaylistsScreen',
   DownloadsScreen: '(screens)/DownloadsScreen',
   LikedSongsScreen: '(screens)/LikedSongsScreen',
   YourLibraryScreen: '(screens)/YourLibraryScreen',
+  AllSongsScreen: '(screens)/AllSongsScreen',
+  QueueScreen: '(screens)/QueueScreen',
+  SongInfoScreen: '(screens)/SongInfoScreen',
+  SongScreen: '(screens)/SongScreen',
 };
 
 export function useNavigate() {
   const router = useRouter();
 
-  function navigate(name: string) {
+  function navigate(name, params = {}) {
     const path = routeMap[name];
     if (!path) throw new Error(`Route "${name}" chưa được định nghĩa`);
-    router.push(path as any);
+    router.push({
+      pathname: path,
+      ...(Object.keys(params).length > 0 ? { params } : {}),
+    });
   }
 
   function goBack() {

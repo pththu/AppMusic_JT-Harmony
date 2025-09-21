@@ -1,16 +1,15 @@
-import { HOST } from "@/config/ApiConfig";
 import axios from "axios";
-
-export const API_URL = `${HOST}/api/v1`;
-
+import { HOST } from "@/config/ApiClient";
 //auth
 export const Login = async (payload) => {
   try {
     const { email, password } = payload;
-    const response = await axios.post(`${API_URL}/auth/login`, {
+    console.log(payload);
+    const response = await axios.post(`${HOST}/auth/login`, {
       email,
       password
     }, { timeout: 3000 });
+    console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
