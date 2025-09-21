@@ -14,7 +14,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
   return (
     <View className="absolute bottom-5 left-5 right-5 bg-transparent items-center justify-center">
       {/* Nền xám đậm, độ mờ tăng và thêm viền */}
-      <View className="flex-row bg-[#222222] rounded-3xl py-2.5 px-4 shadow-xl border border-gray-600">
+      <View className="flex-row bg-[#222222]/10 rounded-3xl py-2.5 px-4 shadow-xl border border-gray-600">
         {state.routes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
           const label =

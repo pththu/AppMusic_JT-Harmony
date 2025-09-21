@@ -6,39 +6,98 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  ScrollView,
+  // ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import LyricsSection from '../components/LyricsSection';
+import ArtistsSection from '../components/ArtistsSection';
+
+import { RouteProp, NavigationProp } from '@react-navigation/native';
+// Chúng ta sẽ import các type cần thiết từ file navigator để đảm bảo tính nhất quán
+import { YourLibraryStackParamList } from '../navigation/YourLibraryStackNavigator';
+
+// Định nghĩa kiểu dữ liệu cho bài hát và nghệ sĩ ở đây để sử dụng trong file này
+interface Artist {
+  name: string;
+  image: string;
+}
+
+interface Song {
+  id: string;
+  title: string;
+  artists: Artist[];
+  image: string;
+  album?: string;
+  itag?: string;
+  mimeType?: string;
+  bitrate?: string;
+  youtubeUrl?: string;
+  downloadUrl?: string;
+}
+
 const screenWidth = Dimensions.get('window').width;
 
-const upNextSongs = [
+const upNextSongs: Song[] = [
   {
     id: '2',
     title: 'Young',
-    artist: 'The Chainsmokers',
+    artists: [
+      {
+        name: 'The Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Memories...Do Not Open',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/young.mp3',
   },
   {
     id: '3',
     title: 'Beach House',
-    artist: 'Chainsmokers - Sick',
+    artists: [
+      {
+        name: 'Chainsmokers - Sick',
+        image:
+          'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Sick Boy',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/beachhouse.mp3',
   },
   {
     id: '4',
     title: 'Kills You Slowly',
-    artist: 'The Chainsmokers - World',
+    artists: [
+      {
+        name: 'The Chainsmokers - World',
+        image:
+          'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'World War Joy',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/killsyouslowly.mp3',
   },
 ];
-
-import { RouteProp, NavigationProp } from '@react-navigation/native';
-import { YourLibraryStackParamList } from '../navigation/YourLibraryStackNavigator';
 
 type SongScreenRouteProp = RouteProp<YourLibraryStackParamList, 'SongScreen'>;
 type SongScreenNavigationProp = NavigationProp<
@@ -52,7 +111,6 @@ type Props = {
 };
 
 export default function SongScreen({ route, navigation }: Props) {
-  // Thay thử URL ảnh mặc định để kiểm tra hiển thị
   const { song } = route.params;
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -60,16 +118,14 @@ export default function SongScreen({ route, navigation }: Props) {
     setIsPlaying(!isPlaying);
   };
 
-  const renderUpNextItem = ({
-    item,
-  }: {
-    item: { id: string; title: string; artist: string; image: string };
-  }) => (
+  const renderUpNextItem = ({ item }: { item: Song }) => (
     <View className="flex-row items-center py-2 border-b border-gray-700">
       <Image source={{ uri: item.image }} className="w-12 h-12 rounded-md" />
       <View className="flex-1 ml-3">
         <Text className="text-white font-bold text-base">{item.title}</Text>
-        <Text className="text-gray-400 text-sm">{item.artist}</Text>
+        <Text className="text-gray-400 text-sm">
+          {item.artists.map(a => a.name).join(', ')}
+        </Text>
       </View>
       <TouchableOpacity>
         <Icon name="more-vert" size={24} color="gray" />
@@ -77,22 +133,22 @@ export default function SongScreen({ route, navigation }: Props) {
     </View>
   );
 
-  return (
-    <ScrollView className="flex-1  bg-[#0E0C1F] px-4 pt-4">
+  const ListHeader = () => (
+    <View>
       {/* Header */}
       <View className="flex-row justify-between items-center mb-4">
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-down" size={28} color="white" />
         </TouchableOpacity>
         <View className="flex-1 items-center">
-          <Text className="text-gray-400 text-sm">Playing from album</Text>
+          <Text className="text-gray-400 text-sm">Now playing</Text>
           <Text className="text-white text-base font-semibold">
             {song.title}
           </Text>
         </View>
-        <TouchableOpacity>
+        {/* <TouchableOpacity>
           <Icon name="more-vert" size={28} color="white" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Album Art */}
@@ -112,39 +168,41 @@ export default function SongScreen({ route, navigation }: Props) {
               {song.title}
             </Text>
             <Text className="text-gray-300 text-lg mb-1 text-center">
-              {song.artist}
-            </Text>
-            <Text className="text-gray-300 text-base text-center">
-              feat. Artist 2
-            </Text>
-            <Text className="text-gray-400 text-sm mt-4 text-center">
-              Lyrics here...
+              {song.artists.map(a => a.name).join(', ')}
             </Text>
           </View>
         </View>
       </View>
 
-      {/* Connect to device */}
-      <TouchableOpacity className="bg-gray-800 px-4 py-2 rounded-full self-center mb-4 flex-row items-center">
-        <Ionicons name="devices" size={20} color="white" />
-        <Text className="text-white text-sm ml-2">Connect to a device</Text>
-      </TouchableOpacity>
-
       {/* Song Info and Action Buttons */}
       <View className="flex-row justify-between items-center mb-4">
         <View>
           <Text className="text-white text-2xl font-bold">{song.title}</Text>
-          <Text className="text-gray-400 text-base">{song.artist}</Text>
+          <Text className="text-gray-400 text-base">
+            {song.artists.map(a => a.name).join(', ')}
+          </Text>
         </View>
         <View className="flex-row">
-          <TouchableOpacity className="mr-4">
-            <Icon name="favorite-border" size={28} color="white" />
+          <TouchableOpacity
+            className="mr-4"
+            onPress={() =>
+              navigation.navigate('SongInfoScreen', { song: song })
+            }
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={24}
+              color="white"
+            />
           </TouchableOpacity>
           <TouchableOpacity className="mr-4">
-            <Icon name="download" size={28} color="white" />
+            <Icon name="favorite-border" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity className="mr-4">
+            <Icon name="download" size={24} color="white" />
           </TouchableOpacity>
           <TouchableOpacity>
-            <Icon name="share" size={28} color="white" />
+            <Icon name="share" size={24} color="white" />
           </TouchableOpacity>
         </View>
       </View>
@@ -155,7 +213,7 @@ export default function SongScreen({ route, navigation }: Props) {
           <Icon name="shuffle" size={24} color="gray" />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Icon name="skip-previous" size={36} color="white" />
+          <Icon name="skip-previous" size={30} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           className="bg-white rounded-full p-2 shadow-lg"
@@ -163,12 +221,12 @@ export default function SongScreen({ route, navigation }: Props) {
         >
           <Icon
             name={isPlaying ? 'pause' : 'play-arrow'}
-            size={48}
+            size={40}
             color="black"
           />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Icon name="skip-next" size={36} color="white" />
+          <Icon name="skip-next" size={30} color="white" />
         </TouchableOpacity>
         <TouchableOpacity>
           <Icon name="repeat" size={24} color="gray" />
@@ -188,19 +246,37 @@ export default function SongScreen({ route, navigation }: Props) {
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-white text-lg font-bold">Up Next</Text>
         <TouchableOpacity
-          onPress={() => navigation.navigate('QueueScreen' as never)}
+          onPress={() =>
+            navigation.navigate('QueueScreen', {
+              nowPlaying: song,
+              queue: upNextSongs,
+            })
+          }
         >
           <Text className="text-gray-400 text-base">Queue</Text>
         </TouchableOpacity>
       </View>
+    </View>
+  );
 
-      {/* Up Next List */}
+  const ListFooter = () => (
+    <View>
+      <LyricsSection />
+      <ArtistsSection artists={song.artists} />
+    </View>
+  );
+
+  return (
+    <View className="flex-1 bg-[#0E0C1F] px-4 pt-4">
       <FlatList
         data={upNextSongs}
         renderItem={renderUpNextItem}
         keyExtractor={item => item.id}
-        scrollEnabled={false}
+        ListHeaderComponent={ListHeader}
+        ListFooterComponent={ListFooter}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 60 }}
       />
-    </ScrollView>
+    </View>
   );
 }

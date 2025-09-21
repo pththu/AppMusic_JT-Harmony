@@ -42,69 +42,202 @@ const libraryItems = [
   },
 ];
 
-const recentlyPlayed = [
+// Định nghĩa các type cần thiết để tránh lỗi TypeScript
+interface Artist {
+  name: string;
+  image: string;
+}
+
+interface Song {
+  id: string;
+  title: string;
+  artists: Artist[];
+  image: string;
+  album?: string;
+  itag?: string;
+  mimeType?: string;
+  bitrate?: string;
+  youtubeUrl?: string;
+  downloadUrl?: string;
+}
+
+// Cập nhật mảng recentlyPlayed với dữ liệu chi tiết
+const recentlyPlayed: Song[] = [
   {
     id: '1',
     title: 'Inside Out',
-    artist: 'The Chainsmokers, Charlee',
+    artists: [
+      {
+        name: 'The Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+      {
+        name: 'Charlee',
+        image:
+          'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Inside Out - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/insideout.mp3',
   },
   {
     id: '2',
     title: 'Young',
-    artist: 'The Chainsmokers',
+    artists: [
+      {
+        name: 'The Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Memories...Do Not Open',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/young.mp3',
   },
   {
     id: '3',
     title: 'Beach House',
-    artist: 'Chainsmokers - Sick',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Sick Boy',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/beachhouse.mp3',
   },
   {
     id: '4',
     title: 'Kills You Slowly',
-    artist: 'The Chainsmokers - World',
+    artists: [
+      {
+        name: 'The Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'World War Joy',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/killsyouslowly.mp3',
   },
   {
     id: '5',
     title: 'Setting Fires',
-    artist: 'Chainsmokers, XYLO -',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Collage',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=x0X6V19LgLg',
+    downloadUrl: 'https://example.com/download/settingfires.mp3',
   },
   {
     id: '6',
     title: 'Somebody',
-    artist: 'Chainsmokers, Drew',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Somebody - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/somebody.mp3',
   },
   {
     id: '7',
     title: 'Somebody',
-    artist: 'Chainsmokers, Drew',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Somebody - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/somebody.mp3',
   },
   {
     id: '8',
     title: 'Somebody',
-    artist: 'Chainsmokers, Drew',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Somebody - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/somebody.mp3',
   },
   {
     id: '9',
     title: 'Somebody',
-    artist: 'Chainsmokers, Drew',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
     image:
       'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Somebody - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/somebody.mp3',
   },
 ];
 
@@ -127,8 +260,10 @@ export default function YourLibraryScreen() {
   }) => (
     <SongItem
       title={item.title}
-      subtitle={item.artist}
+      // Nối tên nghệ sĩ thành một chuỗi
+      subtitle={item.artists.map(a => a.name).join(', ')}
       image={item.image}
+      // Truyền cả mảng artists
       onPress={() => navigation.navigate('SongScreen' as any, { song: item })}
       onOptionsPress={() => {}}
     />
@@ -136,7 +271,7 @@ export default function YourLibraryScreen() {
 
   return (
     <ScrollView
-      className="flex-1  bg-[#0E0C1F]"
+      className="flex-1 bg-[#0E0C1F]"
       contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16 }}
     >
       <Text className="text-white text-2xl font-semibold mb-4">
@@ -149,7 +284,7 @@ export default function YourLibraryScreen() {
         numColumns={2}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         className="mb-6"
-        scrollEnabled={false} // Tắt cuộn của FlatList để nó không xung đột với ScrollView
+        scrollEnabled={false}
       />
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-white text-lg font-semibold">
@@ -172,7 +307,7 @@ export default function YourLibraryScreen() {
         renderItem={renderRecentlyPlayedItem}
         keyExtractor={item => item.id}
         className="mb-4"
-        scrollEnabled={false} // Tắt cuộn của FlatList
+        scrollEnabled={false}
       />
     </ScrollView>
   );
