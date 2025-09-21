@@ -1,5 +1,0 @@
-{
-  "CodeGPT.apiKey": "OpenAI",
-  "claudeCodeChat.permissions.yoloMode": false,
-  "java.compile.nullAnalysis.mode": "disabled"
-}
