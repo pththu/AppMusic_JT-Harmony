@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, ScrollView, Alert, View } from 'react-native';
-import CustomTextInput from '@/components/CustomTextInput';
+import CustomTextInput from '@/components/custom/CustomTextInput';
 import GenderSelector from '@/components/GenderSelector';
 // import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/Ionicons';

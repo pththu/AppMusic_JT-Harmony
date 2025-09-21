@@ -1,82 +1,259 @@
 import React from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+// import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigate } from '@/hooks/useNavigate';
+import LibraryItemButton from '@/components/button/LibraryItemButton';
+import SongItem from '@/components/items/SongItem';
+import { usePlayerStore } from '@/store/playerStore';
 
 const libraryItems = [
-  { id: '1', title: 'Liked Songs', icon: '❤️', screen: 'LikedSongsScreen' },
-  { id: '2', title: 'Downloads', icon: '⬇️', screen: 'DownloadsScreen' },
-  { id: '3', title: 'Playlists', icon: '🎵', screen: 'PlaylistsScreen' },
-  { id: '4', title: 'Artists', icon: '👤', screen: 'ArtistsFollowingScreen' },
+  {
+    id: '1',
+    title: 'Favorite Songs',
+    icon: 'favorite',
+    screen: 'LikedSongsScreen',
+    color: '#ffb5b5',
+  },
+  {
+    id: '2',
+    title: 'Artists',
+    icon: 'person',
+    screen: 'ArtistsFollowingScreen',
+    color: '#fff999',
+  },
+  {
+    id: '3',
+    title: 'Playlists',
+    icon: 'list',
+    screen: 'PlaylistsScreen',
+    color: '#82d8ff',
+  },
+  {
+    id: '4',
+    title: 'Downloaded',
+    icon: 'cloud-download',
+    screen: 'DownloadsScreen',
+    color: '#88d89a',
+  },
 ];
 
 const recentlyPlayed = [
   {
     id: '1',
     title: 'Inside Out',
-    artist: 'The Chainsmokers, Charlee',
-    image: 'https://i.scdn.co/image/ab67616d00001e02a1a1a1a1a1a1a1a1a1a1a1a1',
+    artists: [
+      {
+        name: 'The Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+      {
+        name: 'Charlee',
+        image:
+          'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Inside Out - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/insideout.mp3',
   },
   {
     id: '2',
     title: 'Young',
-    artist: 'The Chainsmokers',
-    image: 'https://i.scdn.co/image/ab67616d00001e02b2b2b2b2b2b2b2b2b2b2b2b2b',
+    artists: [
+      {
+        name: 'The Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Memories...Do Not Open',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/young.mp3',
   },
   {
     id: '3',
     title: 'Beach House',
-    artist: 'Chainsmokers - Sick',
-    image: 'https://i.scdn.co/image/ab67616d00001e02c3c3c3c3c3c3c3c3c3c3c3c3c',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Sick Boy',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/beachhouse.mp3',
   },
   {
     id: '4',
     title: 'Kills You Slowly',
-    artist: 'The Chainsmokers - World',
-    image: 'https://i.scdn.co/image/ab67616d00001e02d4d4d4d4d4d4d4d4d4d4d4d4d',
+    artists: [
+      {
+        name: 'The Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'World War Joy',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
+    downloadUrl: 'https://example.com/download/killsyouslowly.mp3',
   },
   {
     id: '5',
     title: 'Setting Fires',
-    artist: 'Chainsmokers, XYLO -',
-    image: 'https://i.scdn.co/image/ab67616d00001e02e5e5e5e5e5e5e5e5e5e5e5e5e',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Collage',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=x0X6V19LgLg',
+    downloadUrl: 'https://example.com/download/settingfires.mp3',
   },
   {
     id: '6',
     title: 'Somebody',
-    artist: 'Chainsmokers, Drew',
-    image: 'https://i.scdn.co/image/ab67616d00001e02f6f6f6f6f6f6f6f6f6f6f6f6f',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Somebody - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/somebody.mp3',
+  },
+  {
+    id: '7',
+    title: 'Somebody',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Somebody - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/somebody.mp3',
+  },
+  {
+    id: '8',
+    title: 'Somebody',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Somebody - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/somebody.mp3',
+  },
+  {
+    id: '9',
+    title: 'Somebody',
+    artists: [
+      {
+        name: 'Chainsmokers',
+        image:
+          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      },
+    ],
+    image:
+      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    album: 'Somebody - Single',
+    itag: '251',
+    mimeType: 'audio/webm; codecs="opus"',
+    bitrate: '160 kbps',
+    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
+    downloadUrl: 'https://example.com/download/somebody.mp3',
   },
 ];
 
 export default function YourLibraryScreen() {
-  const navigation = useNavigation();
+  const { navigate } = useNavigate();
+
+  const handleSelectSong = (song) => {
+    usePlayerStore.getState().setCurrentSong(song);
+    navigate('SongScreen');
+  }
 
   const renderLibraryItem = ({ item }: { item: (typeof libraryItems)[0] }) => (
-    <TouchableOpacity
-      className="bg-gray-900 rounded-lg p-4 flex-1 m-2"
-      // onPress={() => navigation.navigate(item.screen)}
-    >
-      <Text className="text-white text-lg font-semibold">{item.icon}</Text>
-      <Text className="text-white font-semibold mt-2">{item.title}</Text>
-    </TouchableOpacity>
+    <LibraryItemButton
+      title={item.title}
+      icon={item.icon}
+      onPress={() => navigate(item.screen)}
+      color={item.color}
+    />
   );
 
-  const renderRecentlyPlayedItem = ({
-    item,
-  }: {
-    item: (typeof recentlyPlayed)[0];
-  }) => (
-    <TouchableOpacity className="flex-row items-center p-2">
-      <Image source={{ uri: item.image }} className="w-12 h-12 rounded-md" />
-      <View className="ml-4 flex-1">
-        <Text className="text-white font-semibold">{item.title}</Text>
-        <Text className="text-gray-400">{item.artist}</Text>
-      </View>
-      <TouchableOpacity>
-        <Text className="text-gray-400 text-2xl">⋮</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
+  const renderRecentlyPlayedItem = ({ item }: { item: (typeof recentlyPlayed)[0]; }) => (
+    // <TouchableOpacity className="flex-row items-center p-2">
+    //   <Image source={{ uri: item.image }} className="w-12 h-12 rounded-md" />
+    //   <View className="ml-4 flex-1">
+    //     <Text className="text-white font-semibold">{item.title}</Text>
+    //     <Text className="text-gray-400">{item.artists.map(artist => artist.name).join(", ")}</Text>
+    //   </View>
+    //   <TouchableOpacity>
+    //     <Text className="text-gray-400 text-2xl">⋮</Text>
+    //   </TouchableOpacity>
+    // </TouchableOpacity>
+    <SongItem
+      title={item.title}
+      // Nối tên nghệ sĩ thành một chuỗi
+      subtitle={item.artists.map(a => a.name).join(', ')}
+      image={item.image}
+      // Truyền cả mảng artists
+      onPress={() => handleSelectSong(item)}
+      onOptionsPress={() => { }}
+    />
   );
 
   return (
