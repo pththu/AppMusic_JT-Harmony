@@ -1,5 +1,5 @@
 import axios from "axios";
-import { HOST } from "@/config/ApiClient";
+import { HOST } from "@/config/apiClient";
 //auth
 export const Login = async (payload) => {
   try {

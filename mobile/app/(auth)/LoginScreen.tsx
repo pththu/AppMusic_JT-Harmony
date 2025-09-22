@@ -3,7 +3,7 @@ import { Text, TouchableOpacity, ScrollView, Alert, View, Pressable } from 'reac
 import CustomTextInput from '@/components/custom/CustomTextInput';
 import { useNavigate } from '@/hooks/useNavigate';
 import { useCustomAlert } from '@/hooks/useCustomAlert';
-import { Login } from '@/routes/ApiRouter';
+import { Login } from '@/routes/apiRouter';
 
 export default function LoginScreen() {
   const { navigate } = useNavigate();

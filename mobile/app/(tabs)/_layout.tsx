@@ -29,6 +29,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="SocialScreen"
+        options={{
+          title: 'Social'
+        }}
+      />
+      <Tabs.Screen
         name="YourLibraryScreen"
         options={{
           title: 'Your Library'
