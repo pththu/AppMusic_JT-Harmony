@@ -7,6 +7,7 @@ import {
   FlatList,
   ScrollView,
 } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import HeaderBackButton from '@/components/button/HeaderBackButton';
 import SongItem from '@/components/items/SongItem';
 import CustomButton from '@/components/custom/CustomButton';
@@ -57,8 +58,10 @@ const sampleArtist = {
   ],
 };
 
-export default function ArtistScreen({ navigation, route }: any) {
-  const artist = route.params?.artist || sampleArtist;
+export default function ArtistScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const artist = params.artist ? JSON.parse(params.artist as string) : sampleArtist;
   const popularReleases = artist.popularReleases || [];
 
   const renderItem = ({ item }: any) => (
@@ -82,7 +85,7 @@ export default function ArtistScreen({ navigation, route }: any) {
 
         {/* Header */}
         <View className="absolute top-0 left-0 right-0 p-4 z-10 flex-row items-center">
-          <HeaderBackButton onPress={() => navigation.goBack()} />
+          <HeaderBackButton onPress={() => router.back()} />
           <View className="flex-1" />
           <TouchableOpacity className="ml-4">
             <Icon name="ellipsis-vertical" size={24} color="white" />
@@ -126,7 +129,7 @@ export default function ArtistScreen({ navigation, route }: any) {
         <View className="flex-row justify-between items-center mb-2">
           <Text className="text-white text-xl font-bold">Popular releases</Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate('AllSongsScreen', { artist })}
+            onPress={() => router.push({ pathname: '/AllSongsScreen', params: { artist: JSON.stringify(artist) } })}
           >
             <Text className="text-gray-400 font-semibold">See more</Text>
           </TouchableOpacity>

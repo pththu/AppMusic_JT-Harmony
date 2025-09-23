@@ -1,13 +1,14 @@
-import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { SettingsContext } from '@/context/SettingsContext';
-import { router } from 'expo-router';
+import QualityOption from "@/components/QualityOption";
+import { SettingsContext } from "@/context/SettingsContext";
+import { router } from "expo-router";
+import React, { useContext } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 const qualities = [
-  { label: 'Auto', description: 'Based on Network Speed' },
-  { label: 'HD', description: '320/256 kbps' },
-  { label: 'High', description: '128 kbps' },
-  { label: 'Medium', description: '64 kbps' },
+  { label: "Auto", description: "Based on Network Speed" },
+  { label: "HD", description: "320/256 kbps" },
+  { label: "High", description: "128 kbps" },
+  { label: "Medium", description: "64 kbps" },
 ];
 
 export default function DownloadQualityScreen() {
@@ -19,32 +20,24 @@ export default function DownloadQualityScreen() {
   };
 
   return (
-    <View className="flex-1 bg-black p-6">
+    <View className="flex-1 bg-[#0E0C1F] p-6">
       <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-white text-xl font-bold">Select Download Quality</Text>
+        <Text className="text-white text-xl font-bold">
+          Select Download Quality
+        </Text>
         <TouchableOpacity onPress={() => router.back()}>
           <Text className="text-white text-lg">X</Text>
         </TouchableOpacity>
       </View>
 
       {qualities.map((quality) => (
-        <TouchableOpacity
+        <QualityOption
           key={quality.label}
-          className="flex-row justify-between items-center py-4 border-b border-gray-700"
+          label={quality.label}
+          description={quality.description}
+          isSelected={settings?.downloadQuality === quality.label}
           onPress={() => handleSelect(quality.label)}
-        >
-          <View>
-            <Text className="text-white text-lg">{quality.label}</Text>
-            <Text className="text-gray-400">{quality.description}</Text>
-          </View>
-          <View>
-            {settings?.downloadQuality === quality.label ? (
-              <View className="w-5 h-5 rounded-full border-2 border-white bg-white" />
-            ) : (
-              <View className="w-5 h-5 rounded-full border-2 border-white" />
-            )}
-          </View>
-        </TouchableOpacity>
+        />
       ))}
 
       <TouchableOpacity

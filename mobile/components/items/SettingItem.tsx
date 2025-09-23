@@ -1,20 +1,28 @@
-import React from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import React from "react";
+import { Text, TouchableOpacity } from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
 
 interface SettingItemProps {
   title: string;
-  value?: string;
-  onPress?: () => void;
+  onPress: () => void;
+  color?: string; // Thêm prop color tùy chọn
 }
 
-export default function SettingItem({ title, value, onPress }: SettingItemProps) {
+export default function SettingItem({
+  title,
+  onPress,
+  color = "white",
+}: SettingItemProps) {
   return (
     <TouchableOpacity
-      className="py-3 border-b border-gray-700 active:opacity-75 active:scale-95"
+      className="flex-row items-center justify-between py-4"
       onPress={onPress}
+      activeOpacity={0.7}
     >
-      <Text className="text-gray-400 text-xl">{title}</Text>
-      {value && <Text className="text-gray-400 text-xl">{value}</Text>}
+      <Text className="text-base font-medium" style={{ color: color }}>
+        {title}
+      </Text>
+      <Icon name="chevron-forward" size={24} color={color} />
     </TouchableOpacity>
   );
 }
