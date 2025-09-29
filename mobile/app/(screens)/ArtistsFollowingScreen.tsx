@@ -1,29 +1,87 @@
-import React from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { router } from 'expo-router';
+import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
+import React from "react";
+import {
+  FlatList,
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
 
 const artists = [
-  { id: '1', name: 'One Republic', image: 'https://i.scdn.co/image/ab6761610000e5eb1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1' },
-  { id: '2', name: 'Coldplay', image: 'https://i.scdn.co/image/ab6761610000e5eb2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b' },
-  { id: '3', name: 'The Chainsmokers', image: 'https://i.scdn.co/image/ab6761610000e5eb3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c' },
-  { id: '4', name: 'Linkin Park', image: 'https://i.scdn.co/image/ab6761610000e5eb4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d' },
-  { id: '5', name: 'Sia', image: 'https://i.scdn.co/image/ab6761610000e5eb5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e' },
-  { id: '6', name: 'Ellie Goulding', image: 'https://i.scdn.co/image/ab6761610000e5eb6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f' },
-  { id: '7', name: 'Katy Perry', image: 'https://i.scdn.co/image/ab6761610000e5eb7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a' },
-  { id: '8', name: 'Maroon 5', image: 'https://i.scdn.co/image/ab6761610000e5eb8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b' },
+  {
+    id: "1",
+    name: "One Republic",
+    image:
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  },
+  {
+    id: "2",
+    name: "Coldplay",
+    image:
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  },
+  {
+    id: "3",
+    name: "The Chainsmokers",
+    image:
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  },
+  {
+    id: "4",
+    name: "Linkin Park",
+    image:
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  },
+  {
+    id: "5",
+    name: "Sia",
+    image:
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  },
+  {
+    id: "6",
+    name: "Ellie Goulding",
+    image:
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  },
+  {
+    id: "7",
+    name: "Katy Perry",
+    image:
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  },
+  {
+    id: "8",
+    name: "Maroon 5",
+    image:
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  },
 ];
 
-export default function ArtistsFollowingScreen() {
+export default function ArtistsFollowingScreen({ route }: { route: any }) {
+  const navigation = useNavigation();
 
+  const handleBackPress = () => {
+    if (route?.params?.fromProfile) {
+      navigation.navigate("Profile" as never);
+    } else {
+      navigation.goBack();
+    }
+  };
   return (
-    <View className="flex-1 bg-black px-4 pt-4">
+    <View className="flex-1 bg-[#0E0C1F] px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <View>
-          <Text className="text-white text-2xl font-semibold mb-2">Artists Following</Text>
+          <Text className="text-white text-2xl font-semibold mb-2">
+            Artists Following
+          </Text>
           <Text className="text-gray-400">8 artists following</Text>
         </View>
       </View>
@@ -44,10 +102,13 @@ export default function ArtistsFollowingScreen() {
         data={artists}
         keyExtractor={(item) => item.id}
         numColumns={3}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
         renderItem={({ item }) => (
           <TouchableOpacity className="items-center p-2 flex-1">
-            <Image source={{ uri: item.image }} className="w-20 h-20 rounded-full mb-2" />
+            <Image
+              source={{ uri: item.image }}
+              className="w-20 h-20 rounded-full mb-2"
+            />
             <Text className="text-white text-center">{item.name}</Text>
           </TouchableOpacity>
         )}

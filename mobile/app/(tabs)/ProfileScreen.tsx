@@ -1,83 +1,109 @@
-import React, { useContext } from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { SettingsContext } from '@/context/SettingsContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigate } from '@/hooks/useNavigate';
+import { SettingsContext } from "@/context/SettingsContext";
+import { useNavigate } from "@/hooks/useNavigate";
+import React, { useContext } from "react";
+import { Image, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/Ionicons";
+
+// Import các component tùy chỉnh cần thiết
+import LibraryItemButton from "@/components/button/LibraryItemButton";
+import CustomButton from "@/components/custom/CustomButton";
+import SettingItem from "@/components/items/SettingItem";
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
   const { navigate } = useNavigate();
 
   return (
-    <SafeAreaView className="flex-1 bg-black p-6">
-      <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-white text-2xl font-bold">My Profile</Text>
-        <TouchableOpacity
-          className="bg-gray-700 rounded-full px-4 py-1"
-          onPress={() => navigate('EditProfile')}
-        >
-          <Text className="text-white font-semibold">Edit</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View className="items-center mb-6">
-        <Image
-          source={{ uri: 'https://images.dog.ceo/breeds/pug/n02110958_10076.jpg' }}
-          className="w-24 h-24 rounded-full mb-4 border-4 border-white"
+    <SafeAreaView className="flex-1 bg-[#0E0C1F] p-6">
+      {/* Tiêu đề và nút Edit */}
+      <View className="flex-row justify-between items-center mb-4">
+        <Text className="text-white text-3xl font-bold">Profile</Text>
+        <CustomButton
+          title="Edit"
+          onPress={() => navigate("EditProfile")}
+          iconName="pencil"
         />
-        <Text className="text-white text-xl font-semibold">...</Text>
       </View>
 
-      <View className="mb-6">
-        <Text className="text-gray-400 mb-1">Email</Text>
+      {/* Ảnh đại diện và tên */}
+      <View className="items-center my-4">
+        <Image
+          source={{
+            uri: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+          }}
+          className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-xl"
+        />
+        <Text className="text-white text-2xl font-bold">...</Text>
+      </View>
+
+      {/* Thông tin liên hệ */}
+      <View className="my-4">
+        <View className="flex-row items-center mb-1">
+          <Icon
+            name="mail-outline"
+            size={20}
+            color="#9CA3AF"
+            className="mr-2"
+          />
+          <Text className="text-gray-400">Email</Text>
+        </View>
         <Text className="text-white mb-3">...</Text>
 
-        <Text className="text-gray-400 mb-1">Phone Number</Text>
+        <View className="flex-row items-center mb-1">
+          <Icon
+            name="call-outline"
+            size={20}
+            color="#9CA3AF"
+            className="mr-2"
+          />
+          <Text className="text-gray-400">Phone Number</Text>
+        </View>
         <Text className="text-white">...</Text>
       </View>
 
-      <View className="flex-row justify-between mb-6">
-        <View className="bg-gray-900 rounded-lg p-4 flex-1 mr-2 items-center">
-          <Icon name="heart" size={24} color="white" />
-          <Text className="text-white font-semibold mt-2">... songs</Text>
-        </View>
-        <View className="bg-gray-900 rounded-lg p-4 flex-1 mx-1 items-center">
-          <Icon name="list" size={24} color="white" />
-          <Text className="text-white font-semibold mt-2">... playlists</Text>
-        </View>
-        <View className="bg-gray-900 rounded-lg p-4 flex-1 ml-2 items-center">
-          <Icon name="person" size={24} color="white" />
-          <Text className="text-white font-semibold mt-2">... artists</Text>
-        </View>
+      {/* Các nút Thư viện (Library) */}
+      <View className="flex-row justify-between my-4">
+        <LibraryItemButton
+          title="... Songs"
+          icon="favorite"
+          onPress={() => navigate("LikedSongsScreen")}
+          color="#ffb5b5"
+        />
+        <LibraryItemButton
+          title="... Playlists"
+          icon="list"
+          onPress={() => navigate("PlaylistsScreen")}
+          color="#82d8ff"
+        />
+        <LibraryItemButton
+          title="... Artists"
+          icon="person"
+          onPress={() => navigate("ArtistsFollowingScreen")}
+          color="#fff999"
+        />
       </View>
 
+      {/* Cài đặt (Settings) */}
       <View>
-        <Text className="text-white font-semibold mb-2">Settings</Text>
-        <TouchableOpacity
-          className="py-3 border-b border-gray-700"
-          onPress={() => navigate('MusicLanguage')}
-        >
-          <Text className="text-gray-400">
-            Music Language(s): {settings?.musicLanguages.join(', ')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="py-3 border-b border-gray-700"
-          onPress={() => navigate('StreamingQuality')}
-        >
-          <Text className="text-gray-400">
-            Streaming Quality: {settings?.streamingQuality}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="py-3 border-b border-gray-700"
-          onPress={() => navigate('DownloadQuality')}
-        >
-          <Text className="text-gray-400">
-            Download Quality: {settings?.downloadQuality}
-          </Text>
-        </TouchableOpacity>
+        <Text className="text-white font-semibold mb-2 text-2xl">Settings</Text>
+        <SettingItem
+          title={`Music Language(s): ${settings?.musicLanguages.join(", ")}`}
+          onPress={() => navigate("MusicLanguage")}
+        />
+        <SettingItem
+          title={`Streaming Quality: ${settings?.streamingQuality}`}
+          onPress={() => navigate("StreamingQuality")}
+        />
+        <SettingItem
+          title={`Download Quality: ${settings?.downloadQuality}`}
+          onPress={() => navigate("DownloadQuality")}
+        />
+        <SettingItem
+          color="red"
+          title="Log out"
+          onPress={() => navigate("Login")}
+        />
       </View>
     </SafeAreaView>
   );

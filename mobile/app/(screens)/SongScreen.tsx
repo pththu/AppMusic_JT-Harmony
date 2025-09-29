@@ -1,26 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  FlatList,
   Dimensions,
-  // ScrollView,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
-import LyricsSection from '@/components/LyricsSection';
-import ArtistsSection from '@/components/artists/ArtistsSection';
-import { useNavigate } from '@/hooks/useNavigate';
-import { useQueueStore } from '@/store/queueStore';
-import { router, useLocalSearchParams } from 'expo-router';
-import { usePlayerStore } from '@/store/playerStore';
-
-// import { RouteProp, NavigationProp } from '@react-navigation/native';
-// Chúng ta sẽ import các type cần thiết từ file navigator để đảm bảo tính nhất quán
-// import { YourLibraryStackParamList } from '../navigation/YourLibraryStackNavigator';
+import LyricsSection from "@/components/LyricsSection";
+import ArtistsSection from "@/components/artists/ArtistsSection";
+import { useNavigate } from "@/hooks/useNavigate";
+import { usePlayerStore } from "@/store/playerStore";
+import { useQueueStore } from "@/store/queueStore";
+import { router } from "expo-router";
 
 // Định nghĩa kiểu dữ liệu cho bài hát và nghệ sĩ ở đây để sử dụng trong file này
 interface Artist {
@@ -41,65 +36,65 @@ interface Song {
   downloadUrl?: string;
 }
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get("window").width;
 
 const upNextSongs = [
   {
-    id: '2',
-    title: 'Young',
+    id: "2",
+    title: "Young",
     artists: [
       {
-        name: 'The Chainsmokers',
+        name: "The Chainsmokers",
         image:
-          'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+          "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       },
     ],
     image:
-      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    album: 'Memories...Do Not Open',
-    itag: '251',
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+    album: "Memories...Do Not Open",
+    itag: "251",
     mimeType: 'audio/webm; codecs="opus"',
-    bitrate: '160 kbps',
-    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
-    downloadUrl: 'https://example.com/download/young.mp3',
+    bitrate: "160 kbps",
+    youtubeUrl: "https://www.youtube.com/watch?v=k_y9iN9k3yA",
+    downloadUrl: "https://example.com/download/young.mp3",
   },
   {
-    id: '3',
-    title: 'Beach House',
+    id: "3",
+    title: "Beach House",
     artists: [
       {
-        name: 'Chainsmokers - Sick',
+        name: "Chainsmokers - Sick",
         image:
-          'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+          "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       },
     ],
     image:
-      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    album: 'Sick Boy',
-    itag: '251',
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+    album: "Sick Boy",
+    itag: "251",
     mimeType: 'audio/webm; codecs="opus"',
-    bitrate: '160 kbps',
-    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
-    downloadUrl: 'https://example.com/download/beachhouse.mp3',
+    bitrate: "160 kbps",
+    youtubeUrl: "https://www.youtube.com/watch?v=k_y9iN9k3yA",
+    downloadUrl: "https://example.com/download/beachhouse.mp3",
   },
   {
-    id: '4',
-    title: 'Kills You Slowly',
+    id: "4",
+    title: "Kills You Slowly",
     artists: [
       {
-        name: 'The Chainsmokers - World',
+        name: "The Chainsmokers - World",
         image:
-          'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+          "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
       },
     ],
     image:
-      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    album: 'World War Joy',
-    itag: '251',
+      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+    album: "World War Joy",
+    itag: "251",
     mimeType: 'audio/webm; codecs="opus"',
-    bitrate: '160 kbps',
-    youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
-    downloadUrl: 'https://example.com/download/killsyouslowly.mp3',
+    bitrate: "160 kbps",
+    youtubeUrl: "https://www.youtube.com/watch?v=k_y9iN9k3yA",
+    downloadUrl: "https://example.com/download/killsyouslowly.mp3",
   },
 ];
 
@@ -127,16 +122,16 @@ export default function SongScreen() {
   };
 
   const handleSelectQueue = () => {
-    const { setNowPlaying, setQueue } = useQueueStore.getState(); 
+    const { setNowPlaying, setQueue } = useQueueStore.getState();
     setNowPlaying(song);
     setQueue(upNextSongs);
-    navigate('QueueScreen');
-  }
+    navigate("QueueScreen");
+  };
 
   const handleSelectInfo = (song: Song) => {
     console.log("song", song);
-    navigate('SongInfoScreen', { song: JSON.stringify(song) });
-  }
+    navigate("SongInfoScreen", { song: JSON.stringify(song) });
+  };
 
   const renderUpNextItem = ({ item }: { item: Song }) => (
     <View className="flex-row items-center py-2 border-b border-gray-700">
@@ -144,7 +139,7 @@ export default function SongScreen() {
       <View className="flex-1 ml-3">
         <Text className="text-white font-bold text-base">{item.title}</Text>
         <Text className="text-gray-400 text-sm">
-          {item.artists?.map(a => a.name).join(', ')}
+          {item.artists?.map((a) => a.name).join(", ")}
         </Text>
       </View>
       <TouchableOpacity>
@@ -179,8 +174,8 @@ export default function SongScreen() {
             style={{ width: screenWidth - 32, height: screenWidth - 32 }}
             className="rounded-xl"
             resizeMode="cover"
-            onError={e => {
-              console.log('Image load error:', e.nativeEvent.error);
+            onError={(e) => {
+              console.log("Image load error:", e.nativeEvent.error);
             }}
           />
           <View className="absolute inset-0 justify-center pb-6 items-center bg-opacity-50 rounded-xl px-4">
@@ -188,7 +183,7 @@ export default function SongScreen() {
               {song.title}
             </Text>
             <Text className="text-gray-300 text-lg mb-1 text-center">
-              {song.artists?.map(a => a.name).join(', ')}
+              {song.artists?.map((a) => a.name).join(", ")}
             </Text>
           </View>
         </View>
@@ -199,7 +194,7 @@ export default function SongScreen() {
         <View>
           <Text className="text-white text-2xl font-bold">{song.title}</Text>
           <Text className="text-gray-400 text-base">
-            {song.artists?.map(a => a.name).join(', ')}
+            {song.artists?.map((a) => a.name).join(", ")}
           </Text>
         </View>
         <View className="flex-row">
@@ -238,7 +233,7 @@ export default function SongScreen() {
           onPress={togglePlayPause}
         >
           <Icon
-            name={isPlaying ? 'pause' : 'play-arrow'}
+            name={isPlaying ? "pause" : "play-arrow"}
             size={40}
             color="black"
           />
@@ -263,9 +258,7 @@ export default function SongScreen() {
       {/* Up Next Header */}
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-white text-lg font-bold">Up Next</Text>
-        <TouchableOpacity
-          onPress={() => handleSelectQueue()}
-        >
+        <TouchableOpacity onPress={() => handleSelectQueue()}>
           <Text className="text-gray-400 text-base">Queue</Text>
         </TouchableOpacity>
       </View>
@@ -284,7 +277,7 @@ export default function SongScreen() {
       <FlatList
         data={upNextSongs}
         renderItem={renderUpNextItem}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         ListHeaderComponent={ListHeader}
         ListFooterComponent={ListFooter}
         showsVerticalScrollIndicator={false}
