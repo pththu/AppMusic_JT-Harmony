@@ -1,22 +1,14 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import { router, useLocalSearchParams } from "expo-router";
+import React from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
   Linking,
-} from 'react-native';
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 // import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-
-// Sửa lỗi: Import các type từ file navigator thay vì định nghĩa lại
-// import { YourLibraryStackParamList } from '../navigation/YourLibraryStackNavigator';
-
-// type SongInfoScreenRouteProp = RouteProp<
-//   YourLibraryStackParamList,
-//   'SongInfoScreen'
-// >;
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 // Bổ sung: Định nghĩa lại type Song để sử dụng nội bộ trong file này
 interface Song {
@@ -37,7 +29,7 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => (
   <View className="flex-row mb-4">
     <Text className="text-gray-400 text-lg w-28">{label}</Text>
     <Text className="text-white text-base flex-1">
-      {value || 'Không có thông tin'}
+      {value || "Không có thông tin"}
     </Text>
   </View>
 );
@@ -60,9 +52,6 @@ const LinkRow = ({ label, url }: { label: string; url?: string }) => {
 };
 
 export default function SongInfoScreen() {
-  // const route = useRoute<SongInfoScreenRouteProp>();
-  // const navigation = useNavigation();
-  // const { song } = route.params;
   const params = useLocalSearchParams();
   console.log(params.song);
   const song = JSON.parse(params.song as string);
@@ -92,7 +81,7 @@ export default function SongInfoScreen() {
         {/* General Info */}
         <InfoRow
           label="Artists"
-          value={typedSong.artists?.map(a => a.name).join(', ')}
+          value={typedSong.artists?.map((a) => a.name).join(", ")}
         />
         <InfoRow label="Album" value={typedSong.album} />
         <InfoRow label="Itag" value={typedSong.itag} />

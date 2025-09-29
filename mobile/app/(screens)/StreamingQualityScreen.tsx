@@ -1,15 +1,16 @@
-import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { SettingsContext } from '@/context/SettingsContext';
+import { SettingsContext } from "@/context/SettingsContext";
+import { router } from "expo-router"; // Import router
+import React, { useContext } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 const qualities = [
-  { label: 'Auto', description: 'Based on Network Speed' },
-  { label: 'HD', description: '320/256 kbps' },
-  { label: 'High', description: '128 kbps' },
-  { label: 'Medium', description: '64 kbps' },
+  { label: "Auto", description: "Based on Network Speed" },
+  { label: "HD", description: "320/256 kbps" },
+  { label: "High", description: "128 kbps" },
+  { label: "Medium", description: "64 kbps" },
 ];
 
-export default function StreamingQualityScreen({ navigation }: { navigation: any }) {
+export default function StreamingQualityScreen() {
   const settings = useContext(SettingsContext);
 
   const handleSelect = (quality: string) => {
@@ -18,10 +19,12 @@ export default function StreamingQualityScreen({ navigation }: { navigation: any
   };
 
   return (
-    <View className="flex-1 bg-black p-6">
+    <View className="flex-1 bg-[#0E0C1F] p-6">
       <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-white text-xl font-bold">Select Streaming Quality</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <Text className="text-white text-xl font-bold">
+          Select Streaming Quality
+        </Text>
+        <TouchableOpacity onPress={() => router.back()}>
           <Text className="text-white text-lg">X</Text>
         </TouchableOpacity>
       </View>
@@ -48,7 +51,7 @@ export default function StreamingQualityScreen({ navigation }: { navigation: any
 
       <TouchableOpacity
         className="bg-gray-700 rounded-md py-3 mt-6 items-center"
-        onPress={() => navigation.goBack()}
+        onPress={() => router.back()}
       >
         <Text className="text-white font-semibold text-lg">Done</Text>
       </TouchableOpacity>
