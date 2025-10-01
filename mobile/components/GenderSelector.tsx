@@ -9,14 +9,14 @@ interface GenderSelectorProps {
 
 export default function GenderSelector({ selectedGender, onSelectGender }: GenderSelectorProps) {
   const genders = [
-    { key: 'Male', icon: 'person', label: 'Male' },
-    { key: 'Female', icon: 'person', label: 'Female' },
-    { key: 'Other', icon: 'person-outline', label: 'Other' },
+    { key: 'Male', icon: 'person', label: 'Nam' },
+    { key: 'Female', icon: 'person', label: 'Nữ' },
+    // { key: 'Other', icon: 'person-outline', label: 'Khác' },
   ];
 
   return (
     <View className="mb-4">
-      <Text className="text-gray-300 mb-2">Gender</Text>
+      <Text className="text-gray-300 mb-2">Giới tính</Text>
       <View className="flex-row justify-around">
         {genders.map((gender) => (
           <TouchableOpacity

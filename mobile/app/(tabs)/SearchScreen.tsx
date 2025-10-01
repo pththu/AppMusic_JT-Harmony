@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useNavigate } from "@/hooks/useNavigate";
 
 const trendingArtists = [
   {
@@ -223,10 +224,12 @@ const recentSearches = [
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { navigate } = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
   const [searchText, setSearchText] = useState("");
   const inputRef = useRef<TextInput>(null);
   const animation = useRef(new Animated.Value(0)).current;
+
 
   const onFocus = () => {
     setIsFocused(true);
@@ -308,10 +311,7 @@ export default function SearchScreen() {
                   name={item.name}
                   image={item.image}
                   onPress={() =>
-                    router.push({
-                      pathname: "/ArtistScreen",
-                      params: { artist: JSON.stringify(item) }
-                    })
+                    navigate("ArtistScreen", { artist: JSON.stringify(item) })
                   }
                 />
               )}
@@ -331,7 +331,7 @@ export default function SearchScreen() {
                   name={item.name}
                   color={item.color}
                   icon={item.icon}
-                  onPress={() => {}}
+                  onPress={() => { }}
                 />
               )}
             />
@@ -382,7 +382,7 @@ export default function SearchScreen() {
             />
             <CustomButton
               title="Clear history"
-              onPress={() => {}}
+              onPress={() => { }}
               className="mt-5 items-end"
             />
           </View>

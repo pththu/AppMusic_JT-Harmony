@@ -7,6 +7,7 @@ const routeMap: Record<any, any> = {
   Auth: '(auth)',
   SignUp: '(auth)/SignUpScreen',
   Login: '(auth)/LoginScreen',
+  VerifyEmail: '(auth)/VerifyEmailScreen',
 
   Main: '(tabs)/HomeScreen',
   Profile: '(tabs)/ProfileScreen',

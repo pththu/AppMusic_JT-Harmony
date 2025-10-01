@@ -33,7 +33,9 @@ export default function AuthScreen() {
       console.log('userInfor', userInfor);
       const response = await LoginWithGoogle(userInfor.data.user);
       if (!response.success) {
-        error('Lỗi đăng nhập', `${response.message}`)
+        error('Lỗi đăng nhập', `${response.message}`);
+        await GoogleSignin.signOut();
+        return;
       }
       if (response.success) {
         login(response.user, response.user.accessToken);
@@ -103,14 +105,6 @@ export default function AuthScreen() {
         >
           <Icon name="person-add" size={20} color="black" className="mr-2" />
           <Text className="text-black font-semibold text-lg">Đăng ký</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="items-center  rounded-full w-full py-4 flex-row justify-center"
-          onPress={() => GoogleSignin.signOut().then(() => console.log('User signed out!'))}
-          activeOpacity={0.7}
-        >
-          <Icon name="person-add" size={20} color="black" className="mr-2" />
-          <Text className="text-white font-semibold text-lg">Đăng xuất</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
