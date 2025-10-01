@@ -8,6 +8,9 @@ exports.authenticateToken = async (req, res, next) => {
     // Lấy token từ cookie hoặc header
     const token = req.cookies['accessToken'] || req.headers['authorization']?.split(' ')[1];
 
+    console.log("Token from cookie: ", req.cookies['accessToken']);
+    console.log("Token from header 1: ", req.headers['Authorization']?.split(' ')[1]);
+    console.log("Token from header 2: ", req.headers['authorization']?.split(' ')[1]);
     if (!token) {
       return res.status(401).json({ error: 'Access token required' });
     }

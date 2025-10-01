@@ -1,138 +1,59 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// TypeScript interfaces
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar?: string;
-  role: string;
-  permissions?: string[];
-}
-
+// interface User {
+//   id: number;
+//   username: string;
+//   email: string;
+//   password: string;
+//   accountType: string;
+//   fullName: string | null;
+//   avatarUrl?: string | null;
+//   bio: string | null;
+//   dob: string | null;
+//   gender: string | null;
+//   notificationEnabled: boolean;
+//   streamQuality: string;
+//   status: string;
+//   roleId: number;
+//   lastLogin: string;
+// }
 interface AuthState {
-  // State
-  accessToken: string | null;
-  refreshToken: string | null;
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  
-  // Actions
-  setAccessToken: (token: string) => void;
-  setRefreshToken: (token: string) => void;
-  setUser: (user: User) => void;
-  login: (accessToken: string, refreshToken: string, user: User) => void;
+  user: any | null;
+  token: string | null;
+  isLoggedIn: boolean;
+  login: (user: any, token: string) => void;
   logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
-  setLoading: (loading: boolean) => void;
-  
-  // Helper methods
-  isTokenExpired: () => boolean;
-  getUserPermissions: () => string[];
-  hasPermission: (permission: string) => boolean;
-  hasRole: (role: string) => boolean;
+  updateAccessToken: (newToken: string) => void;
+  updateUser: (user: any) => void;
 }
 
-// CÁCH 1: Sử dụng type assertion (đơn giản nhất)
-export const useAuthStore = create(
+const useAuthStore = create<AuthState>()(
   persist(
-    (set, get): AuthState => ({
-      // === STATE ===
-      accessToken: null,
-      refreshToken: null,
+    (set) => ({
       user: null,
-      isAuthenticated: false,
-      isLoading: false,
-
-      // === ACTIONS ===
-      setAccessToken: (token: string) => {
-        set({ 
-          accessToken: token,
-          isAuthenticated: !!token 
-        });
-      },
-
-      setRefreshToken: (token: string) => {
-        set({ refreshToken: token });
-      },
-
-      setUser: (user: User) => {
-        set({ user });
-      },
-
-      login: (accessToken: string, refreshToken: string, user: User) => {
+      token: null,
+      isLoggedIn: false,
+      login: (user, token) => set({ user, token, isLoggedIn: true }),
+      logout: () =>
         set({
-          accessToken,
-          refreshToken,
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-      },
-
-      logout: () => {
-        set({
-          accessToken: null,
-          refreshToken: null,
           user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-      },
-
-      updateUser: (userData: Partial<User>) => {
-        const currentUser = get().user;
-        if (currentUser) {
-          set({
-            user: { ...currentUser, ...userData }
-          });
-        }
-      },
-
-      setLoading: (loading: boolean) => {
-        set({ isLoading: loading });
-      },
-
-      // === HELPERS ===
-      isTokenExpired: (): boolean => {
-        const { accessToken } = get();
-        if (!accessToken) return true;
-
-        try {
-          const payload = JSON.parse(atob(accessToken.split('.')[1]));
-          const currentTime = Date.now() / 1000;
-          return payload.exp < currentTime;
-        } catch (error) {
-          console.error('Error checking token expiration:', error);
-          return true;
-        }
-      },
-
-      getUserPermissions: (): string[] => {
-        const { user } = get();
-        return user?.permissions || [];
-      },
-
-      hasPermission: (permission: string): boolean => {
-        const { user } = get();
-        return user?.permissions?.includes(permission) || false;
-      },
-
-      hasRole: (role: string): boolean => {
-        const { user } = get();
-        return user?.role === role;
-      },
+          token: null,
+          isLoggedIn: false
+        }),
+      updateAccessToken: (newToken) =>
+        set({ token: newToken }),
+      updateUser: (user) =>
+        set({ user }),
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
+      storage: createJSONStorage(() => AsyncStorage),
     }
   )
 );
+
+export const authStore = useAuthStore;
+export default useAuthStore;
+export type { AuthState };

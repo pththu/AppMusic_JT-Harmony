@@ -2,7 +2,7 @@
   "expo": {
     "name": "JT Harmony",
     "slug": "mobile_jt-harmony",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mobile",
@@ -40,7 +40,9 @@
       "router": {},
       "eas": {
         "projectId": "d5918968-3bf6-466a-b726-07b812636bd3"
-      }
+      },
+      "API_URL": "http://10.107.151.251:3000/api/v1/",
+      "GOOGLE_OAUTH_CLIENT_ID_APP": "145190840857-ild54e2gkkbjas6f2km11b2s156mj05c.apps.googleusercontent.com"
     }
   }
 }

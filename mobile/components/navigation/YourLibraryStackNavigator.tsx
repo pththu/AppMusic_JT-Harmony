@@ -1,11 +1,11 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 
-import DownloadsScreen from "../(screens)/DownloadsScreen";
-import QueueScreen from "../(screens)/QueueScreen";
-import SongInfoScreen from "../(screens)/SongInfoScreen";
-import SongScreen from "../(screens)/SongScreen";
-import YourLibraryScreen from "./YourLibraryScreen";
+import DownloadsScreen from "../../app/(screens)/DownloadsScreen";
+import QueueScreen from "../../app/(screens)/QueueScreen";
+import SongInfoScreen from "../../app/(screens)/SongInfoScreen";
+import SongScreen from "../../app/(screens)/SongScreen";
+import YourLibraryScreen from "../../app/(tabs)/YourLibraryScreen";
 
 // Định nghĩa kiểu dữ liệu cho một nghệ sĩ
 interface Artist {

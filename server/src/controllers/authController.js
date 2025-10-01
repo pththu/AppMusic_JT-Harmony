@@ -2,6 +2,7 @@ const { User } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { sendMail } = require('../utils/mailer');
+const { generateAccessToken, generateRefreshToken } = require('../utils/token');
 const Op = require('sequelize').Op;
 // const admin = require("../configs/firebase");
 
@@ -96,44 +97,22 @@ exports.login = async (req, res) => {
     }
 
     // Generate token
-    const accessToken = jwt.sign(
-      { id: user.id, username: user.username },
-      process.env.ACCESS_TOKEN_SECRET || 'secret',
-      { expiresIn: process.env.ACCESS_TOKEN_LIFE || '7d' }
-    );
-
-    const refreshToken = jwt.sign(
-      { id: user.id, username: user.username },
-      process.env.REFRESH_TOKEN_SECRET || 'secret',
-      { expiresIn: process.env.REFRESH_TOKEN_LIFE || '30d' }
-    );
+    const accessToken = generateAccessToken(user.id, user.username);
+    const refreshToken = generateRefreshToken(user.id, user.username);
 
     // cookie
     res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
-    // Update token in database
-    await User.update(
-      {
-        accessToken,
-        refreshToken,
-        expiry: jwt.decode(refreshToken).exp,
-        lastLogin: new Date()
-      },
-      { where: { id: user.id } }
-    );
+    user.accessToken = accessToken;
+    user.refreshToken = refreshToken;
+    user.expiry = jwt.decode(refreshToken).exp;
+    user.lastLogin = new Date();
+    await user.save();
 
     res.json({
       message: "Login successful",
       statusCode: 200,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email
-      },
-      token: {
-        accessToken,
-        refreshToken
-      }
+      user
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -143,23 +122,78 @@ exports.login = async (req, res) => {
 
 exports.loginWithGoogle = async (req, res) => {
   try {
-    const { token } = req.body;
+    const userInfor = req.body;
+    console.log('userInfor', userInfor);
+    const existingUser = await User.findOne({ where: { email: userInfor?.email } });
+    if (existingUser) {
+      console.log(existingUser);
+      if (existingUser.accountType !== 'google') {
+        return res.json({
+          message: "Tài khoản này đăng nhập bằng phương thức khác",
+          statusCode: 200,
+          success: false
+        });
+      }
+      // Generate token
+      const accessToken = generateAccessToken(existingUser.id, existingUser.username);
+      const refreshToken = generateRefreshToken(existingUser.id, existingUser.username);
 
-    // verify Firebase token
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    const { uid, email, name } = decodedToken;
+      // cookie
+      res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
-    // Tạo JWT app riêng
-    const appToken = jwt.sign(
-      { uid, email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+      // Update token in database
+      existingUser.accessToken = accessToken;
+      existingUser.refreshToken = refreshToken;
+      existingUser.expiry = jwt.decode(refreshToken).exp;
+      existingUser.lastLogin = new Date();
+      await existingUser.save();
 
-    res.json({ success: true, token: appToken, user: { uid, email, name } });
+      return res.json({
+        message: "Đăng nhập thành công",
+        statusCode: 200,
+        success: true,
+        user: existingUser
+      });
+    }
+
+
+    // username random: user + 4 number random
+    const passwordHash = await bcrypt.hash('11111111', 10);
+    const user = await User.create({
+      username: `user${Math.floor(1000 + Math.random() * 9000)}`,
+      email: userInfor.email,
+      password: passwordHash,
+      fullName: userInfor.name,
+      avatarUrl: userInfor.photo,
+      emailVerified: true,
+      notificationEnabled: true,
+      roleId: 2, // user,
+      accountType: 'google',
+    });
+
+    user.accessToken = generateAccessToken(user.id, user.username);
+    user.refreshToken = generateRefreshToken(user.id, user.username);
+    user.expiry = jwt.decode(user.refreshToken).exp;
+    user.lastLogin = new Date();
+    await user.save();
+
+    sendMail(
+      user.email,
+      'Welcome to JT-Harmony',
+      `Hello ${user.username}, welcome to JT-Harmony!`,
+      `<h1>Hello ${user.fullName}, welcome to JT-Harmony!</h1>`
+    )
+
+    res.status(201).json({
+      message: 'Mật khẩu khởi tạo là 1111111. Vui lòng đổi mật khẩu sau khi đăng nhập',
+      user,
+      success: true,
+    });
+
+
   } catch (err) {
     console.error(err);
-    res.status(401).json({ success: false, message: "Invalid token" });
+    res.status(401).json({ success: false, message: "Token không hợp lệ" });
   }
 };
 
@@ -193,7 +227,7 @@ exports.logout = async (req, res) => {
     res.clearCookie("accessToken");
     await user.save();
 
-    return res.status(200).json({ message: "Logged out" });
+    return res.status(200).json({ message: "Logged out", statusCode: 200 });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

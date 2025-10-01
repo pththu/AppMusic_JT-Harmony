@@ -4,3 +4,4 @@ server/.env.development
 frontendmusic/node_modules/
 
 mobile/node_modules/
+mobile/.env

@@ -53,6 +53,22 @@ const decodeToken = async (token, secretKey) => {
   }
 }
 
+const generateAccessToken = (id, username) => {
+  return jwt.sign(
+    { id, username },
+    process.env.ACCESS_TOKEN_SECRET || 'secret',
+    { expiresIn: process.env.ACCESS_TOKEN_LIFE || '7d' }
+  );
+};
+
+const generateRefreshToken = (id, username) => {
+  return jwt.sign(
+    { id, username },
+    process.env.REFRESH_TOKEN_SECRET || 'secret',
+    { expiresIn: process.env.REFRESH_TOKEN_LIFE || '30d' }
+  );
+}
+
 const SALT_KEY = 7
 
 const REFRESH_TOKEN_SIZE = 100
@@ -62,6 +78,8 @@ module.exports = {
   generateToken,
   decodeToken,
   verifyToken,
+  generateAccessToken,
+  generateRefreshToken,
   REFRESH_TOKEN_SIZE,
   SALT_KEY
 }

@@ -22,7 +22,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = 'dark';
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 

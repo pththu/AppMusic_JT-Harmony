@@ -17,6 +17,8 @@ import {
   View,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useNavigate } from "@/hooks/useNavigate";
+import useAuthStore from "@/store/authStore";
 
 // Dữ liệu mockup đã được thêm image URL
 const tabs = [
@@ -133,9 +135,12 @@ const avatarImages = [
 ];
 
 export default function HomeScreen() {
+
+  const { navigate } = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("forYou");
   const animation = useRef(new Animated.Value(0)).current;
-  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  // const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
@@ -199,16 +204,16 @@ export default function HomeScreen() {
 
   const tabUnderlineLeft = tabsLayouted
     ? animation.interpolate({
-        inputRange: tabs.map((_, i) => i),
-        outputRange: tabPositions,
-      })
+      inputRange: tabs.map((_, i) => i),
+      outputRange: tabPositions,
+    })
     : 0;
 
   const tabUnderlineWidth = tabsLayouted
     ? animation.interpolate({
-        inputRange: tabs.map((_, i) => i),
-        outputRange: tabWidths,
-      })
+      inputRange: tabs.map((_, i) => i),
+      outputRange: tabWidths,
+    })
     : 0;
 
   return (
@@ -222,7 +227,7 @@ export default function HomeScreen() {
             transform: [{ translateY: greetingTranslateY }],
           }}
         >
-          Hi, ...
+          Hi, {user?.fullName || "User"} 👋
         </Animated.Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">
@@ -233,7 +238,8 @@ export default function HomeScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("Profile", { screen: "ProfileMain" })
+              // navigation.navigate("Profile", { screen: "ProfileMain" })
+              navigate("Profile")
             }
           >
             {avatarImage ? (
@@ -263,11 +269,10 @@ export default function HomeScreen() {
               className="mr-5 py-2"
             >
               <Text
-                className={`text-xl font-bold ${
-                  activeTab === tab.id
+                className={`text-xl font-bold ${activeTab === tab.id
                     ? "text-white font-bold"
                     : "text-gray-500 font-normal"
-                }`}
+                  }`}
               >
                 {tab.label}
               </Text>
@@ -301,7 +306,7 @@ export default function HomeScreen() {
               <Text className="text-gray-300">{forYouData[0].content}</Text>
               <CustomButton
                 title="Play"
-                onPress={() => {}}
+                onPress={() => { }}
                 className="mt-2 bg-green-500 px-4 py-2 rounded-full"
               />
             </View>
@@ -313,7 +318,7 @@ export default function HomeScreen() {
               <Text className="text-white text-lg font-bold">
                 {forYouData[1].title}
               </Text>
-              <CustomButton title="See more" onPress={() => {}} />
+              <CustomButton title="See more" onPress={() => { }} />
             </View>
             <FlatList
               horizontal
@@ -323,7 +328,7 @@ export default function HomeScreen() {
                 <AlbumItem
                   title={item.title}
                   image={item.image}
-                  onPress={() => {}}
+                  onPress={() => { }}
                 />
               )}
               showsHorizontalScrollIndicator={false}
@@ -343,7 +348,7 @@ export default function HomeScreen() {
                 <AlbumItem
                   title={item.title}
                   image={item.image}
-                  onPress={() => {}}
+                  onPress={() => { }}
                 />
               )}
               showsHorizontalScrollIndicator={false}
@@ -375,8 +380,8 @@ export default function HomeScreen() {
               title={item.title}
               subtitle={item.artist || ""}
               image={item.image}
-              onPress={() => {}}
-              onOptionsPress={() => {}}
+              onPress={() => { }}
+              onOptionsPress={() => { }}
             />
           ))}
         </ScrollView>

@@ -9,10 +9,34 @@ import Icon from "react-native-vector-icons/Ionicons";
 import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
+import useAuthStore from "@/store/authStore";
+import { Logout } from "@/routes/ApiRouter";
+import { useCustomAlert } from '@/hooks/useCustomAlert';
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
+  const user = useAuthStore(state => state.user);
   const { navigate } = useNavigate();
+  const { success } = useCustomAlert();
+  const logout = useAuthStore(state => state.logout);
+
+  const handleLogout = async () => {
+    try {
+      const response = await Logout(); // logout khỏi server -> xóa cookie
+      logout(); // logout khỏi client -> xóa store
+      if (user?.accountType === 'google') {
+        await GoogleSignin.signOut(); // logout khỏi google
+      }
+      console.log(response);
+      if (response.statusCode == 200) {
+        success('Đăng xuất thành công', '');
+        navigate('Auth');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-[#0E0C1F] p-6">
@@ -102,7 +126,7 @@ export default function ProfileScreen() {
         <SettingItem
           color="red"
           title="Log out"
-          onPress={() => navigate("Login")}
+          onPress={() => handleLogout()}
         />
       </View>
     </SafeAreaView>

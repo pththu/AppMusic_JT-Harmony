@@ -4,7 +4,7 @@ import SongScreen from "@/app/(screens)/SongScreen";
 import { useRouter } from "expo-router";
 
 const routeMap: Record<any, any> = {
-  Auth: '(auth)/AuthScreen',
+  Auth: '(auth)',
   SignUp: '(auth)/SignUpScreen',
   Login: '(auth)/LoginScreen',
 

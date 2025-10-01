@@ -200,7 +200,6 @@ const browseCategories = [
   { id: "3", name: "POP", color: "#FF1493", icon: "heart" },
   { id: "4", name: "HIP-HOP", color: "#8A2BE2", icon: "headset" },
   { id: "5", name: "DANCE", color: "#FFD700", icon: "body" },
-  { id: "6", name: "COUNTRY", color: "#32CD32", icon: "guitar" },
   { id: "7", name: "INDIE", color: "#FF8C00", icon: "star" },
   { id: "8", name: "JAZZ", color: "#00BFFF", icon: "radio" },
 ];
