@@ -103,14 +103,20 @@
 // }
 
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 
 import Colors from '@/constants/colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import TabBar from '@/components/tabBar/TabBar';
+import useAuthStore from '@/store/authStore';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const isLoggedIn = useAuthStore(state => state.isLoggedIn);
+
+  if (!isLoggedIn) {
+    return <Redirect href="/(auth)" />;
+  }
 
   return (
     <Tabs

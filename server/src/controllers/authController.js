@@ -8,18 +8,30 @@ const Op = require('sequelize').Op;
 
 exports.register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, dob, gender } = req.body;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    console.log({ username, email, password });
+    console.log({ username, email, password, dob, gender });
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !dob) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    console.log(1);
+    
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: 'Invalid email format' });
     }
-
+    
+    console.log(2);
+    /**
+     * kiểm tra dob có hợp lệ không
+     * năm từ 1900 đến năm hiện tại - 5
+    */
+   if (dob && (dob < new Date('1900-01-01') || dob > new Date(new Date().getFullYear() - 5, 11, 31))) {
+     return res.status(400).json({ message: 'Invalid date of birth' });
+    }
+    
+    console.log(3);
     const existing = await User.findOne(
       {
         where:
@@ -31,13 +43,16 @@ exports.register = async (req, res) => {
         }
       }
     );
+    console.log(4);
     if (existing) {
       return res.status(409).json({ message: 'Email or username already in use' });
     }
-
+    
+    console.log(5);
     const otp = Math.floor(100000 + Math.random() * 900000);
     console.log(otp);
-
+    
+    console.log(6);
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({
       username: username.toLowerCase(),
@@ -48,7 +63,9 @@ exports.register = async (req, res) => {
       roleId: 2, // user,
       otp,
       expireOtp: Date.now() + 10 * 60 * 1000, // 10 minutes
-      accountType: 'local'
+      accountType: 'local',
+      gender,
+      dob: dob
     });
 
     sendMail(
@@ -62,7 +79,8 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       message: 'User registered successfully',
-      data: user
+      data: user,
+      success: true,
     });
   } catch (err) {
     console.error('Register error:', err);
