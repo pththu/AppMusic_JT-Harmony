@@ -36,12 +36,12 @@ const setupRoutes = () => {
   // PUBLIC ROUTES
   const publicRoutes = [
     'auth',      // Login/register
-    'roles'      // Admin routes
+    'roles',      // Admin routes
+    'users'     // Quản lý profile user
   ]
 
   // PROTECTED ROUTES - Bắt buộc phải đăng nhập
   const protectedRoutes = [
-    'users',     // Quản lý profile user
     'favorites',     // Yêu thích
     'follows',       // Theo dõi
     'history',       // Lịch sử nghe nhạc
@@ -75,8 +75,8 @@ setupRoutes();
 // Start server
 async function startServer() {
   try {
-    await sequelize.sync()
-    console.log('✅ Database synchronized successfully')
+    // await sequelize.sync()
+    // console.log('✅ Database synchronized successfully')
 
     server.listen(process.env.PORT || 3000, () => {
       console.log(`🎶 Music Server is running at http://localhost:${process.env.PORT || 8000}`)

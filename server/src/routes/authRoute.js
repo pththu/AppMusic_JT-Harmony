@@ -6,7 +6,7 @@ const { authenticateToken } = require('../middlewares/authentication');
 // Public routes
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.post('/login-google', authController.loginWithGoogle);
+router.post('/google-login', authController.loginWithGoogle);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/reset-password', authController.resetPassword);
 router.post('/verify-otp', authController.verifyOtpEmail);
