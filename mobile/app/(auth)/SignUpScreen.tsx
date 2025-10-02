@@ -53,7 +53,7 @@ export default function SignUpScreen() {
       }
 
       success("Thành công", "Đăng ký tài khoản thành công! Chúng tôi đã gửi một email xác nhận đến bạn, vui lòng kiểm tra hộp thư.");
-      navigate("VerifyEmail", { email: JSON.stringify(email) });
+      navigate("VerifyEmail", { email: JSON.stringify(email), next: "Login" });
     } catch (error) {
       if (error.response) {
         error("Lỗi đăng kí", error.response.data.message);

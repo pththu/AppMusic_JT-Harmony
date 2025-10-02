@@ -58,7 +58,7 @@ export default function ProfileScreen() {
           }}
           className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-xl"
         />
-        <Text className="text-white text-2xl font-bold">{user.fullName || user.username}</Text>
+        <Text className="text-white text-2xl font-bold">{user?.fullName || user?.username}</Text>
       </View>
 
       {/* Thông tin liên hệ */}
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
           />
           <Text className="text-gray-400">Email</Text>
         </View>
-        <Text className="text-white mb-3">{user.email}</Text>
+        <Text className="text-white mb-3">{user?.email}</Text>
 
         <View className="flex-row items-center mb-1">
           <Icon
@@ -83,7 +83,7 @@ export default function ProfileScreen() {
           />
           <Text className="text-gray-400">Tiểu sử</Text>
         </View>
-        <Text className="text-white">{user.bio}</Text>
+        <Text className="text-white">{user?.bio}</Text>
       </View>
 
       {/* Các nút Thư viện (Library) */}

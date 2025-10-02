@@ -207,7 +207,7 @@ export default function HomeScreen() {
             transform: [{ translateY: greetingTranslateY }],
           }}
         >
-          Hi, {user.fullName || user.username} 👋
+          Hi, {user?.fullName || user?.username} 👋
         </Animated.Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">

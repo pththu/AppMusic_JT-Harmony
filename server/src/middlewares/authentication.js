@@ -8,8 +8,8 @@ exports.authenticateToken = async (req, res, next) => {
     // Lấy token từ cookie hoặc header
     const token = req.cookies['accessToken'] || req.headers['authorization']?.split(' ')[1];
 
-    console.log("Token from cookie: ", req.cookies['accessToken']);
-    console.log("Token from header: ", req.headers['authorization']?.split(' ')[1]);
+    // console.log("Token from cookie: ", req.cookies['accessToken']);
+    // console.log("Token from header: ", req.headers['authorization']?.split(' ')[1]);
     if (!token) {
       return res.status(401).json({ error: 'Access token required' });
     }
@@ -42,7 +42,7 @@ exports.authenticateToken = async (req, res, next) => {
 exports.authorizeRole = (req, res, next) => {
   try {
     const user = req.currentUser;
-    console.log(user);
+    // console.log(user);
     if (!user) {
       return res.status(403).json({ error: 'Forbidden' });
     }
