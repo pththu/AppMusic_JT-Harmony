@@ -42,9 +42,9 @@ export default function ProfileScreen() {
     <SafeAreaView className="flex-1 bg-[#0E0C1F] p-6">
       {/* Tiêu đề và nút Edit */}
       <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-white text-3xl font-bold">Profile</Text>
+        <Text className="text-white text-3xl font-bold">Hồ sơ</Text>
         <CustomButton
-          title="Edit"
+          title="Chỉnh sửa"
           onPress={() => navigate("EditProfile")}
           iconName="pencil"
         />
@@ -54,11 +54,11 @@ export default function ProfileScreen() {
       <View className="items-center my-4">
         <Image
           source={{
-            uri: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+            uri: user?.avatarUrl || "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
           }}
           className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-xl"
         />
-        <Text className="text-white text-2xl font-bold">...</Text>
+        <Text className="text-white text-2xl font-bold">{user.fullName || user.username}</Text>
       </View>
 
       {/* Thông tin liên hệ */}
@@ -72,24 +72,24 @@ export default function ProfileScreen() {
           />
           <Text className="text-gray-400">Email</Text>
         </View>
-        <Text className="text-white mb-3">...</Text>
+        <Text className="text-white mb-3">{user.email}</Text>
 
         <View className="flex-row items-center mb-1">
           <Icon
-            name="call-outline"
+            name="information-circle-outline"
             size={20}
             color="#9CA3AF"
             className="mr-2"
           />
-          <Text className="text-gray-400">Phone Number</Text>
+          <Text className="text-gray-400">Tiểu sử</Text>
         </View>
-        <Text className="text-white">...</Text>
+        <Text className="text-white">{user.bio}</Text>
       </View>
 
       {/* Các nút Thư viện (Library) */}
       <View className="flex-row justify-between my-4">
         <LibraryItemButton
-          title="... Songs"
+          title="... Bài hát"
           icon="favorite"
           onPress={() => navigate("LikedSongsScreen")}
           color="#ffb5b5"
@@ -101,7 +101,7 @@ export default function ProfileScreen() {
           color="#82d8ff"
         />
         <LibraryItemButton
-          title="... Artists"
+          title="... Nghệ sĩ"
           icon="person"
           onPress={() => navigate("ArtistsFollowingScreen")}
           color="#fff999"
@@ -110,22 +110,22 @@ export default function ProfileScreen() {
 
       {/* Cài đặt (Settings) */}
       <View>
-        <Text className="text-white font-semibold mb-2 text-2xl">Settings</Text>
+        <Text className="text-white font-semibold mb-2 text-2xl">Cài đặt</Text>
         <SettingItem
-          title={`Music Language(s): ${settings?.musicLanguages.join(", ")}`}
+          title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
           onPress={() => navigate("MusicLanguage")}
         />
         <SettingItem
-          title={`Streaming Quality: ${settings?.streamingQuality}`}
+          title={`Chất lượng phát trực tuyến: ${settings?.streamingQuality}`}
           onPress={() => navigate("StreamingQuality")}
         />
         <SettingItem
-          title={`Download Quality: ${settings?.downloadQuality}`}
+          title={`Chất lượng tải xuống: ${settings?.downloadQuality}`}
           onPress={() => navigate("DownloadQuality")}
         />
         <SettingItem
           color="red"
-          title="Log out"
+          title="Đăng xuất"
           onPress={() => handleLogout()}
         />
       </View>

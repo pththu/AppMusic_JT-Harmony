@@ -95,4 +95,19 @@ export const ResendOtp = async (payload) => {
   } catch (error) {
     return { message: error.message, status: "error" };
   }
-}
+};
+
+// user api
+export const UpdateProfile = async (payload) => {
+  try {
+    const response = await axiosClient.put(`/users/update-profile`, payload);
+    console.log('response.data', response.data);
+    return response.data;
+  } catch (error) {
+    return { message: error.message, status: "error" };
+  }
+};
+
+// post api
+
+// comment api

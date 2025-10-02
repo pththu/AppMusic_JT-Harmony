@@ -13,6 +13,7 @@ interface CustomTextInputProps {
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   multiline?: boolean;
   numberOfLines?: number;
+  editable?: boolean;
 }
 
 export default function CustomTextInput({
@@ -26,6 +27,7 @@ export default function CustomTextInput({
   autoCapitalize = 'none',
   multiline = false,
   numberOfLines = 1,
+  editable = true,
 }: CustomTextInputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -48,6 +50,7 @@ export default function CustomTextInput({
           autoCapitalize={autoCapitalize}
           multiline={multiline}
           numberOfLines={numberOfLines}
+          editable={editable}
         />
         {secureTextEntry && (
           <Pressable onPress={togglePasswordVisibility}>

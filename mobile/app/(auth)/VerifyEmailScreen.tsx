@@ -18,6 +18,7 @@ export default function VerifyEmailScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleVerify = async () => {
+    console.log(otp)
     if (otp.length !== 6) {
       error("Lỗi xác thực", "Vui lòng nhập đủ 6 số OTP");
       return;

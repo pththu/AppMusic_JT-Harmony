@@ -67,28 +67,35 @@ exports.updateInforUser = async (req, res) => {
   try {
     const payload = { ...req.body };
     console.log(req.user)
+    // console.log(req.currentUser)
     console.log('payload', payload);
     const user = await User.findByPk(req.user.id);
+    // console.log('user', user);
 
-    // Gắn giá trị mặc định nếu người dùng bỏ qua bước cập nhật thông tin sau khi đăng ký
     if (!payload.gender && user.gender === null) {
       payload.gender = false;
+      console.log(2);
     }
 
     if (!payload.fullName && user.fullName === null) {
+      console.log(3);
       payload.fullName = 'user' + crypto.randomBytes(2).toString('hex');
     }
 
     if (!payload.avatarUrl && user.avatarUrl === null) {
+      console.log(4);
       payload.avatarUrl = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
     }
 
-    const row = await user.update(payload);
-    console.log('row', row);
+    console.log(1)
+    await user.update(payload);
+    console.log('user', user);
+    console.log(11);
 
     return res.json({
       message: "User information updated successfully",
-      data: row
+      user,
+      success: true
     });
 
   } catch (err) {
