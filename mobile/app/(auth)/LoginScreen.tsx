@@ -1,10 +1,10 @@
 import CustomTextInput from "@/components/custom/CustomTextInput";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
-import { GetMe, Login } from "@/routes/ApiRouter";
+import { Login } from "@/routes/ApiRouter";
 import useAuthStore from "@/store/authStore";
 import React, { useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
@@ -46,12 +46,6 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
-    // if (email === "tuan@gmail.com" && password === "123456") {
-    //   console.log("Đăng nhập thành công (tạm thời)!");
-    //   // Alert.alert("Thành công", "Đăng nhập thành công (tạm thời)!");
-    //   navigate("Main"); // Điều hướng đến màn hình chính
-    //   return; // Dừng hàm tại đây, không gọi API
-    // }
     const validationMessage = validateForm();
     if (validationMessage) {
       error("Lỗi Đăng Nhập", validationMessage);
@@ -61,11 +55,13 @@ export default function LoginScreen() {
       const payload = { email, password };
       const response = await Login(payload);
       console.log(response);
-      if (response.statusCode === 200) {
-        login(response.user, response.user.accessToken);
-        success("Thành Công", "Đăng nhập thành công!");
-        navigate("Main");
+      if (!response.success) {
+        error("Lỗi Đăng Nhập", response.message || "Đăng nhập thất bại.");
+        return;
       }
+      login(response.user, response.user?.accessToken);
+      success("Thành Công", "Đăng nhập thành công!");
+      navigate("Main");
     } catch (err) {
       console.error("Login error:", err);
       // Giả sử lỗi từ server có cấu trúc { message: "..." }
@@ -118,13 +114,9 @@ export default function LoginScreen() {
         </View>
 
         {/* Tùy chọn Remember me và Forgot password? */}
-        <View className="flex-row items-center justify-between mb-8">
-          <View className="flex-row items-center">
-            <TouchableOpacity className="w-5 h-5 border border-gray-400 rounded mr-2"></TouchableOpacity>
-            <Text className="text-[#34D399]">Ghi nhớ tôi</Text>
-          </View>
-          <TouchableOpacity>
-            <Text className="text-[#34D399]">Quên mật khẩu?</Text>
+        <View className="flex-row items-center justify-center mb-8">
+          <TouchableOpacity onPress={() => navigate("ForgotPassword")}>
+            <Text className="text-[#34D399] underline">Quên mật khẩu?</Text>
           </TouchableOpacity>
         </View>
 

@@ -10,7 +10,7 @@ router.post('/google-login', authController.loginWithGoogle);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/reset-password', authController.resetPassword);
 router.post('/verify-otp', authController.verifyOtpEmail);
-router.post('/resend-otp', authController.reSendOtpEmail);
+router.post('/send-otp', authController.sendOtpEmail);
 
 // Protected routes
 router.get('/me', authenticateToken, authController.me);

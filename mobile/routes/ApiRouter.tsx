@@ -81,10 +81,41 @@ export const VerifyEmail = async (payload) => {
     return { message: error.message, status: "error" };
   }
 };
-export const ResendOtp = async (payload) => {
+// export const ResendOtp = async (payload) => {
+//   try {
+//     const { email } = payload;
+//     const response = await axiosClient.post(`/auth/resend-otp`,
+//       {
+//         email
+//       },
+//       { skipAuth: true }
+//     );
+//     console.log(response.data);
+//     return response.data;
+//   } catch (error) {
+//     return { message: error.message, status: "error" };
+//   }
+// };
+export const ResetPassword = async (payload) => {
+  try {
+    const { email, newPassword } = payload;
+    const response = await axiosClient.post(`/auth/reset-password`,
+      {
+        email,
+        newPassword
+      },
+      { skipAuth: true }
+    );
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    return { message: error.message, status: "error" };
+  }
+};
+export const SendOtpEmail = async (payload) => {
   try {
     const { email } = payload;
-    const response = await axiosClient.post(`/auth/resend-otp`,
+    const response = await axiosClient.post(`/auth/send-otp`,
       {
         email
       },
@@ -95,4 +126,19 @@ export const ResendOtp = async (payload) => {
   } catch (error) {
     return { message: error.message, status: "error" };
   }
-}
+};
+
+// user api
+export const UpdateProfile = async (payload) => {
+  try {
+    const response = await axiosClient.put(`/users/update-profile`, payload);
+    console.log('response.data', response.data);
+    return response.data;
+  } catch (error) {
+    return { message: error.message, status: "error" };
+  }
+};
+
+// post api
+
+// comment api

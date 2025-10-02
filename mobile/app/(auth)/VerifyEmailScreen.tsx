@@ -5,15 +5,14 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { VerifyEmail, ResendOtp } from "@/routes/ApiRouter";
+import { SendOtpEmail, VerifyEmail } from "@/routes/ApiRouter";
 
 export default function VerifyEmailScreen() {
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
   const params = useLocalSearchParams();
   const email = params.email ? JSON.parse(params.email as string) : "";
-  console.log("email verify", email);
-
+  const next = params.next ? params.next as string : "Auth";
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +30,9 @@ export default function VerifyEmailScreen() {
         return;
       }
       success("Thành công", "Xác thực email thành công!");
-      navigate("Login"); // Sau khi xác thực thì điều hướng về Login
+      navigate(next, {
+        email: JSON.stringify(email)
+      }); // Sau khi xác thực thì điều hướng đến trang tiếp theo
     } catch (err) {
       error("Lỗi", "Không thể xác thực, vui lòng thử lại.");
       console.log(err);
@@ -43,7 +44,7 @@ export default function VerifyEmailScreen() {
   const handleResend = async () => {
     try {
       setLoading(true);
-      const response = await ResendOtp({ email }); // API gửi lại OTP
+      const response = await SendOtpEmail({ email }); // API gửi lại OTP
       if (!response.success) {
         error("Lỗi", response.message || "Không thể gửi lại mã OTP");
         return;
@@ -58,7 +59,7 @@ export default function VerifyEmailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0E0C1F] p-8">
+    <SafeAreaView className="flex-1 items-center justify-center bg-[#0E0C1F] p-8">
       <View
         className="w-full p-8 rounded-2xl"
         style={{
