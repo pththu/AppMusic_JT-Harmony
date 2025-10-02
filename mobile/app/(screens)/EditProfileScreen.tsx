@@ -37,7 +37,7 @@ export default function EditProfileScreen() {
       const payload = {
         bio: bio || null,
         fullName: fullName || null,
-        // dob: dob || null,
+        dob: dob || null,
         gender: gender === 'Male' ? true : false,
       }
       const response = await UpdateProfile(payload);

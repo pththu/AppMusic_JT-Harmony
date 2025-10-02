@@ -1,7 +1,7 @@
 import { SettingsContext } from "@/context/SettingsContext";
 import { useNavigate } from "@/hooks/useNavigate";
 import React, { useContext } from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 
@@ -36,7 +36,11 @@ export default function ProfileScreen() {
     } catch (error) {
       console.log(error);
     }
-  }
+  };
+
+  const handleEditAvatar = () => {
+    console.log('Edit avatar pressed');
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#0E0C1F] p-6">
@@ -52,12 +56,16 @@ export default function ProfileScreen() {
 
       {/* Ảnh đại diện và tên */}
       <View className="items-center my-4">
-        <Image
-          source={{
-            uri: user?.avatarUrl || "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-          }}
-          className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-xl"
-        />
+        <Pressable className="items-center w-24 h-24 mb-4 border-4 rounded-full border-white shadow-xl"
+          onPress={() => handleEditAvatar()}
+        >
+          <Image
+            source={{
+              uri: user?.avatarUrl || "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+            }}
+            className="w-24 h-24 rounded-full"
+          />
+        </Pressable>
         <Text className="text-white text-2xl font-bold">{user?.fullName || user?.username}</Text>
       </View>
 
@@ -73,6 +81,17 @@ export default function ProfileScreen() {
           <Text className="text-gray-400">Email</Text>
         </View>
         <Text className="text-white mb-3">{user?.email}</Text>
+
+        <View className="flex-row items-center mb-1">
+          <Icon
+            name="calendar-outline"
+            size={20}
+            color="#9CA3AF"
+            className="mr-2"
+          />
+          <Text className="text-gray-400">Ngày sinh</Text>
+        </View>
+        <Text className="text-white">{new Date(user?.dob).toLocaleDateString() || 'Chưa có thông tin'}</Text>
 
         <View className="flex-row items-center mb-1">
           <Icon
