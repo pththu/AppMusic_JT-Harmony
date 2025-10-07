@@ -21,7 +21,6 @@ export default function ForgotPasswordScreen() {
     return true;
   };
 
-
   const handleForgot = async () => {
     if (!email) {
       error("Lỗi", "Vui lòng nhập email của bạn");
@@ -34,8 +33,7 @@ export default function ForgotPasswordScreen() {
     }
 
     try {
-
-      const response = await SendOtpEmail({ email });
+      const response = await SendOtpEmail({ email, facebookId: null });
       if (!response.success) {
         error("Lỗi", response.message || "Không thể gửi yêu cầu, vui lòng thử lại.");
         return;

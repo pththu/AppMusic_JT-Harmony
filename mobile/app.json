@@ -2,7 +2,7 @@
   "expo": {
     "name": "JT Harmony",
     "slug": "mobile_jt-harmony",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mobile",
@@ -23,7 +23,11 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.junia03.mobile_jtharmony"
+      "package": "com.junia03.mobile_jtharmony",
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.INTERNET"
+      ]
     },
     "web": {
       "bundler": "metro",

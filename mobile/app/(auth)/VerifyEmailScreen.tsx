@@ -24,7 +24,7 @@ export default function VerifyEmailScreen() {
 
     try {
       setLoading(true);
-      const response = await VerifyEmail({ email, otp }); // gọi API verify
+      const response = await VerifyEmail({ email, otp, facebookId: null }); // gọi API verify
       if (!response.success) {
         error("Lỗi", response.message || "Mã OTP không hợp lệ");
         return;
@@ -72,7 +72,7 @@ export default function VerifyEmailScreen() {
         }}
       >
         <Text className="text-white text-3xl font-bold mb-6 text-center">
-          Xác thực Email
+          Xác thực OTP
         </Text>
         <Text className="text-gray-300 mb-6 text-center">
           Vui lòng nhập mã OTP 6 số đã được gửi đến:{"\n"}
@@ -100,13 +100,20 @@ export default function VerifyEmailScreen() {
           </TouchableOpacity>
         </View>
 
-        <View className="flex-row justify-center mt-2">
-          <Text className="text-gray-400">Không nhận được mã? </Text>
+        <Text className="text-gray-400">Không nhận được mã? </Text>
+        <View className="flex-row justify-between mt-2">
           <TouchableOpacity onPress={handleResend} disabled={loading}>
             <Text className="text-[#34D399] font-bold ml-1">
               Gửi lại OTP
             </Text>
           </TouchableOpacity>
+          {next !== 'ResetPassword' && (
+            <TouchableOpacity onPress={() => navigate('ResetPassword')} disabled={loading}>
+              <Text className="text-[#34D399] font-bold ml-1">
+                Xác thực sau
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </SafeAreaView>

@@ -59,7 +59,7 @@ export default function LoginScreen() {
         error("Lỗi Đăng Nhập", response.message || "Đăng nhập thất bại.");
         return;
       }
-      login(response.user, response.user?.accessToken);
+      login(response.user, 'local', response.user?.accessToken);
       success("Thành Công", "Đăng nhập thành công!");
       navigate("Main");
     } catch (err) {

@@ -31,6 +31,9 @@ const routeMap: Record<any, any> = {
   QueueScreen: '(screens)/QueueScreen',
   SongInfoScreen: '(screens)/SongInfoScreen',
   SongScreen: '(screens)/SongScreen',
+  Setting: '(screens)/SettingScreen',
+  ChangePassword: '(screens)/ChangePasswordScreen',
+  UpdateEmail: '(screens)/UpdateEmailScreen',
 };
 
 export function useNavigate() {
