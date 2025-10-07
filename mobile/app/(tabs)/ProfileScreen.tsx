@@ -13,10 +13,12 @@ import useAuthStore from "@/store/authStore";
 import { Logout } from "@/routes/ApiRouter";
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { LoginManager } from "react-native-fbsdk-next";
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
   const user = useAuthStore(state => state.user);
+  const loginType = useAuthStore(state => state.loginType);
   const { navigate } = useNavigate();
   const { success } = useCustomAlert();
   const logout = useAuthStore(state => state.logout);
@@ -25,11 +27,13 @@ export default function ProfileScreen() {
     try {
       const response = await Logout(); // logout khỏi server -> xóa cookie
       logout(); // logout khỏi client -> xóa store
-      if (user?.accountType === 'google') {
+      if (loginType === 'google') {
         await GoogleSignin.signOut(); // logout khỏi google
       }
-      console.log(response);
-      if (response.statusCode == 200) {
+      if (loginType === 'facebook') {
+        LoginManager.logOut(); // logout khỏi facebook
+      }
+      if (response.success == 200) {
         success('Đăng xuất thành công', '');
         navigate('Auth');
       }
@@ -48,23 +52,26 @@ export default function ProfileScreen() {
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-white text-3xl font-bold">Hồ sơ</Text>
         <CustomButton
-          title="Chỉnh sửa"
-          onPress={() => navigate("EditProfile")}
-          iconName="pencil"
+          title="Cài đặt"
+          onPress={() => navigate("Setting")}
+          iconName="settings-sharp"
         />
       </View>
 
       {/* Ảnh đại diện và tên */}
       <View className="items-center my-4">
-        <Pressable className="items-center w-24 h-24 mb-4 border-4 rounded-full border-white shadow-xl"
+        <Pressable className="items-center w-24 h-24 mb-4 border-2 rounded-full border-white shadow-xl"
           onPress={() => handleEditAvatar()}
         >
           <Image
             source={{
               uri: user?.avatarUrl || "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
             }}
-            className="w-24 h-24 rounded-full"
+            className="w-[80px] h-[80px] rounded-full items-center"
           />
+          <View className="absolute bottom-0 right-0  p-1 rounded-full bg-black/50">
+            <Icon name="camera" size={16} color="white" />
+          </View>
         </Pressable>
         <Text className="text-white text-2xl font-bold">{user?.fullName || user?.username}</Text>
       </View>
@@ -80,7 +87,7 @@ export default function ProfileScreen() {
           />
           <Text className="text-gray-400">Email</Text>
         </View>
-        <Text className="text-white mb-3">{user?.email}</Text>
+        <Text className="text-white mb-3">{user?.email || 'Chưa có thông tin'}</Text>
 
         <View className="flex-row items-center mb-1">
           <Icon
@@ -91,7 +98,7 @@ export default function ProfileScreen() {
           />
           <Text className="text-gray-400">Ngày sinh</Text>
         </View>
-        <Text className="text-white">{new Date(user?.dob).toLocaleDateString() || 'Chưa có thông tin'}</Text>
+        <Text className="text-white my-2">{new Date(user?.dob).toLocaleDateString() || 'Chưa có thông tin'}</Text>
 
         <View className="flex-row items-center mb-1">
           <Icon
@@ -102,7 +109,7 @@ export default function ProfileScreen() {
           />
           <Text className="text-gray-400">Tiểu sử</Text>
         </View>
-        <Text className="text-white">{user?.bio}</Text>
+        <Text className="text-white">{user?.bio || '...'}</Text>
       </View>
 
       {/* Các nút Thư viện (Library) */}
@@ -129,7 +136,7 @@ export default function ProfileScreen() {
 
       {/* Cài đặt (Settings) */}
       <View>
-        <Text className="text-white font-semibold mb-2 text-2xl">Cài đặt</Text>
+        <Text className="text-white font-semibold mb-2 text-2xl">Cấu hình</Text>
         <SettingItem
           title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
           onPress={() => navigate("MusicLanguage")}

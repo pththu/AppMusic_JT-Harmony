@@ -66,31 +66,26 @@ exports.createUser = async (req, res) => {
 exports.updateInforUser = async (req, res) => {
   try {
     const payload = { ...req.body };
-    console.log(req.user)
-    // console.log(req.currentUser)
-    console.log('payload', payload);
     const user = await User.findByPk(req.user.id);
-    // console.log('user', user);
 
     if (!payload.gender && user.gender === null) {
       payload.gender = false;
-      console.log(2);
     }
 
     if (!payload.fullName && user.fullName === null) {
-      console.log(3);
       payload.fullName = 'user' + crypto.randomBytes(2).toString('hex');
     }
 
     if (!payload.avatarUrl && user.avatarUrl === null) {
-      console.log(4);
       payload.avatarUrl = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
     }
 
-    console.log(1)
+    const isUsernameExist = await User.findOne({ where: { username: payload.username } });
+    if (isUsernameExist && isUsernameExist.id !== req.user.id) {
+      return res.status(200).json({ message: 'Username đã được sử dụng', success: false });
+    };
+
     await user.update(payload);
-    console.log('user', user);
-    console.log(11);
 
     return res.json({
       message: "User information updated successfully",
@@ -106,16 +101,16 @@ exports.updateInforUser = async (req, res) => {
 // Đổi mật khẩu sau khi đăng nhập
 exports.changePassword = async (req, res) => {
   try {
-    const { oldPassword, newPassword } = req.body;
+    const { currentPassword, newPassword } = req.body;
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      return res.status(404).json({ error: 'Invalid user' });
+      return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
     }
 
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(200).json({ message: 'Thông tin xác thực không hợp lệ', success: false });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);

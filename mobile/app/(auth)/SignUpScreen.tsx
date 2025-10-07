@@ -48,7 +48,7 @@ export default function SignUpScreen() {
       console.log('userData', userData);
       const response = await Register(userData);
       if (!response.success) {
-        console.error("Lỗi đăng kí 4:", response.message);
+        error("Lỗi đăng kí", response.message);
         return;
       }
 

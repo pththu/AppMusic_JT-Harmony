@@ -1,0 +1,96 @@
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CustomTextInput from "@/components/custom/CustomTextInput";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { ChangePassword } from "@/routes/ApiRouter";
+import { router } from "expo-router";
+
+export default function ChangePasswordScreen() {
+  const { error, success } = useCustomAlert();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const validatePassword = (password: string) => {
+    if (password.length < 8) {
+      return false;
+    }
+    return true;
+  }
+
+  const handleChangePassword = async () => {
+    if (!validatePassword(newPassword)) {
+      error("Lỗi", "Mật khẩu mới phải có ít nhất 8 ký tự.");
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await ChangePassword({ currentPassword, newPassword });
+      if (!response.success) {
+        error("Lỗi", response.message || "Không thể đổi mật khẩu");
+        return;
+      }
+      success("Thành công", "Đổi mật khẩu thành công!");
+      router.back();
+    } catch (error) {
+      error("Lỗi", "Không thể đổi mật khẩu, vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-[#0E0C1F] p-8">
+      <View
+        className="w-full p-8 rounded-2xl"
+        style={{
+          backgroundColor: "#222222",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.2,
+          shadowRadius: 10,
+          elevation: 10,
+        }}
+      >
+        <Text className="text-white text-3xl font-bold mb-6 text-center">
+          Đổi mật khẩu
+        </Text>
+
+        <CustomTextInput
+          placeholder="Mật khẩu hiện tại"
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          secureTextEntry
+          iconName="lock"
+        />
+
+        <CustomTextInput
+          placeholder="Mật khẩu mới"
+          value={newPassword}
+          onChangeText={setNewPassword}
+          secureTextEntry
+          iconName="key"
+        />
+
+        <CustomTextInput
+          placeholder="Xác nhận mật khẩu mới"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          iconName="key"
+        />
+
+        <TouchableOpacity
+          className="bg-[#089b0d] rounded-full py-4 items-center mt-6"
+          activeOpacity={0.7}
+          onPress={() => handleChangePassword()}
+          disabled={loading}
+        >
+          <Text className="text-white font-bold text-lg">{loading ? "Đang xử lý..." : "Xác nhận"}</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}

@@ -125,7 +125,6 @@ export default function HomeScreen() {
 
   const { navigate } = useNavigate();
   const user = useAuthStore((state) => state.user);
-  console.log('user', user);
   const [activeTab, setActiveTab] = useState("forYou");
   const animation = useRef(new Animated.Value(0)).current;
   const greetingOpacity = useRef(new Animated.Value(0)).current;

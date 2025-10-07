@@ -11,6 +11,18 @@ const User = sequelize.define(
       unique: true,
       primaryKey: true
     },
+    facebookId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+      field: 'facebook_id'
+    },
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+      field: 'google_id'
+    },
     username: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -18,17 +30,17 @@ const User = sequelize.define(
     },
     email: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       unique: true
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: true
     },
     accountType: {
-      type: DataTypes.ENUM('local', 'google', 'facebook'),
+      type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
-      defaultValue: 'local',
+      defaultValue: ['local'],
       field: 'account_type'
     },
     fullName: {
@@ -37,7 +49,7 @@ const User = sequelize.define(
       field: 'full_name'
     },
     avatarUrl: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
       field: 'avatar_url'
     },
@@ -88,13 +100,13 @@ const User = sequelize.define(
       field: 'notification_enabled'
     },
     streamQuality: {
-      type: DataTypes.ENUM('low', 'medium', 'high'),
+      type: DataTypes.STRING, //DataTypes.ENUM('low', 'medium', 'high'),
       allowNull: true,
       defaultValue: 'low',
       field: 'stream_quality'
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive', 'banned'),
+      type: DataTypes.STRING, //DataTypes.ENUM('active', 'inactive', 'banned'),
       allowNull: true,
       defaultValue: 'active'
     },
@@ -114,7 +126,7 @@ const User = sequelize.define(
     timestamps: true,
     indexes: [
       {
-        fields: ['email']
+        fields: ['email', 'username', 'google_id', 'facebook_id', 'id', 'full_name']
       }
     ]
   }

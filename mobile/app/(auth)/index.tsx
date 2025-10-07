@@ -1,24 +1,27 @@
 import { useNavigate } from '@/hooks/useNavigate';
-import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { GoogleSignin, } from '@react-native-google-signin/google-signin';
 import { ENV } from '@/config/env';
-import { LoginWithGoogle } from '@/routes/ApiRouter';
+import { LoginWithFacebook, LoginWithGoogle } from '@/routes/ApiRouter';
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import useAuthStore from '@/store/authStore';
+import { Settings, LoginManager, Profile, AccessToken } from 'react-native-fbsdk-next';
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
 });
+Settings.setAppID(ENV.FACEBOOK_APP_ID);
+Settings.initializeSDK();
 
 export default function AuthScreen() {
 
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
+  const [loading, setLoading] = useState(false);
   const login = useAuthStore(state => state.login);
 
   const handleLoginWithGoogle = async () => {
@@ -27,6 +30,7 @@ export default function AuthScreen() {
       showPlayServicesUpdateDialog: true
     });
 
+    const loginType = 'google';
     try {
       await GoogleSignin.hasPlayServices();
       const userInfor = await GoogleSignin.signIn();
@@ -38,7 +42,7 @@ export default function AuthScreen() {
         return;
       }
       if (response.success) {
-        login(response.user, response.user.accessToken);
+        login(response.user, loginType, response.user.accessToken);
         success('Đăng nhập thành công', `${response.message}`);
         navigate('Main');
       }
@@ -47,8 +51,44 @@ export default function AuthScreen() {
     }
   };
 
-  const handleLoginWithFacebook = () => {
+  const handleLoginWithFacebook = async () => {
     console.log("Login with Facebook");
+    const loginType = 'facebook';
+    try {
+      console.log(2)
+      const result = await LoginManager.logInWithPermissions(['public_profile']);
+      console.log(result);
+      console.log(1)
+      if (result.isCancelled) {
+        console.log('Login cancelled');
+      } else {
+        const data = await AccessToken.getCurrentAccessToken();
+        if (!data) {
+          console.log('Failed to get access token');
+          return;
+        }
+
+        console.log('Access token:', data.accessToken.toString());
+        console.log(3)
+        setTimeout(async () => {
+          const profile = await Profile.getCurrentProfile();
+          if (profile) {
+            console.log('profile', profile);
+            const response = await LoginWithFacebook(profile);
+            if (!response.success) {
+              error('Lỗi đăng nhập', `${response.message}`);
+              LoginManager.logOut();
+              return;
+            }
+            success('Đăng nhập thành công', `${response.message}`);
+            login(response.user, loginType, response.user.accessToken);
+            navigate('Main');
+          }
+        }, 1000);
+      } 
+    } catch (error) {
+      console.log('Login fb fail with error: ' + error);
+    }
   };
 
   return (
