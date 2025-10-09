@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -225,6 +226,7 @@ const recentSearches = [
 export default function SearchScreen() {
   const router = useRouter();
   const { navigate } = useNavigate();
+  const colorScheme = useColorScheme();
   const [isFocused, setIsFocused] = useState(false);
   const [searchText, setSearchText] = useState("");
   const inputRef = useRef<TextInput>(null);
@@ -252,7 +254,7 @@ export default function SearchScreen() {
 
   const containerBackgroundColor = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: ["#000", "#121212"],
+    outputRange: [colorScheme === "dark" ? "#000" : "#fff", colorScheme === "dark" ? "#121212" : "#f5f5f5"],
   });
 
   const clearSearch = () => {
@@ -266,19 +268,19 @@ export default function SearchScreen() {
       style={{ backgroundColor: containerBackgroundColor }}
     >
       <SafeAreaView className="flex-1">
-        <View className="flex-row bg-gray-800 mx-3 rounded-lg px-3 items-center h-10 shadow-lg shadow-black/30">
+        <View className={`flex-row ${colorScheme === "dark" ? "bg-gray-800" : "bg-white"} mx-3 rounded-lg px-3 items-center shadow-lg ${colorScheme === "dark" ? "shadow-black/30" : "shadow-gray-300/30 border border-black"}`}>
           {isFocused ? (
             <TouchableOpacity onPress={onBlur} className="mr-2">
-              <Icon name="arrow-back" size={20} color="#888" />
+              <Icon name="arrow-back" size={20} color={colorScheme === "dark" ? "#888" : "#000"} />
             </TouchableOpacity>
           ) : (
-            <Icon name="search" size={20} color="#888" className="mr-2" />
+            <Icon name="search" size={20} color={colorScheme === "dark" ? "#888" : "#000"} className="mr-2" />
           )}
           <TextInput
             ref={inputRef}
-            className="flex-1 text-white text-base h-full"
+            className={`flex-1 ${colorScheme === "dark" ? "text-white" : "text-black"} text-base h-full`}
             placeholder="Search songs, artist, album or playlist"
-            placeholderTextColor="#888"
+            placeholderTextColor={colorScheme === "dark" ? "#888" : "#777"}
             value={searchText}
             onChangeText={setSearchText}
             onFocus={onFocus}
@@ -287,14 +289,14 @@ export default function SearchScreen() {
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={clearSearch} className="ml-2">
-              <Icon name="close-circle" size={20} color="#888" />
+              <Icon name="close-circle" size={20} color={colorScheme === "dark" ? "#888" : "#000"} />
             </TouchableOpacity>
           )}
         </View>
 
         {!isFocused ? (
           <View className="mt-5">
-            <Text className="text-white font-bold text-lg ml-3 mb-3">
+            <Text className={`text-${colorScheme === "dark" ? "white" : "black"} font-bold text-lg ml-3 mb-3`}>
               Trending artists
             </Text>
             <FlatList
@@ -317,7 +319,7 @@ export default function SearchScreen() {
               )}
             />
 
-            <Text className="text-white font-bold text-lg ml-3 mb-3">
+            <Text className={`text-${colorScheme === "dark" ? "white" : "black"} font-bold text-lg ml-3 mb-3`}>
               Browse
             </Text>
             <FlatList
@@ -338,14 +340,14 @@ export default function SearchScreen() {
           </View>
         ) : (
           <View className="mt-5 mx-3">
-            <Text className="text-white font-bold text-lg mb-3">
+            <Text className={`text-${colorScheme === "dark" ? "white" : "black"} font-bold text-lg mb-3`}>
               Recent searches
             </Text>
             <FlatList
               data={recentSearches}
               keyExtractor={(item) => item.id}
               ItemSeparatorComponent={() => (
-                <View className="h-px bg-gray-700" />
+                <View className={`h-px ${colorScheme === "dark" ? "bg-gray-700" : "bg-gray-300"}`} />
               )}
               renderItem={({ item }) => {
                 let iconName = "musical-notes";
@@ -359,22 +361,22 @@ export default function SearchScreen() {
                       <Icon
                         name={iconName}
                         size={18}
-                        color="#888"
+                        color={colorScheme === "dark" ? "#888" : "#000"}
                         className="mr-3"
                       />
                       <View>
-                        <Text className="text-white font-bold text-sm">
+                        <Text className={`text-${colorScheme === "dark" ? "white" : "black"} font-bold text-sm`}>
                           {item.title}
                         </Text>
                         {item.subtitle ? (
-                          <Text className="text-gray-400 text-xs">
+                          <Text className={`text-${colorScheme === "dark" ? "gray-400" : "gray-600"} text-xs`}>
                             {item.subtitle}
                           </Text>
                         ) : null}
                       </View>
                     </View>
                     <TouchableOpacity>
-                      <Icon name="close" size={20} color="#888" />
+                      <Icon name="close" size={20} color={colorScheme === "dark" ? "#888" : "#000"} />
                     </TouchableOpacity>
                   </TouchableOpacity>
                 );
@@ -383,6 +385,7 @@ export default function SearchScreen() {
             <CustomButton
               title="Clear history"
               onPress={() => { }}
+              variant="primary"
               className="mt-5 items-end"
             />
           </View>

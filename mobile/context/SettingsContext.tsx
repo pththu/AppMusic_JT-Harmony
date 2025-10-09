@@ -7,6 +7,8 @@ type SettingsContextType = {
   setStreamingQuality: (quality: string) => void;
   downloadQuality: string;
   setDownloadQuality: (quality: string) => void;
+  theme: 'system' | 'light' | 'dark';
+  setTheme: (theme: 'system' | 'light' | 'dark') => void;
 };
 
 export const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -15,6 +17,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [musicLanguages, setMusicLanguages] = useState<string[]>(['International', 'Tamil']);
   const [streamingQuality, setStreamingQuality] = useState<string>('HD');
   const [downloadQuality, setDownloadQuality] = useState<string>('HD');
+  const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system');
 
   return (
     <SettingsContext.Provider
@@ -25,6 +28,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         setStreamingQuality,
         downloadQuality,
         setDownloadQuality,
+        theme,
+        setTheme,
       }}
     >
       {children}

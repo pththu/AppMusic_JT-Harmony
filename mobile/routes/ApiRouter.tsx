@@ -168,8 +168,39 @@ export const SelfLockAccount = async (payload) => {
   } catch (error) {
     return { message: error.message, status: "error" };
   }
-}
+};
+export const MergeAccount = async (payload) => {
+  try {
+    const response = await axiosClient.put(`/users/merge-account`, payload);
+    console.log('response.data', response.data);
+    return response.data;
+  } catch (error) {
+    return { message: error.message, status: "error" };
+  }
+};
+export const ChangeAvatar = async (payload) => {
+  try {
+    const imageUri = payload;
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop();
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
 
-// post api
+    formData.append('image', {
+      uri: imageUri,
+      name: filename,
+      type: type
+    } as any);
 
-// comment api
+    const response = await axiosClient.post(`/users/change-avatar`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    console.log('response.data', response.data);
+    return response.data;
+  } catch (error) {
+    return { message: error.message, status: "error" };
+  }
+};

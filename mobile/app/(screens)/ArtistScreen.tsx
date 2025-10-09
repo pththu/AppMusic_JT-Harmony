@@ -80,7 +80,7 @@ export default function ArtistScreen() {
   );
 
   return (
-    <ScrollView className="flex-1  bg-[#0E0C1F]">
+    <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F]">
       {/* Container cho ảnh và overlay */}
       <View className="relative w-full h-72">
         <Image
@@ -109,7 +109,7 @@ export default function ArtistScreen() {
         {/* <Text className="text-white text-3xl font-bold mb-1">
           {artist.name}
         </Text> */}
-        <Text className="text-gray-400 mb-4">
+        <Text className="text-gray-600 dark:text-gray-400 mb-4">
           {artist.monthlyListeners} monthly listeners
         </Text>
         <View className="flex-row space-x-4 mb-4">
@@ -133,11 +133,11 @@ export default function ArtistScreen() {
           />
         </View>
         <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-white text-xl font-bold">Popular releases</Text>
+          <Text className="text-black dark:text-white text-xl font-bold">Popular releases</Text>
           <TouchableOpacity
             onPress={() => handlePressSeeMore()}
           >
-            <Text className="text-gray-400 font-semibold">See more</Text>
+            <Text className="text-gray-600 dark:text-gray-400 font-semibold">See more</Text>
           </TouchableOpacity>
         </View>
         <FlatList

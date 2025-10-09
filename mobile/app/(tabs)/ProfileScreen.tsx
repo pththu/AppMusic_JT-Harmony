@@ -1,6 +1,6 @@
 import { SettingsContext } from "@/context/SettingsContext";
 import { useNavigate } from "@/hooks/useNavigate";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -10,18 +10,73 @@ import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
 import useAuthStore from "@/store/authStore";
-import { Logout } from "@/routes/ApiRouter";
+import { ChangeAvatar, Logout } from "@/routes/ApiRouter";
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LoginManager } from "react-native-fbsdk-next";
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
   const user = useAuthStore(state => state.user);
   const loginType = useAuthStore(state => state.loginType);
   const { navigate } = useNavigate();
-  const { success } = useCustomAlert();
+  const { success, error, warning } = useCustomAlert();
   const logout = useAuthStore(state => state.logout);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      warning('Ứng dụng cần quyền truy cập thư viện ảnh!');
+      return false;
+    }
+    return true;
+  };
+
+  const pickSingleImage = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
+
+    setTimeout(() => {
+      handleUploadSingle();
+    }, 1500);
+  };
+
+  const handleUploadSingle = async () => {
+    if (!selectedImage) {
+      warning('Vui lòng chọn hình ảnh trước!');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await ChangeAvatar(selectedImage);
+
+      if (response.success) {
+        setUploadedImages([...uploadedImages, response.data]);
+        setSelectedImage(null);
+        success('Upload hình ảnh thành công!');
+      }
+    } catch (error) {
+      error('Không thể upload hình ảnh. Vui lòng thử lại!', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -42,7 +97,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleEditAvatar = () => {
+  const handleEditAvatar = async () => {
     console.log('Edit avatar pressed');
   };
 
@@ -61,7 +116,7 @@ export default function ProfileScreen() {
       {/* Ảnh đại diện và tên */}
       <View className="items-center my-4">
         <Pressable className="items-center w-24 h-24 mb-4 border-2 rounded-full border-white shadow-xl"
-          onPress={() => handleEditAvatar()}
+          onPress={() => pickSingleImage()}
         >
           <Image
             source={{

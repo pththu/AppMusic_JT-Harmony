@@ -20,7 +20,7 @@ const libraryItems = [
     title: 'Artists',
     icon: 'person',
     screen: 'ArtistsFollowingScreen',
-    color: '#fff999',
+    color: '#FFA500',
   },
   {
     id: '3',
@@ -257,8 +257,8 @@ export default function YourLibraryScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-black px-4 pt-4">
-      <Text className="text-white text-2xl font-semibold mb-4">
+    <SafeAreaView className="flex-1 bg-white dark:bg-black px-4 pt-4">
+      <Text className="text-black dark:text-white text-2xl font-semibold mb-4">
         Your Library
       </Text>
       <FlatList
@@ -270,11 +270,11 @@ export default function YourLibraryScreen() {
         className="mb-6"
       />
       <View className="flex-row justify-between items-center mb-2">
-        <Text className="text-white text-lg font-semibold">
+        <Text className="text-black dark:text-white text-lg font-semibold">
           Recently Played
         </Text>
         <TouchableOpacity>
-          <Text className="text-gray-400">See more</Text>
+          <Text className="text-gray-400 dark:text-gray-300">See more</Text>
         </TouchableOpacity>
       </View>
       <FlatList

@@ -17,7 +17,7 @@ const server = http.createServer(app);
 
 app.set("trust proxy", true);
 
-// Middleware
+// Middleware CORS - Giữ lại 1 khối cors để tránh trùng lặp và xung đột
 app.use(
     cors({
         origin: ["http://localhost:3000", "http://192.168.1.30:3000"], // Thêm địa chỉ IP của bạn
@@ -36,68 +36,66 @@ app.use(
     express.static(path.join(__dirname, "uploads", "avatars"))
 );
 
-const setupRoutes = () => {
-    // PUBLIC ROUTES
-    const publicRoutes = [
-        "auth", // Login/register
-        "roles", // Admin routes
-        "users", // Quản lý profile user
-    ];
+// --- KHAI BÁO ROUTES Ở PHẠM VI TOÀN CỤC ---
 
-    // PROTECTED ROUTES - Bắt buộc phải đăng nhập
-    // Đã hợp nhất từ hai định nghĩa protectedRoutes bị xung đột.
-    const protectedRoutes = [
-        "users", // Quản lý profile user (từ stash)
-        "favorites", // Yêu thích
-        "follows", // Theo dõi
-        "history", // Lịch sử nghe nhạc
-        "notifications", // Thông báo
-        "playlists", // Playlist cá nhân
-        "posts", // Đăng bài
-        "comments", // Comment (cần đăng nhập mới comment được)
-        "genres", // Xem thể loại nhạc
-        "artists", // Xem thông tin nghệ sĩ
-        "albums", // Xem album
-        "search", // Tìm kiếm công khai
-        "songs", // Xem bài hát (public), upload bài hát (private)
-        "recommend", // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
-        "albumSongs", // Từ stash
-        "auth", // Login/register (từ upstream - nếu cần bảo vệ một số route auth)
-        "roles", // Admin routes (từ upstream - nếu cần bảo vệ một số route roles)
-    ];
+// PUBLIC ROUTES - Các route KHÔNG cần đăng nhập
+const publicRoutes = [
+    'auth', // Login/register
+    'roles', // Admin routes (chỉ các route xem thông tin)
+    'users', // Quản lý profile user (chỉ các route xem thông tin)
+    'posts'
 
-    // Setup public routes
-    publicRoutes.forEach((route) => {
-        app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
-    });
+];
 
-    // Setup protected routes với authentication bắt buộc
-    protectedRoutes.forEach((route) => {
-        app.use(
-            `${API_PREFIX}/${route}`,
-            authenticateToken,
-            require(`./routes/${route}Route`)
-        );
-    });
-};
+// PROTECTED ROUTES - Bắt buộc phải đăng nhập
+const protectedRoutes = [
+    'favorites', // Yêu thích
+    'follows', // Theo dõi
+    'history', // Lịch sử nghe nhạc
+    'notifications', // Thông báo
+    'playlists', // Playlist cá nhân
+    'posts', // Đăng bài, Sửa, Xóa bài đăng
+    'comments', // Comment
+    'albumSongs',
+    'genres', // Xem thể loại nhạc
+    'artists', // Xem thông tin nghệ sĩ
+    'albums', // Xem album
+    'search', // Tìm kiếm công khai
+    'songs', // Xem bài hát (public)
+    'recommend', // Gợi ý (có thể không cá nhân hóa nếu chưa đăng nhập)
+];
 
-setupRoutes();
+// --- THIẾT LẬP ROUTES ---
+
+// 1. Xử lý các route public (KHÔNG cần authenticateToken)
+publicRoutes.forEach(route => {
+    app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`))
+})
+
+// 2. TẠO NGOẠI LỆ CHO GET /posts (LOAD FEED CÔNG KHAI)
+// Dòng này đảm bảo chỉ request GET /posts được xử lý mà không cần Token
+app.get(`${API_PREFIX}/posts`, require('./routes/postsRoute'));
+
+// 3. Setup protected routes với authentication bắt buộc
+protectedRoutes.forEach(route => {
+    // Vì 'posts' nằm trong protectedRoutes, nên POST/PUT/DELETE /posts vẫn được bảo vệ
+    app.use(`${API_PREFIX}/${route}`, authenticateToken, require(`./routes/${route}Route`))
+})
+
 
 // Start server
 async function startServer() {
     try {
-        await sequelize.sync();
-        console.log("✅ Database synchronized successfully");
+
+        // await sequelize.sync()
+        // console.log('✅ Database synchronized successfully')
+
         server.listen(process.env.PORT || 8000, () => {
-            // Đã sửa PORT thành 8000 để khớp với console.log
-            console.log(
-                `🎶 Music Server is running at http://192.168.1.30:${
-          process.env.PORT || 8000
-        }`
-            );
-        });
+            console.log(`🎶 Music Server is running at http://localhost:${process.env.PORT || 8000}`)
+        })
+
     } catch (error) {
-        console.error("❌ Error starting server:", error);
+        console.error('❌ Error starting server:', error)
     }
 }
 
