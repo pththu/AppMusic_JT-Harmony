@@ -45,20 +45,18 @@ export default function SignUpScreen() {
         gender: gender === "Male" ? true : false,
       };
 
-      console.log('userData', userData);
       const response = await Register(userData);
       if (!response.success) {
-        console.error("Lỗi đăng kí 4:", response.message);
+        error("Lỗi đăng kí", response.message);
         return;
       }
 
       success("Thành công", "Đăng ký tài khoản thành công! Chúng tôi đã gửi một email xác nhận đến bạn, vui lòng kiểm tra hộp thư.");
-      navigate("VerifyEmail", { email: JSON.stringify(email) });
+      navigate("VerifyEmail", { email: JSON.stringify(email), next: "Login" });
     } catch (error) {
       if (error.response) {
         error("Lỗi đăng kí", error.response.data.message);
       } else if (error.request) {
-        console.error("Lỗi đăng kí: Không nhận được phản hồi từ server");
         error("Lỗi đăng kí", "Không kết nối được đến server. Vui lòng thử lại.");
       } else {
         error("Lỗi đăng kí", "Đã xảy ra lỗi không mong muốn.");

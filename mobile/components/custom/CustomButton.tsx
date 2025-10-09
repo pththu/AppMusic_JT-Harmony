@@ -60,7 +60,7 @@ export default function CustomButton({
   const { baseStyles, textStyles, iconColor, iconMargin } = getButtonStyles();
 
   return (
-    <TouchableOpacity className={baseStyles} onPress={onPress}>
+    <TouchableOpacity className={`${baseStyles} p-2`} onPress={onPress}>
       {iconName && (
         <Icon
           name={iconName}

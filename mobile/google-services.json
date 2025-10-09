@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "766579417935",
+    "project_id": "jt-harmony-cc77c",
+    "storage_bucket": "jt-harmony-cc77c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:766579417935:android:d7ca4a42190af8a2cc1b3a",
+        "android_client_info": {
+          "package_name": "com.junia03.mobile_jtharmony"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTcPxZIjbpgyXLwyONi20Q75O1l5Dae5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
