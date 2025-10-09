@@ -55,8 +55,8 @@ const setupRoutes = () => {
     'search',     // Tìm kiếm công khai
     'songs',        // Xem bài hát (public), upload bài hát (private)
     'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
-
-    'albumSongs'
+    'albumSongs',
+    'upload'        // Upload hình ảnh, file
   ]
 
   // Setup public routes

@@ -24,6 +24,12 @@ export default ({ config }) => ({
         clientToken: process.env.FACEBOOK_CLIENT_TOKEN,
         displayName: process.env.FACEBOOK_DISPLAY_NAME,
         scheme: process.env.FACEBOOK_APP_ID ? `fb${process.env.FACEBOOK_APP_ID}` : undefined
+      },
+    ],
+    [
+      "expo-image-picker",
+      {
+        "photosPermission": "Ứng dụng cần quyền truy cập thư viện ảnh để upload hình ảnh"
       }
     ]
   ]
