@@ -5,12 +5,10 @@ import axiosClient from "@/config/axiosClient";
 export const Login = async (payload) => {
   try {
     const { email, password } = payload;
-    console.log(payload);
     const response = await axiosClient.post(`/auth/login`, {
       email,
       password,
     }, { timeout: 3000, skipAuth: true });
-    console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -19,7 +17,6 @@ export const Login = async (payload) => {
 export const GetMe = async () => {
   try {
     const response = await axiosClient.get(`/auth/me`);
-    console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -70,7 +67,6 @@ export const Register = async (payload) => {
       },
       { skipAuth: true }
     );
-    console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -87,7 +83,6 @@ export const VerifyEmail = async (payload) => {
       },
       { skipAuth: true }
     );
-    console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -103,7 +98,6 @@ export const ResetPassword = async (payload) => {
       },
       { skipAuth: true }
     );
-    console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -111,7 +105,6 @@ export const ResetPassword = async (payload) => {
 };
 export const SendOtpEmail = async (payload) => {
   try {
-    console.log('payload', payload);
     const { email, facebookId } = payload;
     const response = await axiosClient.post(`/auth/send-otp`,
       {
@@ -120,7 +113,6 @@ export const SendOtpEmail = async (payload) => {
       },
       { skipAuth: true }
     );
-    console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -139,7 +131,6 @@ export const isEmailExist = async (payload) => {
 export const UpdateProfile = async (payload) => {
   try {
     const response = await axiosClient.put(`/users/update-profile`, payload);
-    console.log('response.data', response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -148,11 +139,31 @@ export const UpdateProfile = async (payload) => {
 export const ChangePassword = async (payload) => {
   try {
     const { currentPassword, newPassword } = payload;
-    const response = await axiosClient.post(`/users/change-password`, {
+    const response = await axiosClient.put(`/users/change-password`, {
       currentPassword,
       newPassword
     });
-    console.log('response.data', response.data);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    return { message: error.message, status: "error" };
+  }
+};
+export const LinkSocialAccount = async (payload) => {
+  try {
+    const { userInfor, provider } = payload;
+    const response = await axiosClient.post(`/users/link-social-account`, {
+      userInfor,
+      provider
+    });
+    return response.data;
+  } catch (error) {
+    return { message: error.message, status: "error" };
+  }
+};
+export const SelfLockAccount = async (payload) => {
+  try {
+    const response = await axiosClient.put(`/users/self-lock`, { password: payload });
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };

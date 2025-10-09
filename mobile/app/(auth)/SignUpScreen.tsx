@@ -45,7 +45,6 @@ export default function SignUpScreen() {
         gender: gender === "Male" ? true : false,
       };
 
-      console.log('userData', userData);
       const response = await Register(userData);
       if (!response.success) {
         error("Lỗi đăng kí", response.message);
@@ -58,7 +57,6 @@ export default function SignUpScreen() {
       if (error.response) {
         error("Lỗi đăng kí", error.response.data.message);
       } else if (error.request) {
-        console.error("Lỗi đăng kí: Không nhận được phản hồi từ server");
         error("Lỗi đăng kí", "Không kết nối được đến server. Vui lòng thử lại.");
       } else {
         error("Lỗi đăng kí", "Đã xảy ra lỗi không mong muốn.");

@@ -8,8 +8,10 @@ router.get('/search', userController.search)
 router.get('/:id', userController.getUserById)
 
 router.post('/', userController.createUser)
+router.post('/link-social-account', authenticateToken, userController.linkSocialAccount)
 router.put('/update-profile', authenticateToken, userController.updateInforUser)
 router.put('/change-password', authenticateToken, userController.changePassword)
+router.put('/self-lock', authenticateToken, userController.selfLockAccount)
 
 // admin authorization
 router.delete('/remove/:id', authorizeRole, userController.deleteUser)

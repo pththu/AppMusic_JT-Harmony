@@ -106,7 +106,7 @@ const User = sequelize.define(
       field: 'stream_quality'
     },
     status: {
-      type: DataTypes.STRING, //DataTypes.ENUM('active', 'inactive', 'banned'),
+      type: DataTypes.STRING, //DataTypes.ENUM('active', 'inactive', 'banned', 'locked'),
       allowNull: true,
       defaultValue: 'active'
     },

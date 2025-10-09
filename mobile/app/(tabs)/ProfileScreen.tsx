@@ -26,17 +26,17 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     try {
       const response = await Logout(); // logout khỏi server -> xóa cookie
-      logout(); // logout khỏi client -> xóa store
+      // logout khỏi client -> xóa store
       if (loginType === 'google') {
         await GoogleSignin.signOut(); // logout khỏi google
       }
       if (loginType === 'facebook') {
         LoginManager.logOut(); // logout khỏi facebook
       }
-      if (response.success == 200) {
+      if (response.success) {
         success('Đăng xuất thành công', '');
-        navigate('Auth');
       }
+      logout();
     } catch (error) {
       console.log(error);
     }
@@ -65,7 +65,7 @@ export default function ProfileScreen() {
         >
           <Image
             source={{
-              uri: user?.avatarUrl || "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+              uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg',
             }}
             className="w-[80px] h-[80px] rounded-full items-center"
           />

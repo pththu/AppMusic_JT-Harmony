@@ -18,10 +18,7 @@ exports.register = async (req, res) => {
       return res.status(200).json({ message: 'Định dạng email không hợp lệ', success: false });
     }
 
-    /**
-     * kiểm tra dob có hợp lệ không
-     * năm từ 1900 đến năm hiện tại - 5
-    */
+    // kiểm tra dob có hợp lệ không: năm từ 1900 đến năm hiện tại - 5
     if (dob && (new Date(dob) < new Date('1900-01-01') || new Date(dob).getFullYear() > new Date().getFullYear() - 10)) {
       return res.status(200).json({ message: 'Ngày sinh không hợp lệ. Yêu cầu người dùng trên 10 tuổi', success: false });
     }
@@ -102,6 +99,18 @@ exports.login = async (req, res) => {
         message: 'Tài khoản không tồn tại. Vui lòng đăng ký.',
         success: false
       });
+    };
+
+    if (user.status === 'locked' || user.status === 'banned') {
+      return res.status(200).json({
+        message: `Tài khoản của bạn đã bị ${user.status === 'locked' ? 'khóa' : 'cấm'}.`,
+        success: false
+      });
+    } else if (user.status === 'inactive') {
+      return res.status(200).json({
+        message: 'Tài khoản của bạn không hoạt động. Vui lòng liên hệ quản trị viên.',
+        success: false
+      });
     }
 
     if (!user.accountType.includes('local')) {
@@ -148,6 +157,17 @@ exports.loginWithGoogle = async (req, res) => {
     const userInfor = req.body;
     const existingUser = await User.findOne({ where: { email: userInfor?.email } });
     if (existingUser) {
+      if (existingUser.status === 'locked' || existingUser.status === 'banned') {
+        return res.status(200).json({
+          message: `Tài khoản của bạn đã bị ${existingUser.status === 'locked' ? 'khóa' : 'cấm'}.`,
+          success: false
+        });
+      } else if (existingUser.status === 'inactive') {
+        return res.status(200).json({
+          message: 'Tài khoản của bạn không hoạt động. Vui lòng liên hệ quản trị viên.',
+          success: false
+        });
+      }
       if (!existingUser.accountType.includes('google')) {
         return res.json({
           message: "Tài khoản không bao gồm phương thức đăng nhập này",
@@ -176,7 +196,6 @@ exports.loginWithGoogle = async (req, res) => {
         user: existingUser
       });
     }
-
 
     // username random: user + 4 number random
     const passwordHash = await bcrypt.hash('12345678', 10);
@@ -207,7 +226,7 @@ exports.loginWithGoogle = async (req, res) => {
     )
 
     res.status(201).json({
-      message: 'Đăng nhập thành công',
+      message: 'Đăng nhập thành công. Mật khẩu khởi tạo là 12345678. Hãy cập nhật mật khẩu để bảo mật tài khoản',
       user,
       success: true,
     });
@@ -226,7 +245,24 @@ exports.loginWithFacebook = async (req, res) => {
     const existingUser = await User.findOne({ where: { facebookId: profile?.userID } });
 
     if (existingUser) {
-      console.log('user existsing: ', existingUser);
+      if (existingUser.status === 'locked' || existingUser.status === 'banned') {
+        return res.status(200).json({
+          message: `Tài khoản của bạn đã bị ${existingUser.status === 'locked' ? 'khóa' : 'cấm'}.`,
+          success: false
+        });
+      } else if (existingUser.status === 'inactive') {
+        return res.status(200).json({
+          message: 'Tài khoản của bạn không hoạt động. Vui lòng liên hệ quản trị viên.',
+          success: false
+        });
+      }
+      if (!existingUser.accountType.includes('google')) {
+        return res.json({
+          message: "Tài khoản không bao gồm phương thức đăng nhập này",
+          statusCode: 200,
+          success: false
+        });
+      }
       if (!existingUser.accountType.includes('facebook')) {
         return res.status(200).json({
           message: "Tài khoản này đăng nhập bằng phương thức khác",
@@ -239,7 +275,6 @@ exports.loginWithFacebook = async (req, res) => {
       // cookie
       res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
-      // Update token in database
       existingUser.accessToken = accessToken;
       existingUser.refreshToken = refreshToken;
       existingUser.expiry = jwt.decode(refreshToken).exp;
@@ -247,7 +282,7 @@ exports.loginWithFacebook = async (req, res) => {
       await existingUser.save();
 
       return res.json({
-        message: "Đăng nhập thành công. Mật khẩu khởi tạo là 12345678. Hãy cập nhật mật khẩu để bảo mật tài khoản",
+        message: "Đăng nhập thành công. ",
         success: true,
         user: existingUser
       });
@@ -305,17 +340,14 @@ exports.me = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
-    console.log(req.user)
     const user = await User.findOne({ where: { id: req.user.id } });
-    if (!user) return res.status(200).json({ message: 'User not found', success: false });
-
+    if (!user) return res.status(200).json({ message: 'Không tìm thấy người dùng', success: false });
     user.accessToken = null;
     user.refreshToken = null;
     user.expiry = null;
     res.clearCookie("accessToken");
     await user.save();
-
-    return res.status(200).json({ message: "Logged out", success: true });
+    return res.status(200).json({ message: "Đã đăng xuất", success: true });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -409,13 +441,11 @@ exports.verifyOtpEmail = async (req, res) => {
     user.expireOtp = null;
 
     if (!user.accountType.includes('local')) {
-      // user.accountType.push('local');
       user.accountType = Array.from(new Set([...user.accountType, 'local']));
       user.email = email;
     }
 
     await user.save();
-    console.log('first', user);
     return res.json({
       message: 'Xác thực email thành công',
       success: true,

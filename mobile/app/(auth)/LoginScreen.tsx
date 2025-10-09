@@ -12,8 +12,8 @@ export default function LoginScreen() {
   const { success, error } = useCustomAlert();
   const { login } = useAuthStore();
 
-  const [email, setEmail] = useState("baotrammari2003@gmail.com");
-  const [password, setPassword] = useState("12345678");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,7 +54,6 @@ export default function LoginScreen() {
     try {
       const payload = { email, password };
       const response = await Login(payload);
-      console.log(response);
       if (!response.success) {
         error("Lỗi Đăng Nhập", response.message || "Đăng nhập thất bại.");
         return;
@@ -63,8 +62,6 @@ export default function LoginScreen() {
       success("Thành Công", "Đăng nhập thành công!");
       navigate("Main");
     } catch (err) {
-      console.error("Login error:", err);
-      // Giả sử lỗi từ server có cấu trúc { message: "..." }
       const errorMessage =
         err.response?.data?.message ||
         "Đã xảy ra lỗi trong quá trình đăng nhập.";

@@ -63,7 +63,6 @@ export default function ArtistScreen() {
   const { navigate } = useNavigate();
   const router = useRouter();
   const params = useLocalSearchParams();
-  console.log('params', JSON.parse(params.artist as string));
   const artist = params.artist ? JSON.parse(params.artist as string) : sampleArtist;
   const popularReleases = artist.popularReleases || [];
 

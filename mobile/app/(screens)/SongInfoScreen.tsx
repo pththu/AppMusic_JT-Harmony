@@ -53,9 +53,7 @@ const LinkRow = ({ label, url }: { label: string; url?: string }) => {
 
 export default function SongInfoScreen() {
   const params = useLocalSearchParams();
-  console.log(params.song);
   const song = JSON.parse(params.song as string);
-  console.log(song);
 
   // Ép kiểu (type assertion) để đảm bảo song có đầy đủ thuộc tính
   const typedSong = song as Song;

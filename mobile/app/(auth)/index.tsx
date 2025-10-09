@@ -25,7 +25,6 @@ export default function AuthScreen() {
   const login = useAuthStore(state => state.login);
 
   const handleLoginWithGoogle = async () => {
-    console.log("Login with Google");
     await GoogleSignin.hasPlayServices({
       showPlayServicesUpdateDialog: true
     });
@@ -34,7 +33,6 @@ export default function AuthScreen() {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfor = await GoogleSignin.signIn();
-      console.log('userInfor', userInfor);
       const response = await LoginWithGoogle(userInfor.data.user);
       if (!response.success) {
         error('Lỗi đăng nhập', `${response.message}`);
@@ -52,28 +50,21 @@ export default function AuthScreen() {
   };
 
   const handleLoginWithFacebook = async () => {
-    console.log("Login with Facebook");
     const loginType = 'facebook';
     try {
-      console.log(2)
       const result = await LoginManager.logInWithPermissions(['public_profile']);
-      console.log(result);
-      console.log(1)
       if (result.isCancelled) {
-        console.log('Login cancelled');
+        error('Lỗi đăng nhập', 'Đăng nhập bị hủy');
+        return;
       } else {
         const data = await AccessToken.getCurrentAccessToken();
         if (!data) {
-          console.log('Failed to get access token');
           return;
         }
 
-        console.log('Access token:', data.accessToken.toString());
-        console.log(3)
         setTimeout(async () => {
           const profile = await Profile.getCurrentProfile();
           if (profile) {
-            console.log('profile', profile);
             const response = await LoginWithFacebook(profile);
             if (!response.success) {
               error('Lỗi đăng nhập', `${response.message}`);

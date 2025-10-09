@@ -44,7 +44,6 @@ export default function EditProfileScreen() {
         gender: gender === 'Male' ? true : false,
       }
       const response = await UpdateProfile(payload);
-      console.log('response', response);
       if (!response.success) {
         error("Cập nhật thất bại", response.message || "Đã có lỗi xảy ra, vui lòng thử lại");
         return;

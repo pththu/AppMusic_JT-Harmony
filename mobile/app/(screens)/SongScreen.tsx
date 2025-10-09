@@ -129,7 +129,6 @@ export default function SongScreen() {
   };
 
   const handleSelectInfo = (song: Song) => {
-    console.log("song", song);
     navigate("SongInfoScreen", { song: JSON.stringify(song) });
   };
 
