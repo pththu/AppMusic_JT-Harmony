@@ -12,6 +12,8 @@ export default function ChangePasswordScreen() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [showMessage, setShowMessage] = useState(false);
 
   const validatePassword = (password: string) => {
     if (password.length < 8) {
@@ -22,7 +24,8 @@ export default function ChangePasswordScreen() {
 
   const handleChangePassword = async () => {
     if (!validatePassword(newPassword)) {
-      error("Lỗi", "Mật khẩu mới phải có ít nhất 8 ký tự.");
+      setMessage("Mật khẩu phải có ít nhất 8 ký tự");
+      setShowMessage(true);
       return;
     }
     try {
@@ -69,7 +72,10 @@ export default function ChangePasswordScreen() {
         <CustomTextInput
           placeholder="Mật khẩu mới"
           value={newPassword}
-          onChangeText={setNewPassword}
+          onChangeText={(text) => {
+            setNewPassword(text);
+            setShowMessage(false);
+          }}
           secureTextEntry
           iconName="key"
         />
@@ -77,10 +83,17 @@ export default function ChangePasswordScreen() {
         <CustomTextInput
           placeholder="Xác nhận mật khẩu mới"
           value={confirmPassword}
-          onChangeText={setConfirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            setShowMessage(false);
+          }}
           secureTextEntry
           iconName="key"
         />
+
+        {showMessage && (
+          <Text className="text-red-500 text-sm mb-2">*{message}</Text>
+        )}
 
         <TouchableOpacity
           className="bg-[#089b0d] rounded-full py-4 items-center mt-6"

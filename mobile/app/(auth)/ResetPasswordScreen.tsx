@@ -12,8 +12,6 @@ export default function ResetPasswordScreen() {
   const { error, success } = useCustomAlert();
   const params = useLocalSearchParams();
   const email = params.email ? JSON.parse(params.email as string) : "";
-  console.log("email reset", email);
-  console.log('params', params)
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");

@@ -8,48 +8,111 @@ import { useNavigate } from "@/hooks/useNavigate";
 import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { ENV } from "@/config/env";
+import { LoginManager, Profile, Settings } from "react-native-fbsdk-next";
+import { LinkSocialAccount, Logout, SelfLockAccount } from "@/routes/ApiRouter";
+
+GoogleSignin.configure({
+  webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
+});
+
+Settings.setAppID(ENV.FACEBOOK_APP_ID);
+Settings.initializeSDK();
 
 export default function SettingScreen() {
 
   const user = useAuthStore(state => state.user);
+  const loginType = useAuthStore(state => state.loginType);
+  const updateUser = useAuthStore(state => state.updateUser);
+  const logout = useAuthStore(state => state.logout);
   const { navigate } = useNavigate();
   const { error, success, confirm } = useCustomAlert();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [showMessage, setShowMessage] = useState(false);
 
-  const handleUpdateEmail = () => {
-    navigate("UpdateEmail");
+  const handleLinkAccountFacebook = async () => {
+    try {
+      const result = await LoginManager.logInWithPermissions(['public_profile']);
+      if (result.isCancelled) {
+        error('Lỗi liên kết', 'Liên kết bị hủy');
+        return;
+      } else {
+        setTimeout(async () => {
+          const profile = await Profile.getCurrentProfile();
+          if (profile) {
+            const response = await LinkSocialAccount({ userInfor: profile, provider: 'facebook' });
+            if (!response.success) {
+              error("Liên kết thất bại", response.message);
+              return;
+            }
+            updateUser(response.user);
+          }
+        }, 1000);
+        success("Liên kết thành công tài khoản Facebook");
+      }
+    } catch (error) {
+      console.log('Login fb fail with error: ' + error);
+    } finally {
+      LoginManager.logOut();
+    }
   };
 
-  const handleEditProfile = () => {
-    navigate("EditProfile");
+  const handleLinkAccountGoogle = async () => {
+    await GoogleSignin.hasPlayServices({
+      showPlayServicesUpdateDialog: true
+    });
+
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfor = await GoogleSignin.signIn();
+      const response = await LinkSocialAccount({ userInfor: userInfor.data.user, provider: 'google' });
+      if (!response.success) {
+        error("Liên kết thất bại", response.message);
+        return;
+      }
+
+      updateUser(response.user);
+      success("Liên kết thành công tài khoản Google");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      await GoogleSignin.signOut();
+    }
   };
 
-  const handleChangePassword = () => {
-    navigate("ChangePassword");
-  };
+  const handleLockAccount = async () => {
 
-  const handleLinkAccountFacebook = () => {
-    console.log("Link account Facebook");
-  };
-
-  const handleLinkAccountGoogle = () => {
-    console.log("Link account Google");
-  };
-
-  const handleLockAccount = () => {
-    console.log("Lock account");
-    const lock = async () => {
-      console.log("lock");
-      setTimeout(() => {
+    async function lock() {
+      setLoading(true);
+      setTimeout(async () => {
+        console.log('lock account');
+        try {
+          const response = await SelfLockAccount(password);
+          if (!response.success) {
+            error("Lỗi khi khóa tài khoản", response.message);
+            return;
+          }
+          await handleLogout(); // gọi sau khi khóa tài khoản thành công
+        } catch (error) {
+          error("Lỗi khi khóa tài khoản", error.message);
+        }
         setLoading(false);
       }, 1000);
-    };
+    }
 
-    const cancel = () => {
-      console.log("cancel");
+    function cancel() {
+      console.log('cancel lock account');
       setLoading(false);
-    };
+    }
+
+    if (!password) {
+      setMessage("Vui lòng nhập mật khẩu");
+      setShowMessage(true);
+      return;
+    }
 
     setLoading(true);
     confirm(
@@ -58,6 +121,28 @@ export default function SettingScreen() {
       lock,
       cancel
     );
+  };
+
+  /**
+   * gọi sau khi khóa tài khoản thành công
+   */
+  const handleLogout = async () => {
+    try {
+      const response = await Logout(); // logout khỏi server -> xóa cookie
+      // logout khỏi client -> xóa store
+      if (loginType === 'google') {
+        await GoogleSignin.signOut(); // logout khỏi google
+      }
+      if (loginType === 'facebook') {
+        LoginManager.logOut(); // logout khỏi facebook
+      }
+      if (response.success) {
+        success('Khóa tài khoản thành công', '', () => navigate('Auth'));
+      }
+      logout();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -70,9 +155,9 @@ export default function SettingScreen() {
 
       {/* Danh sách cài đặt */}
       <View>
-        <SettingButton title="Xác thực email" icon="mail-outline" onPress={handleUpdateEmail} />
-        <SettingButton title="Chỉnh sửa hồ sơ" icon="person-circle-outline" onPress={handleEditProfile} />
-        <SettingButton title="Đổi mật khẩu" icon="key-outline" onPress={handleChangePassword} />
+        <SettingButton title="Xác thực email" icon="mail-outline" onPress={() => navigate("UpdateEmail")} />
+        <SettingButton title="Chỉnh sửa hồ sơ" icon="person-circle-outline" onPress={() => navigate("EditProfile")} />
+        <SettingButton title="Đổi mật khẩu" icon="key-outline" onPress={() => navigate("ChangePassword")} />
 
         {/* Liên kết tài khoản */}
         <SettingButton title="Liên kết tài khoản" icon="link-outline">
@@ -106,19 +191,21 @@ export default function SettingScreen() {
             placeholderTextColor="#999"
             secureTextEntry
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(text) => {
+              setPassword(text);
+              setShowMessage(false);
+            }}
             className="bg-[#1A1833] text-white px-4 py-3 rounded-xl mb-3"
           />
+          {showMessage && <Text className="text-red-500 mb-2">*{message}</Text>}
           <TouchableOpacity
             activeOpacity={0.8}
             className="bg-[#ff4d4d] py-3 rounded-xl items-center"
             onPress={() => handleLockAccount()}
           >
-            <Text className="text-white font-semibold text-base">Xác nhận khóa</Text>
+            <Text className="text-white font-semibold text-base">{loading ? 'Đang xử lý...' : 'Khóa tài khoản'}</Text>
           </TouchableOpacity>
         </SettingButton>
-
-
       </View>
 
       {/* Nút quay lại */}

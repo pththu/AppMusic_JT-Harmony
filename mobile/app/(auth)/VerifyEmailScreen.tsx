@@ -44,7 +44,7 @@ export default function VerifyEmailScreen() {
   const handleResend = async () => {
     try {
       setLoading(true);
-      const response = await SendOtpEmail({ email }); // API gửi lại OTP
+      const response = await SendOtpEmail({ email, facebookId: null }); // API gửi lại OTP
       if (!response.success) {
         error("Lỗi", response.message || "Không thể gửi lại mã OTP");
         return;

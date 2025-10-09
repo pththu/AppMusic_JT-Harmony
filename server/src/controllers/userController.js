@@ -110,13 +110,13 @@ exports.changePassword = async (req, res) => {
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
-      return res.status(200).json({ message: 'Thông tin xác thực không hợp lệ', success: false });
+      return res.status(200).json({ message: 'Sai mật khẩu', success: false });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    return res.json({ message: 'Password updated successfully' });
+    return res.json({ message: 'Đổi mật khẩu thành công', success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -129,5 +129,86 @@ exports.deleteUser = async (req, res) => {
     return res.json({ message: 'User deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.linkSocialAccount = async (req, res) => {
+  try {
+    const { userInfor, provider } = req.body;
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
+    }
+
+    if (provider !== 'google' && provider !== 'facebook') {
+      return res.status(200).json({ message: 'Provider không hợp lệ', success: false });
+    };
+
+    if (provider === 'facebook') {
+      if (user.facebookId !== null) {
+        return res.status(200).json({ message: 'Tài khoản đã được liên kết với Facebook', success: false });
+      };
+
+      const existingUser = await User.findOne({ where: { facebookId: userInfor.userID } });
+      if (existingUser) {
+        return res.status(200).json({ message: 'Tài khoản Facebook đã được liên kết với người dùng khác', success: false });
+      };
+
+      if (userInfor.imageURL !== null && user.avatarUrl === null) {
+        user.avatarUrl = userInfor.imageURL;
+      }
+
+      if (user.fullName === null) {
+        user.fullName = userInfor.name;
+      }
+
+      user.facebookId = userInfor.userID;
+      user.accountType = Array.from(new Set([...user.accountType, 'facebook']));
+
+    } else if (provider === 'google') {
+      if (user.email !== userInfor.email) {
+        return res.status(200).json({ message: 'Email không khớp, vui lòng sử dụng đúng email đã đăng ký', success: false });
+      };
+
+      if (user.googleId !== null) {
+        return res.status(200).json({ message: 'Tài khoản đã được liên kết với Google', success: false });
+      };
+
+      if (userInfor.photo !== null && user.avatarUrl === null) {
+        user.avatarUrl = userInfor.photo;
+      }
+
+      if (user.fullName === null) {
+        user.fullName = userInfor.name;
+      }
+
+      user.googleId = userInfor.id;
+      user.accountType = Array.from(new Set([...user.accountType, 'google']));
+    }
+
+    await user.save();
+    return res.json({ message: 'Liên kết tài khoản thành công', success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.selfLockAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(200).json({ message: 'Sai mật khẩu', success: false });
+    }
+
+    user.status = 'locked';
+    await user.save();
+    return res.json({ message: 'Tài khoản đã bị khóa', success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

@@ -46,7 +46,6 @@ export default function UpdateEmailScreen() {
     }
     try {
       setLoading(true);
-      console.log(email, user?.accountType, user?.facebookId);
       const response = await SendOtpEmail({ email, facebookId: user?.facebookId }); // API gửi lại OTP
       if (!response.success) {
         error("Lỗi", response.message || "Không thể gửi mã OTP");
@@ -84,20 +83,13 @@ export default function UpdateEmailScreen() {
 
     try {
       setLoading(true);
-      console.log('email, otp', email, otp, user?.facebookId);
       const response = await VerifyEmail({ email, otp, facebookId: user?.facebookId }); // gọi API verify
       if (!response.success) {
         error("Lỗi", response.message || "Mã OTP không hợp lệ");
         return;
       }
-      success("Thành công", "Xác thực email thành công!");
-      user.emailVerified = true;
-      user.email = email;
-
-      if (!user?.accountType.includes("local")) {
-        user?.accountType.push("local");
-      }
-      updateUser(user);
+      success("Thành công", "Xác thực email thành công! Mật khẩu khởi tạo là: 12345678");
+      updateUser(response.user);
       router.back();
     } catch (err) {
       error("Lỗi", "Không thể xác thực, vui lòng thử lại.");
