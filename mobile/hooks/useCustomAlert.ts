@@ -30,15 +30,15 @@ export const useCustomAlert = () => {
       type: 'warning',
       buttons: [
         {
-          text: 'Hủy',
-          style: 'cancel',
-          onPress: onCancel,
-        },
-        {
           text: 'Xác nhận',
           style: 'destructive',
           onPress: onConfirm,
         },
+        {
+          text: 'Hủy',
+          style: 'cancel',
+          onPress: onCancel,
+        }
       ],
     });
   };

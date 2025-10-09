@@ -7,6 +7,9 @@ const routeMap: Record<any, any> = {
   Auth: '(auth)',
   SignUp: '(auth)/SignUpScreen',
   Login: '(auth)/LoginScreen',
+  VerifyEmail: '(auth)/VerifyEmailScreen',
+  ForgotPassword: '(auth)/ForgotPasswordScreen',
+  ResetPassword: '(auth)/ResetPasswordScreen',
 
   Main: '(tabs)/HomeScreen',
   Profile: '(tabs)/ProfileScreen',
@@ -28,6 +31,9 @@ const routeMap: Record<any, any> = {
   QueueScreen: '(screens)/QueueScreen',
   SongInfoScreen: '(screens)/SongInfoScreen',
   SongScreen: '(screens)/SongScreen',
+  Setting: '(screens)/SettingScreen',
+  ChangePassword: '(screens)/ChangePasswordScreen',
+  UpdateEmail: '(screens)/UpdateEmailScreen',
 };
 
 export function useNavigate() {

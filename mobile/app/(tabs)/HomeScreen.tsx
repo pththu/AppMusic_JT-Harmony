@@ -1,11 +1,6 @@
 import CustomButton from "@/components/custom/CustomButton";
 import AlbumItem from "@/components/items/AlbumItem";
 import SongItem from "@/components/items/SongItem";
-import {
-  NavigationProp,
-  ParamListBase,
-  useNavigation,
-} from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -126,36 +121,20 @@ const relaxData = [
   },
 ];
 
-const avatarImages = [
-  "https://randomuser.me/api/portraits/men/1.jpg",
-  "https://randomuser.me/api/portraits/women/2.jpg",
-  "https://randomuser.me/api/portraits/men/3.jpg",
-  "https://randomuser.me/api/portraits/women/4.jpg",
-  "https://randomuser.me/api/portraits/men/5.jpg",
-];
-
 export default function HomeScreen() {
 
   const { navigate } = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("forYou");
   const animation = useRef(new Animated.Value(0)).current;
-  // const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
-  const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const [hasNotification] = useState(true);
   const [tabWidths, setTabWidths] = useState<number[]>([]);
   const [tabPositions, setTabPositions] = useState<number[]>([]);
   const [tabsLayouted, setTabsLayouted] = useState(false);
 
   useEffect(() => {
-    if (!avatarImage) {
-      const random =
-        avatarImages[Math.floor(Math.random() * avatarImages.length)];
-      setAvatarImage(random);
-    }
-
     Animated.parallel([
       Animated.timing(greetingOpacity, {
         toValue: 1,
@@ -168,7 +147,7 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [greetingOpacity, greetingTranslateY, avatarImage]);
+  }, [greetingOpacity, greetingTranslateY]);
 
   useEffect(() => {
     if (tabWidths.length === tabs.length) {
@@ -227,7 +206,7 @@ export default function HomeScreen() {
             transform: [{ translateY: greetingTranslateY }],
           }}
         >
-          Hi, {user?.fullName || "User"} 👋
+          Hi, {user?.fullName || user?.username} 👋
         </Animated.Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">
@@ -236,20 +215,11 @@ export default function HomeScreen() {
               <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
             )}
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              // navigation.navigate("Profile", { screen: "ProfileMain" })
-              navigate("Profile")
-            }
-          >
-            {avatarImage ? (
-              <Image
-                source={{ uri: avatarImage }}
-                className="w-10 h-10 rounded-full"
-              />
-            ) : (
-              <View className="w-10 h-10 rounded-full bg-gray-600" />
-            )}
+          <TouchableOpacity onPress={() => navigate("Profile")}>
+            <Image
+              source={{ uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
+              className="w-10 h-10 rounded-full"
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -270,8 +240,8 @@ export default function HomeScreen() {
             >
               <Text
                 className={`text-xl font-bold ${activeTab === tab.id
-                    ? "text-white font-bold"
-                    : "text-gray-500 font-normal"
+                  ? "text-white font-bold"
+                  : "text-gray-500 font-normal"
                   }`}
               >
                 {tab.label}

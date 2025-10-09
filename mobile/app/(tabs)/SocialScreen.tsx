@@ -5,19 +5,9 @@ import useAuthStore from '@/store/authStore'
 import { GetMe } from '@/routes/ApiRouter'
 
 const SocialScreen = () => {
-  const user = useAuthStore(state => state.user);
-  console.log(user)
   return (
     <SafeAreaView>
       <Text>SocialScreen</Text>
-      <Text>{user?.username}</Text>
-      <Button title="Get me" onPress={async () => {
-        const response = await GetMe();
-        console.log(response);
-      }} />
-      <Button title='None' onPress={() => {
-        console.log(user)
-      }} />
     </SafeAreaView>
   )
 }

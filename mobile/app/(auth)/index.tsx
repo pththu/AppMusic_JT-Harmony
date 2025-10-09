@@ -1,42 +1,46 @@
 import { useNavigate } from '@/hooks/useNavigate';
-import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { GoogleSignin, } from '@react-native-google-signin/google-signin';
 import { ENV } from '@/config/env';
-import { LoginWithGoogle } from '@/routes/ApiRouter';
+import { LoginWithFacebook, LoginWithGoogle } from '@/routes/ApiRouter';
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import useAuthStore from '@/store/authStore';
+import { Settings, LoginManager, Profile, AccessToken } from 'react-native-fbsdk-next';
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
 });
+Settings.setAppID(ENV.FACEBOOK_APP_ID);
+Settings.initializeSDK();
 
 export default function AuthScreen() {
 
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
+  const [loading, setLoading] = useState(false);
   const login = useAuthStore(state => state.login);
 
   const handleLoginWithGoogle = async () => {
-    console.log("Login with Google");
     await GoogleSignin.hasPlayServices({
       showPlayServicesUpdateDialog: true
     });
 
+    const loginType = 'google';
     try {
       await GoogleSignin.hasPlayServices();
       const userInfor = await GoogleSignin.signIn();
-      console.log('userInfor', userInfor);
       const response = await LoginWithGoogle(userInfor.data.user);
       if (!response.success) {
-        error('Lỗi đăng nhập', `${response.message}`)
+        error('Lỗi đăng nhập', `${response.message}`);
+        await GoogleSignin.signOut();
+        return;
       }
       if (response.success) {
-        login(response.user, response.user.accessToken);
+        login(response.user, loginType, response.user.accessToken);
         success('Đăng nhập thành công', `${response.message}`);
         navigate('Main');
       }
@@ -45,8 +49,37 @@ export default function AuthScreen() {
     }
   };
 
-  const handleLoginWithFacebook = () => {
-    console.log("Login with Facebook");
+  const handleLoginWithFacebook = async () => {
+    const loginType = 'facebook';
+    try {
+      const result = await LoginManager.logInWithPermissions(['public_profile']);
+      if (result.isCancelled) {
+        error('Lỗi đăng nhập', 'Đăng nhập bị hủy');
+        return;
+      } else {
+        const data = await AccessToken.getCurrentAccessToken();
+        if (!data) {
+          return;
+        }
+
+        setTimeout(async () => {
+          const profile = await Profile.getCurrentProfile();
+          if (profile) {
+            const response = await LoginWithFacebook(profile);
+            if (!response.success) {
+              error('Lỗi đăng nhập', `${response.message}`);
+              LoginManager.logOut();
+              return;
+            }
+            success('Đăng nhập thành công', `${response.message}`);
+            login(response.user, loginType, response.user.accessToken);
+            navigate('Main');
+          }
+        }, 1000);
+      } 
+    } catch (error) {
+      console.log('Login fb fail with error: ' + error);
+    }
   };
 
   return (
@@ -103,14 +136,6 @@ export default function AuthScreen() {
         >
           <Icon name="person-add" size={20} color="black" className="mr-2" />
           <Text className="text-black font-semibold text-lg">Đăng ký</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="items-center  rounded-full w-full py-4 flex-row justify-center"
-          onPress={() => GoogleSignin.signOut().then(() => console.log('User signed out!'))}
-          activeOpacity={0.7}
-        >
-          <Icon name="person-add" size={20} color="black" className="mr-2" />
-          <Text className="text-white font-semibold text-lg">Đăng xuất</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import HeaderBackButton from '@/components/button/HeaderBackButton';
 import SongItem from '@/components/items/SongItem';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const sampleSongs = [
   {
@@ -67,21 +68,23 @@ const sampleSongs = [
   },
 ];
 
-export default function AllSongsScreen({ navigation, route }: any) {
-  const artist = route.params?.artist || { name: 'Artist' };
+export default function AllSongsScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const artist = params.artist ? JSON.parse(params.artist as string) : { name: 'Artist' };
 
   const renderItem = ({ item }: any) => (
     <SongItem
       title={item.title}
       subtitle={item.album}
       image={item.image}
-      onOptionsPress={() => {}}
+      onOptionsPress={() => { }}
     />
   );
 
   return (
     <View className="flex-1  bg-[#0E0C1F]">
-      <HeaderBackButton onPress={() => navigation.goBack()} />
+      <HeaderBackButton onPress={() => router.back()} />
       <Text className="text-white text-2xl font-bold px-4 mb-4">All Songs</Text>
       <Text className="text-white text-lg font-semibold px-4 mb-2">
         {artist.name}

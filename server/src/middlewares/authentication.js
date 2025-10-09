@@ -3,16 +3,14 @@ const { User } = require('../models');
 const { json } = require('sequelize');
 require('dotenv').config();
 
+
 exports.authenticateToken = async (req, res, next) => {
   try {
     // Lấy token từ cookie hoặc header
     const token = req.cookies['accessToken'] || req.headers['authorization']?.split(' ')[1];
 
-    console.log("Token from cookie: ", req.cookies['accessToken']);
-    console.log("Token from header 1: ", req.headers['Authorization']?.split(' ')[1]);
-    console.log("Token from header 2: ", req.headers['authorization']?.split(' ')[1]);
     if (!token) {
-      return res.status(401).json({ error: 'Access token required' });
+      return res.status(401).json({ message: 'Không tìm thấy token', success: false });
     }
 
     // Verify token
@@ -43,7 +41,6 @@ exports.authenticateToken = async (req, res, next) => {
 exports.authorizeRole = (req, res, next) => {
   try {
     const user = req.currentUser;
-    console.log(user);
     if (!user) {
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -58,4 +55,4 @@ exports.authorizeRole = (req, res, next) => {
     console.error('Authorization error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-}
+};

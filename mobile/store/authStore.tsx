@@ -2,28 +2,12 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// interface User {
-//   id: number;
-//   username: string;
-//   email: string;
-//   password: string;
-//   accountType: string;
-//   fullName: string | null;
-//   avatarUrl?: string | null;
-//   bio: string | null;
-//   dob: string | null;
-//   gender: string | null;
-//   notificationEnabled: boolean;
-//   streamQuality: string;
-//   status: string;
-//   roleId: number;
-//   lastLogin: string;
-// }
 interface AuthState {
   user: any | null;
   token: string | null;
   isLoggedIn: boolean;
-  login: (user: any, token: string) => void;
+  loginType?: string | null; // 'local' | 'google' | 'facebook' | null
+  login: (user: any, loginType: string, token: string) => void;
   logout: () => void;
   updateAccessToken: (newToken: string) => void;
   updateUser: (user: any) => void;
@@ -35,12 +19,14 @@ const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isLoggedIn: false,
-      login: (user, token) => set({ user, token, isLoggedIn: true }),
+      loginType: null,
+      login: (user, loginType, token) => set({ user, loginType, token, isLoggedIn: true }),
       logout: () =>
         set({
           user: null,
           token: null,
-          isLoggedIn: false
+          isLoggedIn: false,
+          loginType: null,
         }),
       updateAccessToken: (newToken) =>
         set({ token: newToken }),
@@ -50,6 +36,10 @@ const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        // gọi khi load từ AsyncStorage xong
+        console.log("✅ Auth store rehydrated");
+      }
     }
   )
 );
