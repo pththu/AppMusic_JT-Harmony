@@ -3,6 +3,7 @@ import React from "react";
 import EditProfileScreen from "../../app/(screens)/EditProfileScreen";
 import ProfileScreen from "../../app/(tabs)/ProfileScreen";
 
+
 const Stack = createNativeStackNavigator();
 
 export default function ProfileStackNavigator() {

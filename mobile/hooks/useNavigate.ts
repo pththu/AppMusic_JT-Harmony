@@ -1,34 +1,33 @@
-import AllSongsScreen from "@/app/(screens)/AllSongsScreen";
-import QueueScreen from "@/app/(screens)/QueueScreen";
-import SongScreen from "@/app/(screens)/SongScreen";
 import { useRouter } from "expo-router";
 
 const routeMap: Record<any, any> = {
-  Auth: '(auth)',
-  SignUp: '(auth)/SignUpScreen',
-  Login: '(auth)/LoginScreen',
-  VerifyEmail: '(auth)/VerifyEmailScreen',
+  Auth: "(auth)",
+  SignUp: "(auth)/SignUpScreen",
+  Login: "(auth)/LoginScreen",
+  VerifyEmail: "(auth)/VerifyEmailScreen",
+  ForgotPassword: "(auth)/ForgotPasswordScreen",
+  ResetPassword: "(auth)/ResetPasswordScreen",
 
-  Main: '(tabs)/HomeScreen',
-  Profile: '(tabs)/ProfileScreen',
-  Search: '(tabs)/SearchScreen',
-  Library: '(tabs)/YourLibraryScreen',
+  Main: "(tabs)/HomeScreen",
+  Profile: "(tabs)/ProfileScreen",
+  Search: "(tabs)/SearchScreen",
+  Library: "(tabs)/YourLibraryScreen",
 
-  EditProfile: '(screens)/EditProfileScreen',
-  DownloadQuality: '(screens)/DownloadQualityScreen',
-  StreamingQuality: '(screens)/StreamingQualityScreen',
-  MusicLanguage: '(screens)/MusicLanguageScreen',
+  EditProfile: "(screens)/EditProfileScreen",
+  DownloadQuality: "(screens)/DownloadQualityScreen",
+  StreamingQuality: "(screens)/StreamingQualityScreen",
+  MusicLanguage: "(screens)/MusicLanguageScreen",
 
-  ArtistScreen: '(screens)/ArtistScreen',
-  ArtistsFollowingScreen: '(screens)/ArtistsFollowingScreen',
-  PlaylistsScreen: '(screens)/PlaylistsScreen',
-  DownloadsScreen: '(screens)/DownloadsScreen',
-  LikedSongsScreen: '(screens)/LikedSongsScreen',
-  YourLibraryScreen: '(screens)/YourLibraryScreen',
-  AllSongsScreen: '(screens)/AllSongsScreen',
-  QueueScreen: '(screens)/QueueScreen',
-  SongInfoScreen: '(screens)/SongInfoScreen',
-  SongScreen: '(screens)/SongScreen',
+  ArtistScreen: "(screens)/ArtistScreen",
+  ArtistsFollowingScreen: "(screens)/ArtistsFollowingScreen",
+  PlaylistsScreen: "(screens)/PlaylistsScreen",
+  DownloadsScreen: "(screens)/DownloadsScreen",
+  LikedSongsScreen: "(screens)/LikedSongsScreen",
+  YourLibraryScreen: "(screens)/YourLibraryScreen",
+  AllSongsScreen: "(screens)/AllSongsScreen",
+  QueueScreen: "(screens)/QueueScreen",
+  SongInfoScreen: "(screens)/SongInfoScreen",
+  SongScreen: "(screens)/SongScreen",
 };
 
 export function useNavigate() {

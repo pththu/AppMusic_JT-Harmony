@@ -1,134 +1,172 @@
+// ProfileScreen.tsx
+
 import { SettingsContext } from "@/context/SettingsContext";
 import { useNavigate } from "@/hooks/useNavigate";
 import React, { useContext } from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 
-// Import các component tùy chỉnh cần thiết
 import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
-import useAuthStore from "@/store/authStore";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { Logout } from "@/routes/ApiRouter";
-import { useCustomAlert } from '@/hooks/useCustomAlert';
+import useAuthStore from "@/store/authStore";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
-  const user = useAuthStore(state => state.user);
+  const user = useAuthStore((state) => state.user);
   const { navigate } = useNavigate();
   const { success } = useCustomAlert();
-  const logout = useAuthStore(state => state.logout);
+  const logout = useAuthStore((state) => state.logout);
 
   const handleLogout = async () => {
     try {
-      const response = await Logout(); // logout khỏi server -> xóa cookie
-      logout(); // logout khỏi client -> xóa store
-      if (user?.accountType === 'google') {
-        await GoogleSignin.signOut(); // logout khỏi google
+      const response = await Logout(); 
+      logout();
+      if (user?.accountType === "google") {
+        await GoogleSignin.signOut();
       }
       console.log(response);
       if (response.statusCode == 200) {
-        success('Đăng xuất thành công', '');
-        navigate('Auth');
+        success("Đăng xuất thành công", "");
+        navigate("Auth");
       }
     } catch (error) {
       console.log(error);
     }
-  }
+  };
+
+  const handleEditAvatar = () => {
+    console.log("Edit avatar pressed");
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0E0C1F] p-6">
-      {/* Tiêu đề và nút Edit */}
-      <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-white text-3xl font-bold">Profile</Text>
-        <CustomButton
-          title="Edit"
-          onPress={() => navigate("EditProfile")}
-          iconName="pencil"
-        />
-      </View>
-
-      {/* Ảnh đại diện và tên */}
-      <View className="items-center my-4">
-        <Image
-          source={{
-            uri: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-          }}
-          className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-xl"
-        />
-        <Text className="text-white text-2xl font-bold">...</Text>
-      </View>
-
-      {/* Thông tin liên hệ */}
-      <View className="my-4">
-        <View className="flex-row items-center mb-1">
-          <Icon
-            name="mail-outline"
-            size={20}
-            color="#9CA3AF"
-            className="mr-2"
+    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900">
+      <ScrollView className="p-6">
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-black dark:text-white text-3xl font-bold">
+            Hồ sơ
+          </Text>
+          <CustomButton
+            title="Chỉnh sửa"
+            onPress={() => navigate("EditProfile")}
+            iconName="pencil"
           />
-          <Text className="text-gray-400">Email</Text>
         </View>
-        <Text className="text-white mb-3">...</Text>
 
-        <View className="flex-row items-center mb-1">
-          <Icon
-            name="call-outline"
-            size={20}
-            color="#9CA3AF"
-            className="mr-2"
+        <View className="items-center my-4">
+          <Pressable
+            className="items-center w-24 h-24 mb-4"
+            onPress={() => handleEditAvatar()}
+          >
+            <Image
+              source={{
+                uri:
+                  user?.avatarUrl ||
+                  "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+              }}
+              className="w-24 h-24 rounded-full"
+            />
+          </Pressable>
+          <Text className="text-black dark:text-white text-2xl font-bold">
+            {user?.fullName || user?.username}
+          </Text>
+        </View>
+
+        <View className="my-4">
+          <View className="flex-row items-center mb-1">
+            <Icon
+              name="mail-outline"
+              size={20}
+              color="#9CA3AF"
+              className="mr-2"
+            />
+            <Text className="text-gray-600 dark:text-gray-400">Email</Text>
+          </View>
+          <Text className="text-black dark:text-white mb-3">{user?.email}</Text>
+
+          <View className="flex-row items-center mb-1">
+            <Icon
+              name="calendar-outline"
+              size={20}
+              color="#9CA3AF"
+              className="mr-2"
+            />
+            <Text className="text-gray-600 dark:text-gray-400">Ngày sinh</Text>
+          </View>
+          <Text className="text-black dark:text-white">
+            {new Date(user?.dob).toLocaleDateString() || "Chưa có thông tin"}
+          </Text>
+
+          <View className="flex-row items-center mb-1">
+            <Icon
+              name="information-circle-outline"
+              size={20}
+              color="#9CA3AF"
+              className="mr-2"
+            />
+            <Text className="text-gray-600 dark:text-gray-400">Tiểu sử</Text>
+          </View>
+          <Text className="text-black dark:text-white">{user?.bio}</Text>
+        </View>
+
+        <View className="flex-row justify-between my-4">
+          <LibraryItemButton
+            title="... Bài hát"
+            icon="favorite"
+            onPress={() => navigate("LikedSongsScreen")}
+            color="#ffb5b5"
           />
-          <Text className="text-gray-400">Phone Number</Text>
+          <LibraryItemButton
+            title="... Playlists"
+            icon="list"
+            onPress={() => navigate("PlaylistsScreen")}
+            color="#82d8ff"
+          />
+          <LibraryItemButton
+            title="... Nghệ sĩ"
+            icon="person"
+            onPress={() => navigate("ArtistsFollowingScreen")}
+            color="#FFA500"
+          />
         </View>
-        <Text className="text-white">...</Text>
-      </View>
 
-      {/* Các nút Thư viện (Library) */}
-      <View className="flex-row justify-between my-4">
-        <LibraryItemButton
-          title="... Songs"
-          icon="favorite"
-          onPress={() => navigate("LikedSongsScreen")}
-          color="#ffb5b5"
-        />
-        <LibraryItemButton
-          title="... Playlists"
-          icon="list"
-          onPress={() => navigate("PlaylistsScreen")}
-          color="#82d8ff"
-        />
-        <LibraryItemButton
-          title="... Artists"
-          icon="person"
-          onPress={() => navigate("ArtistsFollowingScreen")}
-          color="#fff999"
-        />
-      </View>
-
-      {/* Cài đặt (Settings) */}
-      <View>
-        <Text className="text-white font-semibold mb-2 text-2xl">Settings</Text>
-        <SettingItem
-          title={`Music Language(s): ${settings?.musicLanguages.join(", ")}`}
-          onPress={() => navigate("MusicLanguage")}
-        />
-        <SettingItem
-          title={`Streaming Quality: ${settings?.streamingQuality}`}
-          onPress={() => navigate("StreamingQuality")}
-        />
-        <SettingItem
-          title={`Download Quality: ${settings?.downloadQuality}`}
-          onPress={() => navigate("DownloadQuality")}
-        />
-        <SettingItem
-          color="red"
-          title="Log out"
-          onPress={() => handleLogout()}
-        />
-      </View>
+        <View>
+          <Text className="text-black dark:text-white font-semibold mb-2 text-2xl">
+            Cài đặt
+          </Text>
+          <SettingItem
+            title="Chế độ Tối/Sáng"
+            rightComponent={
+              <View className={"mr-2"}>
+                <ThemeToggle />
+              </View>
+            }
+            onPress={() => {}}
+          />
+          <SettingItem
+            title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
+            onPress={() => navigate("MusicLanguage")}
+          />
+          <SettingItem
+            title={`Chất lượng phát trực tuyến: ${settings?.streamingQuality}`}
+            onPress={() => navigate("StreamingQuality")}
+          />
+          <SettingItem
+            title={`Chất lượng tải xuống: ${settings?.downloadQuality}`}
+            onPress={() => navigate("DownloadQuality")}
+          />
+          <SettingItem
+            color="red"
+            title="Đăng xuất"
+            onPress={() => handleLogout()}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

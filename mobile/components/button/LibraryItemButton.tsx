@@ -34,7 +34,7 @@ export default function LibraryItemButton({
         <Icon name={icon} size={24} color="#000" />
       </View>
       {/* Tiêu đề */}
-      <Text className="text-black text-base font-semibold">{title}</Text>
+      <Text className="text-black dark:text-white text-base font-semibold">{title}</Text>
     </TouchableOpacity>
   );
 }

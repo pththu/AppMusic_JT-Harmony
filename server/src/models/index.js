@@ -25,16 +25,16 @@ const AlbumSong = require('./album_songs');
 // ================= Associations ================= //
 // // Album ↔ Song (N-N) thông qua AlbumSong
 Album.belongsToMany(Song, {
-  through: AlbumSong,
-  foreignKey: 'albumId',
-  otherKey: 'songId',
-  as: 'songs'
+    through: AlbumSong,
+    foreignKey: 'albumId',
+    otherKey: 'songId',
+    as: 'songs'
 })
 Song.belongsToMany(Album, {
-  through: AlbumSong,
-  foreignKey: 'songId',
-  otherKey: 'albumId',
-  as: 'albums'
+    through: AlbumSong,
+    foreignKey: 'songId',
+    otherKey: 'albumId',
+    as: 'albums'
 })
 
 // User - role
@@ -63,11 +63,17 @@ ListeningHistory.belongsTo(User, { foreignKey: 'userId' });
 
 // User - Post
 User.hasMany(Post, { foreignKey: 'userId' });
-Post.belongsTo(User, { foreignKey: 'userId' });
+Post.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'User'
+});
 
 // User - Comment
 User.hasMany(Comment, { foreignKey: 'userId' });
-Comment.belongsTo(User, { foreignKey: 'userId' });
+Comment.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'User'
+});
 
 // User - Download
 User.hasMany(DownloadSong, { foreignKey: 'userId' });
@@ -94,14 +100,14 @@ FavoriteSong.belongsTo(User, { foreignKey: 'userId' });
 
 // Song - Playlist
 Song.belongsToMany(Playlist, {
-  through: PlaylistSong,
-  foreignKey: 'songId',
-  otherKey: 'playlistId'
+    through: PlaylistSong,
+    foreignKey: 'songId',
+    otherKey: 'playlistId'
 });
 Playlist.belongsToMany(Song, {
-  through: PlaylistSong,
-  foreignKey: 'playlistId',
-  otherKey: 'songId'
+    through: PlaylistSong,
+    foreignKey: 'playlistId',
+    otherKey: 'songId'
 });
 
 // Song - Album
@@ -114,26 +120,26 @@ Recommendation.belongsTo(Song, { foreignKey: 'songId' });
 
 // Song - Artist
 Song.belongsToMany(Artist, {
-  through: 'songs_artists',
-  foreignKey: 'songId',
-  otherKey: 'artistId'
+    through: 'songs_artists',
+    foreignKey: 'songId',
+    otherKey: 'artistId'
 });
 Artist.belongsToMany(Song, {
-  through: 'songs_artists',
-  foreignKey: 'artistId',
-  otherKey: 'songId'
+    through: 'songs_artists',
+    foreignKey: 'artistId',
+    otherKey: 'songId'
 });
 
 // Song - Genres
 Song.belongsToMany(Genre, {
-  through: 'songs_genres',
-  foreignKey: 'songId',
-  otherKey: 'genreId'
+    through: 'songs_genres',
+    foreignKey: 'songId',
+    otherKey: 'genreId'
 });
 Genre.belongsToMany(Song, {
-  through: 'songs_genres',
-  foreignKey: 'genreId',
-  otherKey: 'songId'
+    through: 'songs_genres',
+    foreignKey: 'genreId',
+    otherKey: 'songId'
 });
 
 // Song - Favorite Song
@@ -166,25 +172,25 @@ Artist.hasMany(Album, { foreignKey: 'artistId' });
 
 // ================= Export ================= //
 module.exports = {
-  sequelize,
-  Song,
-  Playlist,
-  PlaylistSong,
-  Artist,
-  Album,
-  User,
-  Comment,
-  FavoriteSong,
-  Follow,
-  Genre,
-  ListeningHistory,
-  Notification,
-  Recommendation,
-  Role,
-  SearchHistory,
-  Post,
-  StatDailyPlays,
-  SyncStatus,
-  DownloadSong,
-  AlbumSong
+    sequelize,
+    Song,
+    Playlist,
+    PlaylistSong,
+    Artist,
+    Album,
+    User,
+    Comment,
+    FavoriteSong,
+    Follow,
+    Genre,
+    ListeningHistory,
+    Notification,
+    Recommendation,
+    Role,
+    SearchHistory,
+    Post,
+    StatDailyPlays,
+    SyncStatus,
+    DownloadSong,
+    AlbumSong
 }

@@ -1,5 +1,5 @@
-import { useAlert } from '../context/AlertContext';
-import { AlertButton } from '../types/alert';
+import { useAlert } from "../context/AlertContext";
+import { AlertButton } from "../types/alert";
 
 export const useCustomAlert = () => {
   const { showAlert, hideAlert } = useAlert();
@@ -8,7 +8,7 @@ export const useCustomAlert = () => {
     title: string,
     message?: string,
     buttons?: AlertButton[],
-    type?: 'info' | 'success' | 'warning' | 'error'
+    type?: "info" | "success" | "warning" | "error"
   ) => {
     showAlert({
       title,
@@ -27,16 +27,16 @@ export const useCustomAlert = () => {
     showAlert({
       title,
       message,
-      type: 'warning',
+      type: "warning",
       buttons: [
         {
-          text: 'Hủy',
-          style: 'cancel',
+          text: "Hủy",
+          style: "cancel",
           onPress: onCancel,
         },
         {
-          text: 'Xác nhận',
-          style: 'destructive',
+          text: "Xác nhận",
+          style: "destructive",
           onPress: onConfirm,
         },
       ],
@@ -47,10 +47,10 @@ export const useCustomAlert = () => {
     showAlert({
       title,
       message,
-      type: 'success',
+      type: "success",
       buttons: [
         {
-          text: 'OK',
+          text: "OK",
           onPress,
         },
       ],
@@ -61,10 +61,10 @@ export const useCustomAlert = () => {
     showAlert({
       title,
       message,
-      type: 'error',
+      type: "error",
       buttons: [
         {
-          text: 'Đóng',
+          text: "Đóng",
           onPress,
         },
       ],
@@ -75,10 +75,10 @@ export const useCustomAlert = () => {
     showAlert({
       title,
       message,
-      type: 'warning',
+      type: "warning",
       buttons: [
         {
-          text: 'Hiểu rồi',
+          text: "Hiểu rồi",
           onPress,
         },
       ],

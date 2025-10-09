@@ -11,6 +11,7 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   function async(config) {
     const token = authStore.getState().token;
+    console.log('🔑 Request token:', token ? 'present' : 'null', 'URL:', config.url);
     if (!config.skipAuth && token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

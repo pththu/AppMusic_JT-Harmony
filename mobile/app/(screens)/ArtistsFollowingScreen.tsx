@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useTheme } from '@/components/ThemeContext';
 
 const artists = [
   {
@@ -64,6 +65,9 @@ const artists = [
 
 export default function ArtistsFollowingScreen({ route }: { route: any }) {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
+  const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
 
   const handleBackPress = () => {
     if (route?.params?.fromProfile) {
@@ -73,29 +77,29 @@ export default function ArtistsFollowingScreen({ route }: { route: any }) {
     }
   };
   return (
-    <View className="flex-1 bg-[#0E0C1F] px-4 pt-4">
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Icon name="arrow-back" size={24} color="white" />
+          <Icon name="arrow-back" size={24} color={primaryIconColor} />
         </TouchableOpacity>
         <View>
-          <Text className="text-white text-2xl font-semibold mb-2">
+          <Text className="text-black dark:text-white text-2xl font-semibold mb-2">
             Artists Following
           </Text>
-          <Text className="text-gray-400">8 artists following</Text>
+          <Text className="text-gray-600 dark:text-gray-400">8 artists following</Text>
         </View>
       </View>
       <View className="flex-row items-center mb-4">
-        <View className="flex-1 bg-gray-800 rounded-md p-2 flex-row items-center">
-          <Icon name="search" size={20} color="#888" />
+        <View className="flex-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 flex-row items-center">
+          <Icon name="search" size={20} color={secondaryIconColor} />
           <TextInput
             placeholder="Search"
-            placeholderTextColor="#888"
-            className="ml-2 flex-1 text-white"
+            placeholderTextColor={secondaryIconColor}
+            className="ml-2 flex-1 text-black dark:text-white"
           />
         </View>
         <TouchableOpacity className="ml-4">
-          <Icon name="swap-vertical" size={24} color="#888" />
+          <Icon name="swap-vertical" size={24} color={secondaryIconColor} />
         </TouchableOpacity>
       </View>
       <FlatList
@@ -109,7 +113,7 @@ export default function ArtistsFollowingScreen({ route }: { route: any }) {
               source={{ uri: item.image }}
               className="w-20 h-20 rounded-full mb-2"
             />
-            <Text className="text-white text-center">{item.name}</Text>
+            <Text className="text-black dark:text-white text-center">{item.name}</Text>
           </TouchableOpacity>
         )}
       />

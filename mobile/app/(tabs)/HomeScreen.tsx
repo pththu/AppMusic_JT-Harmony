@@ -1,11 +1,6 @@
 import CustomButton from "@/components/custom/CustomButton";
 import AlbumItem from "@/components/items/AlbumItem";
 import SongItem from "@/components/items/SongItem";
-import {
-  NavigationProp,
-  ParamListBase,
-  useNavigation,
-} from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -15,6 +10,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
@@ -126,37 +122,22 @@ const relaxData = [
   },
 ];
 
-const avatarImages = [
-  "https://randomuser.me/api/portraits/men/1.jpg",
-  "https://randomuser.me/api/portraits/women/2.jpg",
-  "https://randomuser.me/api/portraits/men/3.jpg",
-  "https://randomuser.me/api/portraits/women/4.jpg",
-  "https://randomuser.me/api/portraits/men/5.jpg",
-];
-
 export default function HomeScreen() {
 
   const { navigate } = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const colorScheme = useColorScheme();
   console.log('user', user);
   const [activeTab, setActiveTab] = useState("forYou");
   const animation = useRef(new Animated.Value(0)).current;
-  // const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
-  const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const [hasNotification] = useState(true);
   const [tabWidths, setTabWidths] = useState<number[]>([]);
   const [tabPositions, setTabPositions] = useState<number[]>([]);
   const [tabsLayouted, setTabsLayouted] = useState(false);
 
   useEffect(() => {
-    if (!avatarImage) {
-      const random =
-        avatarImages[Math.floor(Math.random() * avatarImages.length)];
-      setAvatarImage(random);
-    }
-
     Animated.parallel([
       Animated.timing(greetingOpacity, {
         toValue: 1,
@@ -169,7 +150,7 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [greetingOpacity, greetingTranslateY, avatarImage]);
+  }, [greetingOpacity, greetingTranslateY]);
 
   useEffect(() => {
     if (tabWidths.length === tabs.length) {
@@ -218,39 +199,30 @@ export default function HomeScreen() {
     : 0;
 
   return (
-    <View className="flex-1  bg-[#0E0C1F]">
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F]">
       {/* Header */}
-      <View className="flex-row justify-between items-center mx-5 mt-10 mb-2">
+      <View className="flex-row justify-between items-center mx-5 mt-10 mb-2 border border-gray-300 dark:border-black rounded-lg p-4">
         <Animated.Text
-          className="text-white text-2xl font-bold"
+          className="text-black dark:text-white text-2xl font-bold"
           style={{
             opacity: greetingOpacity,
             transform: [{ translateY: greetingTranslateY }],
           }}
         >
-          Hi, {user.fullName || "User"} 👋
+          Hi, {String(user?.fullName || user?.username || 'User')} 👋
         </Animated.Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">
-            <Icon name="notifications-outline" size={28} color="#fff" />
+            <Icon name="notifications-outline" size={28} color={colorScheme === "dark" ? "#fff" : "#000"} />
             {hasNotification && (
               <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
             )}
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              // navigation.navigate("Profile", { screen: "ProfileMain" })
-              navigate("Profile")
-            }
-          >
-            {avatarImage ? (
-              <Image
-                source={{ uri: avatarImage }}
-                className="w-10 h-10 rounded-full"
-              />
-            ) : (
-              <View className="w-10 h-10 rounded-full bg-gray-600" />
-            )}
+          <TouchableOpacity onPress={() => navigate("Profile")}>
+            <Image
+              source={{ uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
+              className="w-10 h-10 rounded-full"
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -271,8 +243,8 @@ export default function HomeScreen() {
             >
               <Text
                 className={`text-xl font-bold ${activeTab === tab.id
-                    ? "text-white font-bold"
-                    : "text-gray-500 font-normal"
+                  ? "text-black dark:text-white font-bold"
+                  : "text-gray-500 dark:text-gray-400 font-normal"
                   }`}
               >
                 {tab.label}
@@ -282,7 +254,7 @@ export default function HomeScreen() {
         </ScrollView>
         {tabsLayouted && (
           <Animated.View
-            className="h-0.5 bg-white absolute -bottom-2"
+            className="h-0.5 bg-black dark:bg-white absolute -bottom-2"
             style={{
               width: tabUnderlineWidth,
               transform: [{ translateX: tabUnderlineLeft }],
@@ -301,10 +273,10 @@ export default function HomeScreen() {
               className="w-full h-48 rounded-lg"
             />
             <View className="absolute bottom-4 left-4">
-              <Text className="text-white text-xl font-bold">
+              <Text className="text-black dark:text-white text-xl font-bold">
                 {forYouData[0].title}
               </Text>
-              <Text className="text-gray-300">{forYouData[0].content}</Text>
+              <Text className="text-gray-600 dark:text-gray-300">{forYouData[0].content}</Text>
               <CustomButton
                 title="Play"
                 onPress={() => { }}
@@ -316,10 +288,10 @@ export default function HomeScreen() {
           {/* Recently Played Horizontal List */}
           <View className="mb-6">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-white text-lg font-bold">
+              <Text className="text-black dark:text-white text-lg font-bold">
                 {forYouData[1].title}
               </Text>
-              <CustomButton title="See more" onPress={() => { }} />
+              <CustomButton title="Xem thêm" onPress={() => { }} />
             </View>
             <FlatList
               horizontal
@@ -338,7 +310,7 @@ export default function HomeScreen() {
 
           {/* Mixes for you Horizontal List */}
           <View className="mb-6">
-            <Text className="text-white text-lg font-bold mb-2">
+            <Text className="text-black dark:text-white text-lg font-bold mb-2">
               {forYouData[2].title}
             </Text>
             <FlatList
@@ -367,10 +339,10 @@ export default function HomeScreen() {
               className="w-full h-48 rounded-lg"
             />
             <View className="absolute bottom-4 left-4">
-              <Text className="text-white text-xl font-bold">
+              <Text className="text-black dark:text-white text-xl font-bold">
                 {relaxData[0].title}
               </Text>
-              <Text className="text-gray-300">{relaxData[0].content}</Text>
+              <Text className="text-gray-600 dark:text-gray-300">{relaxData[0].content}</Text>
             </View>
           </View>
 

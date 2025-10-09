@@ -1,28 +1,31 @@
-import React, { useEffect, useRef } from 'react';
+import { useColorScheme } from "@/components/useColorScheme";
 import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
+  ALERT_ANIMATIONS,
+  DEFAULT_ALERT_BUTTONS,
+} from "@/constants/AlerConfig";
+import { AlertButton, AlertConfig } from "@/types/alert";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useRef } from "react";
+import {
   Animated,
   Dimensions,
+  Modal,
+  Text,
+  TouchableOpacity,
   TouchableWithoutFeedback,
-} from 'react-native';
-import { useColorScheme } from '@/components/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
-import { AlertConfig, AlertButton } from '@/types/alert';
-import { DEFAULT_ALERT_BUTTONS, ALERT_ANIMATIONS } from '@/constants/AlerConfig';
+  View,
+} from "react-native";
 
 interface CustomAlertProps {
   config: AlertConfig;
   onHide: () => void;
 }
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
   const colorScheme = useColorScheme();
-  const isDark = 'dark';
+  const isDark = "dark";
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -74,25 +77,26 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
 
   const getIconByType = () => {
     switch (config.type) {
-      case 'success':
-        return 'checkmark-circle';
-      case 'warning':
-        return 'warning';
-      case 'error':
-        return 'close-circle';
+      case "success":
+        return "checkmark-circle";
+      case "warning":
+        return "warning";
+      case "error":
+        return "close-circle";
       default:
-        return 'information-circle';
+        return "information-circle";
     }
   };
 
   const getIconContainerClass = () => {
-    const baseClass = 'self-center w-16 h-16 rounded-full justify-center items-center mt-6 mb-4';
+    const baseClass =
+      "self-center w-16 h-16 rounded-full justify-center items-center mt-6 mb-4";
     switch (config.type) {
-      case 'success':
+      case "success":
         return `${baseClass} bg-green-100 dark:bg-green-900/30`;
-      case 'warning':
+      case "warning":
         return `${baseClass} bg-amber-100 dark:bg-amber-900/30`;
-      case 'error':
+      case "error":
         return `${baseClass} bg-red-100 dark:bg-red-900/30`;
       default:
         return `${baseClass} bg-blue-100 dark:bg-blue-900/30`;
@@ -101,34 +105,38 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
 
   const getIconColor = () => {
     switch (config.type) {
-      case 'success':
-        return '#10B981';
-      case 'warning':
-        return '#F59E0B';
-      case 'error':
-        return '#EF4444';
+      case "success":
+        return "#10B981";
+      case "warning":
+        return "#F59E0B";
+      case "error":
+        return "#EF4444";
       default:
-        return '#3B82F6';
+        return "#3B82F6";
     }
   };
 
-  const getButtonStyle = (button: AlertButton, index: number, totalButtons: number) => {
-    let baseClass = 'flex-1 py-4 justify-center items-center';
-    
+  const getButtonStyle = (
+    button: AlertButton,
+    index: number,
+    totalButtons: number
+  ) => {
+    let baseClass = "flex-1 py-4 justify-center items-center";
+
     // Background colors based on theme
-    const bgWhite = isDark ? 'bg-gray-800' : 'bg-gray-200';
-    const bgGray = isDark ? 'bg-gray-700' : 'bg-gray-50';
-    const bgRed = isDark ? 'bg-red-900/20' : 'bg-red-50';
-    
+    const bgWhite = isDark ? "bg-gray-800" : "bg-gray-200";
+    const bgGray = isDark ? "bg-gray-700" : "bg-gray-50";
+    const bgRed = isDark ? "bg-red-900/20" : "bg-red-50";
+
     baseClass += ` ${bgWhite}`;
-    
+
     // Single button
     if (totalButtons === 1) {
-      baseClass += ' rounded-bl-xl rounded-br-xl';
+      baseClass += " rounded-bl-xl rounded-br-xl";
     }
     // Multiple buttons
     else {
-      const borderColor = isDark ? 'border-gray-600' : 'border-gray-200';
+      const borderColor = isDark ? "border-gray-600" : "border-gray-200";
       if (index === 0) {
         baseClass += ` rounded-bl-xl border-r ${borderColor}`;
       } else if (index === totalButtons - 1) {
@@ -139,9 +147,9 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     }
 
     // Button specific styles
-    if (button.style === 'cancel') {
+    if (button.style === "cancel") {
       baseClass = baseClass.replace(bgWhite, bgGray);
-    } else if (button.style === 'destructive') {
+    } else if (button.style === "destructive") {
       baseClass = baseClass.replace(bgWhite, bgRed);
     }
 
@@ -149,37 +157,36 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
   };
 
   const getButtonTextStyle = (button: AlertButton) => {
-    let textClass = 'text-base font-semibold';
-    
+    let textClass = "text-base font-semibold";
+
     switch (button.style) {
-      case 'cancel':
-        return textClass + (isDark ? ' text-gray-400' : ' text-gray-500');
-      case 'destructive':
-        return textClass + ' text-gray-500';
+      case "cancel":
+        return textClass + (isDark ? " text-gray-400" : " text-gray-500");
+      case "destructive":
+        return textClass + " text-gray-500";
       default:
-        return textClass + ' text-gray-500';
+        return textClass + " text-gray-500";
     }
   };
 
   const buttons = config.buttons || DEFAULT_ALERT_BUTTONS;
-  const containerBg = isDark ? 'bg-gray-800' : 'bg-gray-100';
-  const titleColor = isDark ? 'text-white' : 'text-gray-900';
-  const messageColor = isDark ? 'text-gray-300' : 'text-gray-600';
-  const borderColor = isDark ? 'border-gray-600' : 'border-gray-200';
+  const containerBg = isDark ? "bg-gray-800" : "bg-gray-100";
+  const titleColor = isDark ? "text-white" : "text-gray-900";
+  const messageColor = isDark ? "text-gray-300" : "text-gray-600";
+  const borderColor = isDark ? "border-gray-600" : "border-gray-200";
 
   return (
-    <Modal
-      transparent
-      visible={true}
-      animationType="none"
-      statusBarTranslucent
-    >
+    <Modal transparent visible={true} animationType="none" statusBarTranslucent>
       <TouchableWithoutFeedback onPress={handleBackdropPress}>
-        <Animated.View 
+        <Animated.View
           className="flex-1 justify-center items-center px-6"
           style={[
-            { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)' },
-            { opacity: opacityAnim }
+            {
+              backgroundColor: isDark
+                ? "rgba(0, 0, 0, 0.7)"
+                : "rgba(0, 0, 0, 0.5)",
+            },
+            { opacity: opacityAnim },
           ]}
         >
           <TouchableWithoutFeedback>
@@ -193,21 +200,25 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
               {/* Icon */}
               {config.type && (
                 <View className={getIconContainerClass()}>
-                  <Ionicons 
-                    name={getIconByType() as any} 
-                    size={28} 
-                    color={getIconColor()} 
+                  <Ionicons
+                    name={getIconByType() as any}
+                    size={28}
+                    color={getIconColor()}
                   />
                 </View>
               )}
 
               {/* Content */}
               <View className="px-6 pb-6 items-center">
-                <Text className={`text-xl font-bold ${titleColor} text-center mb-3`}>
+                <Text
+                  className={`text-xl font-bold ${titleColor} text-center mb-3`}
+                >
                   {config.title}
                 </Text>
                 {config.message && (
-                  <Text className={`text-base ${messageColor} text-center leading-6`}>
+                  <Text
+                    className={`text-base ${messageColor} text-center leading-6`}
+                  >
                     {config.message}
                   </Text>
                 )}

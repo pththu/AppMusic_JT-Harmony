@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import DateTimePicker, { DateType } from "react-native-ui-datepicker";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useTheme } from '@/components/ThemeContext';
 
 export default function EditProfileScreen() {
   const [username, setUsername] = useState("");
@@ -16,6 +17,8 @@ export default function EditProfileScreen() {
   const [gender, setGender] = useState("");
   const [bio, setBio] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const { theme } = useTheme();
+  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
 
   const validateEmail = (email: string) => {
     const re = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
@@ -59,12 +62,12 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#0E0C1F] px-4 pt-4">
+    <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Icon name="arrow-back" size={24} color="white" />
+          <Icon name="arrow-back" size={24} color={primaryIconColor} />
         </TouchableOpacity>
-        <Text className="text-white text-3xl font-extrabold mb-6 text-center">
+        <Text className="text-black dark:text-white text-3xl font-extrabold mb-6 text-center">
           Personal Information
         </Text>
       </View>
@@ -95,18 +98,18 @@ export default function EditProfileScreen() {
         iconName="badge"
       />
 
-      <Text className="text-gray-300 mb-1">Date of Birth</Text>
+      <Text className="text-gray-700 dark:text-gray-300 mb-1">Date of Birth</Text>
       <TouchableOpacity
-        className="bg-gray-800 rounded-md p-3 mb-4"
+        className="bg-gray-200 dark:bg-gray-800 rounded-md p-3 mb-4"
         onPress={() => setShowDatePicker(true)}
       >
-        <Text className="text-white">
+        <Text className="text-black dark:text-white">
           {dob ? formatDate(dob) : "Select date"}
         </Text>
       </TouchableOpacity>
       {errors.dob && <Text className="text-red-500 mb-2">{errors.dob}</Text>}
       {showDatePicker && (
-        <View className="bg-gray-800 rounded-lg p-2">
+        <View className="bg-gray-200 dark:bg-gray-800 rounded-lg p-2">
           <DateTimePicker
             mode="single"
             date={dob ? dayjs(dob) : dayjs()}
