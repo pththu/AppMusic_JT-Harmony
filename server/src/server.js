@@ -53,22 +53,21 @@ const protectedRoutes = [
     'follows', // Theo dõi
     'history', // Lịch sử nghe nhạc
     'notifications', // Thông báo
-    'playlists', // Playlist cá nhân
-    'posts', // Đăng bài, Sửa, Xóa bài đăng
-    'comments', // Comment
+    'playlists',     // Playlist cá nhân
+    'posts',         // Đăng bài
+    'comments',       // Comment (cần đăng nhập mới comment được)
+    'genres',    // Xem thể loại nhạc
+    'artists',   // Xem thông tin nghệ sĩ
+    'albums',    // Xem album
+    'search',     // Tìm kiếm công khai
+    'songs',        // Xem bài hát (public), upload bài hát (private)
+    'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
     'albumSongs',
-    'genres', // Xem thể loại nhạc
-    'artists', // Xem thông tin nghệ sĩ
-    'albums', // Xem album
-    'search', // Tìm kiếm công khai
-    'songs', // Xem bài hát (public)
-    'recommend', // Gợi ý (có thể không cá nhân hóa nếu chưa đăng nhập)
-];
+    'upload'        // Upload hình ảnh, file
+  ]
 
-// --- THIẾT LẬP ROUTES ---
-
-// 1. Xử lý các route public (KHÔNG cần authenticateToken)
-publicRoutes.forEach(route => {
+  // Setup public routes
+  publicRoutes.forEach(route => {
     app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`))
 })
 
