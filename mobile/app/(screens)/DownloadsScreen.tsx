@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '@/components/ThemeContext';
 
 const downloadedSongs = [
   { id: '1', title: 'Inside Out', artist: 'The Chainsmokers, Charlee', image: 'https://i.scdn.co/image/ab67616d00001e02a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1' },
@@ -14,29 +15,32 @@ const downloadedSongs = [
 
 export default function DownloadsScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
+  const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
 
   return (
-    <View className="flex-1 bg-black px-4 pt-4">
+    <View className="flex-1 bg-white dark:bg-black px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="arrow-back" size={24} color="white" />
+          <Icon name="arrow-back" size={24} color={primaryIconColor} />
         </TouchableOpacity>
         <View>
-          <Text className="text-white text-2xl font-semibold mb-2">Downloads</Text>
-          <Text className="text-gray-400">210 songs downloaded</Text>
+          <Text className="text-black dark:text-white text-2xl font-semibold mb-2">Downloads</Text>
+          <Text className="text-gray-600 dark:text-gray-400">210 songs downloaded</Text>
         </View>
       </View>
       <View className="flex-row items-center mb-4">
-        <View className="flex-1 bg-gray-800 rounded-md p-2 flex-row items-center">
-          <Icon name="search" size={20} color="#888" />
+        <View className="flex-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 flex-row items-center">
+          <Icon name="search" size={20} color={secondaryIconColor} />
           <TextInput
             placeholder="Search"
-            placeholderTextColor="#888"
-            className="ml-2 flex-1 text-white"
+            placeholderTextColor={secondaryIconColor}
+            className="ml-2 flex-1 text-black dark:text-white"
           />
         </View>
         <TouchableOpacity className="ml-4">
-          <Icon name="swap-vertical" size={24} color="#888" />
+          <Icon name="swap-vertical" size={24} color={secondaryIconColor} />
         </TouchableOpacity>
       </View>
       <FlatList
@@ -46,11 +50,11 @@ export default function DownloadsScreen() {
           <TouchableOpacity className="flex-row items-center p-2">
             <Image source={{ uri: item.image }} className="w-12 h-12 rounded-md" />
             <View className="ml-4 flex-1">
-              <Text className="text-white font-semibold">{item.title}</Text>
-              <Text className="text-gray-400">{item.artist}</Text>
+              <Text className="text-black dark:text-white font-semibold">{item.title}</Text>
+              <Text className="text-gray-600 dark:text-gray-400">{item.artist}</Text>
             </View>
             <TouchableOpacity>
-              <Text className="text-gray-400 text-2xl">⋮</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-2xl">⋮</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         )}

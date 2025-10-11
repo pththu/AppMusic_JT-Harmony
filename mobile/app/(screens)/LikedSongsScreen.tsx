@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useTheme } from '@/components/ThemeContext';
 
 const likedSongs = [
   {
@@ -57,27 +58,29 @@ const likedSongs = [
 
 export default function LikedSongsScreen() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
 
   return (
-    <View className="flex-1 bg-[#0E0C1F] px-4 pt-4">
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Icon name="arrow-back" size={24} color="white" />
+          <Icon name="arrow-back" size={24} color={primaryIconColor} />
         </TouchableOpacity>
         <View>
-          <Text className="text-white text-2xl font-semibold mb-2">
+          <Text className="text-black dark:text-white text-2xl font-semibold mb-2">
             Liked Songs
           </Text>
-          <Text className="text-gray-400">120 liked songs</Text>
+          <Text className="text-gray-600 dark:text-gray-400">120 liked songs</Text>
         </View>
       </View>
       <View className="flex-row items-center mb-4">
-        <View className="flex-1 bg-gray-800 rounded-md p-2 flex-row items-center">
+        <View className="flex-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 flex-row items-center">
           <Icon name="search" size={20} color="#888" />
           <TextInput
             placeholder="Search"
             placeholderTextColor="#888"
-            className="ml-2 flex-1 text-white"
+            className="ml-2 flex-1 text-black dark:text-white"
           />
         </View>
         <TouchableOpacity className="ml-4">
@@ -94,11 +97,11 @@ export default function LikedSongsScreen() {
               className="w-12 h-12 rounded-md"
             />
             <View className="ml-4 flex-1">
-              <Text className="text-white font-semibold">{item.title}</Text>
-              <Text className="text-gray-400">{item.artist}</Text>
+              <Text className="text-black dark:text-white font-semibold">{item.title}</Text>
+              <Text className="text-gray-600 dark:text-gray-400">{item.artist}</Text>
             </View>
             <TouchableOpacity>
-              <Text className="text-gray-400 text-2xl">⋮</Text>
+              <Text className="text-gray-600 dark:text-gray-400 text-2xl">⋮</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         )}

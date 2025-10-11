@@ -15,8 +15,8 @@ export default function SongItem({ title, subtitle, image, onPress, onOptionsPre
     <TouchableOpacity className="flex-row items-center py-2" onPress={onPress}>
       <Image source={{ uri: image }} className="w-12 h-12 rounded-md mr-3" />
       <View className="flex-1">
-        <Text className="text-white font-semibold">{title}</Text>
-        <Text className="text-gray-400 text-xs">{subtitle}</Text>
+        <Text className="text-black dark:text-white font-semibold">{title}</Text>
+        <Text className="text-gray-400 dark:text-gray-300 text-xs">{subtitle}</Text>
       </View>
       <TouchableOpacity onPress={onOptionsPress}>
         <Icon name="ellipsis-vertical" size={20} color="#888" />
