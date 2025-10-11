@@ -1,28 +1,56 @@
+// components/items/SettingItem.tsx
+
+import { useTheme } from "@/components/ThemeContext";
 import React from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
 interface SettingItemProps {
   title: string;
   onPress: () => void;
-  color?: string; // Thêm prop color tùy chọn
+  color?: string; // Dùng cho trường hợp đặc biệt (ví dụ: "red" cho Đăng xuất)
+  rightComponent?: React.ReactNode;
 }
 
 export default function SettingItem({
   title,
   onPress,
-  color = "white",
+  color,
+  rightComponent,
 }: SettingItemProps) {
+  // Lấy theme hiện tại
+  const { theme } = useTheme(); 
+
+  let textColor = "black";
+  if (color) {
+    textColor = color; // Ưu tiên prop 'color' nếu có (ví dụ: 'red')
+  } else if (theme === "dark") {
+    textColor = "white"; // Nếu Dark Mode, dùng màu trắng
+  } 
+  // Logic tính toán màu cho Icon mũi tên (đã đúng)
+  let iconColor = textColor; // Tận dụng màu chữ đã tính toán cho icon
+
   return (
     <TouchableOpacity
-      className="flex-row items-center justify-between py-4"
+      className="flex-row items-center justify-between py-2"
       onPress={onPress}
       activeOpacity={0.7}
+      disabled={!!rightComponent}
     >
-      <Text className="text-base font-medium" style={{ color: color }}>
+      <Text 
+        style={{ color: textColor }}
+        className={"text-base font-medium"}
+      >
         {title}
       </Text>
-      <Icon name="chevron-forward" size={24} color={color} />
+      <View>
+        {rightComponent ? (
+          rightComponent
+        ) : (
+          // Áp dụng iconColor đã tính toán
+          <Icon name="chevron-forward" size={24} color={iconColor} />
+        )}
+      </View>
     </TouchableOpacity>
   );
 }

@@ -1,50 +1,57 @@
-const express = require('express')
-const http = require('http')
-const cors = require('cors')
-const morgan = require('morgan')
-const path = require('path')
-const cookieParser = require('cookie-parser')
-const bodyParser = require('body-parser')
-const { sequelize } = require('./models')
-const { API_PREFIX } = require('./configs/constants')
-const { authenticateToken } = require('./middlewares/authentication')
-const dotenv = require('dotenv');
+const express = require("express");
+const http = require("http");
+const cors = require("cors");
+const morgan = require("morgan");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const { sequelize } = require("./models");
+const { API_PREFIX } = require("./configs/constants");
+const { authenticateToken } = require("./middlewares/authentication");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
-const app = express()
-const server = http.createServer(app)
+const app = express();
+const server = http.createServer(app);
 
-app.set('trust proxy', true)
+app.set("trust proxy", true);
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:3000'], // frontend
-  credentials: true
-}))
+// Middleware CORS - Giữ lại 1 khối cors để tránh trùng lặp và xung đột
+app.use(
+    cors({
+        origin: ["http://localhost:3000", "http://192.168.1.30:3000"], // Thêm địa chỉ IP của bạn
+        credentials: true,
+    })
+);
 
-app.use(express.json({ limit: '50mb' }))
-app.use(express.urlencoded({ extended: true }))
-app.use(cookieParser())
-
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Static files
-app.use('/static', express.static(path.join(__dirname, 'public')));
-app.use(`${API_PREFIX}/uploads/avatars`, express.static(path.join(__dirname, 'uploads', 'avatars')));
+app.use("/static", express.static(path.join(__dirname, "public")));
+app.use(
+    `${API_PREFIX}/uploads/avatars`,
+    express.static(path.join(__dirname, "uploads", "avatars"))
+);
 
-const setupRoutes = () => {
-  // PUBLIC ROUTES
-  const publicRoutes = [
-    'auth',      // Login/register
-    'roles',      // Admin routes
-    'users'     // Quản lý profile user
-  ]
+// --- KHAI BÁO ROUTES Ở PHẠM VI TOÀN CỤC ---
 
-  // PROTECTED ROUTES - Bắt buộc phải đăng nhập
-  const protectedRoutes = [
-    'favorites',     // Yêu thích
-    'follows',       // Theo dõi
-    'history',       // Lịch sử nghe nhạc
+// PUBLIC ROUTES - Các route KHÔNG cần đăng nhập
+const publicRoutes = [
+    'auth', // Login/register
+    'roles', // Admin routes (chỉ các route xem thông tin)
+    'users', // Quản lý profile user (chỉ các route xem thông tin)
+    'posts'
+
+];
+
+// PROTECTED ROUTES - Bắt buộc phải đăng nhập
+const protectedRoutes = [
+    'favorites', // Yêu thích
+    'follows', // Theo dõi
+    'history', // Lịch sử nghe nhạc
     'notifications', // Thông báo
     'playlists',     // Playlist cá nhân
     'posts',         // Đăng bài
@@ -62,29 +69,33 @@ const setupRoutes = () => {
   // Setup public routes
   publicRoutes.forEach(route => {
     app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`))
-  })
+})
 
-  // Setup protected routes với authentication bắt buộc
-  protectedRoutes.forEach(route => {
+// 2. TẠO NGOẠI LỆ CHO GET /posts (LOAD FEED CÔNG KHAI)
+// Dòng này đảm bảo chỉ request GET /posts được xử lý mà không cần Token
+app.get(`${API_PREFIX}/posts`, require('./routes/postsRoute'));
+
+// 3. Setup protected routes với authentication bắt buộc
+protectedRoutes.forEach(route => {
+    // Vì 'posts' nằm trong protectedRoutes, nên POST/PUT/DELETE /posts vẫn được bảo vệ
     app.use(`${API_PREFIX}/${route}`, authenticateToken, require(`./routes/${route}Route`))
-  })
-}
+})
 
-setupRoutes();
 
 // Start server
 async function startServer() {
-  try {
-    // await sequelize.sync()
-    // console.log('✅ Database synchronized successfully')
+    try {
 
-    server.listen(process.env.PORT || 3000, () => {
-      console.log(`🎶 Music Server is running at http://localhost:${process.env.PORT || 8000}`)
-    })
+        // await sequelize.sync()
+        // console.log('✅ Database synchronized successfully')
 
-  } catch (error) {
-    console.error('❌ Error starting server:', error)
-  }
+        server.listen(process.env.PORT || 8000, () => {
+            console.log(`🎶 Music Server is running at http://localhost:${process.env.PORT || 8000}`)
+        })
+
+    } catch (error) {
+        console.error('❌ Error starting server:', error)
+    }
 }
 
-startServer()
+startServer();

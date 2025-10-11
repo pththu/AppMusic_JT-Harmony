@@ -1,0 +1,4 @@
+- [x] Cập nhật YourLibraryScreen.tsx: Thay thế màu cố định bằng Tailwind classes với dark variants
+- [x] Cập nhật LibraryItemButton.tsx: Thêm dark mode cho text
+- [x] Cập nhật SongItem.tsx: Thêm dark mode cho text
+- [x] Kiểm tra đồng bộ theme giữa ProfileScreen và YourLibraryScreen (Theme global qua ThemeContext, đồng bộ tự động)
