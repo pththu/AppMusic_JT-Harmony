@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import axios from 'axios';
-
 dotenv.config();
 
 // Spotify Configuration
@@ -22,7 +21,6 @@ exports.getSpotifyToken = async () => {
     }
 
     const credentials = Buffer.from(`${SPOTIFY_CONFIG.CLIENT_ID}:${SPOTIFY_CONFIG.CLIENT_SECRET}`).toString('base64');
-
     const response = await axios.post(SPOTIFY_CONFIG.TOKEN_URL,
       'grant_type=client_credentials',
       {
@@ -195,7 +193,6 @@ exports.searchPlaylists = async (queries = [], market = 'VN', limit = 15) => {
     return [];
   }
 };
-
 
 exports.formatTrack = (track) => {
   return {

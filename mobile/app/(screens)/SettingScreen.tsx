@@ -21,7 +21,6 @@ Settings.setAppID(ENV.FACEBOOK_APP_ID);
 Settings.initializeSDK();
 
 export default function SettingScreen() {
-
   const user = useAuthStore(state => state.user);
   const loginType = useAuthStore(state => state.loginType);
   const updateUser = useAuthStore(state => state.updateUser);
@@ -127,7 +126,6 @@ export default function SettingScreen() {
   };
 
   const handleLockAccount = async () => {
-
     async function lock() {
       setLoading(true);
       setTimeout(async () => {

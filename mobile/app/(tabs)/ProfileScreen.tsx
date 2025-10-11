@@ -20,6 +20,7 @@ export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
   const user = useAuthStore(state => state.user);
   const loginType = useAuthStore(state => state.loginType);
+  const updateUser = useAuthStore(state => state.updateUser);
   const { navigate } = useNavigate();
   const { success, error, warning } = useCustomAlert();
   const logout = useAuthStore(state => state.logout);
@@ -65,10 +66,12 @@ export default function ProfileScreen() {
     setLoading(true);
     try {
       const response = await ChangeAvatar(selectedImage);
+      console.log('response', response);
 
       if (response.success) {
         setUploadedImages([...uploadedImages, response.data]);
         setSelectedImage(null);
+        updateUser({ ...user, avatarUrl: response.data });
         success('Upload hình ảnh thành công!');
       }
     } catch (error) {
