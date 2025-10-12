@@ -10,10 +10,12 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from "@/store/authStore";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Dữ liệu mockup đã được thêm image URL
 const tabs = [
@@ -125,6 +127,7 @@ export default function HomeScreen() {
 
   const { navigate } = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const colorScheme = useColorScheme();
   const [activeTab, setActiveTab] = useState("forYou");
   const animation = useRef(new Animated.Value(0)).current;
   const greetingOpacity = useRef(new Animated.Value(0)).current;
@@ -195,12 +198,20 @@ export default function HomeScreen() {
     })
     : 0;
 
+  const containerBackgroundColor = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colorScheme === "dark" ? "#000" : "#fff", colorScheme === "dark" ? "#121212" : "#f5f5f5"],
+  });
+
   return (
-    <View className="flex-1  bg-[#0E0C1F]">
+    <Animated.ScrollView
+      className="flex-1 bg-[#0E0C1F]"
+      style={{ backgroundColor: containerBackgroundColor }}
+    >
       {/* Header */}
       <View className="flex-row justify-between items-center mx-5 mt-10 mb-2">
         <Animated.Text
-          className="text-white text-2xl font-bold"
+          className={`${colorScheme === "dark" ? "text-white" : "text-black"} text-2xl font-bold`}
           style={{
             opacity: greetingOpacity,
             transform: [{ translateY: greetingTranslateY }],
@@ -210,7 +221,7 @@ export default function HomeScreen() {
         </Animated.Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">
-            <Icon name="notifications-outline" size={28} color="#fff" />
+            <Icon name="notifications-outline" size={28} color={colorScheme === "dark" ? "#888" : "#000"} />
             {hasNotification && (
               <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
             )}
@@ -240,8 +251,8 @@ export default function HomeScreen() {
             >
               <Text
                 className={`text-xl font-bold ${activeTab === tab.id
-                  ? "text-white font-bold"
-                  : "text-gray-500 font-normal"
+                  ? `${colorScheme === "dark" ? "text-white" : "text-black"} font-bold`
+                  : `${colorScheme === "dark" ? "text-gray-400" : "text-gray-500"} font-medium`
                   }`}
               >
                 {tab.label}
@@ -285,7 +296,7 @@ export default function HomeScreen() {
           {/* Recently Played Horizontal List */}
           <View className="mb-6">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-white text-lg font-bold">
+              <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
                 {forYouData[1].title}
               </Text>
               <CustomButton title="See more" onPress={() => { }} />
@@ -356,6 +367,6 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
       )}
-    </View>
+    </Animated.ScrollView>
   );
 }

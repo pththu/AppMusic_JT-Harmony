@@ -294,15 +294,20 @@ exports.changeAvatar = async (req, res) => {
     };
 
     console.log('data upload', data);
+    if (req.file.path) {
+      const user = await User.findByPk(req.user.id);
+      user.avatarUrl = req.file.path;
+      await user.save();
+    }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Upload thành công',
       data
     });
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Lỗi khi upload hình ảnh',
       error: error.message

@@ -6,8 +6,10 @@ import useAuthStore from "@/store/authStore";
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useColorScheme } from "react-native";
 
 export default function LoginScreen() {
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error } = useCustomAlert();
   const { login } = useAuthStore();
@@ -70,11 +72,11 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0E0C1F] items-center justify-center">
+    <SafeAreaView className={`flex-1 items-center justify-center ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
       <View
         className="w-11/12 p-8 rounded-2xl"
         style={{
-          backgroundColor: "#222222",
+          backgroundColor: colorScheme === "dark" ? "#222222" : "white",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.2,
@@ -82,15 +84,15 @@ export default function LoginScreen() {
           elevation: 10,
         }}
       >
-        <Text className="text-white text-3xl font-bold mb-8 text-center">
+        <Text className={`text-4xl font-extrabold mb-6 text-center ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"}`}>
           Đăng nhập
         </Text>
 
         {/* Input cho Email */}
         <View className="mb-4">
-          <Text className="text-gray-300 mb-2">Email</Text>
+          <Text className={`text-gray-300 mb-2 ${colorScheme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Email</Text>
           <CustomTextInput
-            placeholder="Your Email"
+            placeholder="Nhập email"
             value={email}
             onChangeText={setEmail}
             iconName="mail"
@@ -100,9 +102,9 @@ export default function LoginScreen() {
 
         {/* Input cho Password */}
         <View className="mb-4">
-          <Text className="text-gray-300 mb-2">Mật khẩu</Text>
+          <Text className={`text-gray-300 mb-2 ${colorScheme === "dark" ? "text-gray-400" : "text-gray-600"}`}>Mật khẩu</Text>
           <CustomTextInput
-            placeholder="Your Password"
+            placeholder="Nhập mật khẩu"
             value={password}
             onChangeText={setPassword}
             iconName="lock"

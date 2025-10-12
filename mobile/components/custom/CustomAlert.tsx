@@ -22,7 +22,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
   const colorScheme = useColorScheme();
-  const isDark = 'dark';
+  const isDark = colorScheme === 'dark' ? true : false;
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -89,13 +89,13 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     const baseClass = 'self-center w-16 h-16 rounded-full justify-center items-center mt-6 mb-4';
     switch (config.type) {
       case 'success':
-        return `${baseClass} bg-green-100 dark:bg-green-900/30`;
+        return `${baseClass} ${isDark ? 'bg-green-900/30' : 'bg-green-100'}`;
       case 'warning':
-        return `${baseClass} bg-amber-100 dark:bg-amber-900/30`;
+        return `${baseClass} ${isDark ? 'bg-amber-900/30' : 'bg-amber-100'}`;
       case 'error':
-        return `${baseClass} bg-red-100 dark:bg-red-900/30`;
+        return `${baseClass} ${isDark ? 'bg-red-900/30' : 'bg-red-100'}`;
       default:
-        return `${baseClass} bg-blue-100 dark:bg-blue-900/30`;
+        return `${baseClass} ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'}`;
     }
   };
 
@@ -114,15 +114,15 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
 
   const getButtonStyle = (button: AlertButton, index: number, totalButtons: number) => {
     let baseClass = 'flex-1 py-4 justify-center items-center';
-    
+
     // Background colors based on theme
-    const bgWhite = isDark ? 'bg-gray-800' : 'bg-gray-200';
-    const bgGray = isDark ? 'bg-gray-700' : 'bg-gray-50';
-    const bgRed = isDark ? 'bg-red-700' : 'bg-red-50';
-    const bgGreen = isDark ? 'bg-green-700' : 'bg-green-50';
-    
+    const bgWhite = isDark ? 'bg-gray-500' : 'bg-gray-300';
+    const bgGray = isDark ? 'bg-gray-500' : 'bg-gray-300';
+    const bgRed = isDark ? 'bg-red-500' : 'bg-red-300';
+    const bgGreen = isDark ? 'bg-green-500' : 'bg-green-300';
+
     baseClass += ` ${bgWhite}`;
-    
+
     // Single button
     if (totalButtons === 1) {
       baseClass += ' rounded-bl-xl rounded-br-xl';
@@ -153,14 +153,14 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
 
   const getButtonTextStyle = (button: AlertButton) => {
     let textClass = 'text-base font-semibold';
-    
+
     switch (button.style) {
       case 'cancel':
-        return textClass + (isDark ? ' text-gray-100' : ' text-gray-600');
+        return textClass + (isDark ? ' text-gray-100' : ' text-gray-700');
       case 'destructive':
-        return textClass + ' text-gray-100';
+        return textClass + (isDark ? ' text-white' : ' text-red-700');
       default:
-        return textClass + ' text-gray-100';
+        return textClass + (isDark ? ' text-white' : ' text-green-700');
     }
   };
 
@@ -178,7 +178,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
       statusBarTranslucent
     >
       <TouchableWithoutFeedback onPress={handleBackdropPress}>
-        <Animated.View 
+        <Animated.View
           className="flex-1 justify-center items-center px-6"
           style={[
             { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)' },
@@ -196,10 +196,10 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
               {/* Icon */}
               {config.type && (
                 <View className={getIconContainerClass()}>
-                  <Ionicons 
-                    name={getIconByType() as any} 
-                    size={28} 
-                    color={getIconColor()} 
+                  <Ionicons
+                    name={getIconByType() as any}
+                    size={28}
+                    color={getIconColor()}
                   />
                 </View>
               )}

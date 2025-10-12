@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
 import CustomTextInput from "@/components/custom/CustomTextInput";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { SendOtpEmail } from "@/routes/ApiRouter";
 
 export default function ForgotPasswordScreen() {
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
 
@@ -55,22 +56,21 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 items-center justify-center bg-[#0E0C1F] p-8">
+    <SafeAreaView className={`flex-1 items-center justify-center ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"} p-8`}>
       <View
         className="w-full p-8 rounded-2xl"
         style={{
-          backgroundColor: "#222222",
+          backgroundColor: colorScheme === "dark" ? "#222222" : "white",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.2,
           shadowRadius: 10,
           elevation: 10,
         }}
-      >
-        <Text className="text-white text-3xl font-bold mb-6 text-center">
+        >
+          <Text className={` text-3xl font-bold mb-6 text-center ${colorScheme === "dark" ? "text-white" : "text-[#222222]"}`}>
           Quên mật khẩu
         </Text>
-        <Text className="text-gray-300 mb-6 text-center">
+        <Text className={`text-center mb-6 ${colorScheme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
           Vui lòng nhập email đã đăng ký để nhận mã OTP đặt lại mật khẩu
         </Text>
 

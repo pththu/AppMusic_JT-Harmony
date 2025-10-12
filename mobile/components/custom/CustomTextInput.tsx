@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, Pressable } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, Pressable, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming MaterialIcons is available
 
 interface CustomTextInputProps {
@@ -30,6 +30,7 @@ export default function CustomTextInput({
   editable = true,
 }: CustomTextInputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const colorScheme = useColorScheme();
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
@@ -37,10 +38,10 @@ export default function CustomTextInput({
 
   return (
     <View className="mb-4">
-      <View className="flex-row items-center bg-gray-800 rounded-md p-3">
+      <View className={`flex-row items-center ${colorScheme === "dark" ? "bg-gray-800" : "bg-gray-200"} rounded-md p-3`}>
         <Icon name={iconName} size={20} color="#888" className="mr-3" />
         <TextInput
-          className="flex-1 text-white"
+          className={`flex-1 ${colorScheme === "dark" ? "text-white" : "text-black"}`}
           placeholder={placeholder}
           placeholderTextColor="#888"
           value={value}
