@@ -1,8 +1,12 @@
 const cloudinary = require('../configs/cloudinary');
+console.log('cloudinary config:', cloudinary.config());
 
 // Upload single image
 exports.uploadSingleImage = async (req, res) => {
   try {
+    console.log('req.file: ', req.file);
+    console.log('cloudinary', cloudinary);
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -10,6 +14,7 @@ exports.uploadSingleImage = async (req, res) => {
       });
     }
 
+    console.log(2)
     res.status(200).json({
       success: true,
       message: 'Upload thành công',

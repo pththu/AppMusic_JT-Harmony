@@ -2,6 +2,7 @@ const { User } = require('../models');
 const { Op } = require("sequelize");
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const cloudinary = require('../configs/cloudinary');
 
 exports.getAllUser = async (req, res) => {
   try {

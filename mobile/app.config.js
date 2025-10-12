@@ -13,9 +13,6 @@ export default ({ config }) => ({
         FACEBOOK_CLIENT_TOKEN: process.env.FACEBOOK_CLIENT_TOKEN || '',
         FACEBOOK_DISPLAY_NAME: process.env.FACEBOOK_DISPLAY_NAME || '',
     },
-    facebookAppId: process.env.FACEBOOK_APP_ID,
-    facebookDisplayName: process.env.FACEBOOK_DISPLAY_NAME,
-    facebookClientToken: process.env.FACEBOOK_CLIENT_TOKEN,
     plugins: [
         [
             "react-native-fbsdk-next",
