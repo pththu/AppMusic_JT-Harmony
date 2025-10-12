@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, useColorScheme } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import SettingButton from "@/components/button/SettingButton";
 import CustomButton from "@/components/custom/CustomButton";
@@ -25,6 +25,7 @@ export default function SettingScreen() {
   const loginType = useAuthStore(state => state.loginType);
   const updateUser = useAuthStore(state => state.updateUser);
   const logout = useAuthStore(state => state.logout);
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success, confirm } = useCustomAlert();
   const [password, setPassword] = useState("");
@@ -187,11 +188,11 @@ export default function SettingScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0E0C1F] p-6">
+    <SafeAreaView className={`flex-1 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"} p-6`}>
       {/* Header */}
       <View className="flex-row items-center mb-6">
-        <Icon name="settings-sharp" size={28} color="white" />
-        <Text className="text-white text-3xl font-bold ml-2">Cài đặt</Text>
+        <Icon name="settings-sharp" size={28} color={`${colorScheme === "dark" ? "white" : "#0E0C1F"}`} />
+        <Text className={`text-3xl font-bold ml-2 ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"}`}>Cài đặt</Text>
       </View>
 
       {/* Danh sách cài đặt */}
@@ -204,39 +205,39 @@ export default function SettingScreen() {
         <SettingButton title="Liên kết tài khoản" icon="link-outline">
           <TouchableOpacity
             activeOpacity={0.8}
-            className="flex-row items-center bg-[#1877F2] py-3 px-4 rounded-2xl mb-3"
+            className={`flex-row items-center ${colorScheme === "dark" ? "bg-[#1877F2]" : "border border-[#1877F2]"} py-3 px-4 rounded-2xl mb-3`}
             disabled={!!user?.facebookId}
             onPress={() => handleLinkAccountFacebook()}
           >
-            <Icon name="logo-facebook" size={20} color="#fff" />
-            <Text className="text-white text-base ml-3">{user?.facebookId ? "Đã liên kết với Facebook" : "Liên kết với Facebook"}</Text>
+            <Icon name="logo-facebook" size={20} color={`${colorScheme === "dark" ? "white" : "#1877F2"}`} />
+            <Text className={`${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"} text-base ml-3`}>{user?.facebookId ? "Đã liên kết với Facebook" : "Liên kết với Facebook"}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.8}
-            className="flex-row items-center bg-white py-3 px-4 rounded-2xl"
+            className={`flex-row items-center ${colorScheme === "dark" ? "bg-white" : "border border-[#E0E0E0]"} py-3 px-4 rounded-2xl`}
             disabled={!!user?.googleId}
             onPress={() => handleLinkAccountGoogle()}
           >
-            <Icon name="logo-google" size={20} color="#000" />
-            <Text className="text-black text-base ml-3">{user?.googleId ? "Đã liên kết với Google" : "Liên kết với Google"}</Text>
+            <Icon name="logo-google" size={20} color={`${colorScheme === "dark" ? "black" : "#DB4437"}`} />
+            <Text className={`${colorScheme === "dark" ? "text-black" : "text-[#0E0C1F]"} text-base ml-3`}>{user?.googleId ? "Đã liên kết với Google" : "Liên kết với Google"}</Text>
           </TouchableOpacity>
         </SettingButton>
 
         {/* Khóa tài khoản */}
         <SettingButton title="Khóa tài khoản" icon="lock-closed-outline" color="#ff6666">
-          <Text className="text-gray-300 text-sm mb-2">
+          <Text className={` self-center text-sm mb-2 ${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>
             Nhập mật khẩu để xác nhận khóa tài khoản:
           </Text>
           <TextInput
             placeholder="Mật khẩu"
-            placeholderTextColor="#999"
+            placeholderTextColor={`${colorScheme === "dark" ? "#e5e7eb" : "#999"}`}
             secureTextEntry
             value={password}
             onChangeText={(text) => {
               setPassword(text);
               setShowMessage(false);
             }}
-            className="bg-[#1A1833] text-white px-4 py-3 rounded-xl mb-3"
+            className={`w-full ${colorScheme === "dark" ? "bg-[#1A1833] text-white" : "bg-gray-200 text-gray-900"} rounded-xl px-4 py-3 mb-2`}
           />
           {showMessage && <Text className="text-red-500 mb-2">*{message}</Text>}
           <TouchableOpacity

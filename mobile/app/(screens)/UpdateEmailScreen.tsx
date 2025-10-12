@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomTextInput from "@/components/custom/CustomTextInput";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,10 +8,12 @@ import useAuthStore from "@/store/authStore";
 import { isEmailExist, SendOtpEmail, VerifyEmail } from "@/routes/ApiRouter";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
+import Icon from "react-native-vector-icons/Ionicons";
 
 export default function UpdateEmailScreen() {
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const colorScheme = useColorScheme();
   const { error, success } = useCustomAlert();
   const { navigate } = useNavigate();
   const [email, setEmail] = useState(user?.email || "");
@@ -100,18 +102,21 @@ export default function UpdateEmailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 items-center bg-[#1A1833] px-8">
+    <SafeAreaView className={`flex-1 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"} px-6`}>
       {/* Back Button */}
-      <View className="w-full flex-row items-center mb-6">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="white" />
+      <View className="flex-row mb-4">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <Icon name="arrow-back" size={24} color={`${colorScheme === "dark" ? "white" : "#0E0C1F"}`} />
         </TouchableOpacity>
+        <Text className={`text-2xl font-bold ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"}`}>
+          {showOtpInput ? "Nhập mã xác thực" : "Đã xác thực email"}
+        </Text>
       </View>
 
       <View
         className="w-full p-8 rounded-2xl"
         style={{
-          backgroundColor: "#0E0C1F",
+          backgroundColor: colorScheme === "dark" ? "#0E0C1F" : "white",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.2,
@@ -119,9 +124,6 @@ export default function UpdateEmailScreen() {
           elevation: 10,
         }}
       >
-        <Text className="text-white text-2xl font-bold mb-6 text-left">
-          {showOtpInput ? "Nhập mã xác thực" : "Xác thực email"}
-        </Text>
 
         {!showOtpInput ? (
           <>
@@ -162,11 +164,11 @@ export default function UpdateEmailScreen() {
             />
 
             <TouchableOpacity
-              className="rounded-full mt-4"
+              className="border border-[#089b0d] items-center rounded-full my-4"
               activeOpacity={0.7}
               onPress={() => handleVerify()}
             >
-              <Text className="text-[#089b0d] font-bold text-lg">
+              <Text className="text-[#089b0d] font-bold text-lg py-4">
                 Xác nhận mã
               </Text>
             </TouchableOpacity>
@@ -175,11 +177,6 @@ export default function UpdateEmailScreen() {
               <TouchableOpacity onPress={handleResend} disabled={loading}>
                 <Text className="text-[#34D399] font-bold ml-1">
                   Gửi lại OTP
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigate('Login')} disabled={loading}>
-                <Text className="text-[#34D399] font-bold ml-1">
-                  Xác thực sau
                 </Text>
               </TouchableOpacity>
             </View>

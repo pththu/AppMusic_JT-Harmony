@@ -1,7 +1,7 @@
 import { SettingsContext } from "@/context/SettingsContext";
 import { useNavigate } from "@/hooks/useNavigate";
 import React, { useContext, useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 
@@ -21,6 +21,7 @@ export default function ProfileScreen() {
   const user = useAuthStore(state => state.user);
   const loginType = useAuthStore(state => state.loginType);
   const updateUser = useAuthStore(state => state.updateUser);
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error, warning } = useCustomAlert();
   const logout = useAuthStore(state => state.logout);
@@ -52,8 +53,8 @@ export default function ProfileScreen() {
       setSelectedImage(result.assets[0].uri);
     }
 
-    setTimeout(() => {
-      handleUploadSingle();
+    setTimeout(async () => {
+      await handleUploadSingle();
     }, 1500);
   };
 
@@ -105,10 +106,10 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0E0C1F] p-6">
+    <SafeAreaView className={`flex-1 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"} p-6`}>
       {/* Tiêu đề và nút Edit */}
       <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-white text-3xl font-bold">Hồ sơ</Text>
+        <Text className={`text-3xl font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F]"}`}>Hồ sơ</Text>
         <CustomButton
           title="Cài đặt"
           onPress={() => navigate("Setting")}
@@ -118,7 +119,7 @@ export default function ProfileScreen() {
 
       {/* Ảnh đại diện và tên */}
       <View className="items-center my-4">
-        <Pressable className="items-center w-24 h-24 mb-4 border-2 rounded-full border-white shadow-xl"
+        <Pressable className={`items-center w-24 h-24 mb-4 border-2 rounded-full border-green-500 shadow-xl`}
           onPress={() => pickSingleImage()}
         >
           <Image
@@ -127,51 +128,51 @@ export default function ProfileScreen() {
             }}
             className="w-[80px] h-[80px] rounded-full items-center"
           />
-          <View className="absolute bottom-0 right-0  p-1 rounded-full bg-black/50">
+          <View className="absolute bottom-0 right-0 p-1 bg-green-500/50 rounded-full">
             <Icon name="camera" size={16} color="white" />
           </View>
         </Pressable>
-        <Text className="text-white text-2xl font-bold">{user?.fullName || user?.username}</Text>
+        <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F]"}`}>{user?.fullName || user?.username}</Text>
       </View>
 
       {/* Thông tin liên hệ */}
-      <View className="my-4">
-        <View className="flex-row items-center mb-1">
+      <View className="my-4 border-b border-gray-300 pb-4">
+        <View className="flex-row items-center mb-2">
           <Icon
             name="mail-outline"
             size={20}
-            color="#9CA3AF"
+            color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
             className="mr-2"
           />
-          <Text className="text-gray-400">Email</Text>
+          <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Email:</Text>
+          <Text className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>{user?.email || 'Chưa có thông tin'}</Text>
         </View>
-        <Text className="text-white mb-3">{user?.email || 'Chưa có thông tin'}</Text>
 
-        <View className="flex-row items-center mb-1">
+        <View className="flex-row items-center mb-2">
           <Icon
             name="calendar-outline"
             size={20}
-            color="#9CA3AF"
+            color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
             className="mr-2"
           />
-          <Text className="text-gray-400">Ngày sinh</Text>
+          <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Ngày sinh:</Text>
+          <Text className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>{new Date(user?.dob).toLocaleDateString() || 'Chưa có thông tin'}</Text>
         </View>
-        <Text className="text-white my-2">{new Date(user?.dob).toLocaleDateString() || 'Chưa có thông tin'}</Text>
 
         <View className="flex-row items-center mb-1">
           <Icon
             name="information-circle-outline"
             size={20}
-            color="#9CA3AF"
+            color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
             className="mr-2"
           />
-          <Text className="text-gray-400">Tiểu sử</Text>
+          <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Tiểu sử:</Text>
         </View>
-        <Text className="text-white">{user?.bio || '...'}</Text>
+        <Text className={`${colorScheme === "dark" ? "text-white" : "text-gray-800 bg-green-100 py-2 px-4 rounded-md"}`}>{user?.bio || '...'}</Text>
       </View>
 
       {/* Các nút Thư viện (Library) */}
-      <View className="flex-row justify-between my-4">
+      <View className="flex-row justify-between mb-4">
         <LibraryItemButton
           title="... Bài hát"
           icon="favorite"

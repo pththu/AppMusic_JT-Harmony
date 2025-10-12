@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomTextInput from "@/components/custom/CustomTextInput";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
@@ -8,6 +8,7 @@ import { router } from "expo-router";
 
 export default function ChangePasswordScreen() {
   const { error, success } = useCustomAlert();
+  const colorScheme = useColorScheme();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,11 +46,11 @@ export default function ChangePasswordScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0E0C1F] p-8">
+    <SafeAreaView className={`flex-1 px-5 ${colorScheme === "dark" ? "bg-[#1A1833]" : "bg-white"}`}>
       <View
         className="w-full p-8 rounded-2xl"
         style={{
-          backgroundColor: "#222222",
+          backgroundColor: colorScheme === "dark" ? "#222222" : "white",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.2,
@@ -57,7 +58,7 @@ export default function ChangePasswordScreen() {
           elevation: 10,
         }}
       >
-        <Text className="text-white text-3xl font-bold mb-6 text-center">
+        <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-3xl font-bold mb-6 text-center`}>
           Đổi mật khẩu
         </Text>
 

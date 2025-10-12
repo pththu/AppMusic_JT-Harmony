@@ -1,25 +1,5 @@
-// import React from "react";
-// import { View, Text, Pressable } from "react-native";
-// import Icon from "react-native-vector-icons/Ionicons";
-
-// export default function SettingButton({ title, icon, onPress, color = "#fff" }) {
-//   return (
-//     <Pressable
-//       onPress={onPress}
-//       className="flex-row items-center justify-between bg-[#1A1833] p-4 rounded-2xl mb-3"
-//       android_ripple={{ color: "#333" }}
-//     >
-//       <View className="flex-row items-center">
-//         <Icon name={icon} size={22} color={color} />
-//         <Text className="text-white text-base ml-3">{title}</Text>
-//       </View>
-//       <Icon name="chevron-forward" size={20} color="#9CA3AF" />
-//     </Pressable>
-//   );
-// }
-
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, Pressable, Animated, LayoutAnimation, Platform, UIManager } from "react-native";
+import { View, Text, Pressable, Animated, LayoutAnimation, Platform, UIManager, useColorScheme } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
 if (Platform.OS === "android") {
@@ -31,7 +11,7 @@ if (Platform.OS === "android") {
 export default function SettingButton({
   title,
   icon,
-  color = "#fff",
+  color,
   children,
   onPress,
 }: {
@@ -43,6 +23,7 @@ export default function SettingButton({
 }) {
   const [expanded, setExpanded] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     Animated.timing(rotateAnim, {
@@ -66,15 +47,18 @@ export default function SettingButton({
     <View className="mb-3">
       <Pressable
         onPress={onPress ? onPress : toggleExpand}
-        className="flex-row items-center justify-between bg-[#1A1833] p-4 rounded-2xl"
+        className={`flex-row items-center justify-between ${colorScheme === "dark" ? "bg-[#1A1833]" : "border border-[#E0E0E0]"} p-4 rounded-2xl`}
         android_ripple={{ color: "#333" }}
       >
         <View className="flex-row items-center">
-          <Icon name={icon} size={22} color={color} />
-          <Text className="text-white text-base ml-3">{title}</Text>
+          <Icon
+            name={icon}
+            size={22}
+            color={`${icon === 'lock-closed-outline' ? '#ff6666' : `${colorScheme === 'dark' ? 'white' : '#0E0C1F'}`}`} />
+          <Text className={`text-base ml-3 ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"}`}>{title}</Text>
         </View>
         <Animated.View style={{ transform: [{ rotateZ: rotation }] }}>
-          <Icon name="chevron-forward" size={20} color="#9CA3AF" />
+          <Icon name="chevron-forward" size={20} color={color} />
         </Animated.View>
       </Pressable>
 
