@@ -1,5 +1,5 @@
 const cloudinary = require('../configs/cloudinary');
-console.log('cloudinary config:', cloudinary.config());
+// console.log('cloudinary config:', cloudinary.config());
 
 // Upload single image
 exports.uploadSingleImage = async (req, res) => {

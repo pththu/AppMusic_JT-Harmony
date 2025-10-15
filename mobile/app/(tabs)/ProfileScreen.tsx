@@ -1,11 +1,9 @@
 import { SettingsContext } from "@/context/SettingsContext";
 import { useNavigate } from "@/hooks/useNavigate";
 import React, { useContext, useState } from "react";
-import { Image, Pressable, Text, View, useColorScheme } from "react-native";
+import { Image, Pressable, Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
-
-// Import các component tùy chỉnh cần thiết
 import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
@@ -15,6 +13,7 @@ import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LoginManager } from "react-native-fbsdk-next";
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
@@ -26,6 +25,7 @@ export default function ProfileScreen() {
   const { success, error, warning } = useCustomAlert();
   const logout = useAuthStore(state => state.logout);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isChoosedImage, setIsChoosedImage] = useState(false);
@@ -39,7 +39,7 @@ export default function ProfileScreen() {
     return true;
   };
 
-  const pickSingleImage = async () => {
+  const handlePickSingleImage = async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
       error('Quyền truy cập bị từ chối!');
@@ -49,23 +49,12 @@ export default function ProfileScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
-      // aspect: [1, 1],
       quality: 0.8,
     });
 
-    console.log(result);
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri);
       setIsChoosedImage(true);
-    }
-  };
-
-  const checkSelectedImage = () => {
-    if (selectedImage) {
-      console.log('Selected Image URI:', selectedImage);
-      handleUploadSingle();
-    } else {
-      console.log('No image selected');
     }
   };
 
@@ -75,15 +64,11 @@ export default function ProfileScreen() {
       return;
     }
 
-    console.log('selectedImage', selectedImage);
-
     setLoading(true);
     try {
       const response = await ChangeAvatar(selectedImage);
-      console.log('response', response);
 
       if (response.success) {
-        setUploadedImages([]);
         setSelectedImage(null);
         setIsChoosedImage(false);
         updateUser({ ...user, avatarUrl: response.data?.url });
@@ -93,6 +78,26 @@ export default function ProfileScreen() {
       error('Không thể upload hình ảnh. Vui lòng thử lại!', error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePickMultipleFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [
+          'audio/*',
+          'video/*'
+        ],
+        copyToCacheDirectory: false,
+      });
+
+      if (!result.canceled) {
+        console.log(result.assets[0]);
+      } else {
+        console.log('No file');
+      }
+    } catch (error) {
+      console.log('Error picking multiple files:', error);
     }
   };
 
@@ -166,7 +171,7 @@ export default function ProfileScreen() {
       {/* Ảnh đại diện và tên */}
       <View className="items-center my-4">
         <Pressable className={`items-center w-24 h-24 mb-4 border-2 rounded-full border-green-500 shadow-xl`}
-          onPress={() => pickSingleImage()}
+          onPress={() => handlePickSingleImage()}
         >
           <Image
             source={{
@@ -219,6 +224,12 @@ export default function ProfileScreen() {
         <Text className={`${colorScheme === "dark" ? "text-white" : "text-gray-800 bg-green-100 py-2 px-4 rounded-md"}`}>{user?.bio || '...'}</Text>
       </View>
 
+      <Pressable className="p-5 border border-slate-300"
+        onPress={() => handlePickMultipleFile()}
+      >
+        <Text>Chọn nhiều file</Text>
+      </Pressable>
+
       {/* Các nút Thư viện (Library) */}
       <View className="flex-row justify-between mb-4">
         <LibraryItemButton
@@ -256,11 +267,13 @@ export default function ProfileScreen() {
           title={`Chất lượng tải xuống: ${settings?.downloadQuality}`}
           onPress={() => navigate("DownloadQuality")}
         />
-        <SettingItem
-          color="red"
-          title="Đăng xuất"
+        <TouchableOpacity
+          className={`py-4`}
           onPress={() => handleLogout()}
-        />
+          activeOpacity={0.7}
+        >
+          <Text className={`text-red-500 font-bold text-lg`}>Đăng xuất</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

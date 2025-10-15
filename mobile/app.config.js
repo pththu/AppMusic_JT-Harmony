@@ -28,6 +28,9 @@ export default ({ config }) => ({
             {
                 "photosPermission": "Ứng dụng cần quyền truy cập thư viện ảnh để upload hình ảnh"
             }
+        ],
+        [
+            "expo-document-picker"
         ]
     ]
 });
