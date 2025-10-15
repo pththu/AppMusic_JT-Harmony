@@ -9,6 +9,8 @@ router.post('/single', upload.single('image'), uploadController.uploadSingleImag
 // Upload multiple images (max 10)
 router.post('/multiple', upload.array('images', 10), uploadController.uploadMultipleImages);
 
+router.post('/multiple-file', upload.array('files', 10), uploadController.uploadMultipleFiles);
+
 // Delete image
 router.delete('/delete', uploadController.deleteImage);
 

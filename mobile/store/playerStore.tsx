@@ -17,6 +17,7 @@ interface Song {
   bitrate: string;
   youtubeUrl: string;
   downloadUrl: string;
+  fileUri: string;
 }
 
 interface PlayerState {

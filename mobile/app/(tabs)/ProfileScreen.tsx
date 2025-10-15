@@ -8,7 +8,7 @@ import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
 import useAuthStore from "@/store/authStore";
-import { ChangeAvatar, Logout } from "@/routes/ApiRouter";
+import { ChangeAvatar, Logout, UploadMultipleFile } from "@/routes/ApiRouter";
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LoginManager } from "react-native-fbsdk-next";
@@ -88,16 +88,26 @@ export default function ProfileScreen() {
           'audio/*',
           'video/*'
         ],
-        copyToCacheDirectory: false,
+        multiple: true,
+        copyToCacheDirectory: true,
       });
 
       if (!result.canceled) {
-        console.log(result.assets[0]);
+        // Truyền trực tiếp mảng result.assets vào hàm upload
+        console.log('Files selected:', result.assets);
+        const uploadResult = await UploadMultipleFile(result.assets);
+
+        if (uploadResult.success) {
+          success('Upload thành công nhiều file!', '');
+          console.log('Server response:', uploadResult);
+        } else {
+          error('Upload thất bại', uploadResult.message);
+        }
       } else {
-        console.log('No file');
+        warning('Bạn chưa chọn file nào để upload!');
       }
     } catch (error) {
-      console.log('Error picking multiple files:', error);
+      error('Không thể chọn file. Vui lòng thử lại!', error.message);
     }
   };
 

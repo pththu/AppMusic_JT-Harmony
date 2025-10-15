@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, useColorScheme } from 'react-native';
 // import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigate } from '@/hooks/useNavigate';
@@ -62,6 +62,7 @@ const recentlyPlayed = [
     bitrate: '160 kbps',
     youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
     downloadUrl: 'https://example.com/download/insideout.mp3',
+    fileUri: 'https://res.cloudinary.com/chaamz03/video/upload/v1760515668/kltn/audios/iam3qsdamdcjmkeqg2r8.mp3',
   },
   {
     id: '2',
@@ -119,106 +120,12 @@ const recentlyPlayed = [
     bitrate: '160 kbps',
     youtubeUrl: 'https://www.youtube.com/watch?v=k_y9iN9k3yA',
     downloadUrl: 'https://example.com/download/killsyouslowly.mp3',
-  },
-  {
-    id: '5',
-    title: 'Setting Fires',
-    artists: [
-      {
-        name: 'Chainsmokers',
-        image:
-          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      },
-    ],
-    image:
-      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    album: 'Collage',
-    itag: '251',
-    mimeType: 'audio/webm; codecs="opus"',
-    bitrate: '160 kbps',
-    youtubeUrl: 'https://www.youtube.com/watch?v=x0X6V19LgLg',
-    downloadUrl: 'https://example.com/download/settingfires.mp3',
-  },
-  {
-    id: '6',
-    title: 'Somebody',
-    artists: [
-      {
-        name: 'Chainsmokers',
-        image:
-          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      },
-    ],
-    image:
-      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    album: 'Somebody - Single',
-    itag: '251',
-    mimeType: 'audio/webm; codecs="opus"',
-    bitrate: '160 kbps',
-    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
-    downloadUrl: 'https://example.com/download/somebody.mp3',
-  },
-  {
-    id: '7',
-    title: 'Somebody',
-    artists: [
-      {
-        name: 'Chainsmokers',
-        image:
-          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      },
-    ],
-    image:
-      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    album: 'Somebody - Single',
-    itag: '251',
-    mimeType: 'audio/webm; codecs="opus"',
-    bitrate: '160 kbps',
-    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
-    downloadUrl: 'https://example.com/download/somebody.mp3',
-  },
-  {
-    id: '8',
-    title: 'Somebody',
-    artists: [
-      {
-        name: 'Chainsmokers',
-        image:
-          'https://images.pexels.com/photos/2085734/pexels-photo-2085734.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      },
-    ],
-    image:
-      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    album: 'Somebody - Single',
-    itag: '251',
-    mimeType: 'audio/webm; codecs="opus"',
-    bitrate: '160 kbps',
-    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
-    downloadUrl: 'https://example.com/download/somebody.mp3',
-  },
-  {
-    id: '9',
-    title: 'Somebody',
-    artists: [
-      {
-        name: 'Chainsmokers',
-        image:
-          'https://images.pexels.com/photos/1674483/pexels-photo-1674483.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-      },
-    ],
-    image:
-      'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    album: 'Somebody - Single',
-    itag: '251',
-    mimeType: 'audio/webm; codecs="opus"',
-    bitrate: '160 kbps',
-    youtubeUrl: 'https://www.youtube.com/watch?v=R2_V1-GfKzE',
-    downloadUrl: 'https://example.com/download/somebody.mp3',
-  },
+  }
 ];
 
 export default function YourLibraryScreen() {
   const { navigate } = useNavigate();
+  const colorScheme = useColorScheme();
 
   const handleSelectSong = (song) => {
     usePlayerStore.getState().setCurrentSong(song);
@@ -235,16 +142,6 @@ export default function YourLibraryScreen() {
   );
 
   const renderRecentlyPlayedItem = ({ item }: { item: (typeof recentlyPlayed)[0]; }) => (
-    // <TouchableOpacity className="flex-row items-center p-2">
-    //   <Image source={{ uri: item.image }} className="w-12 h-12 rounded-md" />
-    //   <View className="ml-4 flex-1">
-    //     <Text className="text-white font-semibold">{item.title}</Text>
-    //     <Text className="text-gray-400">{item.artists.map(artist => artist.name).join(", ")}</Text>
-    //   </View>
-    //   <TouchableOpacity>
-    //     <Text className="text-gray-400 text-2xl">⋮</Text>
-    //   </TouchableOpacity>
-    // </TouchableOpacity>
     <SongItem
       title={item.title}
       // Nối tên nghệ sĩ thành một chuỗi
@@ -257,18 +154,21 @@ export default function YourLibraryScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black px-4 pt-4">
+    <SafeAreaView className={`flex-1 px-4 pt-4 ${colorScheme === 'dark' ? 'bg-black' : 'bg-white'}`}>
       <Text className="text-black dark:text-white text-2xl font-semibold mb-4">
         Your Library
       </Text>
-      <FlatList
-        data={libraryItems}
-        renderItem={renderLibraryItem}
-        keyExtractor={item => item.id}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
-        className="mb-6"
-      />
+      <View className="mb-6  flex-row gap-2 flex-wrap justify-between p-1">
+        {libraryItems?.map(item => (
+          <LibraryItemButton
+            key={item.id}
+            title={item.title}
+            icon={item.icon}
+            onPress={() => navigate(item.screen)}
+            color={item.color}
+          />
+        ))}
+      </View>
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-black dark:text-white text-lg font-semibold">
           Recently Played
@@ -281,7 +181,7 @@ export default function YourLibraryScreen() {
         data={recentlyPlayed}
         renderItem={renderRecentlyPlayedItem}
         keyExtractor={item => item.id}
-        className="mb-4"
+        className=""
       />
     </SafeAreaView>
   );

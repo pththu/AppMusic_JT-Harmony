@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Button,
   Dimensions,
   FlatList,
   Image,
@@ -17,6 +18,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useQueueStore } from "@/store/queueStore";
 import { router } from "expo-router";
 import { useTheme } from "@/components/ThemeContext";
+import { useAudioPlayer } from 'expo-audio';
 
 // Định nghĩa kiểu dữ liệu cho bài hát và nghệ sĩ ở đây để sử dụng trong file này
 interface Artist {
@@ -99,20 +101,9 @@ const upNextSongs = [
   },
 ];
 
-// type SongScreenRouteProp = RouteProp<YourLibraryStackParamList, 'SongScreen'>;
-// type SongScreenNavigationProp = NavigationProp<
-//   YourLibraryStackParamList,
-//   'SongScreen'
-// >;
-
-// type Props = {
-//   route: SongScreenRouteProp;
-//   navigation: SongScreenNavigationProp;
-// };
+const audioSource = 'https://res.cloudinary.com/chaamz03/video/upload/v1760515668/kltn/audios/iam3qsdamdcjmkeqg2r8.mp3';
 
 export default function SongScreen() {
-  // const params = useLocalSearchParams();
-  // const song = JSON.parse(params.song as string);
   const song = usePlayerStore().currentSong;
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -125,6 +116,7 @@ export default function SongScreen() {
 
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
+    console.log('play')
   };
 
   const handleSelectQueue = () => {
@@ -157,15 +149,15 @@ export default function SongScreen() {
     <View>
       {/* Header */}
       <View className="flex-row justify-between items-center mb-4">
-      <TouchableOpacity onPress={() => router.back()}>
-        <Ionicons name="chevron-down" size={28} color={primaryIconColor} />
-      </TouchableOpacity>
-      <View className="flex-1 items-center">
-        <Text className="text-black dark:text-gray-400 text-sm">Now playing</Text>
-        <Text className="text-black dark:text-white text-base font-semibold">
-          {song.title}
-        </Text>
-      </View>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="chevron-down" size={28} color={primaryIconColor} />
+        </TouchableOpacity>
+        <View className="flex-1 items-center">
+          <Text className="text-black dark:text-gray-400 text-sm">Now playing</Text>
+          <Text className="text-black dark:text-white text-base font-semibold">
+            {song.title}
+          </Text>
+        </View>
         {/* <TouchableOpacity>
           <Icon name="more-vert" size={28} color="white" />
         </TouchableOpacity> */}
@@ -277,8 +269,10 @@ export default function SongScreen() {
     </View>
   );
 
+  const player = useAudioPlayer(audioSource);
   return (
     <View className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
+      <Button title="Play" onPress={() => player.play()} />
       <FlatList
         data={upNextSongs}
         renderItem={renderUpNextItem}

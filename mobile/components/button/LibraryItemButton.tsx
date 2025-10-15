@@ -17,7 +17,7 @@ export default function LibraryItemButton({
 }: LibraryItemButtonProps) {
   return (
     <TouchableOpacity
-      className={`flex-1 m-2 rounded-lg p-4`}
+      className={`w-[42%] m-2 rounded-lg p-4`}
       style={{
         backgroundColor: color,
         shadowColor: '#000',
