@@ -6,7 +6,7 @@ const cloudinary = require('../configs/cloudinary');
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'uploads', // Tên folder trên Cloudinary
+    folder: 'kltn', // Tên folder trên Cloudinary
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
     transformation: [{ width: 1000, height: 1000, crop: 'limit' }] // Giới hạn kích thước
   }

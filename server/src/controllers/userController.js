@@ -2,6 +2,7 @@ const { User } = require('../models');
 const { Op } = require("sequelize");
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const cloudinary = require('../configs/cloudinary');
 
 exports.getAllUser = async (req, res) => {
   try {
@@ -293,7 +294,7 @@ exports.changeAvatar = async (req, res) => {
       })
     };
 
-    console.log('data upload', data);
+    // console.log('data upload', data);
     if (req.file.path) {
       const user = await User.findByPk(req.user.id);
       user.avatarUrl = req.file.path;
