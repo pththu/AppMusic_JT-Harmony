@@ -31,6 +31,12 @@ export default ({ config }) => ({
         ],
         [
             "expo-document-picker"
+        ],
+        [
+            "expo-audio",
+            {
+                "microphonePermission": "Allow to access your microphone."
+            }
         ]
     ]
 });

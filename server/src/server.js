@@ -64,10 +64,10 @@ const protectedRoutes = [
     'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
     'albumSongs',
     'upload'        // Upload hình ảnh, file
-  ]
+]
 
-  // Setup public routes
-  publicRoutes.forEach(route => {
+// Setup public routes
+publicRoutes.forEach(route => {
     app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`))
 })
 
