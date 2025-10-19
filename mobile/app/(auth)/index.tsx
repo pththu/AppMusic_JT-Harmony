@@ -50,6 +50,7 @@ export default function AuthScreen() {
   };
 
   const handleLoginWithFacebook = async () => {
+    console.log('first')
     const loginType = 'facebook';
     try {
       const result = await LoginManager.logInWithPermissions(['public_profile']);

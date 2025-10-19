@@ -8,6 +8,8 @@ const bodyParser = require("body-parser");
 const { sequelize } = require("./models");
 const { API_PREFIX } = require("./configs/constants");
 const { authenticateToken } = require("./middlewares/authentication");
+const seedDatabase = require('./utils/seeder');
+
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -49,21 +51,22 @@ const publicRoutes = [
 
 // PROTECTED ROUTES - Bắt buộc phải đăng nhập
 const protectedRoutes = [
-    'favorites', // Yêu thích
+    // 'favorites', // Yêu thích
     'follows', // Theo dõi
-    'history', // Lịch sử nghe nhạc
+    // 'history', // Lịch sử nghe nhạc
     'notifications', // Thông báo
-    'playlists',     // Playlist cá nhân
+    // 'playlists',     // Playlist cá nhân
     'posts',         // Đăng bài
     'comments',       // Comment (cần đăng nhập mới comment được)
-    'genres',    // Xem thể loại nhạc
-    'artists',   // Xem thông tin nghệ sĩ
-    'albums',    // Xem album
-    'search',     // Tìm kiếm công khai
-    'songs',        // Xem bài hát (public), upload bài hát (private)
-    'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
-    'albumSongs',
-    'upload'        // Upload hình ảnh, file
+    // 'genres',    // Xem thể loại nhạc
+    // 'artists',   // Xem thông tin nghệ sĩ
+    // 'albums',    // Xem album
+    // 'search',     // Tìm kiếm công khai
+    // 'track',        // Xem bài hát (public), upload bài hát (private)
+    // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
+    // 'albumSongs',
+    'upload',        // Upload hình ảnh, file
+    'music'          // Các route liên quan đến Spotify và YouTube
 ]
 
 // Setup public routes
@@ -88,6 +91,8 @@ async function startServer() {
 
         // await sequelize.sync()
         // console.log('✅ Database synchronized successfully')
+
+        // await seedDatabase();
 
         server.listen(process.env.PORT || 8000, () => {
             console.log(`🎶 Music Server is running at http://localhost:${process.env.PORT || 8000}`)

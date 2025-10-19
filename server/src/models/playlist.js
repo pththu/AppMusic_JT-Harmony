@@ -11,43 +11,49 @@ const Playlist = sequelize.define(
       unique: true,
       primaryKey: true
     },
-    spotifyPlaylistId: {
+    spotifyId: {
       type: DataTypes.STRING,
-      field: 'spotify_playlist_id'
+      field: 'spotify_id'
     },
     name: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       field: 'user_id'
     },
     description: {
       type: DataTypes.TEXT
     },
-    coverImg: {
+    imageUrl: {
       type: DataTypes.STRING,
       allowNull: true,
-      field: 'cover_img'
+      field: 'image_url'
     },
     isPublic: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
       defaultValue: true,
       field: 'is_public'
     },
+    totalTracks: {
+      type: DataTypes.INTEGER,
+      field: 'total_tracks'
+    },
     shareCount: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       defaultValue: 0,
       field: 'share_count'
     }
   },
   {
     tableName: 'playlists',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        fields: ['id', 'name', 'spotify_id', 'user_id']
+      }
+    ]
   }
 )
 

@@ -9,9 +9,11 @@ const Artist = sequelize.define(
       autoIncrement: true,
       primaryKey: true
     },
-    spotifyArtistId: {
+    spotifyId: {
       type: DataTypes.STRING,
-      field: 'spotify_artist_id'
+      field: 'spotify_id',
+      unique: true,
+      allowNull: false
     },
     name: {
       type: DataTypes.STRING,
@@ -20,14 +22,16 @@ const Artist = sequelize.define(
     imageUrl: {
       type: DataTypes.STRING,
       field: 'image_url'
-    },
-    bio: {
-      type: DataTypes.TEXT
     }
   },
   {
     tableName: 'artists',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        fields: ['id', 'name', 'spotify_id']
+      }
+    ]
   }
 )
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   Button,
   Dimensions,
@@ -19,6 +19,7 @@ import { useQueueStore } from "@/store/queueStore";
 import { router } from "expo-router";
 import { useTheme } from "@/components/ThemeContext";
 import { useAudioPlayer } from 'expo-audio';
+// import YoutubePlayer from "react-native-youtube-iframe";
 
 // Định nghĩa kiểu dữ liệu cho bài hát và nghệ sĩ ở đây để sử dụng trong file này
 interface Artist {
@@ -101,18 +102,30 @@ const upNextSongs = [
   },
 ];
 
-const audioSource = 'https://res.cloudinary.com/chaamz03/video/upload/v1760515668/kltn/audios/iam3qsdamdcjmkeqg2r8.mp3';
+// const audioSource = 'https://res.cloudinary.com/chaamz03/video/upload/v1760515668/kltn/audios/iam3qsdamdcjmkeqg2r8.mp3';
 
 export default function SongScreen() {
   const song = usePlayerStore().currentSong;
 
   const [isPlaying, setIsPlaying] = useState(false);
+  // const [playing, setPlaying] = useState(false);
   const { navigate } = useNavigate();
   const { theme } = useTheme(); // Ensure component re-renders on theme change
 
   // Dynamic icon colors based on theme
   const primaryIconColor = theme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
+
+  // const onStateChange = useCallback((state) => {
+  //   if (state === "ended") {
+  //     setPlaying(false);
+  //     console.log('finished');
+  //   }
+  // }, []);
+
+  // const togglePlaying = useCallback(() => {
+  //   setPlaying((prev) => !prev);
+  // }, []);
 
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -269,10 +282,16 @@ export default function SongScreen() {
     </View>
   );
 
-  const player = useAudioPlayer(audioSource);
+  // const player = useAudioPlayer(audioSource);
   return (
     <View className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
-      <Button title="Play" onPress={() => player.play()} />
+      {/* <YoutubePlayer
+        height={300}
+        play={playing}
+        videoId={"iee2TATGMyI"}
+        onChangeState={onStateChange}
+      />
+      <Button title={playing ? "pause" : "play"} onPress={togglePlaying} /> */}
       <FlatList
         data={upNextSongs}
         renderItem={renderUpNextItem}

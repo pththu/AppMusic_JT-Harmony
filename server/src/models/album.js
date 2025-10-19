@@ -11,33 +11,39 @@ const Album = sequelize.define(
       unique: true,
       primaryKey: true
     },
-    spotifyAlbumId: {
+    spotifyId: {
       type: DataTypes.STRING,
-      field: 'spotify_album_id'
+      field: 'spotify_id',
+      unique: true,
+      allowNull: false
     },
-    title: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    artistId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'artist_id'
-    },
-    coverUrl: {
+    imageUrl: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: 'cover_url'
+      field: 'image_url'
+    },
+    totalTracks: {
+      type: DataTypes.INTEGER,
+      field: 'total_tracks'
     },
     releaseDate: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
       field: 'release_date'
     }
   },
   {
     tableName: 'albums',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        fields: ['id', 'name', 'spotify_id', 'release_date']
+      }
+    ]
   }
 )
 
