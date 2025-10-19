@@ -1,9 +1,9 @@
-const { Genre } = require('../models');
+const { Genres } = require('../models');
 const { Op } = require('sequelize');
 
 exports.getAllGenre = async (req, res) => {
   try {
-    const rows = await Genre.findAll();
+    const rows = await Genres.findAll();
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -12,7 +12,7 @@ exports.getAllGenre = async (req, res) => {
 
 exports.getGenreById = async (req, res) => {
   try {
-    const row = await Genre.findByPk(req.params.id);
+    const row = await Genres.findByPk(req.params.id);
     if (!row) return res.status(404).json({ error: 'Genre not found' });
     res.json(row);
   } catch (err) {
@@ -22,7 +22,7 @@ exports.getGenreById = async (req, res) => {
 
 exports.createGenre = async (req, res) => {
   try {
-    const row = await Genre.create(req.body);
+    const row = await Genres.create(req.body);
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -31,7 +31,7 @@ exports.createGenre = async (req, res) => {
 
 exports.updateGenre = async (req, res) => {
   try {
-    const [updated] = await Genre.update(req.body, { where: { id: req.params.id } });
+    const [updated] = await Genres.update(req.body, { where: { id: req.params.id } });
     if (!updated) return res.status(404).json({ error: 'Genre not found' });
     const row = await Genre.findByPk(req.params.id);
     res.json(row);
@@ -42,7 +42,7 @@ exports.updateGenre = async (req, res) => {
 
 exports.deleteGenre = async (req, res) => {
   try {
-    const deleted = await Genre.destroy({ where: { id: req.params.id } });
+    const deleted = await Genres.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'Genre not found' });
     res.json({ message: 'Genre deleted' });
   } catch (err) {
@@ -61,7 +61,7 @@ exports.getGenresByName = async (req, res) => {
       where.name = { [Op.iLike]: `%${name}%` };
     }
 
-    const genres = await Genre.findAll({ where });
+    const genres = await Genres.findAll({ where });
     return res.status(200).json(genres);
   } catch (error) {
     return res.status(500).json({ error: error.message });

@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Admin",
+    "description": "Quản trị viên toàn hệ thống"
+  },
+  {
+    "name": "User",
+    "description": "Người dùng thông thường"
+  }
+]

@@ -1,483 +1,232 @@
 // controllers/musicController.js
-import spotifyService from '../services/spotifyService.js';
-import youtubeService from '../services/youtubeService.js';
-import ytdl from 'ytdl-core';
-import ffmpeg from 'fluent-ffmpeg';
-import ffmpegStatic from 'ffmpeg-static';
-import fs from 'fs';
-import path from 'path';
-import { promisify } from 'util';
+const { TOP_50_PLAYLIST_ID } = require('../configs/constants');
+const spotify = require('../configs/spotify');
+const youtube = require('../configs/youtube');
+const { get } = require('../routes/musicRoute');
 
-// Config ffmpeg
-ffmpeg.setFfmpegPath(ffmpegStatic);
-
-const unlinkAsync = promisify(fs.unlink);
-
-// ===== SEARCH & GET MUSIC INFO =====
-
-// Tìm kiếm bài hát và lấy đầy đủ thông tin
-export const searchMusic = async (req, res) => {
+// Tìm kiếm playlist trên Spotify
+const findSpotifyPlaylist = async (req, res) => {
   try {
-    const { query, limit = 20 } = req.query;
-
+    const { query } = req.query; // Lấy query từ URL, ví dụ: /spotify/playlists?query=lofi
     if (!query) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng nhập từ khóa tìm kiếm'
-      });
+      return res.status(400).json({ error: 'Query parameter is required' });
     }
-
-    // Tìm kiếm trên Spotify
-    const spotifyTracks = await spotifyService.searchTrackPlaylist(query, 'track', limit);
-
-    // Lấy thông tin YouTube cho mỗi track
-    const tracksWithYouTube = await Promise.all(
-      spotifyTracks.map(async (track) => {
-        const youtubeInfo = await youtubeService.searchYouTubeVideo(track.name, track.artist);
-        return {
-          ...track,
-          youtube: youtubeInfo
-        };
-      })
-    );
-
-    res.status(200).json({
-      success: true,
-      data: tracksWithYouTube,
-      total: tracksWithYouTube.length
-    });
+    const data = await spotify.searchPlaylists(query);
+    res.json(data);
   } catch (error) {
-    console.error('Search music error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi tìm kiếm bài hát',
-      error: error.message
-    });
+    res.status(500).json({ message: error.message || 'Failed to search playlists' });
   }
 };
 
-// Lấy thông tin chi tiết một bài hát
-export const getMusicDetail = async (req, res) => {
+
+// Lấy các bài hát hàng đầu của nghệ sĩ trên Spotify
+const findArtistTopTracks = async (req, res) => {
   try {
-    const { trackName, artist } = req.query;
-
-    if (!trackName || !artist) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng cung cấp tên bài hát và nghệ sĩ'
-      });
-    }
-
-    // Search Spotify
-    const spotifyTracks = await spotifyService.searchTrackPlaylist(`${trackName} ${artist}`, 'track', 1);
-    
-    if (!spotifyTracks || spotifyTracks.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy bài hát'
-      });
-    }
-
-    const spotifyTrack = spotifyTracks[0];
-
-    // Search YouTube
-    const youtubeInfo = await youtubeService.searchYouTubeVideo(spotifyTrack.name, spotifyTrack.artist);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        ...spotifyTrack,
-        youtube: youtubeInfo
-      }
-    });
+    const { artistId } = req.params; // Lấy ID nghệ sĩ từ URL, ví dụ: /spotify/artists/06HL4z0CvFAxyc27GXpf02/top-tracks
+    const data = await spotify.getArtistTopTracks(artistId);
+    res.json(data.tracks);
   } catch (error) {
-    console.error('Get music detail error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy thông tin bài hát',
-      error: error.message
-    });
+    res.status(500).json({ message: error.message || 'Failed to get artist top tracks' });
   }
 };
 
-// ===== VPOP TRACKS =====
-
-// Lấy danh sách Vpop trending
-export const getVpopTracks = async (req, res) => {
+// ví dụ: /youtube/search?song=Hello&artist=Adele
+// Tìm kiếm video trên YouTube
+const findYoutubeVideo = async (req, res) => {
   try {
-    const { limit = 20 } = req.query;
-
-    // Tìm kiếm Vpop tracks
-    const vpopTracks = await spotifyService.searchVpopTracks(parseInt(limit));
-
-    // Lấy thông tin YouTube
-    const tracksWithYouTube = await Promise.all(
-      vpopTracks.slice(0, 10).map(async (track) => { // Giới hạn 10 để tránh quá nhiều API calls
-        const youtubeInfo = await youtubeService.searchYouTubeVideo(track.name, track.artist);
-        return {
-          ...track,
-          youtube: youtubeInfo
-        };
-      })
-    );
-
-    res.status(200).json({
-      success: true,
-      data: tracksWithYouTube,
-      total: tracksWithYouTube.length
-    });
+    const { song, artist } = req.query;
+    if (!song || !artist) {
+      return res.status(400).json({ error: 'Song and artist parameters are required' });
+    }
+    const data = await youtube.searchVideo(song, artist);
+    res.json(data);
   } catch (error) {
-    console.error('Get Vpop tracks error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy danh sách Vpop',
-      error: error.message
-    });
+    res.status(500).json({ message: error.message || 'Failed to search on YouTube' });
   }
 };
 
-// ===== PLAYLIST =====
-
-// Lấy tracks từ playlist
-export const getPlaylistTracks = async (req, res) => {
+const findAlbumById = async (req, res) => {
   try {
-    const { playlistId, limit = 20 } = req.query;
-
-    if (!playlistId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng cung cấp playlistId'
-      });
-    }
-
-    const tracks = await spotifyService.getPlaylistTracks(playlistId, parseInt(limit));
-
-    // Lấy thông tin YouTube cho 5 bài đầu
-    const tracksWithYouTube = await Promise.all(
-      tracks.slice(0, 5).map(async (track) => {
-        const youtubeInfo = await youtubeService.searchYouTubeVideo(track.name, track.artist);
-        return {
-          ...track,
-          youtube: youtubeInfo
-        };
-      })
-    );
-
-    // Tracks còn lại không có YouTube info
-    const remainingTracks = tracks.slice(5).map(track => ({
-      ...track,
-      youtube: null
-    }));
-
-    res.status(200).json({
-      success: true,
-      data: [...tracksWithYouTube, ...remainingTracks],
-      total: tracks.length
-    });
-  } catch (error) {
-    console.error('Get playlist tracks error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy danh sách bài hát từ playlist',
-      error: error.message
-    });
-  }
-};
-
-// Tìm kiếm playlists
-export const searchPlaylists = async (req, res) => {
-  try {
-    const { query, market = 'VN', limit = 15 } = req.query;
-
-    if (!query) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng nhập từ khóa tìm kiếm'
-      });
-    }
-
-    const queries = [query];
-    const playlists = await spotifyService.searchPlaylists(queries, market, parseInt(limit));
-
-    res.status(200).json({
-      success: true,
-      data: playlists,
-      total: playlists.length
-    });
-  } catch (error) {
-    console.error('Search playlists error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi tìm kiếm playlist',
-      error: error.message
-    });
-  }
-};
-
-// ===== YOUTUBE VIDEO INFO =====
-
-// Lấy thông tin video YouTube
-export const getYouTubeInfo = async (req, res) => {
-  try {
-    const { trackName, artist } = req.query;
-
-    if (!trackName || !artist) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng cung cấp tên bài hát và nghệ sĩ'
-      });
-    }
-
-    const youtubeInfo = await youtubeService.searchYouTubeVideo(trackName, artist);
-
-    if (!youtubeInfo) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy video trên YouTube'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: youtubeInfo
-    });
-  } catch (error) {
-    console.error('Get YouTube info error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy thông tin YouTube',
-      error: error.message
-    });
-  }
-};
-
-// ===== DOWNLOAD & CONVERT MP3 =====
-
-// Kiểm tra video có thể download không
-export const checkVideoAvailability = async (req, res) => {
-  try {
-    const { videoId } = req.query;
-
-    if (!videoId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng cung cấp videoId'
-      });
-    }
-
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const info = await ytdl.getInfo(videoUrl);
-
-    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-
-    res.status(200).json({
-      success: true,
-      available: audioFormats.length > 0,
-      title: info.videoDetails.title,
-      duration: info.videoDetails.lengthSeconds,
-      formats: audioFormats.map(f => ({
-        quality: f.quality,
-        container: f.container,
-        bitrate: f.bitrate
-      }))
-    });
-  } catch (error) {
-    console.error('Check video availability error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Không thể kiểm tra video',
-      error: error.message
-    });
-  }
-};
-
-// Download và convert sang MP3
-export const downloadAndConvertToMP3 = async (req, res) => {
-  try {
-    const { videoId, quality = 'highestaudio' } = req.body;
-
-    if (!videoId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng cung cấp videoId'
-      });
-    }
-
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    
-    // Lấy thông tin video
-    const info = await ytdl.getInfo(videoUrl);
-    const title = info.videoDetails.title.replace(/[^\w\s]/gi, ''); // Remove special chars
-    
-    // Tạo tên file
-    const timestamp = Date.now();
-    const tempAudioPath = path.join(__dirname, '../temp', `${timestamp}_audio.webm`);
-    const outputPath = path.join(__dirname, '../temp', `${timestamp}_${title}.mp3`);
-
-    // Tạo thư mục temp nếu chưa có
-    if (!fs.existsSync(path.join(__dirname, '../temp'))) {
-      fs.mkdirSync(path.join(__dirname, '../temp'), { recursive: true });
-    }
-
-    // Download audio
-    const audioStream = ytdl(videoUrl, {
-      quality: quality,
-      filter: 'audioonly'
-    });
-
-    const writeStream = fs.createWriteStream(tempAudioPath);
-    audioStream.pipe(writeStream);
-
-    await new Promise((resolve, reject) => {
-      writeStream.on('finish', resolve);
-      writeStream.on('error', reject);
-    });
-
-    // Convert sang MP3 bằng ffmpeg
-    await new Promise((resolve, reject) => {
-      ffmpeg(tempAudioPath)
-        .toFormat('mp3')
-        .audioBitrate(320)
-        .on('end', resolve)
-        .on('error', reject)
-        .save(outputPath);
-    });
-
-    // Xóa file temp audio
-    await unlinkAsync(tempAudioPath);
-
-    // Gửi file về client
-    res.download(outputPath, `${title}.mp3`, async (err) => {
-      if (err) {
-        console.error('Download error:', err);
-      }
-      
-      // Xóa file sau khi download xong
-      try {
-        await unlinkAsync(outputPath);
-      } catch (error) {
-        console.error('Error deleting file:', error);
-      }
-    });
-
-  } catch (error) {
-    console.error('Download and convert error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi khi download và convert MP3',
-      error: error.message
-    });
-  }
-};
-
-// Stream MP3 trực tiếp (không cần download)
-export const streamMP3 = async (req, res) => {
-  try {
-    const { videoId } = req.query;
-
-    if (!videoId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng cung cấp videoId'
-      });
-    }
-
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const info = await ytdl.getInfo(videoUrl);
-
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Content-Disposition', `inline; filename="${info.videoDetails.title}.mp3"`);
-
-    const audioStream = ytdl(videoUrl, {
-      quality: 'highestaudio',
-      filter: 'audioonly'
-    });
-
-    ffmpeg(audioStream)
-      .toFormat('mp3')
-      .audioBitrate(320)
-      .on('error', (err) => {
-        console.error('Stream error:', err);
-        if (!res.headersSent) {
-          res.status(500).json({
-            success: false,
-            message: 'Lỗi khi stream MP3',
-            error: err.message
-          });
-        }
-      })
-      .pipe(res, { end: true });
-
-  } catch (error) {
-    console.error('Stream MP3 error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        message: 'Lỗi khi stream MP3',
-        error: error.message
-      });
-    }
-  }
-};
-
-// Lấy audio stream URL (cho React Native)
-export const getAudioStreamUrl = async (req, res) => {
-  try {
-    const { videoId } = req.query;
-
-    if (!videoId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Vui lòng cung cấp videoId'
-      });
-    }
-
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    const info = await ytdl.getInfo(videoUrl);
-
-    // Lấy format audio tốt nhất
-    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-    const bestAudio = audioFormats.reduce((best, format) => {
-      return format.bitrate > (best?.bitrate || 0) ? format : best;
-    }, null);
-
-    if (!bestAudio) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy audio stream'
-      });
-    }
-
+    const { albumId } = req.params;
+    const data = await spotify.findAlbumById(albumId);
     return res.status(200).json({
-      success: true,
-      data: {
-        streamUrl: bestAudio.url,
-        title: info.videoDetails.title,
-        duration: info.videoDetails.lengthSeconds,
-        quality: bestAudio.quality,
-        bitrate: bestAudio.bitrate,
-        container: bestAudio.container
-      }
+      message: 'Album retrieval successful',
+      data,
+      success: true
     });
   } catch (error) {
-    console.error('Get audio stream URL error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy audio stream URL',
-      error: error.message
+    res.status(500).json({ message: error.message || 'Failed to find album by ID on Spotify' });
+  }
+}
+
+///////////////////////////////////////////////////////////////
+/**
+ * Tìm kiếm bài hát trên Spotify với các tham số linh hoạt
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+const searchTracks = async (req, res) => {
+  try {
+    const query = {};
+    const { artist, track, album, type, genre, limit } = req.body;
+    if (track) query.track = track;
+    if (album) query.album = album;
+    if (artist) query.artist = artist;
+    if (genre) query.genre = genre;
+    // chuyển đổi thành chuỗi truy vấn
+    const queryString = Object.entries(query).map(([key, value]) => `${key.toLowerCase()}:${String(value.toLowerCase()).replace(/ /g, '+') + '"'}`).join(' ');
+    console.log(queryString);
+
+    const data = await spotify.searchTracks(queryString, type || 'track', Number.parseInt(limit) || null);
+    return res.status(200).json({
+      message: 'Track search successful',
+      data,
+      success: true
     });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to search tracks on Spotify' });
   }
 };
 
-export default {
-  searchMusic,
-  getMusicDetail,
-  getVpopTracks,
-  getPlaylistTracks,
+const searchTop50Tracks = async (req, res) => {
+  try {
+    const { market, genre } = req.body;
+    const query = {};
+    if (genre) query.genre = genre;
+    if (market) query.market = market;
+
+    console.log(1)
+    if (!market || !TOP_50_PLAYLIST_ID[market]) {
+      console.log(2)
+      return res.status(400).json({ error: 'Invalid or missing market parameter' });
+    }
+
+    console.log(3)
+    const tracks = await spotify.searchTop50Tracks('37i9dQZEVXbLdGSmz6xilI');
+    console.log(4)
+    return res.status(200).json({
+      message: 'Top 50 tracks search successful',
+      data: tracks,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to search top 50 tracks on Spotify' });
+  }
+};
+
+const findPlaylistById = async (req, res) => {
+  try {
+    const { market } = req.body;
+    console.log(market)
+    if (!market || !TOP_50_PLAYLIST_ID[market]) {
+      return res.status(400).json({ error: 'Invalid or missing market parameter' });
+    }
+
+    const playlistData = await spotify.findPlaylistById(TOP_50_PLAYLIST_ID[market]);
+    return res.status(200).json({
+      message: 'Playlist retrieval successful',
+      data: playlistData,
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to find playlist by ID on Spotify' });
+  }
+};
+
+const searchPlaylists = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Name parameter is required' });
+    }
+    const data = await spotify.searchPlaylists(name);
+    return res.status(200).json({
+      message: 'Playlist search successful',
+      data,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to search playlists on Spotify' });
+  }
+};
+
+const searchAlbums = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Name parameter is required' });
+    }
+    const data = await spotify.searchAlbums(name);
+    return res.status(200).json({
+      message: 'Album search successful',
+      data,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to search albums on Spotify: controller' });
+  }
+};
+
+const searchArtists = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Name parameter is required' });
+    }
+    const data = await spotify.searchArtists(name);
+    return res.status(200).json({
+      message: 'Artist search successful',
+      data,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to search artists on Spotify' });
+  }
+}
+
+const getTracksFromPlaylist = async (req, res) => {
+  try {
+    const { playlistId } = req.params;
+    const data = await spotify.getPlaylistTracks(playlistId);
+    return res.status(200).json({
+      message: 'Get tracks from playlist successful',
+      data,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get tracks from playlist on Spotify' });
+  }
+};
+
+const getTracksFromAlbum = async (req, res) => {
+  try {
+    const { albumId } = req.params;
+    console.log(albumId)
+    const data = await spotify.getAlbumTracks(albumId);
+    return res.status(200).json({
+      message: 'Get tracks from album successful',
+      data,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get tracks from album on Spotify' });
+  }
+};
+
+module.exports = {
+  findSpotifyPlaylist,
+  findArtistTopTracks,
+  findYoutubeVideo,
+  findPlaylistById,
+  findAlbumById,
+  getTracksFromPlaylist,
+  getTracksFromAlbum,
+  searchTracks,
+  searchTop50Tracks,
   searchPlaylists,
-  getYouTubeInfo,
-  checkVideoAvailability,
-  downloadAndConvertToMP3,
-  streamMP3,
-  getAudioStreamUrl
+  searchAlbums,
+  searchArtists
 };

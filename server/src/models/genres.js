@@ -1,18 +1,13 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
 
-const Genre = sequelize.define(
-  'Genre',
+const Genres = sequelize.define(
+  'Genres',
   {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true
-    },
-    spotifyGenreId: {
-      type: DataTypes.STRING,
-      unique: true,
-      field: 'spotify_genre_id'
     },
     name: {
       type: DataTypes.STRING,
@@ -22,8 +17,13 @@ const Genre = sequelize.define(
   },
   {
     tableName: 'genres',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        fields: ['id', 'name']
+      }
+    ]
   }
 )
 
-module.exports = Genre
+module.exports = Genres

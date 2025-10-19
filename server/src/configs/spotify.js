@@ -1,209 +1,312 @@
-import dotenv from 'dotenv';
-import axios from 'axios';
-dotenv.config();
+require('dotenv').config();
+const axios = require('axios');
+const { DATE } = require('sequelize');
+const { format } = require('sequelize/lib/utils');
 
-// Spotify Configuration
-const SPOTIFY_CONFIG = {
-  CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
-  CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
-  TOKEN_URL: 'https://accounts.spotify.com/api/token',
-  API_URL: 'https://api.spotify.com/v1'
-};
+const clientId = process.env.SPOTIFY_CLIENT_ID;
+const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
 
-let spotifyToken = null;
-let tokenExpiry = null;
+let accessToken = null;
 
-exports.getSpotifyToken = async () => {
+const formatTrack = (track) => ({
+  id: track.id,
+  name: track.name,
+  artists: [
+    ...track.artists.map(artist => ({
+      id: artist.id,
+      name: artist.name,
+    })),
+  ],
+  album: {
+    id: track.album.id,
+    name: track.album.name,
+    imageUrl: track.album.images[0]?.url,
+  },
+  duration: track.duration_ms,
+  href: track.href,
+  type: track.type,
+  explicit: track.explicit,
+  trackNumber: track.track_number,
+  uri: track.uri,
+  externalUrl: track.external_urls.spotify,
+});
+
+const formatPlaylist = (playlist) => ({
+  spotifyId: playlist.id,
+  name: playlist.name,
+  owner: playlist.owner.name,
+  description: playlist.description,
+  imageUrl: playlist.images[0]?.url,
+  totalTracks: playlist.tracks.total,
+  isPublic: playlist.public,
+  type: playlist.type,
+});
+
+const formatAlbum = (album) => ({
+  spotifyId: album.id,
+  name: album.name,
+  artists: [...album.artists.map(artist => artist.name)],
+  imageUrl: album.images[0]?.url,
+  releaseDate: album.release_date ? new Date(album.release_date).toISOString() : null,
+  totalTracks: album.total_tracks,
+  externalUrl: album.external_urls.spotify,
+  type: album.type,
+});
+
+const formatArtist = (artist) => ({
+  spotifyId: artist.id,
+  name: artist.name,
+  genres: artist.genres,
+  imgUrl: artist.images[0]?.url,
+  totalFollowers: artist.followers.total,
+  type: artist.type,
+});
+
+/** Lấy Access Token từ Spotify để xác thực các yêu cầu API. */
+const getAccessToken = async () => {
   try {
-    // Kiểm tra token còn hiệu lực
-    if (spotifyToken && tokenExpiry && Date.now() < tokenExpiry) {
-      return spotifyToken;
-    }
+    const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
-    const credentials = Buffer.from(`${SPOTIFY_CONFIG.CLIENT_ID}:${SPOTIFY_CONFIG.CLIENT_SECRET}`).toString('base64');
-    const response = await axios.post(SPOTIFY_CONFIG.TOKEN_URL,
-      'grant_type=client_credentials',
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${credentials}`
-        }
-      }
-    );
-
-    spotifyToken = response.data.access_token;
-    tokenExpiry = Date.now() + (response.data.expires_in * 1000) - 60000; // Trừ 1 phút cho an toàn
-
-    return spotifyToken;
-  } catch (error) {
-    console.error('Spotify token error:', error.response?.data || error.message);
-    throw new Error('Không thể lấy Spotify token');
-  }
-};
-
-exports.searchTrackPlaylist = async (query, type = 'track', limit = 10) => {
-  try {
-    const token = await getSpotifyToken();
-    const response = await axios.get(`${SPOTIFY_CONFIG.API_URL}/search`, {
-      params: {
-        q: `${query} ${type}`,
-        type: 'track',
-        market: 'VN',
-        limit: limit
-      },
+    const response = await axios.post('https://accounts.spotify.com/api/token', 'grant_type=client_credentials', {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        'Authorization': `Basic ${authString}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     });
 
-    return response.data.tracks?.items?.map(item => formatTrack(item)) || [];
-  } catch (error) {
-    console.error('Search track playlist error:', error.response?.data || error.message);
-    return [];
+    accessToken = response.data.access_token;
+    console.log('Spotify access token has been refreshed!');
+  } catch (err) {
+    console.error('Error retrieving Spotify access token:', err.response ? err.response.data : err.message);
+    accessToken = null;
   }
-}
+};
 
-// Tìm kiếm playlist Vpop
-exports.searchVpopPlaylists = async () => {
-  try {
-    const token = await getSpotifyToken();
-    const queries = [
-      'vpop vietnam top',
-      'nhạc việt hot',
-      'vietnamese pop trending',
-      'vpop 2024'
-    ];
+/* Lấy token lần đầu và tự động làm mới sau mỗi 55 phút và Làm mới trước khi hết hạn (thường là 60 phút) */
+getAccessToken();
+setInterval(getAccessToken, 1000 * 60 * 55);
 
-    for (const query of queries) {
-      const response = await axios.get(`${SPOTIFY_CONFIG.API_URL}/search`, {
-        params: {
-          q: query,
-          type: 'playlist',
-          market: 'VN',
-          limit: 5
-        },
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data.playlists?.items?.length > 0) {
-        return response.data.playlists.items;
-      }
-    }
-    return [];
-  } catch (error) {
-    console.error('Search playlist error:', error.response?.data || error.message);
-    return [];
+/* Hàm trợ giúp để thực hiện một yêu cầu GET đã được xác thực tới Spotify API */
+const spotifyApiRequest = async (endpoint, params = {}) => {
+  if (!accessToken) {
+    throw new Error('Spotify access token is not available.');
   }
-}
 
-// Lấy tracks từ playlist
-exports.getPlaylistTracks = async (playlistId, limit = 20) => {
+  console.log('params', params);
   try {
-    const token = await getSpotifyToken();
-    const response = await axios.get(`${SPOTIFY_CONFIG.API_URL}/playlists/${playlistId}/tracks`, {
-      params: {
-        market: 'VN',
-        limit: limit
-      },
+    const response = await axios.get(`${SPOTIFY_API_URL}${endpoint}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      ...(params ? { params: params } : {})
     });
-
-    return response.data.items?.map(item => formatTrack(item.track)) || [];
-  } catch (error) {
-    console.error('Get playlist tracks error:', error.response?.data || error.message);
-    return [];
-  }
-}
-
-// Tìm kiếm tracks Vpop trực tiếp
-exports.searchVpopTracks = async (limit = 20) => {
-  try {
-    const token = await getSpotifyToken();
-    const queries = [
-      'genre:vietnam',
-      'vpop vietnam',
-      'vietnamese pop music',
-      'nhạc việt'
-    ];
-
-    let allTracks = [];
-
-    for (const query of queries) {
-      const response = await axios.get(`${SPOTIFY_CONFIG.API_URL}/search`, {
-        params: {
-          q: query,
-          type: 'track',
-          market: 'VN',
-          limit: Math.ceil(limit / queries.length)
-        },
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data.tracks?.items) {
-        allTracks = allTracks.concat(response.data.tracks.items.map(track => formatTrack(track)));
-      }
-    }
-
-    // Loại bỏ duplicate và sắp xếp
-    const uniqueTracks = allTracks.filter((track, index, self) =>
-      index === self.findIndex(t => t.id === track.id)
-    );
-
-    return uniqueTracks
-      .sort((a, b) => b.popularity - a.popularity)
-      .slice(0, limit);
-  } catch (error) {
-    console.error('Search tracks error:', error.response?.data || error.message);
-    return [];
+    return response.data;
+  } catch (err) {
+    console.error(`Error calling Spotify API endpoint ${endpoint}:`, err.response ? err.response.data : err.message);
+    throw err;
   }
 };
 
-// Hàm search playlist theo query và quốc gia/châu lục
-exports.searchPlaylists = async (queries = [], market = 'VN', limit = 15) => {
+const findTrackById = async (trackId) => formatTrack(await spotifyApiRequest(`/tracks/${trackId}`));
+const findArtistById = async (artistId) => formatArtist(await spotifyApiRequest(`/artists/${artistId}`));
+const findAlbumById = async (albumId) => formatAlbum(await spotifyApiRequest(`/albums/${albumId}`));
+const findPlaylistById = async (playlistId) => formatPlaylist(await spotifyApiRequest(`/playlists/${playlistId}`));
+
+/**
+ * Tìm kiếm bài hát hoặc nhiều bài hát trên Spotify
+ * @param {*} query: string
+ * @param {*} type: string
+ * @param {*} limit: number | null
+ * @returns list bài hát đã được format
+ */
+const searchTracks = async (query, type, limit = null) => {
   try {
-    const token = await getSpotifyToken();
-
-    for (const query of queries) {
-      const response = await axios.get(`${SPOTIFY_CONFIG.API_URL}/search`, {
-        params: {
-          q: query,
-          type: 'playlist',
-          market,
-          limit
-        },
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data.playlists?.items?.length > 0) {
-        return response.data.playlists.items;
-      }
-    }
-
-    return [];
+    const tracksData = await spotifyApiRequest('/search', {
+      q: query,
+      type: type,
+      ...(limit ? { limit: limit } : {})
+    });
+    const formattedTracks = tracksData.tracks.items.map(formatTrack);
+    return formattedTracks;
   } catch (error) {
-    console.error('Search playlist error:', error.response?.data || error.message);
-    return [];
+    console.error(`Error searching Spotify:`, error.response ? error.response.data : error.message);
+    throw error;
   }
 };
 
-exports.formatTrack = (track) => {
-  return {
-    id: track.id,
-    name: track.name,
-    artist: track.artists.map(artist => artist.name).join(', '),
-    album: track.album.name,
-    image: track.album.images[0]?.url || null,
-    popularity: track.popularity,
-    preview_url: track.preview_url,
-    duration_ms: track.duration_ms,
-    external_url: track.external_urls?.spotify
-  };
+/** Hàm để tìm id playlist từ tên playlist 
+ * B1. Vòng lặp cho đến khi không còn trang tiếp theo (nextUrl không phải là null)
+ * B2. Lọc bỏ các item null trong trang hiện tại
+ * B3. Thêm các playlist hợp lệ vào mảng tổng
+ * B4. Cập nhật nextUrl cho vòng lặp tiếp theo
+ */
+const searchPlaylists = async (query) => {
+  let allPlaylists = [];
+  let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=playlist&limit=50`; // Bắt đầu với URL đầu tiên
+  console.log(`Bắt đầu tìm kiếm tất cả playlist cho query: "${query}"`);
+
+  try {
+    while (nextUrl) {
+      const response = await axios.get(nextUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const playlistsPage = response.data.playlists;
+      const validItems = playlistsPage.items.filter(Boolean);
+      allPlaylists = allPlaylists.concat(validItems);
+      nextUrl = playlistsPage.next;
+      console.log(`Đã lấy được ${validItems.length} playlist. Tổng cộng: ${allPlaylists.length}. Đang tải trang tiếp theo...`);
+    }
+
+    console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allPlaylists.length} playlist.`);
+    console.log(allPlaylists[0])
+    return allPlaylists.map((playlist) => formatPlaylist(playlist));
+  } catch (error) {
+    console.error(`Lỗi khi tìm kiếm playlist trên Spotify:`, error.response ? error.response.data : error.message);
+    throw error;
+  }
 }
+
+const searchAlbums = async (query) => {
+  let allAlbums = [];
+  let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=album&limit=50`; // Bắt đầu với URL đầu tiên
+  console.log(`Bắt đầu tìm kiếm tất cả album cho query: "${query}"`);
+
+  try {
+    while (nextUrl) {
+      const response = await axios.get(nextUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const albumPage = response.data.albums;
+      const validItems = albumPage.items.filter(Boolean);
+      allAlbums = allAlbums.concat(validItems);
+      nextUrl = albumPage.next;
+      console.log(`Đã lấy được ${validItems.length} album. Tổng cộng: ${allAlbums.length}. Đang tải trang tiếp theo...`);
+    }
+
+    console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allAlbums.length} album.`);
+    return allAlbums.map((album) => formatAlbum(album));
+  } catch (error) {
+    console.error(`Lỗi khi tìm kiếm album trên Spotify:`, error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+const searchArtists = async (query) => {
+  try {
+    let allArtists = [];
+    let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=50`; // Bắt đầu với URL đầu tiên
+    console.log(`Bắt đầu tìm kiếm tất cả nghệ sĩ cho query: "${query}"`);
+
+    while (nextUrl) {
+      const response = await axios.get(nextUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const artistPage = response.data.artists;
+      const validItems = artistPage.items.filter(Boolean);
+      allArtists = allArtists.concat(validItems);
+      nextUrl = artistPage.next;
+      console.log(`Đã lấy được ${validItems.length} nghệ sĩ. Tổng cộng: ${allArtists.length}. Đang tải trang tiếp theo...`);
+    }
+
+    return allArtists.map((artist) => formatArtist(artist));
+  } catch (error) {
+    console.error(`Error searching artists on Spotify:`, error.response ? error.response.data : error.message);
+    throw error;
+  }
+}
+
+// unfinished
+const searchTop50Tracks = async (playlistId) => {
+  try {
+    console.log(playlistId)
+    const tracksData = await axios.get(`${SPOTIFY_API_URL}/playlists/${playlistId}/tracks`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+    console.log('tracksData.tracks', tracksData)
+    // const formattedTracks = tracksData.tracks.items.map(formatTrack);
+    return tracksData;
+  } catch (error) {
+    console.error(`Error searching top 50 tracks on Spotify:`, error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+const getPlaylistTracks = async (playlistId) => {
+  try {
+    const tracksData = await spotifyApiRequest(`/playlists/${playlistId}/tracks`);
+    return tracksData.items.map(item => ({
+      spotifyId: item.track.id,
+      name: item.track.name,
+      lyrics: "",
+      externalUrl: item.track.external_urls.spotify,
+      duration: item.track.duration_ms,
+      artists: [...item.track.artists.map(artist => artist.name)],
+      album: item.track.album.name,
+      discNumber: item.track.disc_number,
+      trackNumber: item.track.track_number,
+      type: item.track.type,
+      explicit: item.track.explicit,
+      playCount: 0,
+      shareCount: 0
+    }));
+  } catch (error) {
+    console.error(`Error getting tracks from playlist on Spotify:`, error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+const getAlbumTracks = async (albumId, albumName) => {
+  try {
+    const tracksData = await spotifyApiRequest(`/albums/${albumId}/tracks`);
+    return tracksData.items.map(item => ({
+      spotifyId: item.id,
+      name: item.name,
+      lyrics: "",
+      externalUrl: item.external_urls.spotify,
+      duration: item.duration_ms,
+      artists: [...item.artists.map(artist => artist.name)],
+      album: albumName,
+      discNumber: item.disc_number,
+      trackNumber: item.track_number,
+      type: item.type,
+      explicit: item.explicit,
+      playCount: 0,
+      shareCount: 0
+    }));
+  } catch (error) {
+    console.error(`Error getting album tracks from Spotify:`, error.response ? error.response.data : error.message);
+    throw error;
+  }
+}
+
+// unfinished
+const getArtistTopTracks = async (artistId) => {
+  return await spotifyApiRequest(`/artists/${artistId}/top-tracks`, {
+    market: 'VN', // Bắt buộc phải có mã quốc gia
+  });
+};
+
+
+module.exports = {
+  searchTop50Tracks,
+  searchTracks,
+  searchAlbums,
+  searchPlaylists,
+  searchArtists,
+  getArtistTopTracks,
+  getPlaylistTracks,
+  getAlbumTracks,
+  findAlbumById
+};

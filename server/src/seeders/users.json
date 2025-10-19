@@ -1,0 +1,101 @@
+[
+  {
+    "facebookId": null,
+    "username": "admin",
+    "email": "ht03.thu@gmail.com",
+    "password": "$2b$10$z1fKiZLHb7A0jLVXS/bCZOlLqAUJJ3ODlvnRnMPji9KgPNIYylVne",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Quản trị viên",
+    "avatarUrl": "https://res.cloudinary.com/chaamz03/image/upload/v1760727429/kltn/logo_nw99ke.png",
+    "bio": null,
+    "dob": null,
+    "gender": null,
+    "accessToken": null,
+    "refreshToken": null,
+    "expiry": null,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "Admin"
+  },
+  {
+    "facebookId": null,
+    "googleId": "108400619774723980392",
+    "username": "user3100",
+    "email": "levoduytuan2401@gmail.com",
+    "password": "$2b$10$z1fKiZLHb7A0jLVXS/bCZOlLqAUJJ3ODlvnRnMPji9KgPNIYylVne",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Duy Tuấn",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocI_F6zDgM5K_wIv4rvCCDTh1TtckT9dZewAfsEGSa852jHuhbvN=s96-c",
+    "bio": null,
+    "dob": null,
+    "gender": null,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User"
+  },
+  {
+    "facebookId": "122298904754006905",
+    "googleId": "111213575981860747234",
+    "username": "user7916",
+    "email": "phanthihuynhthu2806@gmail.com",
+    "password": "$2b$10$cJwHCmWRBQOfizIpRSC5oe1NzuZgDJ9F2h30PmzT42.CERk271hui",
+    "accountType": [
+      "facebook",
+      "local",
+      "google"
+    ],
+    "fullName": "Bảo Trâm",
+    "avatarUrl": "https://graph.facebook.com/v16.0/122298904754006905/picture?height=100&width=100&migration_overrides=%7Boctober_2012%3Atrue%7D&access_token=EAAmsY35StoABPm9E6dcZBZAU9wDsysFH1DyZC7S28NwysnvvuM0NPxvpEVbSS60aCSLCueSellKBDC6QhCnUuKQW5autU8gilIYV9Rz2fMNtIzpS8dTr2Luy88zX8PF0q9xxjCymngFAu2oUZBZAhIwiXa933CiQX6W7VyZA70ZBfKtjAq5Ijxf0pS95cy8jDZCXjjhjCnYfZBqy9hKCDaueM1u4SvIK48bZBSF8aI7zyS7fLO9XMT7uAzRsilkZBhTJP4ZD",
+    "bio": null,
+    "dob": null,
+    "gender": null,
+    "accessToken": null,
+    "refreshToken": null,
+    "expiry": null,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User"
+  },
+  {
+    "facebookId": "2003030190549726",
+    "googleId": "113691898021987373332",
+    "username": "chaam",
+    "email": "baotrammari2003@gmail.com",
+    "password": "$2b$10$InQtbBS1I35vfMMcACi/duv6GALJ7Puh2hiWAZ8MXzySYuKx.mRHW",
+    "accountType": [
+      "google",
+      "local",
+      "facebook"
+    ],
+    "fullName": "Mari Trâm Bảo",
+    "avatarUrl": "https://res.cloudinary.com/chaamz03/image/upload/v1760507856/kltn/x9tvc7xuzyuap2bumil3.jpg",
+    "bio": "ảmi",
+    "dob": "2008-10-21T17:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User"
+  }
+]

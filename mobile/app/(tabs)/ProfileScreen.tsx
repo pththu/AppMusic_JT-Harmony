@@ -8,12 +8,12 @@ import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
 import useAuthStore from "@/store/authStore";
-import { ChangeAvatar, Logout, UploadMultipleFile } from "@/routes/ApiRouter";
+import { ChangeAvatar, Logout } from "@/routes/ApiRouter";
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LoginManager } from "react-native-fbsdk-next";
 import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
+// import * as DocumentPicker from 'expo-document-picker';
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
@@ -81,35 +81,35 @@ export default function ProfileScreen() {
     }
   };
 
-  const handlePickMultipleFile = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          'audio/*',
-          'video/*'
-        ],
-        multiple: true,
-        copyToCacheDirectory: true,
-      });
+  // const handlePickMultipleFile = async () => {
+  //   try {
+  //     const result = await DocumentPicker.getDocumentAsync({
+  //       type: [
+  //         'audio/*',
+  //         'video/*'
+  //       ],
+  //       multiple: true,
+  //       copyToCacheDirectory: true,
+  //     });
 
-      if (!result.canceled) {
-        // Truyền trực tiếp mảng result.assets vào hàm upload
-        console.log('Files selected:', result.assets);
-        const uploadResult = await UploadMultipleFile(result.assets);
+  //     if (!result.canceled) {
+  //       // Truyền trực tiếp mảng result.assets vào hàm upload
+  //       console.log('Files selected:', result.assets);
+  //       const uploadResult = await UploadMultipleFile(result.assets);
 
-        if (uploadResult.success) {
-          success('Upload thành công nhiều file!', '');
-          console.log('Server response:', uploadResult);
-        } else {
-          error('Upload thất bại', uploadResult.message);
-        }
-      } else {
-        warning('Bạn chưa chọn file nào để upload!');
-      }
-    } catch (error) {
-      error('Không thể chọn file. Vui lòng thử lại!', error.message);
-    }
-  };
+  //       if (uploadResult.success) {
+  //         success('Upload thành công nhiều file!', '');
+  //         console.log('Server response:', uploadResult);
+  //       } else {
+  //         error('Upload thất bại', uploadResult.message);
+  //       }
+  //     } else {
+  //       warning('Bạn chưa chọn file nào để upload!');
+  //     }
+  //   } catch (error) {
+  //     error('Không thể chọn file. Vui lòng thử lại!', error.message);
+  //   }
+  // };
 
   const handleLogout = async () => {
     try {
@@ -234,11 +234,11 @@ export default function ProfileScreen() {
         <Text className={`${colorScheme === "dark" ? "text-white" : "text-gray-800 bg-green-100 py-2 px-4 rounded-md"}`}>{user?.bio || '...'}</Text>
       </View>
 
-      <Pressable className="p-5 border border-slate-300"
+      {/* <Pressable className="p-5 border border-slate-300"
         onPress={() => handlePickMultipleFile()}
       >
         <Text>Chọn nhiều file</Text>
-      </Pressable>
+      </Pressable> */}
 
       {/* Các nút Thư viện (Library) */}
       <View className="flex-row justify-between mb-4">
