@@ -15,6 +15,7 @@ const Artist = require('./artist');
 const Album = require('./album');
 const Track = require('./track');
 const Playlist = require('./playlist');
+const ListeningHistory = require('./listening_history');
 
 // ================= Associations ================= //
 // // Album ↔ Track (N-N) thông qua AlbumTrack
@@ -114,6 +115,9 @@ Track.belongsToMany(Playlist, {
     otherKey: 'playlist_id',
     as: 'playlists'
 });
+
+User.hasMany(ListeningHistory, { foreignKey: 'userId' });
+ListeningHistory.belongsTo(User, { foreignKey: 'userId' });
 
 // ================= Export ================= //
 module.exports = {

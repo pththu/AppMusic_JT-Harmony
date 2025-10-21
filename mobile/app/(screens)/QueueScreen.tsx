@@ -30,11 +30,9 @@ export default function QueueScreen() {
     : [...queue];
 
   const renderQueueItem = ({ item, index }) => {
-    // Biến này xác định xem bài hát có đang phát hay không.
     const isPlaying = item.isPlaying;
 
     const displayIndex = index > 0 ? index + 1 : null;
-
     return (
       <View
         key={`${item.id}-${index}`}
@@ -47,15 +45,15 @@ export default function QueueScreen() {
             <Text className="text-gray-600 dark:text-gray-400 text-base w-6">{displayIndex}</Text>
           )}
         </View>
-        <Image source={{ uri: item.image }} className="w-12 h-12 rounded-md" />
+        <Image source={{ uri: item.imageUrl }} className="w-12 h-12 rounded-md" />
         <View className="ml-4 flex-1">
           <Text
             className={`font-semibold ${isPlaying ? 'text-green-600 dark:text-green-400' : 'text-black dark:text-white'}`}
           >
-            {item.title}
+            {item.name}
           </Text>
           <Text className="text-gray-600 dark:text-gray-400">
-            {item.artists?.map(a => a.name).join(', ')}
+            {item.artists?.map(a => a).join(', ')}
           </Text>
         </View>
         <TouchableOpacity>
@@ -72,9 +70,6 @@ export default function QueueScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-down" size={28} color={primaryIconColor} />
         </TouchableOpacity>
-        <Text className="text-black dark:text-white text-xl font-semibold flex-1 text-center">
-          In Queue
-        </Text>
       </View>
 
       {/* Hiển thị Now Playing riêng biệt */}
@@ -87,10 +82,10 @@ export default function QueueScreen() {
             />
           )}
           <View>
-            <Text className="text-gray-600 dark:text-gray-400 text-sm">Now Playing</Text>
-            <Text className="text-black dark:text-white font-bold">{nowPlaying.title}</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Đang phát</Text>
+            <Text className="text-black dark:text-white font-bold">{nowPlaying.name}</Text>
             <Text className="text-gray-600 dark:text-gray-400 text-sm">
-              {nowPlaying.artists?.map(a => a.name).join(', ')}
+              {nowPlaying.artists?.map(a => a).join(', ')}
             </Text>
           </View>
         </View>
@@ -100,18 +95,18 @@ export default function QueueScreen() {
       <FlatList
         data={combinedQueue}
         renderItem={renderQueueItem}
-        keyExtractor={(item, index) => `${item.id}-${index}`}
+        keyExtractor={(item, index) => item.spotifyId}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
         ListHeaderComponent={() => (
           <View className="flex-row justify-between items-center py-2 border-t border-gray-300 dark:border-gray-700">
-            <Text className="text-black dark:text-white text-lg font-semibold">Queue</Text>
+            <Text className="text-black dark:text-white text-lg font-semibold">Danh sách chờ</Text>
           </View>
         )}
         ListFooterComponent={() => (
           <View className="flex-row justify-between items-center mt-4">
             <Text className="text-black dark:text-white text-lg font-semibold">
-              Auto-recommendations
+              Gợi ý tự động
             </Text>
             <Switch
               value={autoRecommendations}

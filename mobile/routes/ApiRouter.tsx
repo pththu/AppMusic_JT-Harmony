@@ -197,8 +197,6 @@ export const ChangeAvatar = async (payload) => {
         'Content-Type': 'multipart/form-data',
       },
     });
-
-    console.log('response.data', response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -236,3 +234,6 @@ export const ChangeAvatar = async (payload) => {
 //     return { message: error.message, status: "error" };
 //   }
 // };
+
+
+//track api

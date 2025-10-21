@@ -84,7 +84,6 @@ protectedRoutes.forEach(route => {
     app.use(`${API_PREFIX}/${route}`, authenticateToken, require(`./routes/${route}Route`))
 })
 
-
 // Start server
 async function startServer() {
     try {
