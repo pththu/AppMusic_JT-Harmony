@@ -246,6 +246,7 @@ const searchTop50Tracks = async (playlistId) => {
 const getPlaylistTracks = async (playlistId) => {
   try {
     const tracksData = await spotifyApiRequest(`/playlists/${playlistId}/tracks`);
+    console.log('123456789')
     return tracksData.items.map(item => ({
       spotifyId: item.track.id,
       name: item.track.name,

@@ -34,7 +34,7 @@ const findArtistTopTracks = async (req, res) => {
 // Tìm kiếm video trên YouTube
 const findYoutubeVideo = async (req, res) => {
   try {
-    const { song, artist } = req.query;
+    const { song, artist } = req.body;
     if (!song || !artist) {
       return res.status(400).json({ error: 'Song and artist parameters are required' });
     }
