@@ -55,8 +55,8 @@ export default function HomeScreen() {
 
     if (playerRef.current) {
       // Kiểm tra xem hàm play có tồn tại không
-      if (typeof playerRef.current.play === 'function') {
-        playerRef.current.play();
+      if (typeof playerRef.current.playVideo === 'function') {
+        playerRef.current.playVideo();
       } else {
         console.log("LỖI: playerRef.current.play không phải là một hàm!");
         success("Không thể play, ref chưa sẵn sàng.");
@@ -68,7 +68,7 @@ export default function HomeScreen() {
 
   const handlePause = () => {
     // Gửi yêu cầu "pause" đến player thông qua ref
-    playerRef.current?.pause();
+    playerRef.current?.pauseVideo();
   };
 
   // 4. Hàm xử lý "Lắng nghe" (Listen)
