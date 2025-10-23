@@ -1,8 +1,8 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
 
-const Follow = sequelize.define(
-  'Follow',
+const FollowArtist = sequelize.define(
+  'FollowArtist',
   {
     id: {
       type: DataTypes.INTEGER,
@@ -16,15 +16,10 @@ const Follow = sequelize.define(
       allowNull: false,
       field: 'follower_id',
     },
-    userFolloweeId: { // user duoc theo doi
+    artistId: { // artist duoc theo doi
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'user_followee_id'
-    },
-    artistFolloweeId: { // artist duoc theo doi
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'artist_followee_id'
+      field: 'artist_id'
     },
     followedAt: {
       type: DataTypes.DATE,
@@ -34,8 +29,13 @@ const Follow = sequelize.define(
   },
   {
     tableName: 'follows',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        fields: ['follower_id', 'artist_id']
+      }
+    ]
   }
 )
 
-module.exports = Follow
+module.exports = FollowArtist

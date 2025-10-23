@@ -65,8 +65,6 @@ const searchVideo = async (songName, artistName) => {
       type: 'video',
     });
 
-    console.log(response.items[0]);
-
     const resultWithDetails = await searchVideoWithDuration(response.items[0].id.videoId);
     console.log('resultWithDetails', resultWithDetails);
 
@@ -83,17 +81,9 @@ const parseISO8601Duration = (durationString) => {
   const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
   const matches = durationString.match(regex);
 
-  // matches sẽ là một mảng: [chuỗi_khớp, giờ, phút, giây]
-  // Ví dụ với "PT3M28S": ['PT3M28S', undefined, '3', '28']
-
-  console.log('matches', matches)
-
   const hours = matches[1] ? parseInt(matches[1], 10) : 0;
   const minutes = matches[2] ? parseInt(matches[2], 10) : 0;
   const seconds = matches[3] ? parseInt(matches[3], 10) : 0;
-
-  console.log('minutes', minutes);
-  console.log('s', seconds);
 
   // Tính tổng số giây
   return ((hours * 3600) + (minutes * 60) + seconds) * 1000;

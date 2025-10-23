@@ -20,6 +20,6 @@ router.post('/search-artist', musicController.searchArtists);
 // === YOUTUBE ROUTE ===
 
 // Ví dụ: GET /api/music/youtube/search?song=Shape%20of%20You&artist=Ed%20Sheeran
-router.get('/search-video', musicController.findYoutubeVideo);
+router.post('/search-video', musicController.findYoutubeVideo);
 
 module.exports = router;

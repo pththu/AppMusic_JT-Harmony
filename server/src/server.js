@@ -88,10 +88,10 @@ protectedRoutes.forEach(route => {
 async function startServer() {
     try {
 
-        // await sequelize.sync()
-        // console.log('✅ Database synchronized successfully')
+        await sequelize.sync()
+        console.log('✅ Database synchronized successfully')
 
-        // await seedDatabase();
+        await seedDatabase();
 
         server.listen(process.env.PORT || 8000, () => {
             console.log(`🎶 Music Server is running at http://localhost:${process.env.PORT || 8000}`)

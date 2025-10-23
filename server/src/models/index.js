@@ -5,9 +5,10 @@ const User = require('./User');
 const Notification = require('./notification');
 const Post = require('./post');
 const Comment = require('./comment');
-const Follow = require('./follows');
 const StatDailyPlays = require('./stat_daily_plays');
 const SyncStatus = require('./sync_status');
+const FollowArtist = require('./follow_artist');
+const FollowUser = require('./follow_user');
 
 const Role = require('./role');
 const Genres = require('./genres');
@@ -15,6 +16,7 @@ const Artist = require('./artist');
 const Album = require('./album');
 const Track = require('./track');
 const Playlist = require('./playlist');
+const PlaylistTrack = require('./playlist_track');
 const ListeningHistory = require('./listening_history');
 
 // ================= Associations ================= //
@@ -37,13 +39,6 @@ Comment.belongsTo(User, {
     foreignKey: 'userId',
     as: 'User'
 });
-
-// User - Follow
-User.hasMany(Follow, { foreignKey: 'followerId' });
-Follow.belongsTo(User, { foreignKey: 'followerId' });
-
-User.hasMany(Follow, { foreignKey: 'userFolloweeId' });
-Follow.belongsTo(User, { foreignKey: 'userFolloweeId' });
 
 // User - Notification
 User.hasMany(Notification, { foreignKey: 'userId' });
@@ -102,22 +97,30 @@ Artist.belongsToMany(Track, {
 Album.hasMany(Track, { foreignKey: 'albumId' });
 Track.belongsTo(Album, { foreignKey: 'albumId' });
 
-Playlist.belongsToMany(Track, {
-    through: 'playlist_tracks',
-    foreignKey: 'playlist_id',
-    otherKey: 'track_id',
-    as: 'tracks'
-});
-
-Track.belongsToMany(Playlist, {
-    through: 'playlist_tracks',
-    foreignKey: 'track_id',
-    otherKey: 'playlist_id',
-    as: 'playlists'
-});
-
 User.hasMany(ListeningHistory, { foreignKey: 'userId' });
 ListeningHistory.belongsTo(User, { foreignKey: 'userId' });
+
+User.hasMany(FollowArtist, { foreignKey: 'followerId' });
+FollowArtist.belongsTo(User, { foreignKey: 'followerId' });
+
+Artist.hasMany(FollowArtist, { foreignKey: 'artistId' });
+FollowArtist.belongsTo(Artist, { foreignKey: 'artistId' });
+
+User.hasMany(FollowUser, { foreignKey: 'followerId' });
+FollowUser.belongsTo(User, { foreignKey: 'followerId' });
+
+User.hasMany(FollowUser, { foreignKey: 'followeeId' });
+FollowUser.belongsTo(User, { foreignKey: 'followeeId' });
+
+// User ↔ Playlist (1-N)
+User.hasMany(Playlist, { foreignKey: 'userId' });
+Playlist.belongsTo(User, { foreignKey: 'userId' });
+
+Track.hasMany(PlaylistTrack, { foreignKey: 'trackId' });
+PlaylistTrack.belongsTo(Track, { foreignKey: 'trackId' });
+
+Playlist.hasMany(PlaylistTrack, { foreignKey: 'playlistId' });
+PlaylistTrack.belongsTo(Playlist, { foreignKey: 'playlistId' });
 
 // ================= Export ================= //
 module.exports = {
@@ -128,7 +131,8 @@ module.exports = {
     Album,
     User,
     Comment,
-    Follow,
+    FollowArtist,
+    FollowUser,
     Genres,
     Notification,
     Role,
