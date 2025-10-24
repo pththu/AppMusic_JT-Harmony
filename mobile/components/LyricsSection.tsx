@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  useColorScheme,
 } from 'react-native';
 
 const fullLyrics = [
@@ -45,6 +46,7 @@ const fullLyrics = [
   { text: "I'm gonna love you", time: 138 },
 ];
 const LyricsSection = () => {
+  const colorScheme = useColorScheme();
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [showFullLyrics, setShowFullLyrics] = useState(false);
   const scrollViewRef = useRef(null);
@@ -87,11 +89,11 @@ const LyricsSection = () => {
     : 200;
 
   return (
-    <View className="bg-[#1C1A2F] rounded-xl p-4 mb-6">
+    <View className={`rounded-xl p-4 my-6 ${colorScheme === "dark" ? "bg-[#1C1A2F]" : "bg-green-200"}`}>
       <View className="flex-row justify-between items-center mb-2">
-        <Text className="text-white text-lg font-bold">Lyrics</Text>
+        <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F"}`}>Lyrics</Text>
         <TouchableOpacity onPress={handleShowLyrics}>
-          <Text className="text-gray-400 text-sm">
+          <Text className={`text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>
             {showFullLyrics ? 'Hide' : 'Show'}
           </Text>
         </TouchableOpacity>
@@ -107,7 +109,8 @@ const LyricsSection = () => {
             return (
               <Text
                 key={index}
-                className={`text-center my-3 ${isCurrent ? 'text-white font-bold text-2xl' : 'text-gray-400 text-lg'}`}
+                className={`text-center my-3 
+                  ${isCurrent ? 'text-green-600 font-bold text-2xl' : 'text-gray-700 text-lg'}`}
               >
                 {item.text}
               </Text>

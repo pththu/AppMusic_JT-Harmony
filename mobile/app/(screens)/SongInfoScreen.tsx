@@ -11,22 +11,9 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useTheme } from "@/components/ThemeContext";
 
-// Bổ sung: Định nghĩa lại type Song để sử dụng nội bộ trong file này
-interface Song {
-  id: string;
-  title: string;
-  artists: { name: string; image: string }[];
-  image: string;
-  album?: string;
-  itag?: string;
-  mimeType?: string;
-  bitrate?: string;
-  youtubeUrl?: string;
-  downloadUrl?: string;
-}
 
 // Cập nhật để hiển thị trên hai cột
-const InfoRow = ({ label, value }: { label: string; value?: string }) => (
+const InfoRow = ({ label, value }) => (
   <View className="flex-row mb-4">
     <Text className="text-gray-600 dark:text-gray-400 text-lg w-28">{label}</Text>
     <Text className="text-black dark:text-white text-base flex-1">
@@ -36,7 +23,7 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => (
 );
 
 // Cập nhật để hiển thị trên hai cột
-const LinkRow = ({ label, url }: { label: string; url?: string }) => {
+const LinkRow = ({ label, url }) => {
   if (!url) {
     return <InfoRow label={label} value="Không có thông tin" />;
   }
@@ -57,7 +44,6 @@ export default function SongInfoScreen() {
   const song = JSON.parse(params.song as string);
 
   // Ép kiểu (type assertion) để đảm bảo song có đầy đủ thuộc tính
-  const typedSong = song as Song;
 
   const { theme } = useTheme();
   const primaryIconColor = theme === 'dark' ? 'white' : 'black';
@@ -78,21 +64,21 @@ export default function SongInfoScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Title */}
-        <InfoRow label="Title" value={typedSong.title} />
+        <InfoRow label="Title" value={song.name} />
 
         {/* General Info */}
         <InfoRow
           label="Artists"
-          value={typedSong.artists?.map((a) => a.name).join(", ")}
+          value={song.artists?.map((a) => a).join(", ")}
         />
-        <InfoRow label="Album" value={typedSong.album} />
-        <InfoRow label="Itag" value={typedSong.itag} />
-        <InfoRow label="Mime Type" value={typedSong.mimeType} />
-        <InfoRow label="Bitrate" value={typedSong.bitrate} />
+        <InfoRow label="Album" value={song.album} />
+        {/* <InfoRow label="Itag" value={song.itag} />
+        <InfoRow label="Mime Type" value={song.mimeType} />
+        <InfoRow label="Bitrate" value={song.bitrate} /> */}
 
         {/* Links */}
-        <LinkRow label="YouTube URL" url={typedSong.youtubeUrl} />
-        <LinkRow label="Download URL" url={typedSong.downloadUrl} />
+        <LinkRow label="YouTube URL" url={song.externalUrl} />
+        {/* <LinkRow label="Download URL" url={song.downloadUrl} /> */}
 
         <View className="h-20" />
       </ScrollView>

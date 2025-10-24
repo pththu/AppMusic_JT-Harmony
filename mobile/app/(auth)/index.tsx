@@ -1,6 +1,6 @@
 import { useNavigate } from '@/hooks/useNavigate';
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -21,7 +21,7 @@ export default function AuthScreen() {
 
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
-  const [loading, setLoading] = useState(false);
+  const colorScheme = useColorScheme();
   const login = useAuthStore(state => state.login);
   const { error: showAlertError, success: showAlertSuccess } = useCustomAlert(); 
 
@@ -107,6 +107,7 @@ const handleLoginWithGoogle = async () => {
 };
 
   const handleLoginWithFacebook = async () => {
+    console.log('first')
     const loginType = 'facebook';
     try {
       const result = await LoginManager.logInWithPermissions(['public_profile']);
@@ -133,17 +134,17 @@ const handleLoginWithGoogle = async () => {
             navigate('Main');
           }
         }, 1000);
-      } 
+      }
     } catch (error) {
       console.log('Login fb fail with error: ' + error);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-black items-center justify-center px-6">
-      <View className="flex-row items-center mb-6">
-        <Text className="text-4xl font-extrabold text-white mr-4">JT Harmony</Text>
-        <View className="flex-row space-x-2">
+    <SafeAreaView className={`flex-1 items-center justify-center px-6 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
+      <View className="flex-col items-center mb-6">
+        <Text className={`text-4xl font-extrabold ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"} mr-4`}>JT Harmony</Text>
+        <View className="flex-row mt-6 space-x-2">
           <View className="w-4 h-4 rounded-full bg-green-600" />
           <View className="w-4 h-4 rounded-full bg-green-700" />
           <View className="w-4 h-4 rounded-full bg-green-800" />
@@ -152,34 +153,34 @@ const handleLoginWithGoogle = async () => {
       <Text className="text-gray-400 mb-60">Just keep on vibin'</Text>
       <View className="w-full mt-10">
         <TouchableOpacity
-          className="bg-green-600 rounded-full w-full py-4 mb-8 items-center flex-row justify-center"
+          className={`${colorScheme === 'dark' ? 'bg-green-600' : 'bg-green-500'} rounded-full w-full py-4 mb-8 items-center flex-row justify-center`}
           onPress={() => navigate('Login')}
           activeOpacity={0.7}
         >
           <Text className="text-black font-semibold text-lg">Đăng nhập</Text>
         </TouchableOpacity>
         <View className='self-center flex-row items-center mb-8'>
-          <View className='self-center w-[15%] h-[1px] bg-slate-500' />
+          <View className={`self-center w-[15%] h-[1px] ${colorScheme === "dark" ? "bg-slate-500" : "bg-slate-300"}`} />
           <Text className='text-center text-gray-400 mx-4'>Hoặc</Text>
-          <View className='self-center w-[15%] h-[1px] bg-slate-500' />
+          <View className={`self-center w-[15%] h-[1px] ${colorScheme === "dark" ? "bg-slate-500" : "bg-slate-300"}`} />
         </View>
         <TouchableOpacity
-          className="border border-gray-300 rounded-full w-full py-4 mb-8 flex-row items-center justify-center"
+          className={`border ${colorScheme === "dark" ? "border-gray-500" : "border-green-300"} rounded-full w-full py-4 mb-8 flex-row items-center justify-center `}
           onPress={() => handleLoginWithGoogle()}
           activeOpacity={0.7}
         >
-          <AntDesign name="google" size={20} color="white" className="mr-2" />
-          <Text className="text-white text-base font-semibold">
+          <AntDesign name="google" size={20} color={colorScheme === "dark" ? "white" : "black"} className="mr-2" />
+          <Text className={`text-base font-semibold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Đăng nhập với Google
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="border border-gray-300 rounded-full w-full py-4 mb-8 flex-row items-center justify-center"
+          className={`border ${colorScheme === "dark" ? "border-gray-500" : "border-green-300"} rounded-full w-full py-4 mb-8 flex-row items-center justify-center`}
           onPress={() => handleLoginWithFacebook()}
           activeOpacity={0.7}
         >
-          <Icon name="facebook" size={20} color="white" className="mr-2" />
-          <Text className="text-white text-base font-semibold">
+          <Icon name="facebook" size={20} color={colorScheme === "dark" ? "white" : "black"} className="mr-2" />
+          <Text className={`text-base font-semibold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Đăng nhập với Facebook
           </Text>
         </TouchableOpacity>
@@ -187,7 +188,7 @@ const handleLoginWithGoogle = async () => {
           Bạn chưa có tài khoản?
         </Text>
         <TouchableOpacity
-          className="items-center bg-white rounded-full w-full py-4 flex-row justify-center"
+          className={`items-center ${colorScheme === "dark" ? "bg-white" : "bg-green-300"} rounded-full w-full py-4 flex-row justify-center`}
           onPress={() => navigate('SignUp')}
           activeOpacity={0.7}
         >

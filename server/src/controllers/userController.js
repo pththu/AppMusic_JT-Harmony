@@ -3,8 +3,9 @@ const sequelize = require('../configs/database');
 const { Op } = require("sequelize");
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const cloudinary = require('../configs/cloudinary');
 
-exports.getAllUser = async(req, res) => {
+exports.getAllUser = async (req, res) => {
     try {
         const rows = await User.findAll();
         res.json(rows);
@@ -13,7 +14,7 @@ exports.getAllUser = async(req, res) => {
     }
 };
 
-exports.getUserById = async(req, res) => {
+exports.getUserById = async (req, res) => {
     try {
         const row = await User.findByPk(req.params.id);
         if (!row) return res.status(404).json({ error: 'User not found' });
@@ -31,7 +32,7 @@ exports.getUserById = async(req, res) => {
  * /search?status=active
  * /search?username=abc&gender=false
  */
-exports.search = async(req, res) => {
+exports.search = async (req, res) => {
     try {
         const { id, username, email, fullName, gender, status } = req.query;
         const where = {};
@@ -55,9 +56,9 @@ exports.search = async(req, res) => {
 }
 
 // không sử dụng
-exports.createUser = async(req, res) => {
+exports.createUser = async (req, res) => {
     try {
-        const payload = {...req.body };
+        const payload = { ...req.body };
         if (payload.password) {
             payload.password = await bcrypt.hash(payload.password, 10);
         }
@@ -68,9 +69,9 @@ exports.createUser = async(req, res) => {
     }
 };
 
-exports.updateInforUser = async(req, res) => {
+exports.updateInforUser = async (req, res) => {
     try {
-        const payload = {...req.body };
+        const payload = { ...req.body };
         const user = await User.findByPk(req.user.id);
 
         if (!payload.gender && user.gender === null) {
@@ -104,7 +105,7 @@ exports.updateInforUser = async(req, res) => {
 };
 
 // Đổi mật khẩu sau khi đăng nhập
-exports.changePassword = async(req, res) => {
+exports.changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -127,7 +128,7 @@ exports.changePassword = async(req, res) => {
     }
 };
 
-exports.deleteUser = async(req, res) => {
+exports.deleteUser = async (req, res) => {
     try {
         const deleted = await User.destroy({ where: { id: req.params.id } });
         if (!deleted) return res.status(404).json({ error: 'User not found' });
@@ -137,7 +138,7 @@ exports.deleteUser = async(req, res) => {
     }
 };
 
-exports.linkSocialAccount = async(req, res) => {
+exports.linkSocialAccount = async (req, res) => {
     try {
         const { userInfor, provider } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -198,7 +199,7 @@ exports.linkSocialAccount = async(req, res) => {
     }
 };
 
-exports.selfLockAccount = async(req, res) => {
+exports.selfLockAccount = async (req, res) => {
     try {
         const { password } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -218,7 +219,79 @@ exports.selfLockAccount = async(req, res) => {
     }
 };
 
-exports.getUserProfileSocial = async(req, res) => {
+exports.mergeAccount = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const user = await User.findByPk(req.user.id);
+        const mergeUser = await User.findByPk(userId);
+
+        console.log('user', user.dataValues);
+        console.log('mergeUser', mergeUser.dataValues);
+
+        if (!user || !mergeUser) {
+            return res.status(200).json({ message: 'Người dùng không tồn tại', success: false });
+        }
+
+        // Gộp thông tin tài khoản - ưu tiên thông tin của user hiện tại
+        user.email = user.email || mergeUser.email;
+        user.facebookId = user.facebookId || mergeUser.facebookId;
+        user.googleId = user.googleId || mergeUser.googleId;
+        user.avatarUrl = user.avatarUrl || mergeUser.avatarUrl;
+        user.fullName = user.fullName || mergeUser.fullName;
+        user.accountType = Array.from(new Set([...user.accountType, ...mergeUser.accountType]));
+
+        await Promise.all([
+            user.save(),
+            mergeUser.destroy()
+        ]);
+        return res.status(200).json({ message: 'Gộp tài khoản thành công', success: true, user });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+exports.changeAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Không có file nào được upload',
+            });
+        }
+
+        const data = {
+            url: req.file.path,
+            publicId: req.file.filename,
+            thumbnail: cloudinary.url(req.file.filename, {
+                width: 300,
+                height: 300,
+                crop: 'fill'
+            })
+        };
+
+        // console.log('data upload', data);
+        if (req.file.path) {
+            const user = await User.findByPk(req.user.id);
+            user.avatarUrl = req.file.path;
+            await user.save();
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Upload thành công',
+            data
+        });
+    } catch (error) {
+        console.error('Upload error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi khi upload hình ảnh',
+            error: error.message
+        });
+    }
+};
+
+exports.getUserProfileSocial = async (req, res) => {
     const { userId } = req.params;
     const currentUserId = req.user.id; // ID của người dùng đang xem (từ authenticateToken)
 
@@ -279,7 +352,7 @@ exports.getUserProfileSocial = async(req, res) => {
 // Toggle Theo dõi/Hủy theo dõi
 // POST /api/v1/users/:userId/follow
 // ----------------------------------------------------------------------
-exports.toggleFollow = async(req, res) => {
+exports.toggleFollow = async (req, res) => {
     const targetUserId = req.params.userId;
     const currentUserId = req.user.id;
 

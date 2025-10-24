@@ -5,9 +5,9 @@ require('dotenv').config();
 /**
  * Middleware xác thực token (JWT) từ Cookie hoặc Header Authorization.
  */
-exports.authenticateToken = async(req, res, next) => {
-    console.log("--- BẮT ĐẦU AUTHENTICATE ---");
-    console.log("Raw Headers:", req.headers); // Có thể bật lại log này nếu cần debug sâu
+exports.authenticateToken = async (req, res, next) => {
+    // console.log("--- BẮT ĐẦU AUTHENTICATE ---");
+    // console.log("Raw Headers:", req.headers); // Có thể bật lại log này nếu cần debug sâu
 
     try {
         let token;
@@ -30,7 +30,7 @@ exports.authenticateToken = async(req, res, next) => {
             }
         }
 
-        console.log("Token được tìm thấy:", token ? "CÓ" : "KHÔNG");
+        // console.log("Token được tìm thấy:", token ? "CÓ" : "KHÔNG");
 
         if (!token) {
             console.log("LỖI: Access token required (Token KHÔNG được tìm thấy)");
@@ -50,7 +50,7 @@ exports.authenticateToken = async(req, res, next) => {
         // Thêm thông tin User vào request để các middleware/controller sau sử dụng
         req.user = decoded; // Thông tin từ token (id, role,...)
         req.currentUser = user; // Toàn bộ thông tin từ DB
-        console.log("Xác thực thành công cho User ID:", decoded.id);
+        // console.log("Xác thực thành công cho User ID:", decoded.id);
         next();
 
     } catch (err) {
@@ -67,7 +67,7 @@ exports.authenticateToken = async(req, res, next) => {
     }
 };
 
-exports.optionalAuthenticateToken = async(req, res, next) => {
+exports.optionalAuthenticateToken = async (req, res, next) => {
     let token;
 
     // 1. Lấy token từ Cookie ('accessToken')

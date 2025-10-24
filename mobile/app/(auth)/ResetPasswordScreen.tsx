@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
 import CustomTextInput from "@/components/custom/CustomTextInput";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ResetPassword } from "@/routes/ApiRouter";
 
 export default function ResetPasswordScreen() {
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
   const params = useLocalSearchParams();
@@ -45,11 +46,11 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0E0C1F] p-8">
+    <SafeAreaView className={`flex-1 p-8 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
       <View
         className="w-full p-8 rounded-2xl"
         style={{
-          backgroundColor: "#222222",
+          backgroundColor: colorScheme === "dark" ? "#222222" : "white",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.2,
@@ -57,7 +58,7 @@ export default function ResetPasswordScreen() {
           elevation: 10,
         }}
       >
-        <Text className="text-white text-3xl font-bold mb-6 text-center">
+        <Text className={`text-3xl font-bold mb-6 text-center ${colorScheme === "dark" ? "text-white" : "text-[#222222]"}`}>
           Đặt lại mật khẩu
         </Text>
 

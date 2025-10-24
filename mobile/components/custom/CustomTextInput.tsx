@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, Pressable } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; 
+import { View, TextInput, TouchableOpacity, Text, Pressable, useColorScheme } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming MaterialIcons is available
 
 interface CustomTextInputProps {
   placeholder: string;
@@ -30,6 +30,7 @@ export default function CustomTextInput({
   editable = true,
 }: CustomTextInputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const colorScheme = useColorScheme();
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
@@ -41,14 +42,12 @@ export default function CustomTextInput({
 
   return (
     <View className="mb-4">
-      <View className={`flex-row items-center rounded-md p-3 ${inputBg}`}>
-        
-        <Icon name={iconName} size={20} color={iconPlaceholderColor} className="mr-3" />
-        
+      <View className={`flex-row items-center ${colorScheme === "dark" ? "bg-gray-800" : "bg-gray-200"} rounded-md p-3`}>
+        <Icon name={iconName} size={20} color="#888" className="mr-3" />
         <TextInput
-          className={`flex-1 ${inputTextClass}`}
+          className={`flex-1 ${colorScheme === "dark" ? "text-white" : "text-black"}`}
           placeholder={placeholder}
-          placeholderTextColor={iconPlaceholderColor} 
+          placeholderTextColor={iconPlaceholderColor}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
@@ -58,7 +57,7 @@ export default function CustomTextInput({
           numberOfLines={numberOfLines}
           editable={editable}
         />
-        
+
         {secureTextEntry && (
           <Pressable onPress={togglePasswordVisibility}>
             <Icon
@@ -70,6 +69,6 @@ export default function CustomTextInput({
         )}
       </View>
       {error && <Text className="text-red-500 text-sm mt-1">{error}</Text>}
-    </View>
+    </View >
   );
 }
