@@ -42,7 +42,7 @@ export default ({ config }) => ({
             "expo-build-properties",
             {
                 "android": {
-                    "newArchEnabled": false
+                    "newArchEnabled": true
                 }
             }
         ]
