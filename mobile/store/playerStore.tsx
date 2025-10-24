@@ -8,15 +8,15 @@ interface Artist {
 
 interface Song {
   id: string;
-  title: string;
+  spotifyId: string;
+  name: string;
   artists: Artist[];
-  image: string;
+  imageUrl: string;
   album: string;
-  itag: string;
   mimeType: string;
   bitrate: string;
-  youtubeUrl: string;
-  downloadUrl: string;
+  externalUrl: string;
+  fileUri: string;
 }
 
 interface PlayerState {

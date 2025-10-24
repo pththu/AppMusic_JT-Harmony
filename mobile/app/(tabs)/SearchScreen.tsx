@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
+import { artistData } from "@/constants/data";
 
 const trendingArtists = [
   {
@@ -300,9 +301,9 @@ export default function SearchScreen() {
               Trending artists
             </Text>
             <FlatList
-              data={trendingArtists}
+              data={artistData}
               horizontal
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.spotifyId}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{
                 paddingHorizontal: 12,
@@ -311,29 +312,10 @@ export default function SearchScreen() {
               renderItem={({ item }) => (
                 <ArtistItem
                   name={item.name}
-                  image={item.image}
+                  image={item.imageUrl}
                   onPress={() =>
                     navigate("ArtistScreen", { artist: JSON.stringify(item) })
                   }
-                />
-              )}
-            />
-
-            <Text className={`text-${colorScheme === "dark" ? "white" : "black"} font-bold text-lg ml-3 mb-3`}>
-              Browse
-            </Text>
-            <FlatList
-              data={browseCategories}
-              numColumns={4}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              contentContainerStyle={{ marginHorizontal: 12 }}
-              renderItem={({ item }) => (
-                <CategoryItem
-                  name={item.name}
-                  color={item.color}
-                  icon={item.icon}
-                  onPress={() => { }}
                 />
               )}
             />

@@ -1,131 +1,39 @@
 import CustomButton from "@/components/custom/CustomButton";
 import AlbumItem from "@/components/items/AlbumItem";
-import SongItem from "@/components/items/SongItem";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
+  Button,
   FlatList,
   Image,
+  ImageBackground,
+  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from "@/store/authStore";
+import { playlistData, albumData, trackData, artistData } from "@/constants/data";
+import ArtistItem from "@/components/artists/ArtistItem";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 import { useTheme } from "@/components/ThemeContext";
 
 const tabs = [
-  { id: "forYou", label: "For you" },
-  { id: "relax", label: "Relax" },
-  { id: "workout", label: "Workout" },
-  { id: "travel", label: "Travel" },
-];
-
-const forYouData = [
-  {
-    id: "1",
-    title: "Featuring Today",
-    content: "New ENGLISH SONGS",
-    image:
-      "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  },
-  {
-    id: "2",
-    title: "Recently Played",
-    content: "Your recent songs",
-    horizontalData: [
-      {
-        id: "2.1",
-        title: "Album A",
-        image:
-          "https://images.pexels.com/photos/208696/pexels-photo-208696.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      },
-      {
-        id: "2.2",
-        title: "Album B",
-        image:
-          "https://images.pexels.com/photos/274937/pexels-photo-274937.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      },
-      {
-        id: "2.3",
-        title: "Album C",
-        image:
-          "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Mixes for you",
-    content: "Personalized mixes",
-    mixes: [
-      {
-        id: "3.1",
-        title: "Daily Mix 1",
-        image:
-          "https://images.pexels.com/photos/761963/pexels-photo-761963.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      },
-      {
-        id: "3.2",
-        title: "Daily Mix 2",
-        image:
-          "https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      },
-      {
-        id: "3.3",
-        title: "Daily Mix 3",
-        image:
-          "https://images.pexels.com/photos/33545/sunrise-festival-page-rock.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-      },
-    ],
-  },
-];
-
-const relaxData = [
-  {
-    id: "1",
-    title: "Today's Refreshing Song-Recommendations",
-    content: "Peace - 22 songs",
-    image:
-      "https://images.pexels.com/photos/268415/pexels-photo-268415.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  },
-  {
-    id: "2",
-    title: "Weightless",
-    artist: "Marconi Union",
-    image:
-      "https://images.pexels.com/photos/1037993/pexels-photo-1037993.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  },
-  {
-    id: "3",
-    title: "Nothing I Can",
-    artist: "Helios",
-    image:
-      "https://images.pexels.com/photos/1381670/pexels-photo-1381670.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  },
-  {
-    id: "4",
-    title: "Small Memory",
-    artist: "Jon Hopkins - Insides",
-    image:
-      "https://images.pexels.com/photos/1672635/pexels-photo-1672635.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  },
-  {
-    id: "5",
-    title: "Close To Home",
-    artist: "Lyle Mays",
-    image:
-      "https://images.pexels.com/photos/972665/pexels-photo-972665.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  },
+  { id: "forYou", label: "Dành cho bạn" },
+  { id: "trending", label: "Thịnh hành" }
 ];
 
 export default function HomeScreen() {
   const { navigate } = useNavigate();
   const { theme } = useTheme();
+  const { success, error } = useCustomAlert();
   const user = useAuthStore((state) => state.user);
+  const colorScheme = useColorScheme();
   const [activeTab, setActiveTab] = useState("forYou");
   const animation = useRef(new Animated.Value(0)).current;
   const greetingOpacity = useRef(new Animated.Value(0)).current;
@@ -184,22 +92,22 @@ export default function HomeScreen() {
 
   const tabUnderlineLeft = tabsLayouted
     ? animation.interpolate({
-        inputRange: tabs.map((_, i) => i),
-        outputRange: tabPositions.map((pos) => pos - 20),
-      })
+      inputRange: tabs.map((_, i) => i),
+      outputRange: tabPositions.map((pos) => pos - 20),
+    })
     : 0;
 
   const tabUnderlineWidth = tabsLayouted
     ? animation.interpolate({
-        inputRange: tabs.map((_, i) => i),
-        outputRange: tabWidths,
-      })
+      inputRange: tabs.map((_, i) => i),
+      outputRange: tabWidths,
+    })
     : 0;
 
   const iconColor = theme === 'light' ? '#000' : '#fff';
 
   return (
-    <View className="flex-1 bg-white dark:bg-[#0E0C1F]">
+    <Animated.ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F]">
       <View className="flex-row justify-between items-center mx-5 mt-10 mb-2">
         <Animated.Text
           className="text-black dark:text-white text-2xl font-bold"
@@ -240,11 +148,10 @@ export default function HomeScreen() {
               className="mr-5 py-2"
             >
               <Text
-                className={`text-xl font-bold ${
-                  activeTab === tab.id
-                    ? "text-black dark:text-white font-bold"
-                    : "text-gray-500 dark:text-gray-500 font-normal"
-                }`}
+                className={`text-xl font-bold ${activeTab === tab.id
+                  ? "text-black dark:text-white font-bold"
+                  : "text-gray-500 dark:text-gray-500 font-normal"
+                  }`}
               >
                 {tab.label}
               </Text>
@@ -264,94 +171,143 @@ export default function HomeScreen() {
 
       {activeTab === "forYou" && (
         <ScrollView className="px-5">
-          <View className="mb-6 rounded-lg overflow-hidden">
-            <Image
-              source={{ uri: forYouData[0].image }}
-              className="w-full h-48 rounded-lg"
-            />
-            <View className="absolute bottom-4 left-4">
-              <Text className="text-white text-xl font-bold">
-                {forYouData[0].title}
+          {/* Featuring Today Card */}
+          <View className="mb-6 w-full h-64 rounded-lg overflow-hidden">
+            <ImageBackground
+              source={{ uri: playlistData[7].imageUrl }}
+              className="w-full h-full justify-end"
+              resizeMode="cover"
+            >
+              <View className="flex-1 items-end justify-end bg-black/50">
+                <View className="p-4">
+                  <Text className="text-white text-xl font-bold">
+                    {playlistData[5].name}
+                  </Text>
+                  <Text className="text-gray-300 text-wrap text-sm">{playlistData[5].description}</Text>
+                  <CustomButton
+                    title="Play"
+                    onPress={() => { }}
+                    className="mt-2 bg-green-500 px-4 py-2 rounded-full"
+                  />
+                </View>
+              </View>
+            </ImageBackground>
+          </View>
+
+          {/* Recently Played Horizontal List */}
+          <View className="mb-6">
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Danh sách phát đề xuất cho bạn
               </Text>
-              <Text className="text-white dark:text-gray-300">{forYouData[0].content}</Text>
-              <CustomButton
-                title="Play"
-                onPress={() => {}}
-                className="mt-2 bg-green-500 px-4 py-2 rounded-full"
-              />
+              <CustomButton title="Xem thêm" onPress={() => { }} />
             </View>
+            <FlatList
+              horizontal
+              data={playlistData}
+              keyExtractor={(item) => item.spotifyId}
+              renderItem={({ item }) => (
+                <AlbumItem
+                  title={item.name}
+                  image={item.imageUrl}
+                  onPress={() => { }}
+                />
+              )}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+
+          {/* Mixes for you Horizontal List */}
+          <View className="mb-6">
+            <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+              Album được chọn lọc dành cho bạn
+            </Text>
+            <FlatList
+              horizontal
+              data={albumData}
+              keyExtractor={(item) => item.spotifyId}
+              renderItem={({ item }) => (
+                <AlbumItem
+                  title={item.name}
+                  image={item.imageUrl}
+                  onPress={() => { }}
+                />
+              )}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+        </ScrollView>
+      )}
+      {activeTab === "trending" && (
+        <ScrollView className="px-5">
+          {/* Recently Played Horizontal List */}
+          <View className="mb-6">
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Danh sách phát thịnh hành
+              </Text>
+            </View>
+            <FlatList
+              horizontal
+              data={playlistData}
+              keyExtractor={(item) => item.spotifyId}
+              renderItem={({ item }) => (
+                <AlbumItem
+                  title={item.name}
+                  image={item.imageUrl}
+                  onPress={() => { }}
+                />
+              )}
+              showsHorizontalScrollIndicator={false}
+            />
           </View>
 
           <View className="mb-6">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-black dark:text-white text-lg font-bold">
-                {forYouData[1].title}
+              <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Album phổ biến
               </Text>
-              <CustomButton variant="primary" title="See more" onPress={() => {}} />
             </View>
             <FlatList
               horizontal
-              data={forYouData[1].horizontalData}
-              keyExtractor={(item) => item.id}
+              data={playlistData}
+              keyExtractor={(item) => item.spotifyId}
               renderItem={({ item }) => (
                 <AlbumItem
-                  title={item.title}
-                  image={item.image}
-                  onPress={() => {}}
+                  title={item.name}
+                  image={item.imageUrl}
+                  onPress={() => { }}
                 />
               )}
               showsHorizontalScrollIndicator={false}
             />
           </View>
-
-          <View className="mb-6">
-            <Text className="text-black dark:text-white text-lg font-bold mb-2">
-              {forYouData[2].title}
+          <View className="">
+            <Text className={`text-${colorScheme === "dark" ? "white" : "black"} font-bold text-lg ml-3 mb-3`}>
+              Trending artists
             </Text>
             <FlatList
+              data={artistData}
               horizontal
-              data={forYouData[2].mixes}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.spotifyId}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 12,
+                marginBottom: 20,
+              }}
               renderItem={({ item }) => (
-                <AlbumItem
-                  title={item.title}
-                  image={item.image}
-                  onPress={() => {}}
+                <ArtistItem
+                  name={item.name}
+                  image={item.imageUrl}
+                  onPress={() =>
+                    navigate("ArtistScreen", { artist: JSON.stringify(item) })
+                  }
                 />
               )}
-              showsHorizontalScrollIndicator={false}
             />
           </View>
         </ScrollView>
       )}
-
-      {activeTab === "relax" && (
-        <ScrollView className="px-5">
-          <View className="mb-6 rounded-lg overflow-hidden">
-            <Image
-              source={{ uri: relaxData[0].image }}
-              className="w-full h-48 rounded-lg"
-            />
-            <View className="absolute bottom-4 left-4">
-              <Text className="text-white text-xl font-bold">
-                {relaxData[0].title}
-              </Text>
-              <Text className="text-white dark:text-gray-300">{relaxData[0].content}</Text>
-            </View>
-          </View>
-
-          {relaxData.slice(1).map((item) => (
-            <SongItem
-              key={item.id}
-              title={item.title}
-              subtitle={item.artist || ""}
-              image={item.image}
-              onPress={() => {}}
-              onOptionsPress={() => {}}
-            />
-          ))}
-        </ScrollView>
-      )}
-    </View>
+    </Animated.ScrollView>
   );
 }

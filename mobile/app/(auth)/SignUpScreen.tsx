@@ -2,13 +2,14 @@ import CustomTextInput from "@/components/custom/CustomTextInput";
 import GenderSelector from "@/components/GenderSelector";
 import { useNavigate } from "@/hooks/useNavigate";
 import React, { useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useColorScheme, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import DateTimePicker from "react-native-ui-datepicker";
-import authService from "../../services/authService";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { Register } from "@/routes/ApiRouter";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignUpScreen() {
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
 
@@ -82,11 +83,11 @@ export default function SignUpScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#0E0C1F] p-8">
+    <SafeAreaView className={`flex-1 p-8 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
       <View
         className="w-full p-8 rounded-2xl"
         style={{
-          backgroundColor: "#222222",
+          backgroundColor: colorScheme === "dark" ? "#222222" : "white",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.2,
@@ -94,7 +95,7 @@ export default function SignUpScreen() {
           elevation: 10,
         }}
       >
-        <Text className="text-white text-3xl font-bold mb-8 text-center">
+        <Text className={`text-4xl font-extrabold mb-6 text-center ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"}`}>
           Đăng ký
         </Text>
 
@@ -137,13 +138,12 @@ export default function SignUpScreen() {
 
         {/* Ô nhập liệu cho ngày sinh */}
         <View className="mb-4">
-          <Text className="text-gray-300 mb-2">Ngày sinh</Text>
+          <Text className={`mb-2 ${colorScheme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Ngày sinh</Text>
           <TouchableOpacity
-            className="flex-row items-center bg-[#1a1a1a] rounded-lg border border-[#3A3A3A] px-4 py-3"
+            className={`flex-row items-center border ${colorScheme === "dark" ? "border-gray-600" : "border-gray-300"} rounded-lg px-4 py-3`}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text className="text-white flex-1">{formatDate(dob)}</Text>
-            <Text className="text-gray-400">Select date</Text>
+            <Text className={`flex-1 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>{formatDate(dob)}</Text>
           </TouchableOpacity>
         </View>
 
@@ -154,29 +154,29 @@ export default function SignUpScreen() {
             onChange={onChangeDate}
             maxDate={new Date()}
             style={{
-              backgroundColor: "#3A3A3A",
+              backgroundColor: colorScheme === "dark" ? "#222222" : "#e5e7eb",
               borderRadius: 10,
               padding: 10,
               marginTop: 10,
             }}
             styles={{
-              day_label: { color: "white" },
-              day: { color: "white" },
+              day_label: { color: colorScheme === "dark" ? "white" : "#0E0C1F" },
+              day: { color: colorScheme === "dark" ? "white" : "#0E0C1F" },
               disabled_label: { color: "gray" },
               selected_label: {
-                color: "white",
+                color: colorScheme === "dark" ? "white" : "#0E0C1F",
                 fontWeight: "bold",
                 backgroundColor: "#089b0d",
                 padding: 10,
                 borderRadius: 50,
               },
               today_label: {
-                color: "#dff519",
+                color: "#089b0d",
                 fontWeight: "bold"
               },
-              month_selector_label: { color: "white" },
-              year_selector_label: { color: "white" },
-              weekday_label: { color: "white" }
+              month_selector_label: { color: colorScheme === "dark" ? "white" : "#0E0C1F" },
+              year_selector_label: { color: colorScheme === "dark" ? "white" : "#0E0C1F" },
+              weekday_label: { color: colorScheme === "dark" ? "white" : "#0E0C1F" }
             }}
           />
         )}
@@ -203,6 +203,6 @@ export default function SignUpScreen() {
           </TouchableOpacity>
         </View>
       </View>
-    </ScrollView>
+    </SafeAreaView>
   );
 }

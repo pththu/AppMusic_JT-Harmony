@@ -1,71 +1,36 @@
 const sequelize = require('../configs/database')
-    // const { sequelize } = require('../configs/database');
 
 // Import all models
-const User = require('./user');
-const Role = require('./roles');
-const Artist = require('./artist');
-const Song = require('./song');
-const Album = require('./album');
-const Playlist = require('./playlist');
+const User = require('./User');
 const Notification = require('./notification');
 const Post = require('./post');
 const Comment = require('./comment');
-const Genre = require('./genres');
-const Follow = require('./follows');
-const PlaylistSong = require('./playlist_song');
-const FavoriteSong = require('./favorite_song');
-const ListeningHistory = require('./listening_history');
-const DownloadSong = require('./download_song');
-const SearchHistory = require('./search_history');
 const StatDailyPlays = require('./stat_daily_plays');
 const SyncStatus = require('./sync_status');
 const Recommendation = require('./recommendation');
-const AlbumSong = require('./album_songs');
 const CommentLike = require('./commentLike');
 const Like = require('./like');
 const Conversation = require('./conversation');
 const ConversationMember = require('./conversationMember');
 const Message = require('./message');
+const FollowArtist = require('./follow_artist');
+const FollowUser = require('./follow_user');
+
+const Role = require('./role');
+const Genres = require('./genres');
+const Artist = require('./artist');
+const Album = require('./album');
+const Track = require('./track');
+const Playlist = require('./playlist');
+const PlaylistTrack = require('./playlist_track');
+const ListeningHistory = require('./listening_history');
 
 // ================= Associations ================= //
-// // Album ↔ Song (N-N) thông qua AlbumSong
-Album.belongsToMany(Song, {
-    through: AlbumSong,
-    foreignKey: 'albumId',
-    otherKey: 'songId',
-    as: 'songs'
-})
-Song.belongsToMany(Album, {
-    through: AlbumSong,
-    foreignKey: 'songId',
-    otherKey: 'albumId',
-    as: 'albums'
-})
-
-// User - role
-Role.hasMany(User, { foreignKey: 'roleId' });
-User.belongsTo(Role, { foreignKey: 'roleId' });
+// // Album ↔ Track (N-N) thông qua AlbumTrack
 
 // User - Sync status
 User.hasMany(SyncStatus, { foreignKey: 'userId' });
 SyncStatus.belongsTo(User, { foreignKey: 'userId' });
-
-// User - Playlists
-User.hasMany(Playlist, { foreignKey: 'userId' });
-Playlist.belongsTo(User, { foreignKey: 'userId' });
-
-// User - Favorite Songs
-User.hasMany(FavoriteSong, { foreignKey: 'userId' });
-FavoriteSong.belongsTo(User, { foreignKey: 'userId' });
-
-// User - Search History
-User.hasMany(SearchHistory, { foreignKey: 'userId' });
-SearchHistory.belongsTo(User, { foreignKey: 'userId' });
-
-// User - Listening History
-User.hasMany(ListeningHistory, { foreignKey: 'userId' });
-ListeningHistory.belongsTo(User, { foreignKey: 'userId' });
 
 // User - Post
 User.hasMany(Post, { foreignKey: 'userId' });
@@ -81,27 +46,6 @@ Comment.belongsTo(User, {
     as: 'User'
 });
 
-// User - Download
-User.hasMany(DownloadSong, { foreignKey: 'userId' });
-DownloadSong.belongsTo(User, { foreignKey: 'userId' });
-
-// User - Follow
-// 1. QUAN HỆ: Người theo dõi (Follower)
-// Follow.followerId là ID của người đang theo dõi
-User.hasMany(Follow, { foreignKey: 'followerId', as: 'FollowersFromUser' }); // Thêm alias User.hasMany để tránh xung đột
-Follow.belongsTo(User, {
-    foreignKey: 'followerId',
-    as: 'Follower' // ✅ Cần alias này cho includes trong getUserFollowers
-});
-
-// 2. QUAN HỆ: Người được theo dõi (Followee)
-// Follow.userFolloweeId là ID của người được theo dõi
-User.hasMany(Follow, { foreignKey: 'userFolloweeId', as: 'FollowingByOthers' }); // Thêm alias User.hasMany để tránh xung đột
-Follow.belongsTo(User, {
-    foreignKey: 'userFolloweeId',
-    as: 'Followee' // ✅ Cần alias này cho includes trong getUserFollowing
-});
-
 // User - Notification
 User.hasMany(Notification, { foreignKey: 'userId' });
 Notification.belongsTo(User, { foreignKey: 'userId' });
@@ -110,78 +54,14 @@ Notification.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(Recommendation, { foreignKey: 'userId' });
 Recommendation.belongsTo(User, { foreignKey: 'userId' });
 
-// User - Favorite song
-User.hasMany(FavoriteSong, { foreignKey: 'userId' });
-FavoriteSong.belongsTo(User, { foreignKey: 'userId' });
-
 // Quan hệ Người dùng - Lượt thích Bình luận (User <-> CommentLike)
 // Điều này cho phép bạn biết một người dùng đã thích những comment nào
 User.hasMany(CommentLike, { foreignKey: 'userId', as: 'CommentLikes' });
 CommentLike.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 
-// Song - Playlist
-Song.belongsToMany(Playlist, {
-    through: PlaylistSong,
-    foreignKey: 'songId',
-    otherKey: 'playlistId'
-});
-Playlist.belongsToMany(Song, {
-    through: PlaylistSong,
-    foreignKey: 'playlistId',
-    otherKey: 'songId'
-});
-
-// Song - Album
-Song.belongsTo(Album, { foreignKey: 'albumId' });
-Album.hasMany(Song, { foreignKey: 'albumId' });
-
-// Song - Recommendation
-Song.hasMany(Recommendation, { foreignKey: 'songId' });
-Recommendation.belongsTo(Song, { foreignKey: 'songId' });
-
-// Song - Artist
-Song.belongsToMany(Artist, {
-    through: 'songs_artists',
-    foreignKey: 'songId',
-    otherKey: 'artistId'
-});
-Artist.belongsToMany(Song, {
-    through: 'songs_artists',
-    foreignKey: 'artistId',
-    otherKey: 'songId'
-});
-
-// Song - Genres
-Song.belongsToMany(Genre, {
-    through: 'songs_genres',
-    foreignKey: 'songId',
-    otherKey: 'genreId'
-});
-Genre.belongsToMany(Song, {
-    through: 'songs_genres',
-    foreignKey: 'genreId',
-    otherKey: 'songId'
-});
-
-// Song - Favorite Song
-Song.hasMany(FavoriteSong, { foreignKey: 'songId' });
-FavoriteSong.belongsTo(Song, { foreignKey: 'songId' });
-
-// Download Song - Song
-DownloadSong.belongsTo(Song, { foreignKey: 'songId' });
-Song.hasMany(DownloadSong, { foreignKey: 'songId' });
-
-// StatDailyPlay = Song
-StatDailyPlays.belongsTo(Song, { foreignKey: 'songId' });
-Song.hasMany(StatDailyPlays, { foreignKey: 'songId' });
-
 // Post - Comment
 Post.hasMany(Comment, { foreignKey: 'postId' });
 Comment.belongsTo(Post, { foreignKey: 'postId' });
-
-// Quan hệ Bài đăng - Bài hát (Post <-> Song)
-Post.belongsTo(Song, { foreignKey: 'songId', as: 'Song' });
-Song.hasMany(Post, { foreignKey: 'songId', as: 'Posts' });
 
 // Comment - Comment
 Comment.hasMany(Comment, { foreignKey: 'parentId', as: 'Replies' });
@@ -191,13 +71,75 @@ Comment.belongsTo(Comment, { foreignKey: 'parentId', as: 'Parent' });
 Comment.hasMany(CommentLike, { foreignKey: 'commentId', as: 'Likes' });
 CommentLike.belongsTo(Comment, { foreignKey: 'commentId', as: 'Comment' });
 
-// Artist - Follow
-Artist.hasMany(Follow, { foreignKey: 'artistFolloweeId' });
-Follow.belongsTo(Artist, { foreignKey: 'artistFolloweeId' });
+Role.hasMany(User, { foreignKey: 'roleId' });
+User.belongsTo(Role, { foreignKey: 'roleId' });
 
-// Album - Artist
-Album.belongsTo(Artist, { foreignKey: 'artistId' });
-Artist.hasMany(Album, { foreignKey: 'artistId' });
+Genres.belongsToMany(Artist, {
+    through: 'artist_genres',
+    foreignKey: 'genre_id',
+    otherKey: 'artist_id',
+    as: 'artists'
+});
+Artist.belongsToMany(Genres, {
+    through: 'artist_genres',
+    foreignKey: 'artist_id',
+    otherKey: 'genre_id',
+    as: 'genres'
+})
+
+Album.belongsToMany(Artist, {
+    through: 'artist_albums',
+    foreignKey: 'album_id',
+    otherKey: 'artist_id',
+    as: 'artists'
+});
+Artist.belongsToMany(Album, {
+    through: 'artist_albums',
+    foreignKey: 'artist_id',
+    otherKey: 'album_id',
+    as: 'albums'
+});
+
+Track.belongsToMany(Artist, {
+    through: 'artist_tracks',
+    foreignKey: 'track_id',
+    otherKey: 'artist_id',
+    as: 'artists'
+});
+Artist.belongsToMany(Track, {
+    through: 'artist_tracks',
+    foreignKey: 'artist_id',
+    otherKey: 'track_id',
+    as: 'tracks'
+});
+
+Album.hasMany(Track, { foreignKey: 'albumId' });
+Track.belongsTo(Album, { foreignKey: 'albumId' });
+
+User.hasMany(ListeningHistory, { foreignKey: 'userId' });
+ListeningHistory.belongsTo(User, { foreignKey: 'userId' });
+
+User.hasMany(FollowArtist, { foreignKey: 'followerId' });
+FollowArtist.belongsTo(User, { foreignKey: 'followerId' });
+
+Artist.hasMany(FollowArtist, { foreignKey: 'artistId' });
+FollowArtist.belongsTo(Artist, { foreignKey: 'artistId' });
+
+User.hasMany(FollowUser, { foreignKey: 'followerId' });
+FollowUser.belongsTo(User, { foreignKey: 'followerId' });
+
+User.hasMany(FollowUser, { foreignKey: 'followeeId' });
+FollowUser.belongsTo(User, { foreignKey: 'followeeId' });
+
+// User ↔ Playlist (1-N)
+User.hasMany(Playlist, { foreignKey: 'userId' });
+Playlist.belongsTo(User, { foreignKey: 'userId' });
+
+Track.hasMany(PlaylistTrack, { foreignKey: 'trackId' });
+PlaylistTrack.belongsTo(Track, { foreignKey: 'trackId' });
+
+Playlist.hasMany(PlaylistTrack, { foreignKey: 'playlistId' });
+PlaylistTrack.belongsTo(Playlist, { foreignKey: 'playlistId' });
 
 // Like - User & Post
 Like.belongsTo(User, { foreignKey: 'userId', as: 'User' });
@@ -241,26 +183,21 @@ User.hasMany(ConversationMember, { foreignKey: 'userId', as: 'Memberships' });
 // ================= Export ================= //
 module.exports = {
     sequelize,
-    Song,
+    Track,
     Playlist,
-    PlaylistSong,
+    PlaylistTrack,
     Artist,
     Album,
     User,
     Comment,
-    FavoriteSong,
-    Follow,
-    Genre,
-    ListeningHistory,
+    FollowArtist,
+    FollowUser,
+    Genres,
     Notification,
-    Recommendation,
     Role,
-    SearchHistory,
     Post,
     StatDailyPlays,
     SyncStatus,
-    DownloadSong,
-    AlbumSong,
     CommentLike,
     Like,
     Conversation,

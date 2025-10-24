@@ -1,4 +1,4 @@
-import { View, LayoutChangeEvent } from 'react-native';
+import { View, LayoutChangeEvent, useColorScheme } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import TabBarButton from './TabBarButton';
 import { useState } from 'react';
@@ -7,6 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   const tabPositionX = useSharedValue(0);
+  const colorScheme = useColorScheme();
   const [dimemsions, setDimemsions] = useState({ height: 20, width: 100 });
   const buttonWidth = dimemsions.width / state.routes.length;
 
@@ -26,7 +27,8 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   return (
     <View
       onLayout={onTabBarLayout}
-      className='absolute bottom-0 flex flex-row justify-between items-center bg-[#121212] shadow-md w-full p-2'
+      className={`absolute bottom-0 flex flex-row justify-between items-center shadow-md w-full p-2
+        ${colorScheme === "dark" ? "bg-[#121212] " : "bg-white"}`}
     >
       <Animated.View
         className="absolute rounded-full mr-12 ml-12 pl-2 flex items-center justify-center"

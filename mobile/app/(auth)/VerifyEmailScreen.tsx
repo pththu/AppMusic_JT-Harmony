@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
 import CustomTextInput from "@/components/custom/CustomTextInput";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { SendOtpEmail, VerifyEmail } from "@/routes/ApiRouter";
 
 export default function VerifyEmailScreen() {
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
   const params = useLocalSearchParams();
@@ -59,11 +60,11 @@ export default function VerifyEmailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 items-center justify-center bg-[#0E0C1F] p-8">
+    <SafeAreaView className={`flex-1 items-center justify-center p-8 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
       <View
         className="w-full p-8 rounded-2xl"
         style={{
-          backgroundColor: "#222222",
+          backgroundColor: colorScheme === "dark" ? "#222222" : "white",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.2,
@@ -71,10 +72,10 @@ export default function VerifyEmailScreen() {
           elevation: 10,
         }}
       >
-        <Text className="text-white text-3xl font-bold mb-6 text-center">
+        <Text className={` text-3xl font-bold mb-6 text-center ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"}`}>
           Xác thực OTP
         </Text>
-        <Text className="text-gray-300 mb-6 text-center">
+        <Text className={`text-center mb-6 ${colorScheme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
           Vui lòng nhập mã OTP 6 số đã được gửi đến:{"\n"}
           <Text className="text-[#34D399] font-semibold">{email}</Text>
         </Text>

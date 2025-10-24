@@ -24,7 +24,7 @@ export default function CustomButton({
     let textStyles = 'font-semibold';
     let iconClassName = '';
     const iconSize = size === 'large' ? 20 : 18;
-    
+
     switch (variant) {
       case 'primary':
         baseStyles += ' bg-green-600';
@@ -52,23 +52,23 @@ export default function CustomButton({
         baseStyles += ' px-6 py-3';
         textStyles += ' text-lg';
         break;
-      case 'medium': 
+      case 'medium':
         baseStyles += ' px-5 py-2';
         textStyles += ' text-base';
         break;
-    } 
+    }
 
-    baseStyles += ` ${className}`; 
-    
+    baseStyles += ` ${className}`;
+
     const iconMargin = title ? 'mr-2' : '';
-    
+
     return { baseStyles, textStyles, iconClassName, iconMargin, iconSize };
   };
 
   const { baseStyles, textStyles, iconClassName, iconMargin, iconSize } = getButtonStyles();
 
   return (
-    <TouchableOpacity className={baseStyles} onPress={onPress}>
+    <TouchableOpacity className={`${baseStyles} px-4 py-2`} onPress={onPress}>
       {iconName && (
         <Icon
           name={iconName}
