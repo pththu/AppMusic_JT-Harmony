@@ -134,7 +134,7 @@ const server = http.createServer(app); // 💡 Khởi tạo Server từ HTTP
 const io = new Server(server, {
     cors: {
         // Cần khớp với origin của frontend React Native/Expo của bạn
-        origin: ["http://localhost:3000", "http://192.168.1.21:3000", "exp://192.168.1.21:8081"],
+        origin: ["http://localhost:3000", "http://192.168.0.228:3000", "exp://192.168.0.228:8081"],
         methods: ["GET", "POST"],
         credentials: true,
     },
@@ -183,7 +183,7 @@ app.set("trust proxy", true);
 // Middleware CORS cho Express
 app.use(
     cors({
-        origin: ["http://localhost:3000", "http://192.168.1.21:3000"],
+        origin: ["http://localhost:3000", "http://192.168.0.228:3000"],
         credentials: true,
     })
 );

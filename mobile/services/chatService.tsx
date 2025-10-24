@@ -3,10 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import useAuthStore from '@/store/authStore';
 import { Alert } from 'react-native';
 
-// 💡 LƯU Ý: Phải sử dụng BASE_URL mà không có /api/v1/
-// Nếu backend của bạn là http://192.168.1.212:3000/api/v1/, thì SERVER_URL chỉ là http://192.168.1.212:3000/
-// Tôi đang dùng địa chỉ IP cố định 192.168.1.212 như trong các file của bạn.
-const SOCKET_SERVER_URL = 'http://192.168.1.21:3000';
+const SOCKET_SERVER_URL = 'http://192.168.0.228:3000';
 
 // ==========================================================
 // INTERFACES
