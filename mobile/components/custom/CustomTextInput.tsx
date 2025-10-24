@@ -36,6 +36,10 @@ export default function CustomTextInput({
     setIsPasswordVisible(!isPasswordVisible);
   };
 
+  const inputBg = 'bg-gray-200 dark:bg-gray-800';
+  const inputTextClass = 'text-black dark:text-white';
+  const iconPlaceholderColor = '#9CA3AF'; // Tailwind gray-400
+
   return (
     <View className="mb-4">
       <View className={`flex-row items-center ${colorScheme === "dark" ? "bg-gray-800" : "bg-gray-200"} rounded-md p-3`}>
@@ -43,7 +47,7 @@ export default function CustomTextInput({
         <TextInput
           className={`flex-1 ${colorScheme === "dark" ? "text-white" : "text-black"}`}
           placeholder={placeholder}
-          placeholderTextColor="#888"
+          placeholderTextColor={iconPlaceholderColor}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
@@ -53,17 +57,18 @@ export default function CustomTextInput({
           numberOfLines={numberOfLines}
           editable={editable}
         />
+
         {secureTextEntry && (
           <Pressable onPress={togglePasswordVisibility}>
             <Icon
               name={isPasswordVisible ? 'visibility' : 'visibility-off'}
               size={20}
-              color="#888"
+              color={iconPlaceholderColor}
             />
           </Pressable>
         )}
       </View>
       {error && <Text className="text-red-500 text-sm mt-1">{error}</Text>}
-    </View>
+    </View >
   );
 }

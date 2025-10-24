@@ -1,5 +1,7 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
+const Sequelize = require('sequelize'); // Import module gốc
+const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 
 const FollowArtist = sequelize.define(
   'FollowArtist',
@@ -28,7 +30,7 @@ const FollowArtist = sequelize.define(
     }
   },
   {
-    tableName: 'follows',
+    tableName: 'follow_artists',
     timestamps: true,
     indexes: [
       {

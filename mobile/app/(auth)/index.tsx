@@ -23,29 +23,86 @@ export default function AuthScreen() {
   const { error, success } = useCustomAlert();
   const colorScheme = useColorScheme();
   const login = useAuthStore(state => state.login);
+  const { error: showAlertError, success: showAlertSuccess } = useCustomAlert();
+
+  // const handleLoginWithGoogle = async () => {
+  //   await GoogleSignin.hasPlayServices({
+  //     showPlayServicesUpdateDialog: true
+  //   });
+
+  //   const loginType = 'google';
+  //   try {
+  //     await GoogleSignin.hasPlayServices();
+  //     const userInfor = await GoogleSignin.signIn();
+  //     const response = await LoginWithGoogle(userInfor.data.user);
+  //     if (!response.success) {
+  //       error('Lỗi đăng nhập', `${response.message}`);
+  //       await GoogleSignin.signOut();
+  //       return;
+  //     }
+  //     if (response.success) {
+  //       login(response.user, loginType, response.user.accessToken);
+  //       success('Đăng nhập thành công', `${response.message}`);
+  //       navigate('Main');
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   const handleLoginWithGoogle = async () => {
-    await GoogleSignin.hasPlayServices({
-      showPlayServicesUpdateDialog: true
-    });
+    // 🎯 Đổi tên alert để tránh xung đột với biến 'error' trong khối catch
 
     const loginType = 'google';
+
     try {
       await GoogleSignin.hasPlayServices();
       const userInfor = await GoogleSignin.signIn();
-      const response = await LoginWithGoogle(userInfor.data.user);
+
+      // console.log('Google Sign-In Success Object:', userInfor); 
+
+      const profileToSend = userInfor.data?.user;
+
+      // console.log('Profile được trích xuất:', profileToSend);
+
+      // Kiểm tra dữ liệu
+      if (!profileToSend || !profileToSend.email || !profileToSend.id) {
+        throw new Error('Dữ liệu Google Profile bị thiếu: Email hoặc ID.');
+      }
+
+      // 1. Gửi dữ liệu user profile đã trích xuất lên server
+      const response = await LoginWithGoogle(profileToSend);
+
       if (!response.success) {
-        error('Lỗi đăng nhập', `${response.message}`);
+        showAlertError('Lỗi đăng nhập', `${response.message}`);
         await GoogleSignin.signOut();
         return;
       }
+
       if (response.success) {
         login(response.user, loginType, response.user.accessToken);
-        success('Đăng nhập thành công', `${response.message}`);
+        showAlertSuccess('Đăng nhập thành công', `${response.message}`);
         navigate('Main');
       }
+
     } catch (error) {
-      console.log(error);
+      // // Log lỗi chi tiết
+      // console.log('Lỗi trong handleLoginWithGoogle:', error);
+
+      // Chỉ hiển thị thông báo lỗi chung chung, trừ khi là lỗi đã được throw từ trên
+      let errorMessage = 'Không thể đăng nhập với Google. Vui lòng thử lại.';
+      if (error.message && error.message.includes('Google Profile')) {
+        errorMessage = error.message;
+      }
+
+      // Đảm bảo showAlertError là hàm trước khi gọi
+      if (typeof showAlertError === 'function') {
+        showAlertError('Lỗi đăng nhập', errorMessage);
+      } else {
+        console.error('LỖI CẤU HÌNH: Hàm showAlertError không phải là hàm.');
+      }
+
+      await GoogleSignin.signOut();
     }
   };
 

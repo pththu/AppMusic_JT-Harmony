@@ -7,6 +7,8 @@ import SongItem from '@/components/items/SongItem';
 import { usePlayerStore } from '@/store/playerStore';
 import { trackData, albumData } from '@/constants/data';
 
+import { useTheme } from '@/components/ThemeContext';
+
 const libraryItems = [
   {
     id: '1',

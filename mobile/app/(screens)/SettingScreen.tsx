@@ -11,7 +11,8 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { ENV } from "@/config/env";
 import { LoginManager, Profile, Settings } from "react-native-fbsdk-next";
-import { LinkSocialAccount, Logout, MergeAccount, SelfLockAccount } from "@/routes/ApiRouter";
+import { LinkSocialAccount, Logout, SelfLockAccount } from "@/routes/ApiRouter";
+import { useTheme } from "@/components/ThemeContext"; // Import useTheme
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
@@ -21,36 +22,19 @@ Settings.setAppID(ENV.FACEBOOK_APP_ID);
 Settings.initializeSDK();
 
 export default function SettingScreen() {
+
+  const { theme } = useTheme(); // Lấy theme hiện tại
   const user = useAuthStore(state => state.user);
   const loginType = useAuthStore(state => state.loginType);
   const updateUser = useAuthStore(state => state.updateUser);
   const logout = useAuthStore(state => state.logout);
-  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success, confirm } = useCustomAlert();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [showMessage, setShowMessage] = useState(false);
-
-  const handleMergeAccount = async (userId) => {
-    try {
-      console.log('merge');
-      const response = await MergeAccount({ userId });
-      console.log('response', response);
-      console.log('4');
-      if (!response.success) {
-        console.log(5);
-        error("Gộp tài khoản thất bại", response.message);
-        return;
-      }
-      console.log(6);
-      updateUser(response.user);
-      success("Gộp tài khoản thành công");
-    } catch (error) {
-      error("Gộp tài khoản thất bại", error.message);
-    }
-  };
+  const colorScheme = useColorScheme();
 
   const handleLinkAccountFacebook = async () => {
     try {
@@ -63,27 +47,14 @@ export default function SettingScreen() {
           const profile = await Profile.getCurrentProfile();
           if (profile) {
             const response = await LinkSocialAccount({ userInfor: profile, provider: 'facebook' });
-            console.log('response link facebook', response);
             if (!response.success) {
-              console.log(1)
-              if (!response.userId) {
-                console.log(2)
-                error("Liên kết thất bại", response.message);
-                return;
-              } else {
-                confirm(
-                  "Xác nhận",
-                  response.message,
-                  () => handleMergeAccount(response.userId),
-                  () => { }
-                );
-                return;
-              }
+              error("Liên kết thất bại", response.message);
+              return;
             }
             updateUser(response.user);
-            success("Liên kết thành công tài khoản Facebook");
           }
-        }, 2000);
+        }, 1000);
+        success("Liên kết thành công tài khoản Facebook");
       }
     } catch (error) {
       console.log('Login fb fail with error: ' + error);
@@ -102,21 +73,10 @@ export default function SettingScreen() {
       const userInfor = await GoogleSignin.signIn();
       const response = await LinkSocialAccount({ userInfor: userInfor.data.user, provider: 'google' });
       if (!response.success) {
-        console.log(1)
-        if (!response.userId) {
-          console.log(2)
-          error("Liên kết thất bại", response.message);
-          return;
-        } else {
-          confirm(
-            "Xác nhận",
-            response.message,
-            () => handleMergeAccount(response.userId),
-            () => { }
-          );
-          return;
-        }
+        error("Liên kết thất bại", response.message);
+        return;
       }
+
       updateUser(response.user);
       success("Liên kết thành công tài khoản Google");
     } catch (error) {
@@ -187,12 +147,24 @@ export default function SettingScreen() {
     }
   };
 
+  // Logic màu cho Light/Dark Mode
+  const textColor = 'text-black dark:text-white';
+  const iconColor = theme === 'dark' ? 'white' : 'black';
+  const inputBg = 'bg-gray-200 dark:bg-[#1A1833]';
+  const inputTextColor = 'text-black dark:text-white';
+  const placeholderTextColor = theme === 'dark' ? '#999' : '#666';
+  const labelTextColor = 'text-gray-600 dark:text-gray-300';
+
+
   return (
-    <SafeAreaView className={`flex-1 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"} p-6`}>
+
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F] p-6">
       {/* Header */}
       <View className="flex-row items-center mb-6">
-        <Icon name="settings-sharp" size={28} color={`${colorScheme === "dark" ? "white" : "#0E0C1F"}`} />
-        <Text className={`text-3xl font-bold ml-2 ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"}`}>Cài đặt</Text>
+        {/* Cập nhật màu icon */}
+        <Icon name="settings-sharp" size={28} color={iconColor} />
+        {/* Cập nhật màu chữ tiêu đề */}
+        <Text className={`${textColor} text-3xl font-bold ml-2`}>Cài đặt</Text>
       </View>
 
       {/* Danh sách cài đặt */}
@@ -205,39 +177,41 @@ export default function SettingScreen() {
         <SettingButton title="Liên kết tài khoản" icon="link-outline">
           <TouchableOpacity
             activeOpacity={0.8}
-            className={`flex-row items-center ${colorScheme === "dark" ? "bg-[#1877F2]" : "border border-[#1877F2]"} py-3 px-4 rounded-2xl mb-3`}
+            className="flex-row items-center bg-[#1877F2] py-3 px-4 rounded-2xl mb-3"
             disabled={!!user?.facebookId}
             onPress={() => handleLinkAccountFacebook()}
           >
-            <Icon name="logo-facebook" size={20} color={`${colorScheme === "dark" ? "white" : "#1877F2"}`} />
-            <Text className={`${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"} text-base ml-3`}>{user?.facebookId ? "Đã liên kết với Facebook" : "Liên kết với Facebook"}</Text>
+            <Icon name="logo-facebook" size={20} color="#fff" />
+            <Text className="text-white text-base ml-3">{user?.facebookId ? "Đã liên kết với Facebook" : "Liên kết với Facebook"}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.8}
-            className={`flex-row items-center ${colorScheme === "dark" ? "bg-white" : "border border-[#E0E0E0]"} py-3 px-4 rounded-2xl`}
+            className="flex-row items-center bg-white py-3 px-4 rounded-2xl"
             disabled={!!user?.googleId}
             onPress={() => handleLinkAccountGoogle()}
           >
-            <Icon name="logo-google" size={20} color={`${colorScheme === "dark" ? "black" : "#DB4437"}`} />
-            <Text className={`${colorScheme === "dark" ? "text-black" : "text-[#0E0C1F]"} text-base ml-3`}>{user?.googleId ? "Đã liên kết với Google" : "Liên kết với Google"}</Text>
+            <Icon name="logo-google" size={20} color="#000" />
+            {/* Màu chữ: Đen cố định (vì nền là trắng) */}
+            <Text className="text-black text-base ml-3">{user?.googleId ? "Đã liên kết với Google" : "Liên kết với Google"}</Text>
           </TouchableOpacity>
         </SettingButton>
 
         {/* Khóa tài khoản */}
         <SettingButton title="Khóa tài khoản" icon="lock-closed-outline" color="#ff6666">
-          <Text className={` self-center text-sm mb-2 ${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>
+          {/* Cập nhật màu chữ label */}
+          <Text className={`${labelTextColor} text-sm mb-2`}>
             Nhập mật khẩu để xác nhận khóa tài khoản:
           </Text>
           <TextInput
             placeholder="Mật khẩu"
-            placeholderTextColor={`${colorScheme === "dark" ? "#e5e7eb" : "#999"}`}
+            placeholderTextColor={placeholderTextColor}
             secureTextEntry
             value={password}
             onChangeText={(text) => {
               setPassword(text);
               setShowMessage(false);
             }}
-            className={`w-full ${colorScheme === "dark" ? "bg-[#1A1833] text-white" : "bg-gray-200 text-gray-900"} rounded-xl px-4 py-3 mb-2`}
+            className={`${inputBg} ${inputTextColor} px-4 py-3 rounded-xl mb-3`}
           />
           {showMessage && <Text className="text-red-500 mb-2">*{message}</Text>}
           <TouchableOpacity
@@ -245,6 +219,7 @@ export default function SettingScreen() {
             className="bg-[#ff4d4d] py-3 rounded-xl items-center"
             onPress={() => handleLockAccount()}
           >
+            {/* Chữ trên nút khóa tài khoản giữ màu trắng (vì nền luôn là màu đỏ) */}
             <Text className="text-white font-semibold text-base">{loading ? 'Đang xử lý...' : 'Khóa tài khoản'}</Text>
           </TouchableOpacity>
         </SettingButton>
@@ -257,4 +232,3 @@ export default function SettingScreen() {
     </SafeAreaView >
   );
 }
-

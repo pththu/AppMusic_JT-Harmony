@@ -33,7 +33,7 @@ const PlaylistTrack = sequelize.define(
     timestamps: true,
     indexes: [
       {
-        fields: ['id', 'playlist_id', 'playlist_spotify_id', 'track_spotify_id']
+        fields: ['id', 'playlist_id', 'playlist_spotify_id']
       }
     ]
   }

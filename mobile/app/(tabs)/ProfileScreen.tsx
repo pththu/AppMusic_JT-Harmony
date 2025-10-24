@@ -1,9 +1,10 @@
 import { SettingsContext } from "@/context/SettingsContext";
 import { useNavigate } from "@/hooks/useNavigate";
 import React, { useContext, useState } from "react";
-import { Image, Pressable, Text, TouchableOpacity, View, useColorScheme } from "react-native";
+import { Image, Pressable, Text, View, ScrollView, ActivityIndicator, useColorScheme, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
@@ -81,6 +82,7 @@ export default function ProfileScreen() {
     }
   };
 
+  // up nhiều file lên cloudinary và server
   // const handlePickMultipleFile = async () => {
   //   try {
   //     const result = await DocumentPicker.getDocumentAsync({
@@ -113,13 +115,12 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      const response = await Logout(); // logout khỏi server -> xóa cookie
-      // logout khỏi client -> xóa store
+      const response = await Logout();
       if (loginType === 'google') {
-        await GoogleSignin.signOut(); // logout khỏi google
+        await GoogleSignin.signOut();
       }
       if (loginType === 'facebook') {
-        LoginManager.logOut(); // logout khỏi facebook
+        LoginManager.logOut();
       }
       if (response.success) {
         success('Đăng xuất thành công', '');
@@ -166,125 +167,131 @@ export default function ProfileScreen() {
     );
   }
 
+
   return (
-    <SafeAreaView className={`flex-1 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"} p-6`}>
-      {/* Tiêu đề và nút Edit */}
-      <View className="flex-row justify-between items-center mb-4">
-        <Text className={`text-3xl font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F]"}`}>Hồ sơ</Text>
-        <CustomButton
-          title="Cài đặt"
-          onPress={() => navigate("Setting")}
-          iconName="settings-sharp"
-        />
-      </View>
-
-      {/* Ảnh đại diện và tên */}
-      <View className="items-center my-4">
-        <Pressable className={`items-center w-24 h-24 mb-4 border-2 rounded-full border-green-500 shadow-xl`}
-          onPress={() => handlePickSingleImage()}
-        >
-          <Image
-            source={{
-              uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg',
-            }}
-            className="w-[80px] h-[80px] rounded-full items-center"
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F]">
+      <ScrollView contentContainerStyle={{ padding: 24 }}>
+        <View className="flex-row justify-between items-center mb-4">
+          <Text className="text-black dark:text-white text-3xl font-bold">Hồ sơ</Text>
+          <CustomButton
+            title="Cài đặt"
+            onPress={() => navigate("Setting")}
+            iconName="settings-sharp"
           />
-          <View className="absolute bottom-0 right-0 p-1 bg-green-500/50 rounded-full">
-            <Icon name="camera" size={16} color="white" />
+        </View>
+
+        <View className="items-center my-4">
+          <Pressable className={`items-center w-24 h-24 mb-4 border-2 rounded-full border-green-500 shadow-xl`}
+            onPress={() => handlePickSingleImage()}
+          >
+            <Image
+              source={{
+                uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg',
+              }}
+              className="w-[80px] h-[80px] rounded-full items-center"
+            />
+            <View className="absolute bottom-0 right-0 p-1 bg-green-500/50 rounded-full">
+              <Icon name="camera" size={16} color="white" />
+            </View>
+          </Pressable>
+          <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F]"}`}>{user?.fullName || user?.username}</Text>
+        </View>
+
+        {isChoosedImage && <ModalConfirm />}
+
+        {/* Thông tin liên hệ */}
+        <View className="my-4 border-b border-gray-300 pb-4">
+          <View className="flex-row items-center mb-2 gap-2">
+            <Icon
+              name="mail-outline"
+              size={20}
+              color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
+            />
+            <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Email:</Text>
+            <Text className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>{user?.email || 'Chưa có thông tin'}</Text>
           </View>
-        </Pressable>
-        <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F]"}`}>{user?.fullName || user?.username}</Text>
-      </View>
 
-      {isChoosedImage && <ModalConfirm />}
+          <View className="flex-row items-center mb-2 gap-2">
+            <Icon
+              name="calendar-outline"
+              size={20}
+              color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
+            />
+            <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Ngày sinh:</Text>
+            <Text className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>{new Date(user?.dob).toLocaleDateString() || 'Chưa có thông tin'}</Text>
+          </View>
 
-      {/* Thông tin liên hệ */}
-      <View className="my-4 border-b border-gray-300 pb-4">
-        <View className="flex-row items-center mb-2">
-          <Icon
-            name="mail-outline"
-            size={20}
-            color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
-            className="mr-2"
-          />
-          <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Email:</Text>
-          <Text className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>{user?.email || 'Chưa có thông tin'}</Text>
+          <View className="flex-row items-center mb-1 gap-2">
+            <Icon
+              name="information-circle-outline"
+              size={20}
+              color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
+            />
+            <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Tiểu sử:</Text>
+          </View>
+          <Text className={`${colorScheme === "dark" ? "text-white" : "text-gray-800 bg-green-100 py-2 px-4 rounded-md"}`}>{user?.bio || '...'}</Text>
         </View>
 
-        <View className="flex-row items-center mb-2">
-          <Icon
-            name="calendar-outline"
-            size={20}
-            color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
-            className="mr-2"
-          />
-          <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Ngày sinh:</Text>
-          <Text className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>{new Date(user?.dob).toLocaleDateString() || 'Chưa có thông tin'}</Text>
-        </View>
-
-        <View className="flex-row items-center mb-1">
-          <Icon
-            name="information-circle-outline"
-            size={20}
-            color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
-            className="mr-2"
-          />
-          <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Tiểu sử:</Text>
-        </View>
-        <Text className={`${colorScheme === "dark" ? "text-white" : "text-gray-800 bg-green-100 py-2 px-4 rounded-md"}`}>{user?.bio || '...'}</Text>
-      </View>
-
-      {/* <Pressable className="p-5 border border-slate-300"
+        {/* <Pressable className="p-5 border border-slate-300"
         onPress={() => handlePickMultipleFile()}
       >
         <Text>Chọn nhiều file</Text>
       </Pressable> */}
 
-      {/* Các nút Thư viện (Library) */}
-      <View className="flex-row justify-between mb-4">
-        <LibraryItemButton
-          title="... Bài hát"
-          icon="favorite"
-          onPress={() => navigate("LikedSongsScreen")}
-          color="#ffb5b5"
-        />
-        <LibraryItemButton
-          title="... Playlists"
-          icon="list"
-          onPress={() => navigate("PlaylistsScreen")}
-          color="#82d8ff"
-        />
-        <LibraryItemButton
-          title="... Nghệ sĩ"
-          icon="person"
-          onPress={() => navigate("ArtistsFollowingScreen")}
-          color="#fff999"
-        />
-      </View>
+        {/* Các nút Thư viện (Library) */}
+        <View className="flex-row justify-between mb-4">
+          <LibraryItemButton
+            title="... Bài hát"
+            icon="favorite"
+            onPress={() => navigate("LikedSongsScreen")}
+            color="#ffb5b5"
+          />
+          <LibraryItemButton
+            title="... Playlists"
+            icon="list"
+            onPress={() => navigate("PlaylistsScreen")}
+            color="#82d8ff"
+          />
+          <LibraryItemButton
+            title="... Nghệ sĩ"
+            icon="person"
+            onPress={() => navigate("ArtistsFollowingScreen")}
+            color="#FFA500"
+          />
+        </View>
 
-      {/* Cài đặt (Settings) */}
-      <View>
-        <Text className="text-white font-semibold mb-2 text-2xl">Cấu hình</Text>
-        <SettingItem
-          title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
-          onPress={() => navigate("MusicLanguage")}
-        />
-        <SettingItem
-          title={`Chất lượng phát trực tuyến: ${settings?.streamingQuality}`}
-          onPress={() => navigate("StreamingQuality")}
-        />
-        <SettingItem
-          title={`Chất lượng tải xuống: ${settings?.downloadQuality}`}
-          onPress={() => navigate("DownloadQuality")}
-        />
-        <TouchableOpacity
-          className={`py-4`}
-          onPress={() => handleLogout()}
-          activeOpacity={0.7}
-        >
-          <Text className={`text-red-500 font-bold text-lg`}>Đăng xuất</Text>
-        </TouchableOpacity>
-      </View>
+        <View>
+          <Text className="text-black dark:text-white font-semibold mb-2 text-2xl">Cấu hình</Text>
+          <SettingItem
+            title="Chế độ Tối/Sáng"
+            rightComponent={
+              <View className={"mr-2"}>
+                <ThemeToggle />
+              </View>
+            }
+            onPress={() => { }}
+          />
+          <SettingItem
+            title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
+            onPress={() => navigate("MusicLanguage")}
+          />
+          <SettingItem
+            title={`Chất lượng phát trực tuyến: ${settings?.streamingQuality}`}
+            onPress={() => navigate("StreamingQuality")}
+          />
+          <SettingItem
+            title={`Chất lượng tải xuống: ${settings?.downloadQuality}`}
+            onPress={() => navigate("DownloadQuality")}
+          />
+          <TouchableOpacity
+            className={`py-4`}
+            onPress={() => handleLogout()}
+            activeOpacity={0.7}
+          >
+            <Text className={`text-red-500 font-bold text-lg`}>Đăng xuất</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

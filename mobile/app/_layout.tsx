@@ -9,13 +9,11 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-// Đảm bảo đã import View
 import { View } from "react-native"; 
 import "react-native-reanimated";
 
 import { ThemeProvider, useTheme } from "@/components/ThemeContext";
 import { AlertProvider } from "@/context/AlertContext";
-// Đã import SafeAreaProvider, đây là cấu trúc đúng
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export { ErrorBoundary } from "expo-router";
@@ -39,11 +37,9 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    // ✅ SỬA LỖI: Thay return null; bằng return <View />;
     return <View />; 
   }
 
-  // Cấu trúc Providers ở cấp độ cao nhất
   return (
     <ThemeProvider>
       <RootLayoutNav />
@@ -55,7 +51,6 @@ function RootLayoutNav() {
   const { theme: colorScheme, isThemeLoaded } = useTheme();
   
   if (!isThemeLoaded) {
-    // ✅ SỬA LỖI: Thay return null; bằng return <View />;
     return <View />;
   }
 
@@ -63,10 +58,8 @@ function RootLayoutNav() {
     <NavigationThemeProvider
       value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
     >
-      {/* Nền Light Mode là trắng, Dark Mode là đen/xám đậm */}
       <View className="flex-1 bg-white dark:bg-black"> 
         <SafeAreaProvider>
-          {/* AlertProvider bọc toàn bộ định tuyến */}
           <AlertProvider>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

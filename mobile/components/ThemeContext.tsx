@@ -1,8 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
-// 💡 CẦN THÊM View TỪ REACT-NATIVE
 import { View } from "react-native"; 
-// Hook quan trọng từ NativeWind để kiểm soát chế độ tối/sáng
 import { useColorScheme } from "nativewind";
 
 // Khởi tạo Context
@@ -64,15 +62,12 @@ export const ThemeProvider = ({ children }) => {
     theme: colorScheme,
     setTheme: saveTheme,
     isThemeLoaded,
-    // Hàm tiện lợi để chuyển đổi
     toggleTheme: () => {
       const newMode = colorScheme === "light" ? "dark" : "light";
       saveTheme(newMode);
     },
   };
 
-  // ✅ SỬA LỖI: Tránh hiển thị UI trước khi theme được tải từ Async Storage
-  // Thay thế 'return null;' bằng 'return <View />;'
   if (!isThemeLoaded) {
     return <View />;
   }
@@ -84,5 +79,4 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-// Hook tùy chỉnh để sử dụng dễ dàng trong các component khác
 export const useTheme = () => useContext(ThemeContext);

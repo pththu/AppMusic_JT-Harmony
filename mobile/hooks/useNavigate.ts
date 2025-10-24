@@ -1,6 +1,3 @@
-import AllSongsScreen from "@/app/(screens)/AllSongsScreen";
-import QueueScreen from "@/app/(screens)/QueueScreen";
-import SongScreen from "@/app/(screens)/SongScreen";
 import { useRouter } from "expo-router";
 
 const routeMap: Record<any, any> = {
@@ -34,6 +31,8 @@ const routeMap: Record<any, any> = {
   Setting: '(screens)/SettingScreen',
   ChangePassword: '(screens)/ChangePasswordScreen',
   UpdateEmail: '(screens)/UpdateEmailScreen',
+  ProfileSocialScreen: '(screens)/ProfileSocialScreen',
+  ChatScreen: '(screens)/ChatScreen'
 };
 
 export function useNavigate() {

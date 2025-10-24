@@ -1,230 +1,245 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Alert,
+  ActivityIndicator,
   FlatList,
   Image,
   Keyboard,
-  KeyboardAvoidingView,
-  Linking,
-  Modal,
-  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
   useColorScheme,
+  ScrollView
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
+import { fetchPosts, fetchCommentsByPostId, createNewComment, createNewPost, togglePostLike, toggleCommentLike } from "../../services/socialApi";
+import useAuthStore from "@/store/authStore";
+import * as ImagePicker from 'expo-image-picker';
+// import { uploadMedia } from '../../services/uploadService';
+import { useNavigate } from "@/hooks/useNavigate";
+import PostItem from "../../components/items/PostItem";
+import CommentModal from "../../components/modals/CommentModal";
 
-const PostItem = ({
-  avatarUrl,
-  username,
-  groupName,
-  time,
-  contentText,
-  images,
-  musicLink,
-  likeCount,
-  commentCount,
-  shareCount,
-  isOnline,
-  onPostUpdate, // NHẬN: Hàm callback từ SocialScreen
-  onCommentPress, // New prop to open comment modal
-  onSharePress, // New prop to handle share press
-}) => {
+const SocialScreen = () => {
   const colorScheme = useColorScheme();
-  // STATE: Theo dõi trạng thái đã thích (liked)
-  const [isLiked, setIsLiked] = useState(false);
+  const [posts, setPosts] = useState<any[]>([]); // Sử dụng any[] nếu Post interface chưa rõ ràng
+  const [loading, setLoading] = useState(true);
+  const user = useAuthStore(state => state.user);
+  const { navigate } = useNavigate();
 
-  // STATE: Dùng state nội bộ để hiển thị số like (được đồng bộ với prop)
-  const [currentLikeCount, setCurrentLikeCount] = useState(likeCount);
 
-  // Xử lý nút Tim
-  const handleLike = () => {
-    const newLikedStatus = !isLiked;
-    const likeChange = newLikedStatus ? 1 : -1;
+  // === 🆕 STATES MỚI VÀ ĐÃ ĐƯỢC CHỈNH SỬA ===
+  const [newPostText, setNewPostText] = useState("");
+  const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]); // 🆕 Lưu trữ Mảng URLs
+  const [selectedSongId, setSelectedSongId] = useState<number | null>(null); // ID bài hát đính kèm
+  const [isUploading, setIsUploading] = useState(false); // Trạng thái upload file
 
-    setIsLiked(newLikedStatus);
-    setCurrentLikeCount((prevCount) => prevCount + likeChange);
-
-    // Gửi sự kiện cập nhật lên SocialScreen (nếu cần cập nhật state chung)
-    if (onPostUpdate) {
-      onPostUpdate("like", likeChange);
-    }
-  };
-
-  // Xử lý nút Bình luận
-  const handleComment = () => {
-    if (onPostUpdate) {
-      onPostUpdate("comment", 1);
-    }
-    if (onCommentPress) {
-      onCommentPress();
-    }
-  };
-
-  // Xử lý nút Chia sẻ
-  const handleShare = () => {
-    if (onPostUpdate) {
-      onPostUpdate("share", 1);
-    }
-    if (onSharePress) {
-      onSharePress();
-    } else {
-      Alert.alert(
-        "Chia sẻ",
-        `Mở Share Sheet để chia sẻ bài đăng của ${username}.`
-      );
-    }
-  };
-
-  return (
-    <SafeAreaView className="bg-white dark:bg-[#171431] p-3 mb-3 rounded-xl shadow-lg shadow-black/50">
-      {/* Header */}
-      <View className="flex-row items-center mb-1.5">
-        <Image source={{ uri: avatarUrl }} className="w-9 h-9 rounded-full" />
-        <View className="ml-2 flex-col">
-          <View className="flex-row items-center">
-            <Text className="font-bold text-sm text-black dark:text-white">{username}</Text>
-            {groupName ? (
-              <Text className="text-sm text-gray-600 dark:text-gray-300">
-
-                {">"} {groupName}
-              </Text>
-            ) : null}
-            {isOnline ? (
-              <View className="w-2 h-2 rounded-full bg-green-400 ml-1.5" />
-            ) : null}
-          </View>
-          <Text className="text-gray-500 dark:text-gray-400 text-xs">{time}</Text>
-        </View>
-      </View>
-
-      {/* Content Text */}
-      {contentText ? (
-        <Text className="text-sm text-black dark:text-gray-300 mb-2">{contentText}</Text>
-      ) : null}
-
-      {/* Images */}
-      {images && images.length > 0 ? (
-        <View className="flex-row mb-2">
-          {images.map((img, index) => (
-            <Image
-              key={index}
-              source={{ uri: img }}
-              className="w-30 h-30 rounded-lg mr-2"
-            />
-          ))}
-        </View>
-      ) : null}
-
-      {/* Music Link */}
-      {musicLink ? (
-        <TouchableOpacity
-          onPress={() => Linking.openURL(musicLink)}
-          className="bg-blue-900/50 p-2 rounded-lg mb-2"
-        >
-          <Text className="text-blue-400 underline">Nghe nhạc tại đây</Text>
-        </TouchableOpacity>
-      ) : null}
-
-      {/* Interaction Buttons */}
-      <View className={`flex-row justify-between pt-2 border-t ${colorScheme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
-        {/* NÚT LIKE (TIM) */}
-        <TouchableOpacity
-          onPress={handleLike}
-          className="flex-row items-center space-x-1"
-        >
-          <Icon
-            name={isLiked ? "heart" : "heart"} // Cả hai icon đều là 'heart', chỉ khác màu
-            size={20}
-            color={isLiked ? "#ef4444" : (colorScheme === "dark" ? "#9ca3af" : "#000000")} // Màu đỏ khi liked, xám khi chưa liked
-          />
-          <Text
-            className={`ml-1 ${isLiked ? "text-red-400 font-bold" : (colorScheme === "dark" ? "text-gray-400" : "text-black")}`}
-          >
-            {currentLikeCount}
-          </Text>
-        </TouchableOpacity>
-
-        {/* NÚT BÌNH LUẬN */}
-        <TouchableOpacity
-          onPress={handleComment}
-          className="flex-row items-center space-x-1"
-        >
-          <Icon name="message-circle" size={20} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-          <Text className={`ml-1 ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>{commentCount}</Text>
-        </TouchableOpacity>
-
-        {/* NÚT CHIA SẺ */}
-        <TouchableOpacity
-          onPress={handleShare}
-          className="flex-row items-center space-x-1"
-        >
-          <Icon name="share-2" size={20} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-          <Text className={`ml-1 ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>{shareCount}</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-};
-
-const CommentModal = ({
-  visible,
-  onClose,
-  comments,
-  onAddComment,
-  onCommentLike,
-  postId,
-}) => {
-  const colorScheme = useColorScheme();
   const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState(null); // Lưu comment đang trả lời
-  const [quote, setQuote] = useState(null); // Lưu comment đang trích dẫn
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [expandedReplies, setExpandedReplies] = useState({}); // theo dõi comment cha đang mở rộng replies
+  const [replyTo, setReplyTo] = useState<any | null>(null); // Dùng state cho reply
+  const [quote, setQuote] = useState<any | null>(null); // Dùng state cho quote
+  const [commentModalVisible, setCommentModalVisible] = useState(false);
 
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+
+  // Helper function để format thời gian (giữ nguyên)
+  const formatTime = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    if (diffInHours < 1) return 'Vừa xong';
+    if (diffInHours < 24) return `${diffInHours} giờ`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} ngày`;
+  };
+
+  const handleUserPress = useCallback((targetUserId: number) => {
+    if (!targetUserId) {
+      Alert.alert("Lỗi", "Không tìm thấy ID người dùng.");
+      return;
+    }
+    navigate('ProfileSocialScreen', { userId: targetUserId });
+  }, [navigate]);
+
+  // Helper function để map dữ liệu từ API (giữ nguyên, nhưng có thể cần tối ưu hóa logic fileUrl/musicLink)
+  const mapApiPostToLocal = (apiPost: any) => ({
+    id: apiPost.id,
+    userId: apiPost.userId,
+    User: apiPost.User || { id: apiPost.userId, avatarUrl: '', username: 'Anonymous', fullName: 'Anonymous' },
+    uploadedAt: apiPost.uploadedAt,
+    content: apiPost.content,
+    fileUrl: apiPost.fileUrl,
+    heartCount: apiPost.heartCount,
+    commentCount: apiPost.commentCount,
+    shareCount: apiPost.shareCount,
+    isLiked: apiPost.isLiked,
+    songId: apiPost.songId,
+    // Additional mapped fields for compatibility
+    avatarUrl: apiPost.User?.avatarUrl || '',
+    username: apiPost.User?.username || 'Anonymous',
+    groupName: '',
+    time: formatTime(apiPost.uploadedAt),
+    contentText: apiPost.content,
+    // SỬA: Sử dụng fileUrl cho images (chấp nhận ảnh/video)
+    images: Array.isArray(apiPost.fileUrl) ? apiPost.fileUrl : (apiPost.fileUrl ? [apiPost.fileUrl] : []),
+    // SỬA: Sử dụng songId cho musicLink
+    musicLink: apiPost.songId ? `🎵 Song ID: ${apiPost.songId}` : '',
+    isOnline: false,
+    comments: [],
+  });
+
+
+
+  // useEffect để tải bài đăng (giữ nguyên)
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      () => {
-        setKeyboardVisible(true);
+    const loadPosts = async () => {
+      try {
+        setLoading(true);
+        const apiPosts = await fetchPosts();
+        const mappedPosts = apiPosts.map(mapApiPostToLocal);
+        setPosts(mappedPosts);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        Alert.alert('Lỗi', 'Không thể tải bài đăng');
+      } finally {
+        setLoading(false);
       }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => {
-        setKeyboardVisible(false);
-      }
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
     };
+
+    loadPosts();
   }, []);
 
-  const handleAddComment = () => {
-    if (newComment.trim()) {
-      // Gửi comment chỉ với text
-      onAddComment(newComment);
-      setNewComment("");
-      setReplyTo(null);
-      setQuote(null);
+  const handleSelectMedia = async () => {
+    if (isUploading) return;
+
+    // Yêu cầu cấp quyền (giữ nguyên)
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("Lỗi", "Cần quyền truy cập thư viện ảnh để tiếp tục.");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: false,
+        quality: 1,
+        allowsMultipleSelection: true, // 👈 BẬT CHẾ ĐỘ CHỌN NHIỀU
+      });
+
+      if (result.canceled) {
+        setIsUploading(false);
+        return;
+      }
+
+      // 🆕 Lấy TẤT CẢ URI từ mảng assets
+      const newUris = result.assets.map(asset => asset.uri);
+
+      // ⚠️ LOGIC UPLOAD: Bạn cần lặp qua newUris và upload từng file lên server
+      // Ví dụ tạm thời: Lưu URI cục bộ vào state (Bạn cần thay bằng logic upload thật)
+
+      // Nếu dùng logic upload thật:
+      // const uploadedUrls = await Promise.all(newUris.map(uri => uploadMedia(uri)));
+      // setPostMediaUrls(prevUrls => [...prevUrls, ...uploadedUrls]); 
+
+      // Nếu dùng logic URI cục bộ:
+      setPostMediaUrls(prevUrls => [...prevUrls, ...newUris]);
+
+      Alert.alert("Thành công", `Đã chọn ${newUris.length} media.`);
+
+    } catch (e) {
+      console.error("Lỗi khi chọn/tải media:", e);
+      Alert.alert("Lỗi", "Không thể chọn media.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  // Hàm addPost đã được sửa lỗi gọi API
+  const addPost = async () => {
+    // 1. Kiểm tra điều kiện đăng bài (ít nhất phải có Content HOẶC Media)
+    if (newPostText.trim() === "" && postMediaUrls.length === 0) {
+      Alert.alert("Thông báo", "Vui lòng nhập nội dung hoặc chọn ảnh/video.");
+      return;
+    }
+
+    try {
+      // 2. CHUẨN BỊ PAYLOAD CHO API BACKEND
+      const content = newPostText.trim();
+      const fileUrlsToSend = postMediaUrls.length > 0 ? postMediaUrls : null;
+      const songId = selectedSongId; // ID bài hát đính kèm (có thể là null)
+
+      // 3. GỌI API TẠO BÀI ĐĂNG (ĐÃ GỬI ĐỦ 3 THAM SỐ)
+      const apiPost = await createNewPost(content, fileUrlsToSend, songId);
+
+      // 4. MAP KẾT QUẢ VÀ CẬP NHẬT STATE
+      const newPost = mapApiPostToLocal(apiPost);
+      setPosts([newPost, ...posts]);
+
+      // 5. RESET INPUTS
+      setNewPostText("");
+      setPostMediaUrls([]); // Reset URL media
+      setSelectedSongId(null); // Reset Song ID
+      Keyboard.dismiss();
+
+    } catch (error) {
+      console.error('Lỗi khi tạo bài đăng:', error);
+      Alert.alert('Lỗi Đăng Bài', error.response?.data?.error || 'Không thể tạo bài đăng.');
     }
   };
 
-  // Hàm xử lý khi nhấn trả lời comment
-  const handleReply = (comment) => {
-    setReplyTo(comment);
-    setQuote(null);
+  // HÀM CẬP NHẬT POSTS: Được gọi từ PostItem (giữ nguyên)
+  const updatePost = (id, type, value) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id === id) {
+          if (type === "like") {
+            // Logic cập nhật like count trong state gốc
+            return { ...post, likeCount: (post.likeCount || 0) + (value || 0) };
+          } else if (type === "comment") {
+            return { ...post, commentCount: (post.commentCount || 0) + (value || 0) };
+          } else if (type === "share") {
+            return { ...post, shareCount: (post.shareCount || 0) + (value || 0) };
+          }
+        }
+        return post;
+      })
+    );
   };
 
-  // Hàm xử lý khi nhấn trích dẫn comment
-  const handleQuote = (comment) => {
-    setQuote(comment);
-    setReplyTo(null);
+  // Chức năng Comment Modal (giữ nguyên)
+  // Dùng để tải comments khi modal mở
+  const loadComments = async (postId: string) => {
+    try {
+      const fetchedComments = await fetchCommentsByPostId(postId);
+
+      // 💡 CẬP NHẬT TRỰC TIẾP comments vào post TƯƠNG ỨNG trong state posts
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, comments: fetchedComments } : post
+        )
+      );
+      return fetchedComments;
+    } catch (e) {
+      console.error('Lỗi tải comments:', e);
+      Alert.alert('Lỗi', 'Không thể tải bình luận cho bài viết này.');
+      return [];
+    }
+  };
+  const openCommentModal = (postId: string) => {
+    setSelectedPostId(postId);
+    setCommentModalVisible(true);
+
+    // Tải comments ngay khi modal mở
+    loadComments(postId);
+  };
+
+  const closeCommentModal = () => {
+    setCommentModalVisible(false);
+    setSelectedPostId(null);
   };
 
   // Hàm hủy trả lời hoặc trích dẫn
@@ -233,458 +248,237 @@ const CommentModal = ({
     setQuote(null);
   };
 
-  // Hàm toggle mở rộng replies
-  const toggleExpandedReplies = (commentId) => {
-    setExpandedReplies((prev) => ({
-      ...prev,
-      [commentId]: !prev[commentId],
-    }));
+  // Hàm set reply/quote (sẽ được truyền vào CommentModal)
+  const handleSetReply = (comment: any) => {
+    setReplyTo(comment);
+    setQuote(null);
   };
 
-  return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <KeyboardAvoidingView
-        style={{
-          flex: 1,
-          justifyContent: "flex-end",
-          backgroundColor: "rgba(0,0,0,0.5)",
-        }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-      >
-        <View
-          className={`rounded-t-xl p-4 ${isKeyboardVisible ? "h-1/2" : "h-3/4"} ${colorScheme === "dark" ? "bg-[#171431]" : "bg-white"}`}
-        >
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>Bình luận</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Icon name="x" size={24} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={comments}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => {
-              const isExpanded = expandedReplies[item.id];
-              const visibleReplies = isExpanded
-                ? item.replies
-                : item.replies.slice(0, 3);
-              return (
-                <View className="mb-3">
-                  {/* Comment cha */}
-                  <View className="flex-row items-center mb-1">
-                    <Image
-                      source={{
-                        uri: "https://randomuser.me/api/portraits/men/3.jpg",
-                      }}
-                      className="w-6 h-6 rounded-full mr-2"
-                    />
-                    <Text className={`font-bold text-sm ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-                      {item.username}
-                    </Text>
-                    <Text className={`text-xs ml-2 ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>
-                      {item.time}
-                    </Text>
-                  </View>
-                  {/* Hiển thị trích dẫn nếu có */}
-                  {item.quote ? (
-                    <View className={`rounded p-2 mb-1 ml-8 border-l-4 border-blue-500 ${colorScheme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}>
-                      <Text className={`italic text-sm ${colorScheme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                        {item.quote.text}
-                      </Text>
-                      <Text className={`text-xs ${colorScheme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                        - {item.quote.username}
-                      </Text>
-                    </View>
-                  ) : null}
-                  <Text className={`text-sm ml-8 ${colorScheme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
-                    {item.text}
-                  </Text>
-                  {/* Nút trả lời và trích dẫn */}
-                  <View className="flex-row ml-8 mt-1">
-                    <TouchableOpacity
-                      onPress={() =>
-                        onCommentLike(postId, item.id, false, null)
-                      }
-                      className="flex-row items-center space-x-1"
-                    >
-                      <Icon
-                        name={item.isLiked ? "heart" : "heart"}
-                        size={16}
-                        color={item.isLiked ? "#ef4444" : (colorScheme === "dark" ? "#9ca3af" : "#000000")}
-                      />
-                      <Text
-                        className={`text-xs ${item.isLiked ? "text-red-400" : (colorScheme === "dark" ? "text-gray-200" : "text-gray-800")}`}
-                      >
-                        {item.likeCount}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleReply(item)}
-                      className="flex-row items-center px-2"
-                    >
-                      <Icon name="corner-up-left" size={16} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-                      <Text className={`text-xs ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>Trả lời</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleQuote(item)}
-                      className="flex-row items-center space-x-1"
-                    >
-                      <Icon name="repeat" size={16} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-                      <Text className={`text-xs ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>Trích dẫn</Text>
-                    </TouchableOpacity>
-                  </View>
-                  {/* Hiển thị replies */}
-                  {visibleReplies.map((reply) => (
-                    <View key={reply.id} className="ml-12 mt-2">
-                      <View className="flex-row items-center mb-1">
-                        <Image
-                          source={{
-                            uri: "https://randomuser.me/api/portraits/men/3.jpg",
-                          }}
-                          className="w-5 h-5 rounded-full mr-2"
-                        />
-                        <Text className={`font-bold text-xs ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-                          {reply.username}
-                        </Text>
-                        <Text className={`text-xs ml-2 ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>
-                          {reply.time}
-                        </Text>
-                      </View>
-                      <Text className={`text-sm ${colorScheme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
-                        {reply.text}
-                      </Text>
-                      {/* Nút like và trả lời cho reply */}
-                      <View className="flex-row mt-1">
-                        <TouchableOpacity
-                          onPress={() =>
-                            onCommentLike(postId, item.id, true, reply.id)
-                          }
-                          className="flex-row items-center space-x-1"
-                        >
-                          <Icon
-                            name={reply.isLiked ? "heart" : "heart"}
-                            size={14}
-                            color={reply.isLiked ? "#ef4444" : (colorScheme === "dark" ? "#9ca3af" : "#000000")}
-                          />
-                          <Text
-                            className={`text-xs ${reply.isLiked ? "text-red-400" : (colorScheme === "dark" ? "text-gray-400" : "text-gray-600")}`}
-                          >
-                            {reply.likeCount}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => handleReply(reply)}
-                          className="flex-row items-center px-2"
-                        >
-                          <Icon
-                            name="corner-up-left"
-                            size={14}
-                            color={colorScheme === "dark" ? "#9ca3af" : "#000000"}
-                          />
-                          <Text className={`text-xs ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>Trả lời</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => handleQuote(item)}
-                          className="flex-row items-end space-x-1"
-                        >
-                          <Icon name="repeat" size={16} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-                          <Text className={`text-xs ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>
-                            Trích dẫn
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ))}
-                  {/* Nút xem thêm replies */}
-                  {item.replies.length > 3 && (
-                    <TouchableOpacity
-                      onPress={() => toggleExpandedReplies(item.id)}
-                      className="ml-12 mt-1"
-                    >
-                      <Text className="text-blue-400 text-xs">
-                        {isExpanded
-                          ? "Ẩn các trả lời"
-                          : `Xem ${item.replies.length - 3} trả lời khác`}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              );
-            }}
-            showsVerticalScrollIndicator={false}
-          />
-          {/* Hiển thị thông tin trả lời hoặc trích dẫn ở trên thanh nhập */}
-          {(replyTo || quote) && (
-            <View className={`rounded p-2 mb-2 flex-row justify-between items-center ${colorScheme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}>
-              <Text
-                className={`italic text-sm flex-1 ${colorScheme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-                numberOfLines={1}
-              >
-                {replyTo
-                  ? `Trả lời: ${replyTo.text}`
-                  : `Trích dẫn: ${quote.text}`}
-              </Text>
-              <TouchableOpacity onPress={cancelReplyOrQuote}>
-                <Icon name="x" size={20} color="#ef4444" />
-              </TouchableOpacity>
-            </View>
-          )}
-          <View className={`flex-row items-center py-12 px-2 border-t ${colorScheme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
-            <TextInput
-              placeholder="Viết bình luận..."
-              placeholderTextColor={colorScheme === "dark" ? "#aaa" : "#777"}
-              value={newComment}
-              onChangeText={setNewComment}
-              className={`flex-1 border rounded-full px-4 py-2 text-base ${colorScheme === "dark" ? "border-gray-600 bg-[#0E0C1F] text-white" : "border-gray-700 bg-white text-black"}`}
-              multiline
-            />
-            <TouchableOpacity
-              onPress={handleAddComment}
-              className="ml-2 bg-green-600 px-4 py-2 rounded-full"
-            >
-              <Text className="text-white font-bold">Gửi</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-};
+  const handleSetQuote = (comment: any) => {
+    setQuote(comment);
+    setReplyTo(null);
+  };
 
-const SocialScreen = () => {
-  const colorScheme = useColorScheme();
-  const [posts, setPosts] = useState([
-    {
-      id: "1",
-      avatarUrl: "https://randomuser.me/api/portraits/men/1.jpg",
-      username: "bancuanhalong",
-      groupName: "Cats of Threads",
-      time: "3 giờ",
-      contentText:
-        "=))))))))))) kiếp nạn mèo ở phòng trọ tự mắc vào thì tự gỡ nha",
-      images: ["https://i.imgur.com/1.jpg", "https://i.imgur.com/2.jpg"],
-      musicLink: "",
-      likeCount: 202,
-      commentCount: 2,
-      shareCount: 16,
-      isOnline: true,
-      comments: [
-        {
-          id: "c1",
-          username: "user1",
-          text: "Haha cute!",
-          time: "2 giờ",
-          replies: [],
-          likeCount: 5,
-          isLiked: false,
-        },
-        {
-          id: "c2",
-          username: "user2",
-          text: "Poor cat!",
-          time: "1 giờ",
-          replies: [],
-          likeCount: 3,
-          isLiked: false,
-        },
-      ],
-    },
-    {
-      id: "2",
-      avatarUrl: "https://randomuser.me/api/portraits/men/2.jpg",
-      username: "eduardosotoj862",
-      groupName: "#design",
-      time: "7 giờ",
-      contentText:
-        "Bảng màu thiên nhiên các designer tham khảo nha\nCre: Designer Vietnam",
-      images: ["https://i.imgur.com/3.jpg", "https://i.imgur.com/4.jpg"],
-      musicLink: "",
-      likeCount: 150,
-      commentCount: 10,
-      shareCount: 5,
-      isOnline: false,
-      comments: [
-        {
-          id: "c3",
-          username: "designer1",
-          text: "Great colors!",
-          time: "6 giờ",
-          likeCount: 12,
-          isLiked: false,
-          replies: [
-            {
-              id: "c3r1",
-              username: "userA",
-              text: "Agree!",
-              time: "5 giờ",
-              likeCount: 2,
-              isLiked: false,
-            },
-            {
-              id: "c3r2",
-              username: "userB",
-              text: "Nice palette",
-              time: "4 giờ",
-              likeCount: 1,
-              isLiked: false,
-            },
-            {
-              id: "c3r3",
-              username: "userC",
-              text: "Love it",
-              time: "3 giờ",
-              likeCount: 0,
-              isLiked: false,
-            },
-            {
-              id: "c3r4",
-              username: "userD",
-              text: "Thanks for sharing",
-              time: "2 giờ",
-              likeCount: 3,
-              isLiked: false,
-            },
-          ],
-        },
-        {
-          id: "c4",
-          username: "designer2",
-          text: "Thanks for sharing",
-          time: "5 giờ",
-          likeCount: 8,
-          isLiked: false,
-          replies: [],
-        },
-        {
-          id: "c5",
-          username: "designer3",
-          text: "Very useful",
-          time: "4 giờ",
-          likeCount: 4,
-          isLiked: false,
-          replies: [],
-        },
-      ],
-    },
-  ]);
+  const addComment = async (text: string, parentId: string | null) => {
+    // ⚠️ Đảm bảo đã khai báo và có sẵn: selectedPostId, setNewComment, cancelReplyOrQuote
+    // Lấy thông tin người dùng hiện tại từ store để tự tạo comment object
+    const currentUser = useAuthStore.getState().user;
 
-  const [newPostText, setNewPostText] = useState("");
-  const [newPostMusicLink, setNewPostMusicLink] = useState("");
-  const [commentModalVisible, setCommentModalVisible] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState(null);
+    if (!selectedPostId || !text.trim() || !currentUser) return;
 
-  const addPost = () => {
-    if (newPostText.trim() === "" && newPostMusicLink.trim() === "") return;
-    const newPost = {
-      id: Date.now().toString(),
-      avatarUrl: "https://randomuser.me/api/portraits/men/3.jpg",
-      username: "duytuan.24",
-      groupName: "",
-      time: "Vừa xong",
-      contentText: newPostText,
-      images: [],
-      musicLink: newPostMusicLink,
+    // Khởi tạo một đối tượng comment tạm thời để hiển thị ngay lập tức
+    const optimisticComment = {
+      // Tên trường phải khớp với interface Comment (trong socialApi.tsx)
+      id: Date.now().toString(), // ID tạm thời, sẽ được thay thế sau
+      userId: currentUser.id,
+      postId: selectedPostId,
+      content: text.trim(),
+      parentId: parentId,
+      commentedAt: new Date().toISOString(), // Thời gian hiện tại
       likeCount: 0,
-      commentCount: 0,
-      shareCount: 0,
-      isOnline: true,
-      comments: [],
+      isLiked: false,
+      // Đối tượng User được lồng (phải viết hoa U theo Alias Sequelize)
+      User: {
+        id: currentUser.id,
+        username: currentUser.username,
+        avatarUrl: currentUser.avatarUrl,
+        // Thêm các trường User khác nếu cần
+      },
+      // Đối tượng Replies (phải viết hoa R theo Alias Sequelize)
+      Replies: [],
+      // Tùy chỉnh hiển thị quote nếu đang trong chế độ quote
+      quote: quote
+        ? { username: quote.User?.username, content: quote.content }
+        : undefined,
     };
-    setPosts([newPost, ...posts]);
-    setNewPostText("");
-    setNewPostMusicLink("");
-  };
 
-  // HÀM CẬP NHẬT POSTS: Được gọi từ PostItem
-  const updatePost = (id, type, value) => {
+    // 1. CẬP NHẬT UI TỨC THỜI (OPTIMISTIC UPDATE)
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
-        if (post.id === id) {
-          if (type === "like") {
-            // Logic cập nhật like count trong state gốc
-            return { ...post, likeCount: post.likeCount + value };
-          } else if (type === "comment") {
-            return { ...post, commentCount: post.commentCount + value };
-          } else if (type === "share") {
-            return { ...post, shareCount: post.shareCount + value };
-          }
-        }
-        return post;
-      })
-    );
-  };
+        if (post.id === selectedPostId) {
 
-  const openCommentModal = (postId) => {
-    setSelectedPostId(postId);
-    setCommentModalVisible(true);
-  };
+          let updatedComments = [...(post.comments || [])];
 
-  const closeCommentModal = () => {
-    setCommentModalVisible(false);
-    setSelectedPostId(null);
-  };
-
-  const addComment = (text) => {
-    if (selectedPostId) {
-      const newComment = {
-        id: Date.now().toString(),
-        username: "duytuan.24",
-        text,
-        time: "Vừa xong",
-        replies: [],
-        likeCount: 0,
-        isLiked: false,
-      };
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === selectedPostId
-            ? { ...post, comments: [...post.comments, newComment] }
-            : post
-        )
-      );
-    }
-  };
-
-  const updateCommentLike = (postId, commentId, isReply, replyId) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: post.comments.map((comment) => {
-              if (comment.id === commentId) {
-                if (isReply) {
-                  return {
-                    ...comment,
-                    replies: comment.replies.map((reply) => {
-                      if (reply.id === replyId) {
-                        const newLiked = !reply.isLiked;
-                        return {
-                          ...reply,
-                          isLiked: newLiked,
-                          likeCount: reply.likeCount + (newLiked ? 1 : -1),
-                        };
-                      }
-                      return reply;
-                    }),
-                  };
-                } else {
-                  const newLiked = !comment.isLiked;
-                  return {
-                    ...comment,
-                    isLiked: newLiked,
-                    likeCount: comment.likeCount + (newLiked ? 1 : -1),
-                  };
-                }
+          if (parentId) {
+            // LÀ TRẢ LỜI (Reply): Tìm comment cha và thêm vào Replies
+            updatedComments = updatedComments.map(comment => {
+              if (comment.id === parentId) {
+                return {
+                  ...comment,
+                  // Thêm vào mảng Replies (VIẾT HOA R)
+                  Replies: [...(comment.Replies || []), optimisticComment]
+                };
               }
               return comment;
-            }),
+            });
+          } else {
+            // LÀ BÌNH LUẬN CHA: Thêm vào đầu danh sách comments
+            updatedComments = [optimisticComment, ...updatedComments];
+          }
+
+          return {
+            ...post,
+            commentCount: (post.commentCount || 0) + 1,
+            comments: updatedComments,
           };
         }
         return post;
       })
     );
+
+    // Dọn dẹp Input ngay lập tức
+    setNewComment("");
+    cancelReplyOrQuote();
+
+    try {
+      // 2. GỌI API TẠO COMMENT
+      const apiComment = await createNewComment(selectedPostId, text.trim(), parentId);
+
+      // 3. CẬP NHẬT LẠI ID CHÍNH THỨC VÀ DỮ LIỆU TỪ SERVER
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post.id === selectedPostId) {
+            let updatedComments = [...(post.comments || [])];
+
+            // Tìm và thay thế comment tạm thời bằng comment chính thức
+            const updateCommentArray = (arr) => arr.map(c => {
+              if (c.id === optimisticComment.id) {
+                return { ...apiComment, User: c.User, Replies: apiComment.Replies || c.Replies };
+              }
+              // Nếu là comment cha, tìm trong Replies của nó
+              if (c.Replies) {
+                return { ...c, Replies: updateCommentArray(c.Replies) };
+              }
+              return c;
+            });
+
+            return {
+              ...post,
+              comments: updateCommentArray(updatedComments),
+            };
+          }
+          return post;
+        })
+      );
+
+    } catch (error) {
+      console.error('Lỗi khi gửi bình luận:', error);
+      Alert.alert('Lỗi', 'Gửi bình luận thất bại. Đã hoàn tác.');
+
+      // 4. ROLLBACK nếu API thất bại (Xóa comment tạm thời khỏi UI)
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post.id === selectedPostId) {
+
+            const rollbackCommentArray = (arr) => arr.filter(c => c.id !== optimisticComment.id).map(c => {
+              if (c.Replies) {
+                return { ...c, Replies: rollbackCommentArray(c.Replies) };
+              }
+              return c;
+            });
+
+            return {
+              ...post,
+              commentCount: (post.commentCount || 0) - 1,
+              comments: rollbackCommentArray(post.comments || []),
+            };
+          }
+          return post;
+        })
+      );
+    }
+  };
+
+  const updateCommentLike = async (postId, commentId, isReply, replyId) => {
+    // ⚠️ Tạm thời bỏ qua API cho Reply, chỉ xử lý Comment Cha
+    if (isReply) {
+      Alert.alert("Thông báo", "Chức năng thích trả lời (Reply) chưa được triển khai API.");
+      return;
+    }
+
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const comment = post.comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    const prevIsLiked = comment.isLiked;
+    const prevLikeCount = comment.likeCount;
+    const newIsLikedOptimistic = !prevIsLiked;
+    const likeChangeOptimistic = newIsLikedOptimistic ? 1 : -1;
+
+    // 1. Optimistic Update: Cập nhật UI tạm thời
+    setPosts((prevPosts) =>
+      prevPosts.map((p) => {
+        if (p.id === postId) {
+          return {
+            ...p,
+            comments: p.comments.map((c) => {
+              if (c.id === commentId) {
+                return {
+                  ...c,
+                  isLiked: newIsLikedOptimistic,
+                  likeCount: prevLikeCount + likeChangeOptimistic,
+                };
+              }
+              return c;
+            }),
+          };
+        }
+        return p;
+      })
+    );
+
+    try {
+      // 2. GỌI API MỚI
+      const result = await toggleCommentLike(commentId);
+
+      // 3. Cập nhật trạng thái chính thức từ Server
+      setPosts((prevPosts) =>
+        prevPosts.map((p) => {
+          if (p.id === postId) {
+            return {
+              ...p,
+              comments: p.comments.map((c) => {
+                if (c.id === commentId) {
+                  return {
+                    ...c,
+                    isLiked: result.isLiked, // Dùng kết quả từ API
+                    likeCount: result.likeCount, // Dùng kết quả từ API
+                  };
+                }
+                return c;
+              }),
+            };
+          }
+          return p;
+        })
+      );
+    } catch (error) {
+      console.error('Lỗi khi thích/bỏ thích bình luận:', error);
+      Alert.alert('Lỗi', 'Không thể cập nhật trạng thái thích bình luận.');
+
+      // 4. Rollback nếu thất bại
+      setPosts((prevPosts) =>
+        prevPosts.map((p) => {
+          if (p.id === postId) {
+            return {
+              ...p,
+              comments: p.comments.map((c) => {
+                if (c.id === commentId) {
+                  return {
+                    ...c,
+                    isLiked: prevIsLiked,
+                    likeCount: prevLikeCount,
+                  };
+                }
+                return c;
+              }),
+            };
+          }
+          return p;
+        })
+      );
+    }
   };
 
   const handleShare = () => {
@@ -694,59 +488,138 @@ const SocialScreen = () => {
   return (
     <View className="flex-1 bg-gray-100 dark:bg-[#0E0C1F] px-3 pt-10">
       {/* Input đăng bài mới */}
-      <View className="flex-row items-center mb-2">
+      <View className="flex-row items-start mb-2 border-b pb-4 border-gray-300 dark:border-gray-700">
+        {/* Ảnh đại diện User */}
         <Image
-          source={{ uri: "https://randomuser.me/api/portraits/men/3.jpg" }}
+          source={{ uri: user?.avatarUrl }}
           className="w-10 h-10 rounded-full mr-2"
         />
-        <TextInput
-          placeholder="Có gì mới?"
-          placeholderTextColor={colorScheme === "dark" ? "#aaa" : "#777"}
-          value={newPostText}
-          onChangeText={setNewPostText}
-          className={`flex-1 border rounded-full px-4 py-2 text-base ${
-            colorScheme === "dark"
-              ? "border-gray-600 bg-[#171431] text-white"
-              : "border-gray-700 bg-white text-black"
-          }`}
-          multiline
-        />
-        <TouchableOpacity
-          onPress={addPost}
-          className="ml-2 bg-green-600 px-4 py-2 rounded-full"
-        >
-          <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>Đăng</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Icons thêm ảnh, GIF, văn bản, ... */}
-      <View className="flex-row justify-start mb-3 pl-12">
-        <TouchableOpacity className="mr-4">
-          <Icon name="image" size={24} color={colorScheme === 'dark' ? '#a1a1aa' : '#000000'} />
-        </TouchableOpacity>
-        <TouchableOpacity className="mr-4">
-          <Icon name="file-text" size={24} color={colorScheme === 'dark' ? '#a1a1aa' : '#000000'} />
-        </TouchableOpacity>
-        <TouchableOpacity className="mr-4">
-          <Icon name="more-horizontal" size={24} color={colorScheme === 'dark' ? '#a1a1aa' : '#000000'} />
-        </TouchableOpacity>
+        <View className="flex-1 mb-5">
+          {/* 1. INPUT NỘI DUNG */}
+          <TextInput
+            placeholder="Bạn đang nghĩ gì?"
+            placeholderTextColor={colorScheme === "dark" ? "#aaa" : "#777"}
+            value={newPostText}
+            onChangeText={setNewPostText}
+            className={`flex-1 border-b px-2 pb-2 text-base ${colorScheme === "dark"
+              ? "border-gray-600 bg-transparent text-white"
+              : "border-gray-300 bg-transparent text-black"
+              }`}
+            multiline
+            style={{ minHeight: 40 }}
+          />
+
+          {/* 2. HIỂN THỊ MEDIA ĐÃ CHỌN (Sử dụng ScrollView cho Gallery ngang) */}
+          {postMediaUrls.length > 0 ? (
+            <View className="mt-3">
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-2">
+                {postMediaUrls.map((url, index) => (
+                  <View key={index} className="mr-3 relative">
+                    <Image
+                      source={{ uri: url }}
+                      style={{ width: 100, height: 100, borderRadius: 8, resizeMode: 'cover' }}
+                    />
+                    {/* Nút Xóa (Hủy chọn từng ảnh) */}
+                    <TouchableOpacity
+                      onPress={() => setPostMediaUrls(postMediaUrls.filter((_, i) => i !== index))}
+                      className="absolute top-[-8] right-[-8] p-1 rounded-full bg-red-500 border-2 border-white"
+                    >
+                      <Icon name="x" size={12} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+              <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Đã chọn: {postMediaUrls.length} ảnh/video.
+              </Text>
+            </View>
+          ) : null}
+
+          {/* 3. HIỂN THỊ SONG ID ĐÃ CHỌN */}
+          {selectedSongId ? (
+            <View className="mt-2 p-2 bg-purple-100 dark:bg-purple-900 rounded flex-row items-center">
+              <Icon name="headphones" size={16} color="#8b5cf6" />
+              <Text className="ml-2 text-purple-700 dark:text-purple-300 flex-1" numberOfLines={1}>
+                Đính kèm Bài hát ID: {selectedSongId}
+              </Text>
+              <TouchableOpacity onPress={() => setSelectedSongId(null)}>
+                <Icon name="x" size={16} color="#ef4444" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+
+          <View className="flex-row justify-between items-center mt-2">
+            {/* NÚT CHỌN MEDIA (CALLS handleSelectMedia) */}
+            <TouchableOpacity onPress={handleSelectMedia} disabled={isUploading} className="flex-row items-center p-2 rounded">
+              {isUploading ? (
+                <ActivityIndicator size="small" color="#3b82f6" />
+              ) : (
+                <>
+                  <Icon name="image" size={20} color="#3b82f6" />
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* NÚT ĐÍNH KÈM NHẠC (CALLS logic để gán/hủy selectedSongId) */}
+            <TouchableOpacity
+              // Giả định: Khi bấm, gán/hủy một ID mẫu (thay thế bằng Modal chọn nhạc)
+              onPress={() => setSelectedSongId(selectedSongId ? null : 42)}
+              className="flex-row items-center"
+            >
+              <Icon name="headphones" size={20} color="#8b5cf6" />
+              <Text className="ml-2 text-purple-600 dark:text-purple-400">
+                {selectedSongId}
+              </Text>
+            </TouchableOpacity>
+
+            {/* 4. NÚT ĐĂNG BÀI (CALLS addPost) */}
+            <TouchableOpacity
+              onPress={addPost}
+              // Điều kiện đăng bài: Phải có Text HOẶC Media URL VÀ không đang upload
+              disabled={(!newPostText.trim() && !postMediaUrls) || isUploading}
+              className={`ml-auto px-4 py-2 rounded-full ${(!newPostText.trim() && !postMediaUrls) || isUploading ? "bg-gray-400" : "bg-green-600"
+                }`}
+            >
+              <Text className="font-bold text-white">Đăng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       {/* Danh sách bài đăng */}
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <PostItem
-            {...item}
-            // TRUYỀN HÀM CẬP NHẬT
-            onPostUpdate={(type, value) => updatePost(item.id, type, value)}
-            onCommentPress={() => openCommentModal(item.id)}
-            onSharePress={handleShare}
-          />
-        )}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải bài đăng...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => {
+            // 💡 HÃY THÊM DÒNG LOG NÀY
+            if (!item.userId && !item.User?.id) {
+              console.log('❌ LỖI DỮ LIỆU POST THIẾU USER ID:', item);
+            }
+            // ----------------------------
+
+            return (
+              <PostItem
+                {...item} // ✅ TRUYỀN TẤT CẢ PROPS (Bao gồm fileUrl là chuỗi JSON)
+                postId={item.id} // Thừa, vì id đã có trong {...item}
+                onPostUpdate={(type, value) => updatePost(item.id, type, value)}
+                onCommentPress={() => openCommentModal(item.id)}
+                onSharePress={handleShare}
+                userId={item.userId || item.User?.id} // Đảm bảo userId là số
+                onUserPress={handleUserPress}
+              />
+            )
+          }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       {/* Comment Modal */}
       <CommentModal
@@ -758,368 +631,18 @@ const SocialScreen = () => {
         onAddComment={addComment}
         onCommentLike={updateCommentLike}
         postId={selectedPostId}
+        onUserPress={handleUserPress}
+        // ✅ TRUYỀN PROPS MỚI
+        newComment={newComment}
+        setNewComment={setNewComment}
+        replyTo={replyTo}
+        setReplyTo={setReplyTo} // Truyền setter
+        quote={quote}
+        setQuote={setQuote} // Truyền setter
+
       />
     </View>
   );
 };
 
 export default SocialScreen;
-// mobile/src/SocialScreen.tsx
-
-// import React, { useEffect, useState, useCallback, useMemo } from "react";
-// import {
-//   Alert,
-//   FlatList,
-//   Image,
-//   Keyboard,
-//   KeyboardAvoidingView,
-//   Modal,
-//   Platform,
-//   Text,
-//   TextInput,
-//   TouchableOpacity,
-//   View,
-//   useColorScheme,
-//   ActivityIndicator, // Thêm ActivityIndicator cho trạng thái Loading
-// } from "react-native";
-// import Icon from "react-native-vector-icons/Feather";
-// // Import các hàm API và Interface đã tạo
-// import {
-//   fetchPosts,
-//   createNewPost,
-//   togglePostLike,
-//   fetchCommentsByPostId,
-//   createNewComment,
-//   Post,
-//   Comment,
-// } from "@/services/socialApi"; // Đảm bảo đường dẫn này đúng
-
-// // --- GIAO DIỆN MẪU: Cần đảm bảo PostItem nhận đúng Props mới từ API ---
-// const PostItem = ({
-//   // Dữ liệu từ API
-//   id,
-//   User, // Thông tin người dùng (từ Eager Loading)
-//   content: contentText, // Đổi tên content thành contentText
-//   fileUrl: musicLink, // Đổi tên fileUrl thành musicLink
-//   heartCount: likeCount, // Đổi tên heartCount thành likeCount
-//   shareCount,
-//   uploadedAt: time, // Đổi tên uploadedAt thành time
-//   // Dữ liệu bổ sung
-//   commentCount: initialCommentCount,
-//   onPostUpdate,
-//   onCommentPress,
-//   onSharePress,
-// }) => {
-//   const colorScheme = useColorScheme();
-//   const [isLiked, setIsLiked] = useState(false); // TODO: Lấy trạng thái liked của user hiện tại
-//   const [currentLikeCount, setCurrentLikeCount] = useState(likeCount);
-//   const [currentCommentCount, setCurrentCommentCount] = useState(initialCommentCount);
-
-
-//   // Xử lý nút Tim (Tích hợp API)
-//   const handleLike = async () => {
-//     try {
-//       await togglePostLike(id); // Gọi API like
-//       const newLikedStatus = !isLiked;
-//       const likeChange = newLikedStatus ? 1 : -1;
-
-//       setIsLiked(newLikedStatus);
-//       setCurrentLikeCount(prev => prev + likeChange);
-
-//       // Báo cho màn hình cha biết đã cập nhật (có thể không cần nếu UI tự cập nhật)
-//       onPostUpdate("like", likeChange);
-//     } catch (error) {
-//       Alert.alert("Lỗi", "Không thể cập nhật trạng thái thích.");
-//     }
-//   };
-
-//   // Hàm mở comment modal
-//   const handleCommentPress = () => {
-//     onCommentPress(); // Gọi hàm từ SocialScreen để mở modal
-//   };
-
-//   return (
-//     <View className="bg-white dark:bg-[#171431] p-4 rounded-xl mb-4 shadow-md">
-//       {/* Header (Thông tin User) */}
-//       <View className="flex-row justify-between items-center mb-3">
-//         <View className="flex-row items-center">
-//           <Image
-//             source={{ uri: User.avatarUrl || 'https://default-avatar.com/default.jpg' }}
-//             className="w-10 h-10 rounded-full mr-3"
-//           />
-//           <View>
-//             <Text className={`font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-//               {User.username}
-//             </Text>
-//             <Text className={`text-xs ${colorScheme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-//               {new Date(time).toLocaleTimeString()}
-//             </Text>
-//           </View>
-//         </View>
-//         <Icon name="more-horizontal" size={20} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-//       </View>
-
-//       {/* Content */}
-//       {contentText && (
-//         <Text className={`text-base mb-3 ${colorScheme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
-//           {contentText}
-//         </Text>
-//       )}
-//       {/* TODO: Xử lý hiển thị nhạc/ảnh dựa trên musicLink (fileUrl) */}
-//       {musicLink && (
-//         <View className="mb-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-//           <Text className="text-sm font-semibold text-blue-500">Music Link:</Text>
-//           <Text className="text-xs dark:text-gray-300" numberOfLines={1}>{musicLink}</Text>
-//         </View>
-//       )}
-
-//       {/* Actions (Like, Comment, Share) */}
-//       <View className="flex-row justify-around items-center border-t border-b border-gray-200 dark:border-gray-700 pt-3 mt-2">
-//         {/* Like */}
-//         <TouchableOpacity onPress={handleLike} className="flex-row items-center p-2">
-//           <Icon name="heart" size={20} color={isLiked ? "#ef4444" : (colorScheme === "dark" ? "#9ca3af" : "#000000")} />
-//           <Text className={`ml-1 text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>
-//             {currentLikeCount} Thích
-//           </Text>
-//         </TouchableOpacity>
-
-//         {/* Comment */}
-//         <TouchableOpacity onPress={handleCommentPress} className="flex-row items-center p-2">
-//           <Icon name="message-circle" size={20} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-//           <Text className={`ml-1 text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>
-//             {currentCommentCount} Bình luận
-//           </Text>
-//         </TouchableOpacity>
-
-//         {/* Share */}
-//         <TouchableOpacity onPress={onSharePress} className="flex-row items-center p-2">
-//           <Icon name="share-2" size={20} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-//           <Text className={`ml-1 text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>
-//             {shareCount} Chia sẻ
-//           </Text>
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-// };
-
-// // --- COMMENT MODAL COMPONENT (Đã tích hợp API) ---
-
-// const CommentItem = ({ comment, onReply, onQuote, onLike }) => {
-//   const colorScheme = useColorScheme();
-//   const [isLiked, setIsLiked] = useState(false); // Tạm thời
-//   const [likeCount, setLikeCount] = useState(0); // Tạm thời
-
-//   // Logic để render comment, reply, quote, ...
-//   return (
-//     <View className="mb-3">
-//       {/* Comment cha */}
-//       <View className="flex-row items-center mb-1">
-//         <Image
-//           source={{ uri: comment.User.avatarUrl || 'https://default-avatar.com/default.jpg' }}
-//           className="w-6 h-6 rounded-full mr-2"
-//         />
-//         <Text className={`font-bold text-sm ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-//           {comment.User.username}
-//         </Text>
-//         <Text className={`text-xs ml-2 ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>
-//           {new Date(comment.commentedAt).toLocaleTimeString()}
-//         </Text>
-//       </View>
-//       <Text className={`text-sm ml-8 ${colorScheme === "dark" ? "text-gray-200" : "text-gray-800"}`}>
-//         {comment.content}
-//       </Text>
-//       {/* Nút trả lời và like */}
-//       <View className="flex-row ml-8 mt-1">
-//         <TouchableOpacity
-//           onPress={() => onLike(comment.id)} // TODO: GỌI API LIKE COMMENT
-//           className="flex-row items-center space-x-1"
-//         >
-//           <Icon
-//             name={isLiked ? "heart" : "heart"}
-//             size={16}
-//             color={isLiked ? "#ef4444" : (colorScheme === "dark" ? "#9ca3af" : "#000000")}
-//           />
-//           <Text
-//             className={`text-xs ${isLiked ? "text-red-400" : (colorScheme === "dark" ? "text-gray-200" : "text-gray-800")}`}
-//           >
-//             {likeCount}
-//           </Text>
-//         </TouchableOpacity>
-//         <TouchableOpacity
-//           onPress={() => onReply(comment)}
-//           className="flex-row items-center px-2"
-//         >
-//           <Icon name="corner-up-left" size={16} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-//           <Text className={`text-xs ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}>Trả lời</Text>
-//         </TouchableOpacity>
-//       </View>
-//       {/* TODO: Logic hiển thị Replies nếu có */}
-//     </View>
-//   );
-// }
-
-// const CommentModal = ({
-//   visible,
-//   onClose,
-//   onAddComment,
-//   postId,
-// }) => {
-//   const colorScheme = useColorScheme();
-//   const [newComment, setNewComment] = useState("");
-//   const [replyTo, setReplyTo] = useState<Comment | null>(null);
-//   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-//   const [comments, setComments] = useState<Comment[]>([]);
-//   const [isLoadingComments, setIsLoadingComments] = useState(false);
-
-//   // HÀM FETCH BÌNH LUẬN
-//   const loadComments = useCallback(async () => {
-//     if (!postId) return;
-//     setIsLoadingComments(true);
-//     try {
-//       const data = await fetchCommentsByPostId(postId);
-//       setComments(data);
-//     } catch (error) {
-//       setComments([]);
-//     } finally {
-//       setIsLoadingComments(false);
-//     }
-//   }, [postId]);
-
-//   useEffect(() => {
-//     if (visible && postId) {
-//       loadComments();
-//     }
-//   }, [visible, postId, loadComments]);
-
-
-//   // HÀM THÊM COMMENT MỚI (GỌI API)
-//   const handleAddComment = async () => {
-//     if (newComment.trim() && postId) {
-//       try {
-//         const parentId = replyTo ? replyTo.id : null;
-
-//         // GỌI API TẠO COMMENT
-//         const createdComment = await createNewComment(postId, newComment.trim(), parentId);
-
-//         // Cập nhật state UI
-//         setComments((prev) => [...prev, createdComment]);
-
-//         // Cập nhật số lượng comment trong Post (gọi callback từ SocialScreen)
-//         if (onAddComment) {
-//           onAddComment(createdComment);
-//         }
-
-//         setNewComment("");
-//         setReplyTo(null);
-//         Keyboard.dismiss();
-
-//       } catch (error) {
-//         // Lỗi đã được Alert bên trong socialApi.ts
-//       }
-//     }
-//   };
-
-//   // Xử lý reply
-//   const handleReply = (comment: Comment) => {
-//     setReplyTo(comment);
-//   };
-//   const cancelReply = () => {
-//     setReplyTo(null);
-//   };
-
-//   // TODO: Xử lý Like Comment
-//   const handleLikeComment = (commentId: string) => {
-//     Alert.alert("Tính năng", `Thích bình luận ${commentId}. Cần triển khai API.`);
-//   }
-
-//   // ... (Giữ nguyên Keyboard listeners)
-//   useEffect(() => {
-//     const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
-//     const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
-//     return () => {
-//       keyboardDidShowListener.remove();
-//       keyboardDidHideListener.remove();
-//     };
-//   }, []);
-//   // ... (Kết thúc giữ nguyên)
-
-
-//   return (
-//     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-//       <KeyboardAvoidingView
-//         style={{
-//           flex: 1,
-//           justifyContent: "flex-end",
-//           backgroundColor: "rgba(0,0,0,0.5)",
-//         }}
-//         behavior={Platform.OS === "ios" ? "padding" : "height"}
-//         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-//       >
-//         <View
-//           className={`rounded-t-xl p-4 ${isKeyboardVisible ? "h-1/2" : "h-3/4"} ${colorScheme === "dark" ? "bg-[#171431]" : "bg-white"}`}
-//         >
-//           {/* Header */}
-//           <View className="flex-row justify-between items-center mb-4">
-//             <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>Bình luận</Text>
-//             <TouchableOpacity onPress={onClose}>
-//               <Icon name="x" size={24} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-//             </TouchableOpacity>
-//           </View>
-
-//           {/* LIST COMMENTS */}
-//           {isLoadingComments ? (
-//             <ActivityIndicator size="large" color={colorScheme === "dark" ? "#fff" : "#000"} className="mt-10" />
-//           ) : (
-//             <FlatList
-//               data={comments}
-//               keyExtractor={(item) => item.id.toString()}
-//               renderItem={({ item }) => (
-//                 <CommentItem
-//                   comment={item}
-//                   onReply={handleReply}
-//                   onQuote={() => { }}
-//                   onLike={handleLikeComment}
-//                 />
-//               )}
-//               showsVerticalScrollIndicator={false}
-//             />
-//           )}
-
-//           {/* INPUT AREA */}
-//           {replyTo && (
-//             <View className={`rounded p-2 mb-2 flex-row justify-between items-center ${colorScheme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}>
-//               <Text
-//                 className={`italic text-sm flex-1 ${colorScheme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-//                 numberOfLines={1}
-//               >
-//                 {`Trả lời: ${replyTo.content}`}
-//               </Text>
-//               <TouchableOpacity onPress={cancelReply}>
-//                 <Icon name="x" size={20} color="#ef4444" />
-//               </TouchableOpacity>
-//             </View>
-//           )}
-//           <View className={`flex-row items-center py-2 px-2 border-t ${colorScheme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
-//             <TextInput
-//               placeholder="Viết bình luận..."
-//               placeholderTextColor={colorScheme === "dark" ? "#aaa" : "#777"}
-//               value={newComment}
-//               onChangeText={setNewComment}
-//               className={`flex-1 border rounded-full px-4 py-2 text-base ${colorScheme === "dark" ? "border-gray-600 bg-[#0E0C1F] text-white" : "border-gray-700 bg-white text-black"}`}
-//               multiline
-//             />
-//             <TouchableOpacity
-//               onPress={handleAddComment}
-//               disabled={newComment.trim() === ""}
-//               className={`ml-2 px-4 py-2 rounded-full ${newComment.trim() ? "bg-green-600" : "bg-gray-500"}`}
-//             >
-//               <Text className="text-white font-bold">Gửi</Text>
-//             </TouchableOpacity>
-//           </View>
-//         </View>
-//       </KeyboardAvoidingView>
-//     </Modal>
-//   );
-// };
-
