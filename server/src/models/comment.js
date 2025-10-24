@@ -1,6 +1,7 @@
 // models/comment.js
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
+    // const { sequelize } = require('../configs/database');
 
 
 const Comment = sequelize.define(
@@ -41,7 +42,9 @@ const Comment = sequelize.define(
             allowNull: false,
             field: 'commented_at',
             defaultValue: DataTypes.NOW
-        }
+        },
+        // likeCount: {       type: DataTypes.INTEGER,       allowNull: false,       defaultValue: 0,       field: 'like_count' // Tên cột trong DB
+        //              }
     }, {
         tableName: 'comments',
         timestamps: true

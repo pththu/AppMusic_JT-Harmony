@@ -19,7 +19,9 @@ export default function SongItem({ title, subtitle, image, onPress, onOptionsPre
         <Text className="text-gray-400 dark:text-gray-300 text-xs">{subtitle}</Text>
       </View>
       <TouchableOpacity onPress={onOptionsPress}>
-        <Icon name="ellipsis-vertical" size={20} color="#888" />
+        <Text>
+          <Icon name="ellipsis-vertical" size={20} color="#888" />
+        </Text>
       </TouchableOpacity>
     </TouchableOpacity>
   );

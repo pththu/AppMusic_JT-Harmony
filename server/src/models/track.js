@@ -79,4 +79,4 @@ const Track = sequelize.define(
   }
 )
 
-module.exports = Track
+module.exports = Track;

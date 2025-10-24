@@ -1,3 +1,5 @@
+// components/items/AlbumItem.tsx
+
 import React from 'react';
 import { Text, TouchableOpacity, Image, useColorScheme } from 'react-native';
 

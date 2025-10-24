@@ -5,6 +5,7 @@ import CustomTextInput from "@/components/custom/CustomTextInput";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { ChangePassword } from "@/routes/ApiRouter";
 import { router } from "expo-router";
+// import { useTheme } from "@/components/ThemeContext"; // Cần import nếu bạn sử dụng hook này
 
 export default function ChangePasswordScreen() {
   const { error, success } = useCustomAlert();
@@ -29,6 +30,12 @@ export default function ChangePasswordScreen() {
       setShowMessage(true);
       return;
     }
+
+    if (newPassword !== confirmPassword) {
+      setMessage("Xác nhận mật khẩu không khớp");
+      setShowMessage(true);
+      return;
+    }
     try {
       setLoading(true);
       const response = await ChangePassword({ currentPassword, newPassword });
@@ -43,14 +50,15 @@ export default function ChangePasswordScreen() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <SafeAreaView className={`flex-1 px-5 ${colorScheme === "dark" ? "bg-[#1A1833]" : "bg-white"}`}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F] p-8">
       <View
-        className="w-full p-8 rounded-2xl"
+        className="w-full p-8 rounded-2xl bg-white dark:bg-[#222222]" // Cập nhật nền form
         style={{
-          backgroundColor: colorScheme === "dark" ? "#222222" : "white",
+          // Giữ hiệu ứng shadow, có thể thay đổi màu shadow nếu cần,
+          // nhưng hiện tại để style inline (không hỗ trợ dark:)
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.2,
@@ -58,7 +66,8 @@ export default function ChangePasswordScreen() {
           elevation: 10,
         }}
       >
-        <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-3xl font-bold mb-6 text-center`}>
+        {/* Cập nhật màu chữ tiêu đề: Đen ở Light Mode, Trắng ở Dark Mode */}
+        <Text className="text-black dark:text-white text-3xl font-bold mb-6 text-center">
           Đổi mật khẩu
         </Text>
 
@@ -93,9 +102,11 @@ export default function ChangePasswordScreen() {
         />
 
         {showMessage && (
+
           <Text className="text-red-500 text-sm mb-2">*{message}</Text>
         )}
 
+        {/* Nút Xác nhận: Giữ nguyên màu nền xanh lá và chữ trắng */}
         <TouchableOpacity
           className="bg-[#089b0d] rounded-full py-4 items-center mt-6"
           activeOpacity={0.7}

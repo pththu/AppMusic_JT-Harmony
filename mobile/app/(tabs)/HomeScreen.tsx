@@ -19,18 +19,18 @@ import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from "@/store/authStore";
 import { playlistData, albumData, trackData, artistData } from "@/constants/data";
 import ArtistItem from "@/components/artists/ArtistItem";
-import YoutubePlayer from "react-native-youtube-iframe";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 
-// Dữ liệu mockup đã được thêm image URL
+import { useTheme } from "@/components/ThemeContext";
+
 const tabs = [
   { id: "forYou", label: "Dành cho bạn" },
   { id: "trending", label: "Thịnh hành" }
 ];
 
 export default function HomeScreen() {
-
   const { navigate } = useNavigate();
+  const { theme } = useTheme();
   const { success, error } = useCustomAlert();
   const user = useAuthStore((state) => state.user);
   const colorScheme = useColorScheme();
@@ -116,7 +116,7 @@ export default function HomeScreen() {
   const tabUnderlineLeft = tabsLayouted
     ? animation.interpolate({
       inputRange: tabs.map((_, i) => i),
-      outputRange: tabPositions,
+      outputRange: tabPositions.map((pos) => pos - 20),
     })
     : 0;
 
@@ -127,30 +127,23 @@ export default function HomeScreen() {
     })
     : 0;
 
-  const containerBackgroundColor = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [colorScheme === "dark" ? "#000" : "#FEFEFE", colorScheme === "dark" ? "#000" : "#FEFEFE"],
-  });
+  const iconColor = theme === 'light' ? '#000' : '#fff';
 
   return (
-    <Animated.ScrollView
-      className="flex-1 bg-[#0E0C1F]"
-      style={{ backgroundColor: containerBackgroundColor }}
-    >
-      {/* Header */}
+    <Animated.ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F]">
       <View className="flex-row justify-between items-center mx-5 mt-10 mb-2">
         <Animated.Text
-          className={`${colorScheme === "dark" ? "text-white" : "text-black"} text-2xl font-bold`}
+          className="text-black dark:text-white text-2xl font-bold"
           style={{
             opacity: greetingOpacity,
             transform: [{ translateY: greetingTranslateY }],
           }}
         >
-          Hi, {user?.fullName || user?.username} 👋
+          Hi, {String(user?.fullName || user?.username)} 👋
         </Animated.Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">
-            <Icon name="notifications-outline" size={28} color={colorScheme === "dark" ? "#888" : "#000"} />
+            <Icon name="notifications-outline" size={28} color={iconColor} />
             {hasNotification && (
               <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
             )}
@@ -164,7 +157,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Tabs and Underline */}
       <View className="relative mb-5">
         <ScrollView
           horizontal
@@ -180,8 +172,8 @@ export default function HomeScreen() {
             >
               <Text
                 className={`text-xl font-bold ${activeTab === tab.id
-                  ? `${colorScheme === "dark" ? "text-white" : "text-black"} font-bold`
-                  : `${colorScheme === "dark" ? "text-gray-400" : "text-gray-500"} font-medium`
+                  ? "text-black dark:text-white font-bold"
+                  : "text-gray-500 dark:text-gray-500 font-normal"
                   }`}
               >
                 {tab.label}
@@ -191,7 +183,7 @@ export default function HomeScreen() {
         </ScrollView>
         {tabsLayouted && (
           <Animated.View
-            className="h-0.5 bg-white absolute -bottom-2"
+            className="h-0.5 bg-black dark:bg-white absolute -bottom-2"
             style={{
               width: tabUnderlineWidth,
               transform: [{ translateX: tabUnderlineLeft }],
@@ -200,7 +192,6 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Content */}
       {activeTab === "forYou" && (
         <ScrollView className="px-5">
           {/* Featuring Today Card */}
@@ -346,9 +337,8 @@ export default function HomeScreen() {
               )}
             />
           </View>
-
         </ScrollView>
       )}
-    </Animated.ScrollView >
+    </Animated.ScrollView>
   );
 }

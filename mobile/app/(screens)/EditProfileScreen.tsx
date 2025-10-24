@@ -1,6 +1,6 @@
 import CustomTextInput from "@/components/custom/CustomTextInput";
 import GenderSelector from "@/components/GenderSelector";
-import dayjs from "dayjs"; // Import dayjs
+import dayjs from "dayjs";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View, useColorScheme } from "react-native";
@@ -9,11 +9,12 @@ import Icon from "react-native-vector-icons/Ionicons";
 import useAuthStore from "@/store/authStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { UpdateProfile } from "@/routes/ApiRouter";
+import { useTheme } from "@/components/ThemeContext"; // Import useTheme
 
 export default function EditProfileScreen() {
+  const { theme } = useTheme(); // Lấy theme hiện tại
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
-  const colorScheme = useColorScheme();
   const { error, success } = useCustomAlert();
   const [username, setUsername] = useState(user?.username || "");
   const [fullName, setFullName] = useState(user?.fullName || "");
@@ -24,6 +25,8 @@ export default function EditProfileScreen() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isChange, setIsChange] = useState(false);
   const [loading, setLoading] = useState(false);
+  const colorScheme = useColorScheme();
+
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -58,13 +61,9 @@ export default function EditProfileScreen() {
     } finally {
       setLoading(false);
     }
-    success("Cập nhật thành công", "Thông tin cá nhân đã được cập nhật");
   };
 
-  // Cập nhật hàm xử lý onChangeDate
   const onChangeDate = (params: { date: DateType }) => {
-    // Thư viện mới trả về ngày dưới dạng { date: DateType }
-    // Chúng ta chuyển nó về đối tượng Date để lưu vào state.
     if (params && params.date) {
       const selectedDate = dayjs(params.date).toDate();
       setDob(selectedDate);
@@ -85,24 +84,39 @@ export default function EditProfileScreen() {
       const hasChanged =
         username !== user.username ||
         fullName !== user.fullName ||
-        (dob ? dayjs(dob).toDate().toString() : "") !== (user.dob ? dayjs(user.dob).toDate().toString() : "") ||
+        (dob ? dayjs(dob).startOf('day').toISOString() : "") !== (user.dob ? dayjs(user.dob).startOf('day').toISOString() : "") || // So sánh ngày chính xác hơn
         gender !== (user.gender === true ? "Male" : "Female") ||
         bio !== user.bio
       setIsChange(hasChanged);
     }
-  }, [username, fullName, dob, gender, bio]);
+  }, [username, fullName, dob, gender, bio, user]);
+
+  // Màu Icon mũi tên dựa trên theme
+  const backIconColor = theme === 'dark' ? 'white' : 'black';
+  // Màu nền cho DatePicker container
+  const datePickerContainerBg = theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200';
+  // Màu chữ cho label ngày sinh
+  const labelColor = 'text-gray-600 dark:text-gray-300';
+  // Màu nền cho input ngày sinh
+  const dateInputBg = 'bg-gray-200 dark:bg-gray-800';
+  // Màu chữ cho input ngày sinh
+  const dateInputText = 'text-black dark:text-white';
+
 
   return (
-    <ScrollView className={`flex-1 p-4 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
+    <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
       <View className="flex-row items-center mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Icon name="arrow-back" size={24} color={`${colorScheme === "dark" ? "white" : "#0E0C1F"}`} />
+          {/* Cập nhật màu icon */}
+          <Icon name="arrow-back" size={24} color={backIconColor} />
         </TouchableOpacity>
-        <Text className={`text-2xl font-bold ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"}`}>
+        {/* Cập nhật màu chữ tiêu đề */}
+        <Text className="text-black dark:text-white text-2xl font-extrabold text-center">
           Thông tin người dùng
         </Text>
       </View>
 
+      {/* CustomTextInput (Giả định CustomTextInput đã hỗ trợ Dark Mode) */}
       <CustomTextInput
         placeholder="Username"
         value={username}
@@ -119,65 +133,57 @@ export default function EditProfileScreen() {
         iconName="badge"
       />
 
-      <Text className={`mb-1 ${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Ngày sinh</Text>
+      {/* Ngày sinh Input */}
+      <Text className={labelColor}>Ngày sinh</Text>
       <TouchableOpacity
-        className={`rounded-md p-3 mb-4 ${colorScheme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}
+        className={`${dateInputBg} rounded-md p-3 mb-4`} // Cập nhật màu nền
         onPress={() => setShowDatePicker(true)}
       >
-        <Text className={`${colorScheme === "dark" ? "text-white" : "text-gray-900"}`}>
+        <Text className={dateInputText}> {/* Cập nhật màu chữ */}
           {dob ? formatDate(dob) : "Chọn ngày"}
         </Text>
       </TouchableOpacity>
       {!!errors.dob && <Text className="text-red-500 mb-2">{errors.dob}</Text>}
-      {showDatePicker && (
-        <View className={`rounded-lg p-2 ${colorScheme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}>
-          <DateTimePicker
-            mode="single"
-            date={dob ? dayjs(dob) : dayjs()}
-            onChange={onChangeDate}
-            maxDate={new Date()}
-            style={{
-              backgroundColor: `${colorScheme === "dark" ? "#3A3A3A" : "#e5e7eb"}`,
-              borderRadius: 10,
-              padding: 10,
-              marginTop: 10,
-            }}
-            styles={{
-              day_label: { color: `${colorScheme === "dark" ? "white" : "#0E0C1F"}` },
-              day: { color: `${colorScheme === "dark" ? "white" : "#0E0C1F"}` },
-              disabled_label: { color: "gray" },
-              selected_label: {
-                color: "white",
-                fontWeight: "bold",
-                backgroundColor: "#089b0d",
+
+      {/* DatePicker */}
+      {
+        showDatePicker && (
+          <View className={`${datePickerContainerBg} rounded-lg p-2 mb-4`}>
+            <DateTimePicker
+              mode="single"
+              date={dob ? dayjs(dob) : dayjs()}
+              onChange={onChangeDate}
+              maxDate={new Date()}
+              // Cập nhật style và styles để tương thích với Light/Dark Mode
+              style={{
+                backgroundColor: theme === 'dark' ? "#3A3A3A" : "#FFFFFF", // Màu nền DatePicker
+                borderRadius: 10,
                 padding: 10,
-                borderRadius: 50,
-              },
-              today_label: {
-                color: "#dff519",
-                fontWeight: "bold"
-              },
-              month_selector_label: { color: `${colorScheme === "dark" ? "white" : "#0E0C1F"}` },
-              year_selector_label: { color: `${colorScheme === "dark" ? "white" : "#0E0C1F"}` },
-              weekday_label: { color: `${colorScheme === "dark" ? "white" : "#0E0C1F"}` }
-            }}
-          />
-        </View>
-      )}
-
-      <GenderSelector selectedGender={gender} onSelectGender={setGender} />
-      {errors.gender && (
-        <Text className="text-red-500 mb-2">{errors.gender}</Text>
-      )}
-
-      <CustomTextInput
-        placeholder="Bio"
-        value={bio}
-        onChangeText={setBio}
-        iconName="description"
-        multiline
-        numberOfLines={3}
-      />
+                marginTop: 10,
+              }}
+              styles={{
+                day_label: { color: theme === 'dark' ? "white" : "black" },
+                day: { color: theme === 'dark' ? "white" : "black" },
+                disabled_label: { color: "gray" },
+                selected_label: {
+                  color: "white",
+                  fontWeight: "bold",
+                  backgroundColor: "#089b0d", // Màu xanh lá cố định
+                  padding: 10,
+                  borderRadius: 50,
+                },
+                today_label: {
+                  color: "#dff519", // Màu vàng neon cố định
+                  fontWeight: "bold"
+                },
+                month_selector_label: { color: theme === 'dark' ? "white" : "black" },
+                year_selector_label: { color: theme === 'dark' ? "white" : "black" },
+                weekday_label: { color: theme === 'dark' ? "white" : "black" }
+              }}
+            />
+          </View>
+        )
+      }
 
       <TouchableOpacity
         // className="bg-[#089b0d] rounded-full py-4 items-center"
