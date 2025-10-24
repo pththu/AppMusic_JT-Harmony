@@ -37,6 +37,14 @@ export default ({ config }) => ({
             {
                 "microphonePermission": "Allow to access your microphone."
             }
+        ],
+        [
+            "expo-build-properties",
+            {
+                "android": {
+                    "newArchEnabled": false
+                }
+            }
         ]
     ]
 });
