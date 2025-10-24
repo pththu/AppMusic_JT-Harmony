@@ -1,4 +1,5 @@
 const sequelize = require('../configs/database')
+    // const { sequelize } = require('../configs/database');
 
 // Import all models
 const User = require('./user');
@@ -21,6 +22,11 @@ const StatDailyPlays = require('./stat_daily_plays');
 const SyncStatus = require('./sync_status');
 const Recommendation = require('./recommendation');
 const AlbumSong = require('./album_songs');
+const CommentLike = require('./commentLike');
+const Like = require('./like');
+const Conversation = require('./conversation');
+const ConversationMember = require('./conversationMember');
+const Message = require('./message');
 
 // ================= Associations ================= //
 // // Album ↔ Song (N-N) thông qua AlbumSong
@@ -80,11 +86,21 @@ User.hasMany(DownloadSong, { foreignKey: 'userId' });
 DownloadSong.belongsTo(User, { foreignKey: 'userId' });
 
 // User - Follow
-User.hasMany(Follow, { foreignKey: 'followerId' });
-Follow.belongsTo(User, { foreignKey: 'followerId' });
+// 1. QUAN HỆ: Người theo dõi (Follower)
+// Follow.followerId là ID của người đang theo dõi
+User.hasMany(Follow, { foreignKey: 'followerId', as: 'FollowersFromUser' }); // Thêm alias User.hasMany để tránh xung đột
+Follow.belongsTo(User, {
+    foreignKey: 'followerId',
+    as: 'Follower' // ✅ Cần alias này cho includes trong getUserFollowers
+});
 
-User.hasMany(Follow, { foreignKey: 'userFolloweeId' });
-Follow.belongsTo(User, { foreignKey: 'userFolloweeId' });
+// 2. QUAN HỆ: Người được theo dõi (Followee)
+// Follow.userFolloweeId là ID của người được theo dõi
+User.hasMany(Follow, { foreignKey: 'userFolloweeId', as: 'FollowingByOthers' }); // Thêm alias User.hasMany để tránh xung đột
+Follow.belongsTo(User, {
+    foreignKey: 'userFolloweeId',
+    as: 'Followee' // ✅ Cần alias này cho includes trong getUserFollowing
+});
 
 // User - Notification
 User.hasMany(Notification, { foreignKey: 'userId' });
@@ -97,6 +113,11 @@ Recommendation.belongsTo(User, { foreignKey: 'userId' });
 // User - Favorite song
 User.hasMany(FavoriteSong, { foreignKey: 'userId' });
 FavoriteSong.belongsTo(User, { foreignKey: 'userId' });
+
+// Quan hệ Người dùng - Lượt thích Bình luận (User <-> CommentLike)
+// Điều này cho phép bạn biết một người dùng đã thích những comment nào
+User.hasMany(CommentLike, { foreignKey: 'userId', as: 'CommentLikes' });
+CommentLike.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 
 // Song - Playlist
 Song.belongsToMany(Playlist, {
@@ -158,9 +179,17 @@ Song.hasMany(StatDailyPlays, { foreignKey: 'songId' });
 Post.hasMany(Comment, { foreignKey: 'postId' });
 Comment.belongsTo(Post, { foreignKey: 'postId' });
 
+// Quan hệ Bài đăng - Bài hát (Post <-> Song)
+Post.belongsTo(Song, { foreignKey: 'songId', as: 'Song' });
+Song.hasMany(Post, { foreignKey: 'songId', as: 'Posts' });
+
 // Comment - Comment
-Comment.hasMany(Comment, { foreignKey: 'parentId' });
-Comment.belongsTo(Comment, { foreignKey: 'parentId' });
+Comment.hasMany(Comment, { foreignKey: 'parentId', as: 'Replies' });
+Comment.belongsTo(Comment, { foreignKey: 'parentId', as: 'Parent' });
+
+// Quan hệ Bình luận - Lượt thích (Comment <-> CommentLike)
+Comment.hasMany(CommentLike, { foreignKey: 'commentId', as: 'Likes' });
+CommentLike.belongsTo(Comment, { foreignKey: 'commentId', as: 'Comment' });
 
 // Artist - Follow
 Artist.hasMany(Follow, { foreignKey: 'artistFolloweeId' });
@@ -169,6 +198,45 @@ Follow.belongsTo(Artist, { foreignKey: 'artistFolloweeId' });
 // Album - Artist
 Album.belongsTo(Artist, { foreignKey: 'artistId' });
 Artist.hasMany(Album, { foreignKey: 'artistId' });
+
+// Like - User & Post
+Like.belongsTo(User, { foreignKey: 'userId', as: 'User' });
+Like.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+
+// Conversation - Message (1-N)
+Conversation.hasMany(Message, { foreignKey: 'conversationId', as: 'Messages' });
+Message.belongsTo(Conversation, { foreignKey: 'conversationId', as: 'Conversation' });
+
+// Conversation - Message (Latest Message - 1-1)
+// Dùng để lấy tin nhắn cuối cùng trong danh sách cuộc trò chuyện
+Conversation.belongsTo(Message, { foreignKey: 'lastMessageId', as: 'LastMessage' });
+// Message.hasOne(Conversation, { foreignKey: 'lastMessageId', as: 'ConversationOfLastMessage' }); // Có thể bỏ qua
+
+// Conversation - User (N-N) thông qua ConversationMember
+Conversation.belongsToMany(User, {
+    through: ConversationMember,
+    foreignKey: 'conversationId',
+    otherKey: 'userId',
+    as: 'Participants' // User tham gia cuộc trò chuyện
+});
+User.belongsToMany(Conversation, {
+    through: ConversationMember,
+    foreignKey: 'userId',
+    otherKey: 'conversationId',
+    as: 'Conversations' // Danh sách cuộc trò chuyện của User
+});
+
+// Conversation - Creator (1-1)
+Conversation.belongsTo(User, { foreignKey: 'creatorId', as: 'Creator' });
+
+// Message - Sender (1-1)
+Message.belongsTo(User, { foreignKey: 'senderId', as: 'Sender' });
+
+// Model trung gian ConversationMember - User & Conversation (1-N)
+ConversationMember.belongsTo(Conversation, { foreignKey: 'conversationId', as: 'Conversation' });
+ConversationMember.belongsTo(User, { foreignKey: 'userId', as: 'User' });
+Conversation.hasMany(ConversationMember, { foreignKey: 'conversationId', as: 'Members' });
+User.hasMany(ConversationMember, { foreignKey: 'userId', as: 'Memberships' });
 
 // ================= Export ================= //
 module.exports = {
@@ -192,5 +260,10 @@ module.exports = {
     StatDailyPlays,
     SyncStatus,
     DownloadSong,
-    AlbumSong
+    AlbumSong,
+    CommentLike,
+    Like,
+    Conversation,
+    ConversationMember,
+    Message,
 }

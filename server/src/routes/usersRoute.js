@@ -13,6 +13,12 @@ router.put('/update-profile', authenticateToken, userController.updateInforUser)
 router.put('/change-password', authenticateToken, userController.changePassword)
 router.put('/self-lock', authenticateToken, userController.selfLockAccount)
 
+// 1. LẤY PROFILE CHI TIẾT CHO MÀN HÌNH SOCIAL (Gồm isFollowing)
+router.get('/:userId/profile', authenticateToken, userController.getUserProfileSocial);
+
+// 2. TOGGLE THEO DÕI / HỦY THEO DÕI
+router.post('/:userId/follow', authenticateToken, userController.toggleFollow);
+
 // admin authorization
 router.delete('/remove/:id', authorizeRole, userController.deleteUser)
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, Pressable } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming MaterialIcons is available
+import Icon from 'react-native-vector-icons/MaterialIcons'; 
 
 interface CustomTextInputProps {
   placeholder: string;
@@ -35,14 +35,20 @@ export default function CustomTextInput({
     setIsPasswordVisible(!isPasswordVisible);
   };
 
+  const inputBg = 'bg-gray-200 dark:bg-gray-800';
+  const inputTextClass = 'text-black dark:text-white';
+  const iconPlaceholderColor = '#9CA3AF'; // Tailwind gray-400
+
   return (
     <View className="mb-4">
-      <View className="flex-row items-center bg-gray-800 rounded-md p-3">
-        <Icon name={iconName} size={20} color="#888" className="mr-3" />
+      <View className={`flex-row items-center rounded-md p-3 ${inputBg}`}>
+        
+        <Icon name={iconName} size={20} color={iconPlaceholderColor} className="mr-3" />
+        
         <TextInput
-          className="flex-1 text-white"
+          className={`flex-1 ${inputTextClass}`}
           placeholder={placeholder}
-          placeholderTextColor="#888"
+          placeholderTextColor={iconPlaceholderColor} 
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
@@ -52,12 +58,13 @@ export default function CustomTextInput({
           numberOfLines={numberOfLines}
           editable={editable}
         />
+        
         {secureTextEntry && (
           <Pressable onPress={togglePasswordVisibility}>
             <Icon
               name={isPasswordVisible ? 'visibility' : 'visibility-off'}
               size={20}
-              color="#888"
+              color={iconPlaceholderColor}
             />
           </Pressable>
         )}

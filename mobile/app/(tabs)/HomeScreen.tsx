@@ -15,7 +15,8 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from "@/store/authStore";
 
-// Dữ liệu mockup đã được thêm image URL
+import { useTheme } from "@/components/ThemeContext";
+
 const tabs = [
   { id: "forYou", label: "For you" },
   { id: "relax", label: "Relax" },
@@ -122,8 +123,8 @@ const relaxData = [
 ];
 
 export default function HomeScreen() {
-
   const { navigate } = useNavigate();
+  const { theme } = useTheme();
   const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("forYou");
   const animation = useRef(new Animated.Value(0)).current;
@@ -183,34 +184,35 @@ export default function HomeScreen() {
 
   const tabUnderlineLeft = tabsLayouted
     ? animation.interpolate({
-      inputRange: tabs.map((_, i) => i),
-      outputRange: tabPositions,
-    })
+        inputRange: tabs.map((_, i) => i),
+        outputRange: tabPositions.map((pos) => pos - 20),
+      })
     : 0;
 
   const tabUnderlineWidth = tabsLayouted
     ? animation.interpolate({
-      inputRange: tabs.map((_, i) => i),
-      outputRange: tabWidths,
-    })
+        inputRange: tabs.map((_, i) => i),
+        outputRange: tabWidths,
+      })
     : 0;
 
+  const iconColor = theme === 'light' ? '#000' : '#fff';
+
   return (
-    <View className="flex-1  bg-[#0E0C1F]">
-      {/* Header */}
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F]">
       <View className="flex-row justify-between items-center mx-5 mt-10 mb-2">
         <Animated.Text
-          className="text-white text-2xl font-bold"
+          className="text-black dark:text-white text-2xl font-bold"
           style={{
             opacity: greetingOpacity,
             transform: [{ translateY: greetingTranslateY }],
           }}
         >
-          Hi, {user?.fullName || user?.username} 👋
+          Hi, {String(user?.fullName || user?.username)} 👋
         </Animated.Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">
-            <Icon name="notifications-outline" size={28} color="#fff" />
+            <Icon name="notifications-outline" size={28} color={iconColor} />
             {hasNotification && (
               <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
             )}
@@ -224,7 +226,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Tabs and Underline */}
       <View className="relative mb-5">
         <ScrollView
           horizontal
@@ -239,10 +240,11 @@ export default function HomeScreen() {
               className="mr-5 py-2"
             >
               <Text
-                className={`text-xl font-bold ${activeTab === tab.id
-                  ? "text-white font-bold"
-                  : "text-gray-500 font-normal"
-                  }`}
+                className={`text-xl font-bold ${
+                  activeTab === tab.id
+                    ? "text-black dark:text-white font-bold"
+                    : "text-gray-500 dark:text-gray-500 font-normal"
+                }`}
               >
                 {tab.label}
               </Text>
@@ -251,7 +253,7 @@ export default function HomeScreen() {
         </ScrollView>
         {tabsLayouted && (
           <Animated.View
-            className="h-0.5 bg-white absolute -bottom-2"
+            className="h-0.5 bg-black dark:bg-white absolute -bottom-2"
             style={{
               width: tabUnderlineWidth,
               transform: [{ translateX: tabUnderlineLeft }],
@@ -260,10 +262,8 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Content */}
       {activeTab === "forYou" && (
         <ScrollView className="px-5">
-          {/* Featuring Today Card */}
           <View className="mb-6 rounded-lg overflow-hidden">
             <Image
               source={{ uri: forYouData[0].image }}
@@ -273,22 +273,21 @@ export default function HomeScreen() {
               <Text className="text-white text-xl font-bold">
                 {forYouData[0].title}
               </Text>
-              <Text className="text-gray-300">{forYouData[0].content}</Text>
+              <Text className="text-white dark:text-gray-300">{forYouData[0].content}</Text>
               <CustomButton
                 title="Play"
-                onPress={() => { }}
+                onPress={() => {}}
                 className="mt-2 bg-green-500 px-4 py-2 rounded-full"
               />
             </View>
           </View>
 
-          {/* Recently Played Horizontal List */}
           <View className="mb-6">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-white text-lg font-bold">
+              <Text className="text-black dark:text-white text-lg font-bold">
                 {forYouData[1].title}
               </Text>
-              <CustomButton title="See more" onPress={() => { }} />
+              <CustomButton variant="primary" title="See more" onPress={() => {}} />
             </View>
             <FlatList
               horizontal
@@ -298,16 +297,15 @@ export default function HomeScreen() {
                 <AlbumItem
                   title={item.title}
                   image={item.image}
-                  onPress={() => { }}
+                  onPress={() => {}}
                 />
               )}
               showsHorizontalScrollIndicator={false}
             />
           </View>
 
-          {/* Mixes for you Horizontal List */}
           <View className="mb-6">
-            <Text className="text-white text-lg font-bold mb-2">
+            <Text className="text-black dark:text-white text-lg font-bold mb-2">
               {forYouData[2].title}
             </Text>
             <FlatList
@@ -318,7 +316,7 @@ export default function HomeScreen() {
                 <AlbumItem
                   title={item.title}
                   image={item.image}
-                  onPress={() => { }}
+                  onPress={() => {}}
                 />
               )}
               showsHorizontalScrollIndicator={false}
@@ -329,7 +327,6 @@ export default function HomeScreen() {
 
       {activeTab === "relax" && (
         <ScrollView className="px-5">
-          {/* Today's Refreshing Song-Recommendations Card */}
           <View className="mb-6 rounded-lg overflow-hidden">
             <Image
               source={{ uri: relaxData[0].image }}
@@ -339,19 +336,18 @@ export default function HomeScreen() {
               <Text className="text-white text-xl font-bold">
                 {relaxData[0].title}
               </Text>
-              <Text className="text-gray-300">{relaxData[0].content}</Text>
+              <Text className="text-white dark:text-gray-300">{relaxData[0].content}</Text>
             </View>
           </View>
 
-          {/* Relax Songs List */}
           {relaxData.slice(1).map((item) => (
             <SongItem
               key={item.id}
               title={item.title}
               subtitle={item.artist || ""}
               image={item.image}
-              onPress={() => { }}
-              onOptionsPress={() => { }}
+              onPress={() => {}}
+              onOptionsPress={() => {}}
             />
           ))}
         </ScrollView>

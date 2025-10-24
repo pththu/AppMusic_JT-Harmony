@@ -1,23 +1,24 @@
 import React from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
-// import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigate } from '@/hooks/useNavigate';
 import LibraryItemButton from '@/components/button/LibraryItemButton';
 import SongItem from '@/components/items/SongItem';
 import { usePlayerStore } from '@/store/playerStore';
 
+import { useTheme } from '@/components/ThemeContext'; 
+
 const libraryItems = [
   {
     id: '1',
-    title: 'Favorite Songs',
+    title: 'Bài hát yêu thích',
     icon: 'favorite',
     screen: 'LikedSongsScreen',
     color: '#ffb5b5',
   },
   {
     id: '2',
-    title: 'Artists',
+    title: 'Nghệ sĩ',
     icon: 'person',
     screen: 'ArtistsFollowingScreen',
     color: '#FFA500',
@@ -31,7 +32,7 @@ const libraryItems = [
   },
   {
     id: '4',
-    title: 'Downloaded',
+    title: 'Đã tải xuống',
     icon: 'cloud-download',
     screen: 'DownloadsScreen',
     color: '#88d89a',
@@ -219,8 +220,9 @@ const recentlyPlayed = [
 
 export default function YourLibraryScreen() {
   const { navigate } = useNavigate();
+  const { theme } = useTheme(); 
 
-  const handleSelectSong = (song) => {
+  const handleSelectSong = (song: (typeof recentlyPlayed)[0]) => {
     usePlayerStore.getState().setCurrentSong(song);
     navigate('SongScreen');
   }
@@ -235,31 +237,19 @@ export default function YourLibraryScreen() {
   );
 
   const renderRecentlyPlayedItem = ({ item }: { item: (typeof recentlyPlayed)[0]; }) => (
-    // <TouchableOpacity className="flex-row items-center p-2">
-    //   <Image source={{ uri: item.image }} className="w-12 h-12 rounded-md" />
-    //   <View className="ml-4 flex-1">
-    //     <Text className="text-white font-semibold">{item.title}</Text>
-    //     <Text className="text-gray-400">{item.artists.map(artist => artist.name).join(", ")}</Text>
-    //   </View>
-    //   <TouchableOpacity>
-    //     <Text className="text-gray-400 text-2xl">⋮</Text>
-    //   </TouchableOpacity>
-    // </TouchableOpacity>
     <SongItem
-      title={item.title}
-      // Nối tên nghệ sĩ thành một chuỗi
-      subtitle={item.artists.map(a => a.name).join(', ')}
+      title={String(item.title)}
+      subtitle={item.artists?.map(a => String(a?.name || '')).join(', ') || ''}
       image={item.image}
-      // Truyền cả mảng artists
       onPress={() => handleSelectSong(item)}
       onOptionsPress={() => { }}
     />
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black px-4 pt-4">
+    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900 px-4 pt-4">
       <Text className="text-black dark:text-white text-2xl font-semibold mb-4">
-        Your Library
+        Thư viện của bạn
       </Text>
       <FlatList
         data={libraryItems}
@@ -271,10 +261,10 @@ export default function YourLibraryScreen() {
       />
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-black dark:text-white text-lg font-semibold">
-          Recently Played
+          Đã phát gần đây
         </Text>
         <TouchableOpacity>
-          <Text className="text-gray-400 dark:text-gray-300">See more</Text>
+          <Text className="text-gray-500 dark:text-gray-400">Xem thêm</Text>
         </TouchableOpacity>
       </View>
       <FlatList

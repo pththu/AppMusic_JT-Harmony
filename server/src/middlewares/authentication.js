@@ -7,7 +7,7 @@ require('dotenv').config();
  */
 exports.authenticateToken = async(req, res, next) => {
     console.log("--- BẮT ĐẦU AUTHENTICATE ---");
-    // console.log("Raw Headers:", req.headers); // Có thể bật lại log này nếu cần debug sâu
+    console.log("Raw Headers:", req.headers); // Có thể bật lại log này nếu cần debug sâu
 
     try {
         let token;
@@ -64,6 +64,72 @@ exports.authenticateToken = async(req, res, next) => {
         }
         console.error('LỖI AUTH KHÔNG XÁC ĐỊNH:', err.message);
         return res.status(500).json({ error: 'Internal server error: ' + err.message });
+    }
+};
+
+exports.optionalAuthenticateToken = async(req, res, next) => {
+    let token;
+
+    // 1. Lấy token từ Cookie ('accessToken')
+    token = req.cookies && req.cookies['accessToken'];
+
+    // 2. Nếu không có trong cookie, lấy từ Header 'Authorization' (logic robust)
+    if (!token) {
+        let authHeader = req.headers['authorization']; // Thử lowercase trước
+
+        if (!authHeader) {
+            authHeader = req.headers['Authorization']; // Thử uppercase
+        }
+
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
+    }
+
+    // 🎯 LOG MỚI: Báo hiệu kết quả tìm kiếm Token
+    if (!token) {
+        req.user = null;
+        req.currentUser = null;
+        // Case A: Không có token
+        console.log("OPTIONAL AUTH: KHÔNG tìm thấy Token. Tiếp tục với numericUserId: null.");
+        return next();
+    }
+
+    // 3. CÓ token, Bắt đầu xác thực
+    try {
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+        const user = await User.findByPk(decoded.id, {
+            attributes: ['id', 'username', 'roleId', 'fullName']
+        });
+
+        if (user) {
+            // 🎯 Gán THÀNH CÔNG: Đảm bảo ID là kiểu Number
+            req.user = {
+                id: Number(user.id), // Ép kiểu an toàn
+                username: user.username,
+                roleId: user.roleId,
+                fullName: user.fullName
+            };
+            req.currentUser = user;
+
+            // Case B: Thành công
+            console.log("OPTIONAL AUTH: Thành công, User ID được gán:", req.user.id);
+        } else {
+            // Case C: Token hợp lệ nhưng user không tồn tại trong DB
+            console.warn("OPTIONAL AUTH: User từ token không tồn tại. Tiếp tục với null.");
+            req.user = null;
+            req.currentUser = null;
+        }
+
+        return next();
+
+    } catch (err) {
+        // Case D: Token KHÔNG HỢP LỆ (hết hạn, sai chữ ký)
+        console.warn(`OPTIONAL AUTH: Token KHÔNG HỢP LỆ (${err.name}). Tiếp tục với null.`);
+        req.user = null;
+        req.currentUser = null;
+        return next();
     }
 };
 
