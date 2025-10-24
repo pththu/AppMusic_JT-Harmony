@@ -84,7 +84,7 @@ export default function ArtistScreen() {
       {/* Container cho ảnh và overlay */}
       <View className="relative w-full h-72">
         <Image
-          source={{ uri: artist.image }}
+          source={{ uri: artist.imageUrl }}
           className="w-full h-full object-cover"
         />
         <View className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -109,9 +109,9 @@ export default function ArtistScreen() {
         {/* <Text className="text-white text-3xl font-bold mb-1">
           {artist.name}
         </Text> */}
-        <Text className="text-gray-600 dark:text-gray-400 mb-4">
+        {/* <Text className="text-gray-600 dark:text-gray-400 mb-4">
           {artist.monthlyListeners} monthly listeners
-        </Text>
+        </Text> */}
         <View className="flex-row space-x-4 mb-4">
           <CustomButton
             title=""

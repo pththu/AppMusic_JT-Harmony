@@ -6,7 +6,7 @@ import { Alert } from 'react-native';
 // 💡 LƯU Ý: Phải sử dụng BASE_URL mà không có /api/v1/
 // Nếu backend của bạn là http://192.168.1.212:3000/api/v1/, thì SERVER_URL chỉ là http://192.168.1.212:3000/
 // Tôi đang dùng địa chỉ IP cố định 192.168.1.212 như trong các file của bạn.
-const SOCKET_SERVER_URL = 'http://192.168.1.21:3000';
+const SOCKET_SERVER_URL = 'http://10.107.151.251:3000';
 
 // ==========================================================
 // INTERFACES
@@ -55,10 +55,10 @@ export const connectSocket = (): Socket => {
         console.log('Socket already connected. Returning existing instance.');
         return socket;
     }
-    
+
     // 🎯 SỬA 2: Lấy token và tạo kết nối nếu chưa có
     const token = useAuthStore.getState().token; // Chỉ lấy token tại thời điểm này
-    
+
     // Nếu token chưa có, bạn có thể cân nhắc ném lỗi hoặc trả về null (dựa trên luồng logic app)
     if (!token) {
         Alert.alert("Lỗi Chat", "Không có token xác thực. Vui lòng đăng nhập lại.");
@@ -71,7 +71,7 @@ export const connectSocket = (): Socket => {
     });
 
     // 🎯 SỬA 3: Gán instance mới vào biến singleton
-    socket = newSocket; 
+    socket = newSocket;
 
     // 💡 Thêm các listeners xử lý lỗi kết nối
     socket.on('connect', () => {
@@ -86,7 +86,7 @@ export const connectSocket = (): Socket => {
         // Lỗi này chính là lỗi bạn đang thấy
         console.error('❌ Socket connection error:', error.message);
     });
-    
+
     // Thêm logic tự động tham gia phòng chat sau khi kết nối lại
     // if (user) {
     //     newSocket.on('connect', () => {
@@ -172,12 +172,12 @@ export const subscribeToNewMessages = (listener: (message: Message) => void): ((
     if (!socket) {
         console.error('Socket not initialized.');
         // Trả về hàm hủy đăng ký rỗng
-        return () => {}; 
+        return () => { };
     }
-    
+
     // Thêm listener cho sự kiện 'receive_message'
     socket.on('receive_message', listener);
-    
+
     // Trả về hàm để client gọi khi component bị unmount (Hủy đăng ký)
     return () => {
         socket?.off('receive_message', listener);
@@ -190,11 +190,11 @@ export const subscribeToNewMessages = (listener: (message: Message) => void): ((
  */
 export const subscribeToTypingStatus = (listener: (data: { conversationId: number, userId: number, isTyping: boolean }) => void): (() => void) => {
     if (!socket) {
-        return () => {};
+        return () => { };
     }
-    
+
     socket.on('user_typing', listener);
-    
+
     // Trả về hàm hủy đăng ký
     return () => {
         socket?.off('user_typing', listener);

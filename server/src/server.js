@@ -142,11 +142,11 @@ publicRoutes.forEach(route => {
 async function startServer() {
     try {
         // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
-        await sequelize.sync({ alter: true });
-        // await sequelize.sync();
-        console.log('✅ Database synchronized successfully')
+        // await sequelize.sync({ alter: true });
+        // // await sequelize.sync();
+        // console.log('✅ Database synchronized successfully')
 
-        await seedDatabase();
+        // await seedDatabase();
 
         // 💡 SỬ DỤNG server.listen (thay vì app.listen) để Socket.IO hoạt động
         server.listen(process.env.PORT || 3000, () => {
