@@ -63,10 +63,6 @@ CommentLike.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 Post.hasMany(Comment, { foreignKey: 'postId' });
 Comment.belongsTo(Post, { foreignKey: 'postId' });
 
-// Quan hệ Bài đăng - Bài hát (Post <-> Song)
-Post.belongsTo(Song, { foreignKey: 'songId', as: 'Song' });
-Song.hasMany(Post, { foreignKey: 'songId', as: 'Posts' });
-
 // Comment - Comment
 Comment.hasMany(Comment, { foreignKey: 'parentId', as: 'Replies' });
 Comment.belongsTo(Comment, { foreignKey: 'parentId', as: 'Parent' });
@@ -189,6 +185,7 @@ module.exports = {
     sequelize,
     Track,
     Playlist,
+    PlaylistTrack,
     Artist,
     Album,
     User,

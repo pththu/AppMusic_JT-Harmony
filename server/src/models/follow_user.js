@@ -28,7 +28,7 @@ const FollowUser = sequelize.define(
     }
   },
   {
-    tableName: 'follows',
+    tableName: 'follow_users',
     timestamps: true,
     indexes: [
       {

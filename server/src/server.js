@@ -98,13 +98,13 @@ const protectedRoutes = [
     // 'favorites', // Yêu thích
     // 'history', // Lịch sử nghe nhạc
     'notifications', // Thông báo
-    'playlists', // Playlist cá nhân
+    // 'playlists', // Playlist cá nhân
     'comments', // Comment (cần đăng nhập mới comment được)
-    'genres', // Xem thể loại nhạc
-    'artists', // Xem thông tin nghệ sĩ
-    'albums', // Xem album
-    'search', // Tìm kiếm công khai
-    'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
+    // 'genres', // Xem thể loại nhạc
+    // 'artists', // Xem thông tin nghệ sĩ
+    // 'albums', // Xem album
+    // 'search', // Tìm kiếm công khai
+    // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
     'conversations',
     'upload',        // Upload hình ảnh, file
     'music'
@@ -143,13 +143,14 @@ async function startServer() {
     try {
         // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
         await sequelize.sync({ alter: true });
+        // await sequelize.sync();
         console.log('✅ Database synchronized successfully')
 
         await seedDatabase();
 
         // 💡 SỬ DỤNG server.listen (thay vì app.listen) để Socket.IO hoạt động
-        server.listen(port, () => {
-            console.log(`🚀 Server is running on port ${port}`);
+        server.listen(process.env.PORT || 3000, () => {
+            console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);
         });
     } catch (e) {
         console.error('❌ Server startup error:', e.message);

@@ -22,8 +22,6 @@ import { useNavigate } from "@/hooks/useNavigate";
 import PostItem from "../../components/items/PostItem";
 import CommentModal from "../../components/modals/CommentModal";
 
-
-
 const SocialScreen = () => {
   const colorScheme = useColorScheme();
   const [posts, setPosts] = useState<any[]>([]); // Sử dụng any[] nếu Post interface chưa rõ ràng
@@ -505,8 +503,8 @@ const SocialScreen = () => {
             value={newPostText}
             onChangeText={setNewPostText}
             className={`flex-1 border-b px-2 pb-2 text-base ${colorScheme === "dark"
-                ? "border-gray-600 bg-transparent text-white"
-                : "border-gray-300 bg-transparent text-black"
+              ? "border-gray-600 bg-transparent text-white"
+              : "border-gray-300 bg-transparent text-black"
               }`}
             multiline
             style={{ minHeight: 40 }}

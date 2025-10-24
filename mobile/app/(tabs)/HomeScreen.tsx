@@ -19,7 +19,6 @@ import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from "@/store/authStore";
 import { playlistData, albumData, trackData, artistData } from "@/constants/data";
 import ArtistItem from "@/components/artists/ArtistItem";
-import YoutubePlayer from "react-native-youtube-iframe";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 import { useTheme } from "@/components/ThemeContext";
@@ -43,55 +42,6 @@ export default function HomeScreen() {
   const [tabWidths, setTabWidths] = useState<number[]>([]);
   const [tabPositions, setTabPositions] = useState<number[]>([]);
   const [tabsLayouted, setTabsLayouted] = useState(false);
-
-  const playerRef = useRef(null);
-  const [playerState, setPlayerState] = useState('unstarted');
-  const [isPlayerReady, setPlayerReady] = useState(false);
-
-  const handlePlay = () => {
-    console.log("LOG: Nút 'Phát' đã được nhấn.");
-
-    // Log ra chính xác playerRef.current tại thời điểm nhấn nút
-    console.log("LOG: playerRef.current lúc nhấn nút:", playerRef.current);
-
-    if (playerRef.current) {
-      // Kiểm tra xem hàm play có tồn tại không
-      if (typeof playerRef.current.playVideo === 'function') {
-        playerRef.current.playVideo();
-      } else {
-        console.log("LỖI: playerRef.current.play không phải là một hàm!");
-        success("Không thể play, ref chưa sẵn sàng.");
-      }
-    } else {
-      console.error("LỖI: playerRef.current là null!");
-    }
-  };
-
-  const handlePause = () => {
-    // Gửi yêu cầu "pause" đến player thông qua ref
-    playerRef.current?.pauseVideo();
-  };
-
-  // 4. Hàm xử lý "Lắng nghe" (Listen)
-  const onStateChange = (state) => {
-    // Player báo cho bạn biết: "Tôi vừa đổi trạng thái!"
-    // Bạn cập nhật state của component để UI thay đổi
-    setPlayerState(state);
-
-    if (state === 'ended') {
-      success('Video has finished playing!');
-    }
-  };
-
-  useEffect(() => {
-    // Lắng nghe sự kiện "ready" từ player
-    if (isPlayerReady) {
-      console.log("YouTube Player is ready!");
-      console.log(playerRef)
-    } else {
-      console.log("YouTube Player is not ready yet.");
-    }
-  }, [isPlayerReady]);
 
   useEffect(() => {
     Animated.parallel([
@@ -222,7 +172,7 @@ export default function HomeScreen() {
       {activeTab === "forYou" && (
         <ScrollView className="px-5">
           {/* Featuring Today Card */}
-          {/* <View className="mb-6 w-full h-64 rounded-lg overflow-hidden">
+          <View className="mb-6 w-full h-64 rounded-lg overflow-hidden">
             <ImageBackground
               source={{ uri: playlistData[7].imageUrl }}
               className="w-full h-full justify-end"
@@ -242,10 +192,10 @@ export default function HomeScreen() {
                 </View>
               </View>
             </ImageBackground>
-          </View> */}
+          </View>
 
           {/* Recently Played Horizontal List */}
-          {/* <View className="mb-6">
+          <View className="mb-6">
             <View className="flex-row justify-between items-center mb-2">
               <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
                 Danh sách phát đề xuất cho bạn
@@ -265,10 +215,10 @@ export default function HomeScreen() {
               )}
               showsHorizontalScrollIndicator={false}
             />
-          </View> */}
+          </View>
 
           {/* Mixes for you Horizontal List */}
-          {/* <View className="mb-6">
+          <View className="mb-6">
             <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
               Album được chọn lọc dành cho bạn
             </Text>
@@ -285,42 +235,6 @@ export default function HomeScreen() {
               )}
               showsHorizontalScrollIndicator={false}
             />
-          </View> */}
-          <Text className="text-white">Mixes for you</Text>
-          <YoutubePlayer
-            ref={playerRef} // 5. Gắn "điều khiển" vào player
-            height={300}
-            play={false} // Không tự động phát khi tải
-            videoId={'BEIwwuQY_Cg'} // Video ID ví dụ
-            onChangeState={onStateChange} // 6. Gắn "bộ lắng nghe"
-            onReady={(state) => {
-              setPlayerReady(true);
-              console.log(state);
-            }}
-
-            // (Optional) Xử lý nếu có lỗi
-            onError={(error) => console.error("YouTube Player Error:", error)}
-          />
-
-          <View className="my-4justify-around">
-            <Button
-              title="Phát (Play)"
-              onPress={handlePlay}
-              // Chỉ cho phép nhấn khi player KHÔNG đang phát
-              disabled={!isPlayerReady || playerState === 'playing'}
-            />
-            <Button
-              title="Tạm dừng (Pause)"
-              onPress={handlePause}
-              // Chỉ cho phép nhấn khi player ĐANG phát
-              disabled={!isPlayerReady || playerState !== 'playing'}
-            />
-            <Text className="text-white">
-              Trạng thái Player: {playerState}
-            </Text>
-            <Text className="text-white">
-              Player Sẵn sàng: {isPlayerReady ? "CÓ" : "CHƯA"}
-            </Text>
           </View>
         </ScrollView>
       )}

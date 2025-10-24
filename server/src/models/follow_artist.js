@@ -30,7 +30,7 @@ const FollowArtist = sequelize.define(
     }
   },
   {
-    tableName: 'follows',
+    tableName: 'follow_artists',
     timestamps: true,
     indexes: [
       {

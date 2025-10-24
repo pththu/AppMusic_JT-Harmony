@@ -82,6 +82,7 @@ export default function ProfileScreen() {
     }
   };
 
+  // up nhiều file lên cloudinary và server
   // const handlePickMultipleFile = async () => {
   //   try {
   //     const result = await DocumentPicker.getDocumentAsync({

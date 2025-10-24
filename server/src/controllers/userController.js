@@ -310,35 +310,42 @@ exports.getUserProfileSocial = async (req, res) => {
             return res.status(404).json({ error: 'Người dùng không tồn tại' });
         }
 
-        // 1. Tính toán số lượng người theo dõi (Follower Count)
-        const followerCount = await Follow.count({
-            where: {
-                userFolloweeId: userId
-            }
-        });
+        // // 1. Tính toán số lượng người theo dõi (Follower Count)
+        // const followerCount = await Follow.count({
+        //     where: {
+        //         userFolloweeId: userId
+        //     }
+        // });
 
-        // 2. Tính toán số lượng đang theo dõi (Following Count)
-        const followingCount = await Follow.count({
-            where: {
-                followerId: userId // Những người người này đang theo dõi
-            }
-        });
+        // // 2. Tính toán số lượng đang theo dõi (Following Count)
+        // const followingCount = await Follow.count({
+        //     where: {
+        //         followerId: userId // Những người người này đang theo dõi
+        //     }
+        // });
 
-        // 3. Kiểm tra trạng thái Theo dõi (Is Following)
-        const isFollowing = await Follow.findOne({
-            where: {
-                followerId: currentUserId, // Người dùng hiện tại
-                // ✅ SỬ DỤNG userFolloweeId: đang theo dõi người dùng này
-                userFolloweeId: userId,
-                artistFolloweeId: null, // Đảm bảo chỉ kiểm tra việc theo dõi User
-            }
-        });
+        // // 3. Kiểm tra trạng thái Theo dõi (Is Following)
+        // const isFollowing = await Follow.findOne({
+        //     where: {
+        //         followerId: currentUserId, // Người dùng hiện tại
+        //         // ✅ SỬ DỤNG userFolloweeId: đang theo dõi người dùng này
+        //         userFolloweeId: userId,
+        //         artistFolloweeId: null, // Đảm bảo chỉ kiểm tra việc theo dõi User
+        //     }
+        // });
+
+        // const profileData = {
+        //     ...user.toJSON(),
+        //     followerCount: followerCount,
+        //     followingCount: followingCount,
+        //     isFollowing: !!isFollowing // Chuyển thành boolean
+        // };
 
         const profileData = {
             ...user.toJSON(),
-            followerCount: followerCount,
-            followingCount: followingCount,
-            isFollowing: !!isFollowing // Chuyển thành boolean
+            followerCount: 0,
+            followingCount: 0,
+            isFollowing: false // Chuyển thành boolean
         };
 
         res.json(profileData);
@@ -353,46 +360,46 @@ exports.getUserProfileSocial = async (req, res) => {
 // POST /api/v1/users/:userId/follow
 // ----------------------------------------------------------------------
 exports.toggleFollow = async (req, res) => {
-    const targetUserId = req.params.userId;
-    const currentUserId = req.user.id;
+    // const targetUserId = req.params.userId;
+    // const currentUserId = req.user.id;
 
-    if (parseInt(targetUserId) === currentUserId) {
-        return res.status(400).json({ error: 'Không thể tự theo dõi chính mình' });
-    }
+    // if (parseInt(targetUserId) === currentUserId) {
+    //     return res.status(400).json({ error: 'Không thể tự theo dõi chính mình' });
+    // }
 
-    try {
-        // Tìm hoặc tạo bản ghi Follow
-        const [follow, created] = await Follow.findOrCreate({
-            where: {
-                followerId: currentUserId,
-                userFolloweeId: targetUserId
-            },
-            defaults: {
-                followerId: currentUserId,
-                userFolloweeId: targetUserId,
-                // ✅ CẦN THIẾT: Gán artistFolloweeId = null (Hoặc giá trị mặc định của bạn)
-                artistFolloweeId: null,
-                // ✅ CẦN THIẾT: Gán followedAt (Nếu không để defaultValue)
-                followedAt: new Date(),
-            }
-        });
+    // try {
+    //     // Tìm hoặc tạo bản ghi Follow
+    //     const [follow, created] = await Follow.findOrCreate({
+    //         where: {
+    //             followerId: currentUserId,
+    //             userFolloweeId: targetUserId
+    //         },
+    //         defaults: {
+    //             followerId: currentUserId,
+    //             userFolloweeId: targetUserId,
+    //             // ✅ CẦN THIẾT: Gán artistFolloweeId = null (Hoặc giá trị mặc định của bạn)
+    //             artistFolloweeId: null,
+    //             // ✅ CẦN THIẾT: Gán followedAt (Nếu không để defaultValue)
+    //             followedAt: new Date(),
+    //         }
+    //     });
 
-        let isFollowing;
+    //     let isFollowing;
 
-        if (!created) {
-            // Đã tồn tại -> Hủy theo dõi
-            await follow.destroy();
-            isFollowing = false;
-        } else {
-            // Mới tạo -> Đã theo dõi
-            isFollowing = true;
-        }
+    //     if (!created) {
+    //         // Đã tồn tại -> Hủy theo dõi
+    //         await follow.destroy();
+    //         isFollowing = false;
+    //     } else {
+    //         // Mới tạo -> Đã theo dõi
+    //         isFollowing = true;
+    //     }
 
-        // Trả về trạng thái mới cho client
-        res.json({ message: isFollowing ? 'Theo dõi thành công' : 'Hủy theo dõi thành công', isFollowing });
+    //     // Trả về trạng thái mới cho client
+    //     res.json({ message: isFollowing ? 'Theo dõi thành công' : 'Hủy theo dõi thành công', isFollowing });
 
-    } catch (err) {
-        console.error('Lỗi khi Toggle Follow:', err);
-        res.status(500).json({ error: err.message });
-    }
+    // } catch (err) {
+    //     console.error('Lỗi khi Toggle Follow:', err);
+    //     res.status(500).json({ error: err.message });
+    // }
 };
