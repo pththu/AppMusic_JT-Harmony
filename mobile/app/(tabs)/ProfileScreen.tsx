@@ -9,7 +9,7 @@ import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
 import useAuthStore from "@/store/authStore";
-import { ChangeAvatar, Logout } from "@/routes/ApiRouter";
+import { ChangeAvatar, Logout, UploadMultipleFile } from "@/routes/ApiRouter";
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LoginManager } from "react-native-fbsdk-next";
@@ -88,7 +88,8 @@ export default function ProfileScreen() {
   //     const result = await DocumentPicker.getDocumentAsync({
   //       type: [
   //         'audio/*',
-  //         'video/*'
+  //         'video/*',
+  //         'image/*',
   //       ],
   //       multiple: true,
   //       copyToCacheDirectory: true,
@@ -167,7 +168,6 @@ export default function ProfileScreen() {
     );
   }
 
-
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F]">
       <ScrollView contentContainerStyle={{ padding: 24 }}>
@@ -233,10 +233,10 @@ export default function ProfileScreen() {
         </View>
 
         {/* <Pressable className="p-5 border border-slate-300"
-        onPress={() => handlePickMultipleFile()}
-      >
-        <Text>Chọn nhiều file</Text>
-      </Pressable> */}
+          onPress={() => handlePickMultipleFile()}
+        >
+          <Text>Chọn nhiều file</Text>
+        </Pressable> */}
 
         {/* Các nút Thư viện (Library) */}
         <View className="flex-row justify-between mb-4">

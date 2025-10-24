@@ -141,7 +141,7 @@ const searchTracks = async (query, type, limit = null) => {
  * B3. Thêm các playlist hợp lệ vào mảng tổng
  * B4. Cập nhật nextUrl cho vòng lặp tiếp theo
  */
-const searchPlaylists = async (query) => {
+const searchPlaylists = async (query, limit) => {
   let allPlaylists = [];
   let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=playlist&limit=50`; // Bắt đầu với URL đầu tiên
   console.log(`Bắt đầu tìm kiếm tất cả playlist cho query: "${query}"`);
@@ -159,18 +159,22 @@ const searchPlaylists = async (query) => {
       allPlaylists = allPlaylists.concat(validItems);
       nextUrl = playlistsPage.next;
       console.log(`Đã lấy được ${validItems.length} playlist. Tổng cộng: ${allPlaylists.length}. Đang tải trang tiếp theo...`);
+      if (allPlaylists.length >= 3) {
+        console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
+        break;
+      }
     }
 
     console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allPlaylists.length} playlist.`);
-    console.log(allPlaylists[0])
-    return allPlaylists.map((playlist) => formatPlaylist(playlist));
+    // console.log(allPlaylists[0])
+    return shuffle(allPlaylists).slice(0, limit).map((playlist) => formatPlaylist(playlist));
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm playlist trên Spotify:`, error.response ? error.response.data : error.message);
     throw error;
   }
 }
 
-const searchAlbums = async (query) => {
+const searchAlbums = async (query, limit) => {
   let allAlbums = [];
   let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=album&limit=50`; // Bắt đầu với URL đầu tiên
   console.log(`Bắt đầu tìm kiếm tất cả album cho query: "${query}"`);
@@ -188,17 +192,21 @@ const searchAlbums = async (query) => {
       allAlbums = allAlbums.concat(validItems);
       nextUrl = albumPage.next;
       console.log(`Đã lấy được ${validItems.length} album. Tổng cộng: ${allAlbums.length}. Đang tải trang tiếp theo...`);
+      if (allAlbums.length >= 3) {
+        console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
+        break;
+      }
     }
 
     console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allAlbums.length} album.`);
-    return allAlbums.map((album) => formatAlbum(album));
+    return shuffle(allAlbums).slice(0, limit).map((album) => formatAlbum(album));
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm album trên Spotify:`, error.response ? error.response.data : error.message);
     throw error;
   }
 };
 
-const searchArtists = async (query) => {
+const searchArtists = async (query, limit) => {
   try {
     let allArtists = [];
     let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=50`; // Bắt đầu với URL đầu tiên
@@ -216,9 +224,13 @@ const searchArtists = async (query) => {
       allArtists = allArtists.concat(validItems);
       nextUrl = artistPage.next;
       console.log(`Đã lấy được ${validItems.length} nghệ sĩ. Tổng cộng: ${allArtists.length}. Đang tải trang tiếp theo...`);
+      if (allArtists.length >= limit) {
+        console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
+        break;
+      }
     }
 
-    return allArtists.map((artist) => formatArtist(artist));
+    return allArtists.slice(0, limit).map((artist) => formatArtist(artist));
   } catch (error) {
     console.error(`Error searching artists on Spotify:`, error.response ? error.response.data : error.message);
     throw error;
@@ -299,6 +311,25 @@ const getArtistTopTracks = async (artistId) => {
   });
 };
 
+const shuffle = (array) => {
+  let currentIndex = array.length;
+  let randomIndex;
+
+  // Lặp khi vẫn còn phần tử để xáo trộn
+  while (currentIndex !== 0) {
+    // Chọn một phần tử ngẫu nhiên còn lại
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // Và hoán đổi nó với phần tử hiện tại
+    // (Sử dụng cú pháp ES6 để hoán đổi)
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]
+    ];
+  }
+
+  return array;
+}
 
 module.exports = {
   searchTop50Tracks,

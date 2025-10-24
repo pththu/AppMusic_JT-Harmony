@@ -216,6 +216,80 @@ const getTracksFromAlbum = async (req, res) => {
   }
 };
 
+const getPlaylistsForYou = async (req, res) => {
+  try {
+    const { playlistName, limit } = req.body;
+    const playlists = [];
+
+    if (playlistName?.length === 0) {
+      return res.status(200).json({ message: 'Playlist name parameter is required', success: false });
+    }
+
+    for (const name of playlistName) {
+      const responsePlaylist = await spotify.searchPlaylists(name, limit);
+      playlists.push(...responsePlaylist);
+    }
+
+    console.log('tổng số playlist nhận được: ', playlists.length);
+
+    return res.status(200).json({
+      message: 'Get personalized playlists successful',
+      data: playlists,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get personalized playlists on Spotify' });
+  }
+}
+
+const getAlbumsForYou = async (req, res) => {
+  try {
+    const { albumName, limit } = req.body;
+    const albums = [];
+
+    if (albumName.length === 0) {
+      return res.status(200).json({ message: 'Album name parameter is required', success: false });
+    }
+
+    for (const name of albumName) {
+      const responseAlbum = await spotify.searchAlbums(name, limit);
+      albums.push(...responseAlbum);
+    }
+
+    return res.status(200).json({
+      message: 'Album search successful',
+      data: albums,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get personalized albums on Spotify' });
+  }
+};
+
+const getArtistsForYou = async (req, res) => {
+  try {
+    const { artistName, limit } = req.body;
+    const artists = [];
+
+    if (artistName.length === 0) {
+      return res.status(200).json({ message: 'Artist name parameter is required', success: false });
+    }
+
+    for (const name of artistName) {
+      const responseArtist = await spotify.searchArtists(name, limit);
+      artists.push(...responseArtist);
+    }
+
+    return res.status(200).json({
+      message: 'Get artist for you successful',
+      data: artists,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get artist for you on Spotify' });
+  }
+};
+
 module.exports = {
   findSpotifyPlaylist,
   findArtistTopTracks,
@@ -224,6 +298,9 @@ module.exports = {
   findAlbumById,
   getTracksFromPlaylist,
   getTracksFromAlbum,
+  getPlaylistsForYou,
+  getAlbumsForYou,
+  getArtistsForYou,
   searchTracks,
   searchTop50Tracks,
   searchPlaylists,

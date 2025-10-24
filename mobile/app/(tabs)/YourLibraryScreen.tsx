@@ -89,8 +89,8 @@ export default function YourLibraryScreen() {
       <FlatList
         data={trackData}
         renderItem={renderRecentlyPlayedItem}
-        keyExtractor={item => item.spotifyId}
-        className='mb-[20%]'
+        keyExtractor={item => item.id.toString()}
+        className=''
       />
     </SafeAreaView>
   );

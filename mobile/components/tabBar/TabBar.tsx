@@ -27,7 +27,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   return (
     <View
       onLayout={onTabBarLayout}
-      className={`absolute bottom-0 flex flex-row justify-between items-center shadow-md w-full p-2
+      className={`flex flex-row justify-between items-center shadow-md w-full p-2
         ${colorScheme === "dark" ? "bg-[#121212] " : "bg-white"}`}
     >
       <Animated.View

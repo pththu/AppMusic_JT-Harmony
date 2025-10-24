@@ -1,6 +1,6 @@
 // src/services/chatApi.tsx
 import { Alert } from 'react-native';
-import axiosClient from '@/config/axiosClient'; 
+import axiosClient from '@/config/axiosClient';
 import { UserInfo } from './socialApi'; // Tái sử dụng UserInfo
 
 const api = axiosClient;
@@ -12,7 +12,7 @@ export interface Conversation {
     name: string | null;
     lastMessage: any; // Cần định nghĩa rõ hơn sau, tạm thời là any
     updatedAt: string;
-    members: UserInfo[]; 
+    members: UserInfo[];
 }
 
 /**
@@ -38,7 +38,7 @@ export const createOrGetPrivateConversation = async (userId: number): Promise<{ 
     try {
         // userId là ID của người dùng bạn muốn chat cùng (người được theo dõi)
         const response = await api.post(`/conversations/user/${userId}`);
-        
+
         // Server trả về { conversationId: number, message: string }
         return {
             conversationId: response.data.conversationId,
@@ -90,7 +90,7 @@ export const fetchMessages = async (
                 },
             }
         );
-        
+
         // Server trả về danh sách tin nhắn, tin nhắn mới nhất nằm trên cùng (DESC)
         return response.data as Message[];
     } catch (error) {

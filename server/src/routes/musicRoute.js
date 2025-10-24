@@ -6,14 +6,17 @@ const musicController = require('../controllers/musicController');
 // === SPOTIFY ROUTES ===
 
 router.get('/search/playlists', musicController.findSpotifyPlaylist);
-router.get('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
-router.get('/album/:albumId/tracks', musicController.getTracksFromAlbum);
 router.get('/search-album/:albumId', musicController.findAlbumById);
-
-router.post('/search-track', musicController.searchTracks);
-router.post('/top-50-tracks', musicController.searchTop50Tracks);
 router.post('/playlist', musicController.findPlaylistById);
 
+router.get('/album/:albumId/tracks', musicController.getTracksFromAlbum);
+router.get('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
+router.post('/playlist-for-you', musicController.getPlaylistsForYou);
+router.post('/album-for-you', musicController.getAlbumsForYou);
+router.post('/artist-for-you', musicController.getArtistsForYou);
+
+router.post('/top-50-tracks', musicController.searchTop50Tracks);
+router.post('/search-track', musicController.searchTracks);
 router.post('/search-playlist', musicController.searchPlaylists);
 router.post('/search-album', musicController.searchAlbums);
 router.post('/search-artist', musicController.searchArtists);

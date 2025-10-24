@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { Alert } from 'react-native';
-import useAuthStore from '@/store/authStore'; 
+import useAuthStore from '@/store/authStore';
 
-import axiosClient from '@/config/axiosClient'; 
-const api = axiosClient; 
+import axiosClient from '@/config/axiosClient';
+const api = axiosClient;
 // const BASE_URL = 'http://192.168.1.212:3000/api/v1'; 
 
 // // === TẠO INSTANCE AXIOS ===
@@ -30,183 +30,183 @@ const api = axiosClient;
 // === INTERFACES ===
 // Giữ nguyên các interfaces
 export interface UserInfo {
-  id: number;
-  username: string;
-  avatarUrl: string;
-  fullName: string;
+    id: number;
+    username: string;
+    avatarUrl: string;
+    fullName: string;
 
     isFollowing?: boolean;
 }
 
 export interface Comment {
-  id: string;
-  userId: number;
-  postId: number;
-  content: string;
-  parentId: number | null;
-  commentedAt: string;
-  User: UserInfo;
-  likeCount: number;
-  isLiked: boolean;
-  Replies?: Comment[];
-  quote?: {
-    username: string;
+    id: string;
+    userId: number;
+    postId: number;
     content: string;
-  };
+    parentId: number | null;
+    commentedAt: string;
+    User: UserInfo;
+    likeCount: number;
+    isLiked: boolean;
+    Replies?: Comment[];
+    quote?: {
+        username: string;
+        content: string;
+    };
 }
 
 export interface Post {
-  id: string;
-  userId: number;
-  content: string;
-  fileUrl: string[] | string;
-  musicLink: string | null;
-  heartCount: number;
-  shareCount: number;
-  uploadedAt: string;
-  User: UserInfo;
-  commentCount: number;
-  isLiked: boolean;
+    id: string;
+    userId: number;
+    content: string;
+    fileUrl: string[] | string;
+    musicLink: string | null;
+    heartCount: number;
+    shareCount: number;
+    uploadedAt: string;
+    User: UserInfo;
+    commentCount: number;
+    isLiked: boolean;
 }
 
 // === API CHO BÀI ĐĂNG ===
 
 /** Lấy danh sách bài đăng */
 export const fetchPosts = async (): Promise<Post[]> => {
-  try {
-    const response = await api.get('/posts');
-    const data = response.data;
+    try {
+        const response = await api.get('/posts');
+        const data = response.data;
 
-    if (!Array.isArray(data)) {
-      Alert.alert('Lỗi ❌', 'Dữ liệu bài đăng không hợp lệ.');
-      return [];
-    }
+        if (!Array.isArray(data)) {
+            Alert.alert('Lỗi ❌', 'Dữ liệu bài đăng không hợp lệ.');
+            return [];
+        }
 
-    return data.map((post: any) => {
-      let fileUrl: string[] = [];
-      try {
-        const rawFileUrl = post.file_url || post.fileUrl || [];
-        if (typeof rawFileUrl === 'string') {
-          fileUrl = JSON.parse(rawFileUrl);
-        } else if (Array.isArray(rawFileUrl)) {
-          fileUrl = rawFileUrl;
-        } else {
-          fileUrl = [];
-        }
-      } catch (e) {
-        console.error('Error parsing fileUrl in fetchPosts:', e);
-        fileUrl = [];
-      }
-      return {
-        id: post.id.toString(),
-        userId: post.user_id || post.userId,
-        content: post.content || '',
-        fileUrl,
-        musicLink: post.musicLink || null,
-        heartCount: post.heart_count || post.heartCount || 0,
-        shareCount: post.share_count || post.shareCount || 0,
-        uploadedAt: post.uploaded_at || post.uploadedAt || new Date().toISOString(),
-        User:
-          post.user || post.User || {
-            id: post.user_id || post.userId,
-            username: 'Anonymous',
-          avatarUrl: '',
-          fullName: 'Ẩn danh',
-          },
-        // Đảm bảo lấy đúng commentCount được trả về từ server (sau tối ưu hóa)
-        commentCount: post.commentCount || 0,
-        isLiked: post.isLiked === true || post.isLiked === 't',
-      };
-    }) as Post[];
-  } catch (error) {
-    Alert.alert('Lỗi ❌', 'Không thể tải Feed. Kiểm tra Token, Server URL hoặc Server Status.');
-    throw error;
-  }
+        return data.map((post: any) => {
+            let fileUrl: string[] = [];
+            try {
+                const rawFileUrl = post.file_url || post.fileUrl || [];
+                if (typeof rawFileUrl === 'string') {
+                    fileUrl = JSON.parse(rawFileUrl);
+                } else if (Array.isArray(rawFileUrl)) {
+                    fileUrl = rawFileUrl;
+                } else {
+                    fileUrl = [];
+                }
+            } catch (e) {
+                console.error('Error parsing fileUrl in fetchPosts:', e);
+                fileUrl = [];
+            }
+            return {
+                id: post.id.toString(),
+                userId: post.user_id || post.userId,
+                content: post.content || '',
+                fileUrl,
+                musicLink: post.musicLink || null,
+                heartCount: post.heart_count || post.heartCount || 0,
+                shareCount: post.share_count || post.shareCount || 0,
+                uploadedAt: post.uploaded_at || post.uploadedAt || new Date().toISOString(),
+                User:
+                    post.user || post.User || {
+                        id: post.user_id || post.userId,
+                        username: 'Anonymous',
+                        avatarUrl: '',
+                        fullName: 'Ẩn danh',
+                    },
+                // Đảm bảo lấy đúng commentCount được trả về từ server (sau tối ưu hóa)
+                commentCount: post.commentCount || 0,
+                isLiked: post.isLiked === true || post.isLiked === 't',
+            };
+        }) as Post[];
+    } catch (error) {
+        Alert.alert('Lỗi ❌', 'Không thể tải Feed. Kiểm tra Token, Server URL hoặc Server Status.');
+        throw error;
+    }
 };
 
 // Lấy danh sách bài đăng theo User ID
 export const fetchPostsByUserId = async (userId: number): Promise<Post[]> => {
-  try {
-    // Server Endpoint: GET /api/v1/posts/byUser/:userId
-    const response = await api.get(`/posts/byUser/${userId}`); 
-    const data = response.data;
+    try {
+        // Server Endpoint: GET /api/v1/posts/byUser/:userId
+        const response = await api.get(`/posts/byUser/${userId}`);
+        const data = response.data;
 
-    if (!Array.isArray(data)) {
-      Alert.alert('Lỗi ❌', 'Dữ liệu bài đăng không hợp lệ.');
-      return [];
-    }
+        if (!Array.isArray(data)) {
+            Alert.alert('Lỗi ❌', 'Dữ liệu bài đăng không hợp lệ.');
+            return [];
+        }
 
-    return data.map((post: any) => {
-      let fileUrl: string[] = [];
-      try {
-        const rawFileUrl = post.file_url || post.fileUrl || post.images || [];
-        if (typeof rawFileUrl === 'string') {
-          fileUrl = JSON.parse(rawFileUrl);
-        } else if (Array.isArray(rawFileUrl)) {
-          fileUrl = rawFileUrl;
-        } else {
-          fileUrl = [];
-        }
-      } catch (e) {
-        console.error('Error parsing fileUrl in fetchPostsByUserId:', e);
-        fileUrl = [];
-      }
-      return {
-        id: post.id.toString(),
-        userId: post.userId,
-        content: post.content || '',
-        fileUrl,
-        musicLink: post.musicLink || null,
-        heartCount: post.likeCount || post.heartCount || 0, // Backend sử dụng likeCount
-        shareCount: post.shareCount || 0,
-        uploadedAt: post.uploadedAt || new Date().toISOString(),
-        User: { // Lấy thông tin User đã được Backend include
-          id: post.User.id,
-          username: post.User.username,
-          avatarUrl: post.User.avatarUrl,
-          fullName: post.User.fullName || post.User.username,
-        },
-        commentCount: post.commentCount || 0,
-        isLiked: post.isLiked === true, // Lấy trạng thái isLiked đã tính toán
-        // ✅ MAP comments đã được xử lý (bao gồm isLiked & likeCount)
-        comments: post.comments?.map(mapCommentData) || [],
-      };
-    }) as Post[];
-  } catch (error) {
-    Alert.alert('Lỗi ❌', 'Không thể tải bài đăng của người dùng.');
-    throw error;
-  }
+        return data.map((post) => {
+            let fileUrl = [];
+            try {
+                const rawFileUrl = post.file_url || post.fileUrl || post.images || [];
+                if (typeof rawFileUrl === 'string') {
+                    fileUrl = JSON.parse(rawFileUrl);
+                } else if (Array.isArray(rawFileUrl)) {
+                    fileUrl = rawFileUrl;
+                } else {
+                    fileUrl = [];
+                }
+            } catch (e) {
+                console.error('Error parsing fileUrl in fetchPostsByUserId:', e);
+                fileUrl = [];
+            }
+            return {
+                id: post.id.toString(),
+                userId: post.userId,
+                content: post.content || '',
+                fileUrl,
+                musicLink: post.musicLink || null,
+                heartCount: post.likeCount || post.heartCount || 0, // Backend sử dụng likeCount
+                shareCount: post.shareCount || 0,
+                uploadedAt: post.uploadedAt || new Date().toISOString(),
+                User: { // Lấy thông tin User đã được Backend include
+                    id: post.User.id,
+                    username: post.User.username,
+                    avatarUrl: post.User.avatarUrl,
+                    fullName: post.User.fullName || post.User.username,
+                },
+                commentCount: post.commentCount || 0,
+                isLiked: post.isLiked === true, // Lấy trạng thái isLiked đã tính toán
+                // ✅ MAP comments đã được xử lý (bao gồm isLiked & likeCount)
+                comments: post.comments?.map(mapCommentData) || [],
+            };
+        }) as Post[];
+    } catch (error) {
+        Alert.alert('Lỗi ❌', 'Không thể tải bài đăng của người dùng.');
+        throw error;
+    }
 };
 
 // ✅ HÀM HỖ TRỢ: Ánh xạ dữ liệu Comment (được sử dụng cho cả Post và Comment API)
 const mapCommentData = (comment: any): Comment => {
-  // Hàm đệ quy để xử lý Replies
-  const mapReplies = (replies: any[]): Comment[] => {
-    return replies.map((reply: any) => ({
-      ...reply,
-      id: reply.id.toString(),
-      likeCount: reply.likeCount || 0,
-      isLiked: reply.isLiked || false,
-      // Nếu Replies có Replies, tiếp tục đệ quy (chỉ nên áp dụng cho Replies trong Post API)
-      // Ở đây, ta chỉ cần một cấp Replies
-      replies: reply.Replies ? mapReplies(reply.Replies) : [] 
-    }));
-  };
-  
-  return {
-    ...comment,
-    id: comment.id.toString(),
-    likeCount: comment.likeCount || 0,
-    isLiked: comment.isLiked || false,
-    User: {
-      id: comment.User?.id,
-      username: comment.User?.username,
-      avatarUrl: comment.User?.avatarUrl,
-      fullName: comment.User?.fullName || comment.User?.username || 'User',
-    },
-    // Tái sử dụng logic ánh xạ Replies
-    replies: comment.Replies ? mapReplies(comment.Replies) : [], 
-  };
+    // Hàm đệ quy để xử lý Replies
+    const mapReplies = (replies: any[]): Comment[] => {
+        return replies.map((reply: any) => ({
+            ...reply,
+            id: reply.id.toString(),
+            likeCount: reply.likeCount || 0,
+            isLiked: reply.isLiked || false,
+            // Nếu Replies có Replies, tiếp tục đệ quy (chỉ nên áp dụng cho Replies trong Post API)
+            // Ở đây, ta chỉ cần một cấp Replies
+            replies: reply.Replies ? mapReplies(reply.Replies) : []
+        }));
+    };
+
+    return {
+        ...comment,
+        id: comment.id.toString(),
+        likeCount: comment.likeCount || 0,
+        isLiked: comment.isLiked || false,
+        User: {
+            id: comment.User?.id,
+            username: comment.User?.username,
+            avatarUrl: comment.User?.avatarUrl,
+            fullName: comment.User?.fullName || comment.User?.username || 'User',
+        },
+        // Tái sử dụng logic ánh xạ Replies
+        replies: comment.Replies ? mapReplies(comment.Replies) : [],
+    };
 };
 
 /** * Tạo bài đăng mới.
@@ -216,67 +216,67 @@ const mapCommentData = (comment: any): Comment => {
  * @returns Promise<Post> Bài đăng đã tạo.
  */
 export const createNewPost = async (content: string, fileUrls: string[] | null = null, songId: number | null = null): Promise<Post> => {
-  try {
-    // Lấy thông tin người dùng từ store để sử dụng khi cần thiết
-    const user = useAuthStore.getState().user;
-    if (!user) throw new Error('Chưa đăng nhập');
+    try {
+        // Lấy thông tin người dùng từ store để sử dụng khi cần thiết
+        const user = useAuthStore.getState().user;
+        if (!user) throw new Error('Chưa đăng nhập');
 
-    // Gửi yêu cầu POST với content, fileUrl và songId
-    const response = await api.post('/posts', {
-      content,
-      fileUrls, // Bao gồm URL của ảnh/video
-      songId,  // Bao gồm ID bài hát
-      // KHÔNG GỬI userId LÊN SERVER. SERVER SẼ LẤY NÓ TỪ TOKEN.
-    });
+        // Gửi yêu cầu POST với content, fileUrl và songId
+        const response = await api.post('/posts', {
+            content,
+            fileUrls, // Bao gồm URL của ảnh/video
+            songId,  // Bao gồm ID bài hát
+            // KHÔNG GỬI userId LÊN SERVER. SERVER SẼ LẤY NÓ TỪ TOKEN.
+        });
 
-    const newPostResponse = response.data.post; // Server trả về { message, post }
-    
-    return {
-      ...newPostResponse,
-      id: newPostResponse.id.toString(),
-      // Sử dụng thông tin User được server trả về (đã tối ưu hóa ở backend)
-      // Nếu server không gửi User kèm theo, dùng thông tin local user
-      User: newPostResponse.User || {
-        id: user.id,
-        username: user.username || 'User',
-        avatarUrl: user.avatarUrl || '',
-        fullName: user.fullName || user.username || 'User',
-      },
-      commentCount: newPostResponse.commentCount || 0,
-      heartCount: newPostResponse.heartCount || 0,
-      shareCount: newPostResponse.shareCount || 0,
-      isLiked: false,
-      fileUrl: Array.isArray(newPostResponse.fileUrl) ? newPostResponse.fileUrl : [],
-      musicLink: newPostResponse.musicLink || null,
-    } as Post;
-  } catch (error) {
-    console.error('❌ Lỗi tạo bài đăng:', error);
-    Alert.alert('Lỗi ❌', 'Không thể tạo bài đăng mới.');
-    throw error;
-  }
+        const newPostResponse = response.data.post; // Server trả về { message, post }
+
+        return {
+            ...newPostResponse,
+            id: newPostResponse.id.toString(),
+            // Sử dụng thông tin User được server trả về (đã tối ưu hóa ở backend)
+            // Nếu server không gửi User kèm theo, dùng thông tin local user
+            User: newPostResponse.User || {
+                id: user.id,
+                username: user.username || 'User',
+                avatarUrl: user.avatarUrl || '',
+                fullName: user.fullName || user.username || 'User',
+            },
+            commentCount: newPostResponse.commentCount || 0,
+            heartCount: newPostResponse.heartCount || 0,
+            shareCount: newPostResponse.shareCount || 0,
+            isLiked: false,
+            fileUrl: Array.isArray(newPostResponse.fileUrl) ? newPostResponse.fileUrl : [],
+            musicLink: newPostResponse.musicLink || null,
+        } as Post;
+    } catch (error) {
+        console.error('❌ Lỗi tạo bài đăng:', error);
+        Alert.alert('Lỗi ❌', 'Không thể tạo bài đăng mới.');
+        throw error;
+    }
 };
 
 /** * Thích / Bỏ thích bài đăng.
  * @returns {isLiked: boolean, heartCount: number} Trạng thái like và số lượng like mới nhất.
  */
 export const togglePostLike = async (postId: string): Promise<{ isLiked: boolean, heartCount: number }> => {
-  try {
-    // Gửi yêu cầu POST đến endpoint toggleLike
-    const response = await api.post(`/posts/${postId}/like`); 
+    try {
+        // Gửi yêu cầu POST đến endpoint toggleLike
+        const response = await api.post(`/posts/${postId}/like`);
 
-    // ✅ LẤY DỮ LIỆU CẬP NHẬT TỪ SERVER
-    const { isLiked, heartCount } = response.data;
-    
-    // Trả về trạng thái đã được cập nhật
-    return {
-      isLiked: !!isLiked, // Đảm bảo là boolean
-      heartCount: heartCount || 0,
-    };
-  } catch (error) {
-    console.error('❌ Lỗi togglePostLike:', error);
-    Alert.alert('Lỗi ❌', 'Không thể cập nhật trạng thái thích.');
-    throw error;
-  }
+        // ✅ LẤY DỮ LIỆU CẬP NHẬT TỪ SERVER
+        const { isLiked, heartCount } = response.data;
+
+        // Trả về trạng thái đã được cập nhật
+        return {
+            isLiked: !!isLiked, // Đảm bảo là boolean
+            heartCount: heartCount || 0,
+        };
+    } catch (error) {
+        console.error('❌ Lỗi togglePostLike:', error);
+        Alert.alert('Lỗi ❌', 'Không thể cập nhật trạng thái thích.');
+        throw error;
+    }
 };
 
 // === API CHO BÌNH LUẬN ===
@@ -319,22 +319,22 @@ export const togglePostLike = async (postId: string): Promise<{ isLiked: boolean
 //     }
 // };
 export const fetchCommentsByPostId = async (postId: string): Promise<Comment[]> => {
-    try {
-        // Gọi API đến Endpoint đã định nghĩa trong commentController.js
-        const response = await api.get(`/comments/byPost/${postId}`);
-        const data = response.data;
+    try {
+        // Gọi API đến Endpoint đã định nghĩa trong commentController.js
+        const response = await api.get(`/comments/byPost/${postId}`);
+        const data = response.data;
 
-        if (!Array.isArray(data)) {
-            Alert.alert('Lỗi ❌', 'Dữ liệu bình luận không hợp lệ.');
-            return [];
-        }
+        if (!Array.isArray(data)) {
+            Alert.alert('Lỗi ❌', 'Dữ liệu bình luận không hợp lệ.');
+            return [];
+        }
 
-        // SỬ DỤNG HÀM ÁNH XẠ CHUNG
-        return data.map(mapCommentData) as Comment[];
-    } catch (error) {
-        Alert.alert('Lỗi ❌', 'Không thể tải bình luận.');
-        throw error;
-    }
+        // SỬ DỤNG HÀM ÁNH XẠ CHUNG
+        return data.map(mapCommentData) as Comment[];
+    } catch (error) {
+        Alert.alert('Lỗi ❌', 'Không thể tải bình luận.');
+        throw error;
+    }
 };
 /** Tạo bình luận mới */
 export const createNewComment = async (postId: string, content: string, parentId: string | null = null): Promise<Comment> => {
@@ -372,10 +372,10 @@ export const createNewComment = async (postId: string, content: string, parentId
 export const toggleCommentLike = async (commentId: string): Promise<{ isLiked: boolean, likeCount: number }> => {
     try {
         // Server Endpoint: POST /api/v1/comments/:commentId/like
-        const response = await api.post(`/comments/${commentId}/like`); 
-        
+        const response = await api.post(`/comments/${commentId}/like`);
+
         const { isLiked, likeCount } = response.data;
-        
+
         return {
             isLiked: !!isLiked,
             likeCount: likeCount || 0,
@@ -426,7 +426,7 @@ export const toggleFollow = async (userId: number): Promise<{ isFollowing: boole
         // ➡️ Endpoint: POST /api/v1/users/:userId/follow (sử dụng userId của người được theo dõi)
         // Đây là endpoint đã được định nghĩa trong followsController.js
         const response = await api.post(`/follows/users/${userId}/follow`);
-        
+
         // Server trả về { message: string, isFollowing: boolean }
         return {
             isFollowing: response.data.isFollowing

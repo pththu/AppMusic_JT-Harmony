@@ -52,7 +52,7 @@ exports.getAllPost = async(req, res) => {
 
     // 1. Kiểm tra req.user.id (sau khi đã ép kiểu trong optionalAuthenticateToken)
     if (req.user && req.user.id) {
-        rawUserId = req.user.id;
+        rawUserId = req.user.id; 
     }
 
     // 2. Nếu không có ở req.user.id, kiểm tra req.currentUser.id (Sequelize Model ID)
@@ -429,7 +429,11 @@ exports.getPostsByUserId = async(req, res) => {
             };
         }));
 
-        res.json(postsWithExtras);
+        // res.json(postsWithExtras);
+        res.status(200).json({
+            message: 'Lấy bài đăng theo User ID thành công.',
+            data: postsWithExtras
+        })
 
     } catch (err) {
         console.error("Lỗi khi lấy bài đăng theo User ID:", err);

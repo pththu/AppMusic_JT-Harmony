@@ -1,4 +1,3 @@
-import axios from "axios";
 import axiosClient from "@/config/axiosClient";
 
 // auth api
@@ -203,37 +202,37 @@ export const ChangeAvatar = async (payload) => {
   }
 };
 
-// export const UploadMultipleFile = async (payload) => {
-//   try {
-//     const assets = payload; // array of file URIs
-//     if (!assets || assets.length === 0) {
-//       console.log("Không có file nào được chọn để upload.");
-//       return { message: "Không có file nào được chọn", status: "info" };
-//     }
+export const UploadMultipleFile = async (payload) => {
+  try {
+    const assets = payload; // array of file URIs
+    if (!assets || assets.length === 0) {
+      console.log("Không có file nào được chọn để upload.");
+      return { message: "Không có file nào được chọn", status: "info" };
+    }
 
-//     const formData = new FormData();
-//     assets.forEach((asset) => {
-//       const fileToUpload = {
-//         uri: asset.uri,
-//         name: asset.name,
-//         type: asset.mimeType || 'application/octet-stream',
-//       };
+    const formData = new FormData();
+    assets.forEach((asset) => {
+      const fileToUpload = {
+        uri: asset.uri,
+        name: asset.name,
+        type: asset.mimeType || 'application/octet-stream',
+      };
 
-//       // Tên field 'files' phải khớp với tên mà backend
-//       formData.append('files', fileToUpload as any);
-//     });
+      // Tên field 'files' phải khớp với tên mà backend
+      formData.append('files', fileToUpload as any);
+    });
 
-//     const response = await axiosClient.post(`/upload/multiple-file`, formData, {
-//       headers: {
-//         'Content-Type': 'multipart/form-data',
-//       },
-//     });
-//     console.log('response.data', response.data);
-//     return response.data;
-//   } catch (error) {
-//     return { message: error.message, status: "error" };
-//   }
-// };
+    const response = await axiosClient.post(`/upload/multiple-file`,       formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    console.log('response.data', response.data);
+    return response.data;
+  } catch (error) {
+    return { message: error.message, status: "error" };
+  }
+};
 
 
 //track api
