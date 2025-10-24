@@ -1,4 +1,4 @@
-import axiosClient from '../api/axiosClient';
+import axiosClient from '../config/axiosClient';
 
 const authService = {
   // Hàm đăng nhập đã có

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 // import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useTheme } from "@/components/ThemeContext";
 
 // Bổ sung: Định nghĩa lại type Song để sử dụng nội bộ trong file này
 interface Song {
@@ -27,8 +28,8 @@ interface Song {
 // Cập nhật để hiển thị trên hai cột
 const InfoRow = ({ label, value }: { label: string; value?: string }) => (
   <View className="flex-row mb-4">
-    <Text className="text-gray-400 text-lg w-28">{label}</Text>
-    <Text className="text-white text-base flex-1">
+    <Text className="text-gray-600 dark:text-gray-400 text-lg w-28">{label}</Text>
+    <Text className="text-black dark:text-white text-base flex-1">
       {value || "Không có thông tin"}
     </Text>
   </View>
@@ -41,9 +42,9 @@ const LinkRow = ({ label, url }: { label: string; url?: string }) => {
   }
   return (
     <View className="flex-row mb-4">
-      <Text className="text-gray-400 text-x1 w-28">{label}</Text>
+      <Text className="text-gray-600 dark:text-gray-400 text-x1 w-28">{label}</Text>
       <TouchableOpacity onPress={() => Linking.openURL(url)} className="flex-1">
-        <Text className="text-blue-400 text-base" numberOfLines={1}>
+        <Text className="text-blue-600 dark:text-blue-400 text-base" numberOfLines={1}>
           {url}
         </Text>
       </TouchableOpacity>
@@ -53,23 +54,24 @@ const LinkRow = ({ label, url }: { label: string; url?: string }) => {
 
 export default function SongInfoScreen() {
   const params = useLocalSearchParams();
-  console.log(params.song);
   const song = JSON.parse(params.song as string);
-  console.log(song);
 
   // Ép kiểu (type assertion) để đảm bảo song có đầy đủ thuộc tính
   const typedSong = song as Song;
 
+  const { theme } = useTheme();
+  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
+
   return (
-    <View className="flex-1 bg-[#0E0C1F] px-4 pt-4">
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
         <TouchableOpacity onPress={() => router.back()}>
           {/* Thay đổi icon quay lại */}
-          <Ionicons name="chevron-down" size={28} color="white" />
+          <Ionicons name="chevron-down" size={28} color={primaryIconColor} />
         </TouchableOpacity>
         {/* Cập nhật tiêu đề */}
-        <Text className="text-white text-2xl font-bold flex-1 text-center">
+        <Text className="text-black dark:text-white text-2xl font-bold flex-1 text-center">
           Information
         </Text>
       </View>

@@ -1,6 +1,8 @@
 server/node_modules/
 server/.env.development
+server/serviceAccountKey.json
 
 frontendmusic/node_modules/
 
 mobile/node_modules/
+mobile/.env

@@ -1,5 +1,4 @@
-import { FontAwesome5, AntDesign, Ionicons, Feather } from '@expo/vector-icons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { FontAwesome5, AntDesign, Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
 import { JSX } from 'react';
 
 export const icons: Record<string, (props: any) => JSX.Element> =  {

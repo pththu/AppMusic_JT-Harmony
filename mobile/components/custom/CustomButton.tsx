@@ -22,19 +22,24 @@ export default function CustomButton({
   const getButtonStyles = () => {
     let baseStyles = 'rounded-full flex-row items-center justify-center';
     let textStyles = 'font-semibold';
-
+    let iconClassName = '';
+    const iconSize = size === 'large' ? 20 : 18;
+    
     switch (variant) {
       case 'primary':
         baseStyles += ' bg-green-600';
-        textStyles += ' text-white';
+        textStyles += ' text-black dark:text-white';
+        iconClassName = 'text-black dark:text-white';
         break;
       case 'secondary':
-        baseStyles += ' bg-gray-800';
-        textStyles += ' text-white';
+        baseStyles += ' bg-gray-100 dark:bg-gray-800';
+        textStyles += ' text-black dark:text-white';
+        iconClassName = 'text-black dark:text-white';
         break;
       case 'outline':
-        baseStyles += ' border border-gray-600';
-        textStyles += ' text-gray-400';
+        baseStyles += ' border border-gray-300 dark:border-gray-600';
+        textStyles += ' text-gray-600 dark:text-gray-400';
+        iconClassName = 'text-gray-600 dark:text-gray-400';
         break;
     }
 
@@ -47,26 +52,28 @@ export default function CustomButton({
         baseStyles += ' px-6 py-3';
         textStyles += ' text-lg';
         break;
-    } // Thêm className tùy chỉnh từ props
+      case 'medium': 
+        baseStyles += ' px-5 py-2';
+        textStyles += ' text-base';
+        break;
+    } 
 
-    baseStyles += ` ${className}`; // Xác định màu icon
-
-    const iconColor = variant === 'outline' ? '#9CA3AF' : 'white'; // Thêm margin cho icon nếu có title
+    baseStyles += ` ${className}`; 
+    
     const iconMargin = title ? 'mr-2' : '';
-
-    return { baseStyles, textStyles, iconColor, iconMargin };
+    
+    return { baseStyles, textStyles, iconClassName, iconMargin, iconSize };
   };
 
-  const { baseStyles, textStyles, iconColor, iconMargin } = getButtonStyles();
+  const { baseStyles, textStyles, iconClassName, iconMargin, iconSize } = getButtonStyles();
 
   return (
     <TouchableOpacity className={baseStyles} onPress={onPress}>
       {iconName && (
         <Icon
           name={iconName}
-          size={18}
-          color={iconColor}
-          className={iconMargin}
+          size={iconSize}
+          className={`${iconClassName} ${iconMargin}`}
         />
       )}
       <Text className={textStyles}>{title}</Text>

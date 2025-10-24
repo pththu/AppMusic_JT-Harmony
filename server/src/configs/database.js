@@ -3,7 +3,7 @@ const { Sequelize } = require('sequelize');
 const { Client } = require('pg');
 
 // Hàm tạo cơ sở dữ liệu nếu chưa tồn tại
-const createDatabaseIfNotExists = async () => {
+const createDatabaseIfNotExists = async() => {
     const { DB_NAME, DB_USER, DB_PASS, DB_HOST, DB_PORT } = process.env;
 
     try {
@@ -56,7 +56,7 @@ const initializeSequelize = () => {
 };
 
 // Thực hiện kiểm tra và khởi tạo cơ sở dữ liệu
-(async () => {
+(async() => {
     await createDatabaseIfNotExists();
 })();
 

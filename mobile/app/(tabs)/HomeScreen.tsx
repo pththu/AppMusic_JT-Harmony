@@ -1,11 +1,6 @@
 import CustomButton from "@/components/custom/CustomButton";
 import AlbumItem from "@/components/items/AlbumItem";
 import SongItem from "@/components/items/SongItem";
-import {
-  NavigationProp,
-  ParamListBase,
-  useNavigation,
-} from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -17,8 +12,11 @@ import {
   View,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useNavigate } from "@/hooks/useNavigate";
+import useAuthStore from "@/store/authStore";
 
-// Dữ liệu mockup đã được thêm image URL
+import { useTheme } from "@/components/ThemeContext";
+
 const tabs = [
   { id: "forYou", label: "For you" },
   { id: "relax", label: "Relax" },
@@ -124,33 +122,20 @@ const relaxData = [
   },
 ];
 
-const avatarImages = [
-  "https://randomuser.me/api/portraits/men/1.jpg",
-  "https://randomuser.me/api/portraits/women/2.jpg",
-  "https://randomuser.me/api/portraits/men/3.jpg",
-  "https://randomuser.me/api/portraits/women/4.jpg",
-  "https://randomuser.me/api/portraits/men/5.jpg",
-];
-
 export default function HomeScreen() {
+  const { navigate } = useNavigate();
+  const { theme } = useTheme();
+  const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("forYou");
   const animation = useRef(new Animated.Value(0)).current;
-  const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
-  const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const [hasNotification] = useState(true);
   const [tabWidths, setTabWidths] = useState<number[]>([]);
   const [tabPositions, setTabPositions] = useState<number[]>([]);
   const [tabsLayouted, setTabsLayouted] = useState(false);
 
   useEffect(() => {
-    if (!avatarImage) {
-      const random =
-        avatarImages[Math.floor(Math.random() * avatarImages.length)];
-      setAvatarImage(random);
-    }
-
     Animated.parallel([
       Animated.timing(greetingOpacity, {
         toValue: 1,
@@ -163,7 +148,7 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [greetingOpacity, greetingTranslateY, avatarImage]);
+  }, [greetingOpacity, greetingTranslateY]);
 
   useEffect(() => {
     if (tabWidths.length === tabs.length) {
@@ -200,7 +185,7 @@ export default function HomeScreen() {
   const tabUnderlineLeft = tabsLayouted
     ? animation.interpolate({
         inputRange: tabs.map((_, i) => i),
-        outputRange: tabPositions,
+        outputRange: tabPositions.map((pos) => pos - 20),
       })
     : 0;
 
@@ -211,44 +196,36 @@ export default function HomeScreen() {
       })
     : 0;
 
+  const iconColor = theme === 'light' ? '#000' : '#fff';
+
   return (
-    <View className="flex-1  bg-[#0E0C1F]">
-      {/* Header */}
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F]">
       <View className="flex-row justify-between items-center mx-5 mt-10 mb-2">
         <Animated.Text
-          className="text-white text-2xl font-bold"
+          className="text-black dark:text-white text-2xl font-bold"
           style={{
             opacity: greetingOpacity,
             transform: [{ translateY: greetingTranslateY }],
           }}
         >
-          Hi, ...
+          Hi, {String(user?.fullName || user?.username)} 👋
         </Animated.Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">
-            <Icon name="notifications-outline" size={28} color="#fff" />
+            <Icon name="notifications-outline" size={28} color={iconColor} />
             {hasNotification && (
               <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
             )}
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate("Profile", { screen: "ProfileMain" })
-            }
-          >
-            {avatarImage ? (
-              <Image
-                source={{ uri: avatarImage }}
-                className="w-10 h-10 rounded-full"
-              />
-            ) : (
-              <View className="w-10 h-10 rounded-full bg-gray-600" />
-            )}
+          <TouchableOpacity onPress={() => navigate("Profile")}>
+            <Image
+              source={{ uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
+              className="w-10 h-10 rounded-full"
+            />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Tabs and Underline */}
       <View className="relative mb-5">
         <ScrollView
           horizontal
@@ -265,8 +242,8 @@ export default function HomeScreen() {
               <Text
                 className={`text-xl font-bold ${
                   activeTab === tab.id
-                    ? "text-white font-bold"
-                    : "text-gray-500 font-normal"
+                    ? "text-black dark:text-white font-bold"
+                    : "text-gray-500 dark:text-gray-500 font-normal"
                 }`}
               >
                 {tab.label}
@@ -276,7 +253,7 @@ export default function HomeScreen() {
         </ScrollView>
         {tabsLayouted && (
           <Animated.View
-            className="h-0.5 bg-white absolute -bottom-2"
+            className="h-0.5 bg-black dark:bg-white absolute -bottom-2"
             style={{
               width: tabUnderlineWidth,
               transform: [{ translateX: tabUnderlineLeft }],
@@ -285,10 +262,8 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Content */}
       {activeTab === "forYou" && (
         <ScrollView className="px-5">
-          {/* Featuring Today Card */}
           <View className="mb-6 rounded-lg overflow-hidden">
             <Image
               source={{ uri: forYouData[0].image }}
@@ -298,7 +273,7 @@ export default function HomeScreen() {
               <Text className="text-white text-xl font-bold">
                 {forYouData[0].title}
               </Text>
-              <Text className="text-gray-300">{forYouData[0].content}</Text>
+              <Text className="text-white dark:text-gray-300">{forYouData[0].content}</Text>
               <CustomButton
                 title="Play"
                 onPress={() => {}}
@@ -307,13 +282,12 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Recently Played Horizontal List */}
           <View className="mb-6">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-white text-lg font-bold">
+              <Text className="text-black dark:text-white text-lg font-bold">
                 {forYouData[1].title}
               </Text>
-              <CustomButton title="See more" onPress={() => {}} />
+              <CustomButton variant="primary" title="See more" onPress={() => {}} />
             </View>
             <FlatList
               horizontal
@@ -330,9 +304,8 @@ export default function HomeScreen() {
             />
           </View>
 
-          {/* Mixes for you Horizontal List */}
           <View className="mb-6">
-            <Text className="text-white text-lg font-bold mb-2">
+            <Text className="text-black dark:text-white text-lg font-bold mb-2">
               {forYouData[2].title}
             </Text>
             <FlatList
@@ -354,7 +327,6 @@ export default function HomeScreen() {
 
       {activeTab === "relax" && (
         <ScrollView className="px-5">
-          {/* Today's Refreshing Song-Recommendations Card */}
           <View className="mb-6 rounded-lg overflow-hidden">
             <Image
               source={{ uri: relaxData[0].image }}
@@ -364,11 +336,10 @@ export default function HomeScreen() {
               <Text className="text-white text-xl font-bold">
                 {relaxData[0].title}
               </Text>
-              <Text className="text-gray-300">{relaxData[0].content}</Text>
+              <Text className="text-white dark:text-gray-300">{relaxData[0].content}</Text>
             </View>
           </View>
 
-          {/* Relax Songs List */}
           {relaxData.slice(1).map((item) => (
             <SongItem
               key={item.id}

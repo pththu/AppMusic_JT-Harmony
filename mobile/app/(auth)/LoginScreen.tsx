@@ -2,15 +2,18 @@ import CustomTextInput from "@/components/custom/CustomTextInput";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
 import { Login } from "@/routes/ApiRouter";
+import useAuthStore from "@/store/authStore";
 import React, { useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const { navigate } = useNavigate();
   const { success, error } = useCustomAlert();
+  const { login } = useAuthStore();
 
-  const [email, setEmail] = useState("tuan@gmail.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -43,12 +46,6 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
-    if (email === "tuan@gmail.com" && password === "123456") {
-      console.log("Đăng nhập thành công (tạm thời)!");
-      Alert.alert("Thành công", "Đăng nhập thành công (tạm thời)!");
-      navigate("Main"); // Điều hướng đến màn hình chính
-      return; // Dừng hàm tại đây, không gọi API
-    }
     const validationMessage = validateForm();
     if (validationMessage) {
       error("Lỗi Đăng Nhập", validationMessage);
@@ -57,13 +54,14 @@ export default function LoginScreen() {
     try {
       const payload = { email, password };
       const response = await Login(payload);
-      console.log(response);
-      if (response.statusCode === 200) {
-        success("Thành Công", "Đăng nhập thành công!", () => navigate("Main"));
+      if (!response.success) {
+        error("Lỗi Đăng Nhập", response.message || "Đăng nhập thất bại.");
+        return;
       }
+      login(response.user, 'local', response.user?.accessToken);
+      success("Thành Công", "Đăng nhập thành công!");
+      navigate("Main");
     } catch (err) {
-      console.error("Login error:", err);
-      // Giả sử lỗi từ server có cấu trúc { message: "..." }
       const errorMessage =
         err.response?.data?.message ||
         "Đã xảy ra lỗi trong quá trình đăng nhập.";
@@ -72,7 +70,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1 bg-[#0E0C1F] items-center justify-center">
+    <SafeAreaView className="flex-1 bg-[#0E0C1F] items-center justify-center">
       <View
         className="w-11/12 p-8 rounded-2xl"
         style={{
@@ -85,7 +83,7 @@ export default function LoginScreen() {
         }}
       >
         <Text className="text-white text-3xl font-bold mb-8 text-center">
-          Login
+          Đăng nhập
         </Text>
 
         {/* Input cho Email */}
@@ -102,7 +100,7 @@ export default function LoginScreen() {
 
         {/* Input cho Password */}
         <View className="mb-4">
-          <Text className="text-gray-300 mb-2">Password</Text>
+          <Text className="text-gray-300 mb-2">Mật khẩu</Text>
           <CustomTextInput
             placeholder="Your Password"
             value={password}
@@ -113,13 +111,9 @@ export default function LoginScreen() {
         </View>
 
         {/* Tùy chọn Remember me và Forgot password? */}
-        <View className="flex-row items-center justify-between mb-8">
-          <View className="flex-row items-center">
-            <TouchableOpacity className="w-5 h-5 border border-gray-400 rounded mr-2"></TouchableOpacity>
-            <Text className="text-[#34D399]">Remember me</Text>
-          </View>
-          <TouchableOpacity>
-            <Text className="text-[#34D399]">Forgot password?</Text>
+        <View className="flex-row items-center justify-center mb-8">
+          <TouchableOpacity onPress={() => navigate("ForgotPassword")}>
+            <Text className="text-[#34D399] underline">Quên mật khẩu?</Text>
           </TouchableOpacity>
         </View>
 
@@ -130,18 +124,18 @@ export default function LoginScreen() {
             onPress={handleLogin}
             activeOpacity={0.7}
           >
-            <Text className="text-white font-bold text-lg">Login</Text>
+            <Text className="text-white font-bold text-lg">Đăng nhập</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Liên kết Don't have an account? Register */}
+        {/* Liên kết Chưa có tài khoản? Đăng ký */}
         <View className="flex-row justify-center">
-          <Text className="text-gray-400">Don't have an account?</Text>
+          <Text className="text-gray-400">Chưa có tài khoản?</Text>
           <TouchableOpacity onPress={() => navigate("SignUp")}>
-            <Text className="text-[#34D399] font-bold ml-1">Sign Up</Text>
+            <Text className="text-[#34D399] font-bold ml-1">Đăng ký</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }

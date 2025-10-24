@@ -12,6 +12,7 @@ import HeaderBackButton from '@/components/button/HeaderBackButton';
 import SongItem from '@/components/items/SongItem';
 import CustomButton from '@/components/custom/CustomButton';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigate } from '@/hooks/useNavigate';
 
 const sampleArtist = {
   id: '1',
@@ -59,22 +60,27 @@ const sampleArtist = {
 };
 
 export default function ArtistScreen() {
+  const { navigate } = useNavigate();
   const router = useRouter();
   const params = useLocalSearchParams();
   const artist = params.artist ? JSON.parse(params.artist as string) : sampleArtist;
   const popularReleases = artist.popularReleases || [];
+
+  const handlePressSeeMore = () => {
+    navigate("AllSongsScreen", { artist: JSON.stringify(artist) });
+  }
 
   const renderItem = ({ item }: any) => (
     <SongItem
       title={item.title}
       subtitle={item.album}
       image={item.image}
-      onOptionsPress={() => {}}
+      onOptionsPress={() => { }}
     />
   );
 
   return (
-    <ScrollView className="flex-1  bg-[#0E0C1F]">
+    <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F]">
       {/* Container cho ảnh và overlay */}
       <View className="relative w-full h-72">
         <Image
@@ -103,35 +109,35 @@ export default function ArtistScreen() {
         {/* <Text className="text-white text-3xl font-bold mb-1">
           {artist.name}
         </Text> */}
-        <Text className="text-gray-400 mb-4">
+        <Text className="text-gray-600 dark:text-gray-400 mb-4">
           {artist.monthlyListeners} monthly listeners
         </Text>
         <View className="flex-row space-x-4 mb-4">
           <CustomButton
             title=""
-            onPress={() => {}}
+            onPress={() => { }}
             iconName="person-add"
             className="bg-gray-800 rounded-full px-5 py-2 mr-4 flex-row items-center"
           />
           <CustomButton
             title=""
-            onPress={() => {}}
+            onPress={() => { }}
             iconName="share-outline"
             className="bg-gray-800 rounded-full px-5 py-2 flex-row items-center mr-4"
           />
           <CustomButton
             title=""
-            onPress={() => {}}
+            onPress={() => { }}
             iconName="play"
             className="bg-green-600 rounded-full px-5 py-2 flex-row items-center"
           />
         </View>
         <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-white text-xl font-bold">Popular releases</Text>
+          <Text className="text-black dark:text-white text-xl font-bold">Popular releases</Text>
           <TouchableOpacity
-            onPress={() => router.push({ pathname: '/AllSongsScreen', params: { artist: JSON.stringify(artist) } })}
+            onPress={() => handlePressSeeMore()}
           >
-            <Text className="text-gray-400 font-semibold">See more</Text>
+            <Text className="text-gray-600 dark:text-gray-400 font-semibold">See more</Text>
           </TouchableOpacity>
         </View>
         <FlatList

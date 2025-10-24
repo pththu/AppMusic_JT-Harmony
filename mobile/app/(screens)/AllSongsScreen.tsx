@@ -3,6 +3,8 @@ import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import HeaderBackButton from '@/components/button/HeaderBackButton';
 import SongItem from '@/components/items/SongItem';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTheme } from '@/components/ThemeContext';
 
 const sampleSongs = [
   {
@@ -67,23 +69,28 @@ const sampleSongs = [
   },
 ];
 
-export default function AllSongsScreen({ navigation, route }: any) {
-  const artist = route.params?.artist || { name: 'Artist' };
+export default function AllSongsScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const artist = params.artist ? JSON.parse(params.artist as string) : { name: 'Artist' };
+
+  const { theme } = useTheme();
+  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
 
   const renderItem = ({ item }: any) => (
     <SongItem
       title={item.title}
       subtitle={item.album}
       image={item.image}
-      onOptionsPress={() => {}}
+      onOptionsPress={() => { }}
     />
   );
 
   return (
-    <View className="flex-1  bg-[#0E0C1F]">
-      <HeaderBackButton onPress={() => navigation.goBack()} />
-      <Text className="text-white text-2xl font-bold px-4 mb-4">All Songs</Text>
-      <Text className="text-white text-lg font-semibold px-4 mb-2">
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F]">
+      <HeaderBackButton onPress={() => router.back()} />
+      <Text className="text-black dark:text-white text-2xl font-bold px-4 mb-4">All Songs</Text>
+      <Text className="text-black dark:text-white text-lg font-semibold px-4 mb-2">
         {artist.name}
       </Text>
       <FlatList
@@ -92,8 +99,8 @@ export default function AllSongsScreen({ navigation, route }: any) {
         renderItem={renderItem}
       />
       <TouchableOpacity className="bg-green-600 rounded-full px-5 py-3 m-4 flex-row items-center justify-center">
-        <Icon name="play" size={20} color="white" />
-        <Text className="text-white font-semibold ml-3">Play All</Text>
+        <Icon name="play" size={20} color={primaryIconColor} />
+        <Text className="text-black dark:text-white font-semibold ml-3">Play All</Text>
       </TouchableOpacity>
     </View>
   );

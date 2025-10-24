@@ -20,13 +20,13 @@ export default function DownloadQualityScreen() {
   };
 
   return (
-    <View className="flex-1 bg-[#0E0C1F] p-6">
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F] p-6">
       <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-white text-xl font-bold">
+        <Text className="text-black dark:text-white text-xl font-bold">
           Select Download Quality
         </Text>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text className="text-white text-lg">X</Text>
+          <Text className="text-black dark:text-white text-lg">X</Text>
         </TouchableOpacity>
       </View>
 
@@ -41,10 +41,10 @@ export default function DownloadQualityScreen() {
       ))}
 
       <TouchableOpacity
-        className="bg-gray-700 rounded-md py-3 mt-6 items-center"
+        className="bg-gray-300 dark:bg-gray-700 rounded-md py-3 mt-6 items-center"
         onPress={() => router.back()}
       >
-        <Text className="text-white font-semibold text-lg">Done</Text>
+        <Text className="text-black dark:text-white font-semibold text-lg">Done</Text>
       </TouchableOpacity>
     </View>
   );

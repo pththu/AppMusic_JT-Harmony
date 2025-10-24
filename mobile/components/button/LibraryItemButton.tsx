@@ -29,12 +29,12 @@ export default function LibraryItemButton({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {/* Icon */}
       <View className="mb-2">
-        <Icon name={icon} size={24} color="#000" />
+        <Text> 
+          <Icon name={icon} size={24} color="#000" />
+        </Text>
       </View>
-      {/* Tiêu đề */}
-      <Text className="text-black text-base font-semibold">{title}</Text>
+      <Text className="text-black dark:text-white text-base font-semibold">{title}</Text>
     </TouchableOpacity>
   );
 }

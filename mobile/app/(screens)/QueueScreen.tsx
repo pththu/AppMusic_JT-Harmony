@@ -12,9 +12,13 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 // import { useNavigation } from '@react-navigation/native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQueueStore } from '@/store/queueStore';
+import { useTheme } from '@/components/ThemeContext';
 
 export default function QueueScreen() {
   const [autoRecommendations, setAutoRecommendations] = useState(true);
+  const { theme } = useTheme();
+  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
+  const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
 
   // Nhận dữ liệu bài hát đang phát và hàng đợi từ params
   // const { nowPlaying, queue } = route.params;
@@ -34,41 +38,41 @@ export default function QueueScreen() {
     return (
       <View
         key={`${item.id}-${index}`}
-        className={`flex-row items-center py-2 ${index > 0 ? 'border-b border-gray-700' : ''}`}
+        className={`flex-row items-center py-2 ${index > 0 ? 'border-b border-gray-300 dark:border-gray-700' : ''}`}
       >
         <View className="mr-4">
           {isPlaying ? (
             <Ionicons name="volume-medium" size={24} color="#1ED760" />
           ) : (
-            <Text className="text-gray-400 text-base w-6">{displayIndex}</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-base w-6">{displayIndex}</Text>
           )}
         </View>
         <Image source={{ uri: item.image }} className="w-12 h-12 rounded-md" />
         <View className="ml-4 flex-1">
           <Text
-            className={`font-semibold ${isPlaying ? 'text-green-400' : 'text-white'}`}
+            className={`font-semibold ${isPlaying ? 'text-green-600 dark:text-green-400' : 'text-black dark:text-white'}`}
           >
             {item.title}
           </Text>
-          <Text className="text-gray-400">
+          <Text className="text-gray-600 dark:text-gray-400">
             {item.artists?.map(a => a.name).join(', ')}
           </Text>
         </View>
         <TouchableOpacity>
-          <Icon name="more-vert" size={24} color="gray" />
+          <Icon name="more-vert" size={24} color={secondaryIconColor} />
         </TouchableOpacity>
       </View>
     );
   };
 
   return (
-    <View className="flex-1 bg-[#0E0C1F] p-4">
+    <View className="flex-1 bg-white dark:bg-[#0E0C1F] p-4">
       <View className="flex-row items-center mb-4">
         {/* Nút quay lại */}
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-down" size={28} color="white" />
+          <Ionicons name="chevron-down" size={28} color={primaryIconColor} />
         </TouchableOpacity>
-        <Text className="text-white text-xl font-semibold flex-1 text-center">
+        <Text className="text-black dark:text-white text-xl font-semibold flex-1 text-center">
           In Queue
         </Text>
       </View>
@@ -83,9 +87,9 @@ export default function QueueScreen() {
             />
           )}
           <View>
-            <Text className="text-gray-400 text-sm">Now Playing</Text>
-            <Text className="text-white font-bold">{nowPlaying.title}</Text>
-            <Text className="text-gray-400 text-sm">
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">Now Playing</Text>
+            <Text className="text-black dark:text-white font-bold">{nowPlaying.title}</Text>
+            <Text className="text-gray-600 dark:text-gray-400 text-sm">
               {nowPlaying.artists?.map(a => a.name).join(', ')}
             </Text>
           </View>
@@ -100,13 +104,13 @@ export default function QueueScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
         ListHeaderComponent={() => (
-          <View className="flex-row justify-between items-center py-2 border-t border-gray-700">
-            <Text className="text-white text-lg font-semibold">Queue</Text>
+          <View className="flex-row justify-between items-center py-2 border-t border-gray-300 dark:border-gray-700">
+            <Text className="text-black dark:text-white text-lg font-semibold">Queue</Text>
           </View>
         )}
         ListFooterComponent={() => (
           <View className="flex-row justify-between items-center mt-4">
-            <Text className="text-white text-lg font-semibold">
+            <Text className="text-black dark:text-white text-lg font-semibold">
               Auto-recommendations
             </Text>
             <Switch

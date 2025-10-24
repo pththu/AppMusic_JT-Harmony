@@ -1,29 +1,18 @@
 import React from 'react';
-import { Stack } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import useAuthStore from '@/store/authStore';
 
-export default function TabLayout() {
+export default function AuthLayout() {
+  const isLoggedIn = useAuthStore(state => state.isLoggedIn);
+
+  if (isLoggedIn) {
+    return <Redirect href="/(tabs)/HomeScreen" />;
+  }
 
   return (
-    <Stack>
-      <Stack.Screen
-        name="index"
-        options={{
-          title: 'Auth Landing',
-          headerShown: false
-        }}
-      />
-      <Stack.Screen
-        name="LoginScreen"
-        options={{
-          headerShown: false
-        }}
-      />
-      <Stack.Screen
-        name="SignUpScreen"
-        options={{
-          headerShown: false
-        }}
-      />
-    </Stack>
+    <SafeAreaView className='flex-1'>
+      <Stack screenOptions={{ headerShown: false }} />
+    </SafeAreaView>
   );
 }

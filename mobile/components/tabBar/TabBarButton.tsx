@@ -43,7 +43,6 @@ const TabBarButton = ({
     >
       <Animated.View style={animatedIconStyle}>
         {icons[routeName]?.({
-          // size: isFocused ? 24 : 20,
           color: isFocused ? '#22c55e' : 'gray'
         })}
       </Animated.View>

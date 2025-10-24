@@ -1,5 +1,7 @@
+// components/items/AlbumItem.tsx
+
 import React from 'react';
-import { Text, TouchableOpacity, Image } from 'react-native';
+import { Text, TouchableOpacity, Image } from 'react-native'; 
 
 interface AlbumItemProps {
   title: string;
@@ -12,8 +14,10 @@ export default function AlbumItem({ title, subtitle, image, onPress }: AlbumItem
   return (
     <TouchableOpacity className="mr-4" onPress={onPress}>
       <Image source={{ uri: image }} className="w-32 h-32 rounded-lg" />
-      <Text className="text-white mt-1 text-base font-bold">{title}</Text>
-      {subtitle && <Text className="text-gray-400 text-sm">{subtitle}</Text>}
+      <Text className="text-black dark:text-white mt-1 text-base font-bold">{title}</Text>
+      {subtitle && (
+        <Text className="text-gray-600 dark:text-gray-400 text-sm">{subtitle}</Text>
+      )}
     </TouchableOpacity>
   );
 }

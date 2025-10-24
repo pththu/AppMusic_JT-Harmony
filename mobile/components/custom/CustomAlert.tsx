@@ -22,7 +22,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = 'dark';
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -118,7 +118,8 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     // Background colors based on theme
     const bgWhite = isDark ? 'bg-gray-800' : 'bg-gray-200';
     const bgGray = isDark ? 'bg-gray-700' : 'bg-gray-50';
-    const bgRed = isDark ? 'bg-red-900/20' : 'bg-red-50';
+    const bgRed = isDark ? 'bg-red-700' : 'bg-red-50';
+    const bgGreen = isDark ? 'bg-green-700' : 'bg-green-50';
     
     baseClass += ` ${bgWhite}`;
     
@@ -140,9 +141,11 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
 
     // Button specific styles
     if (button.style === 'cancel') {
-      baseClass = baseClass.replace(bgWhite, bgGray);
-    } else if (button.style === 'destructive') {
       baseClass = baseClass.replace(bgWhite, bgRed);
+    } else if (button.style === 'destructive') {
+      baseClass = baseClass.replace(bgWhite, bgGreen);
+    } else if (button.style === 'default') {
+      baseClass = baseClass.replace(bgWhite, bgGreen);
     }
 
     return baseClass;
@@ -153,11 +156,11 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     
     switch (button.style) {
       case 'cancel':
-        return textClass + (isDark ? ' text-gray-400' : ' text-gray-500');
+        return textClass + (isDark ? ' text-gray-100' : ' text-gray-600');
       case 'destructive':
-        return textClass + ' text-gray-500';
+        return textClass + ' text-gray-100';
       default:
-        return textClass + ' text-gray-500';
+        return textClass + ' text-gray-100';
     }
   };
 

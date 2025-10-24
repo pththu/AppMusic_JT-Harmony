@@ -2,43 +2,45 @@ const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
 
 const Album = sequelize.define(
-  'Album',
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      allowNull: false,
-      unique: true,
-      primaryKey: true
-    },
-    spotifyAlbumId: {
-      type: DataTypes.STRING,
-      field: 'spotify_album_id'
-    },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    artistId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'artist_id'
-    },
-    coverUrl: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      field: 'cover_url'
-    },
-    releaseDate: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      field: 'release_date'
+    'Album', {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            allowNull: false,
+            unique: true,
+            primaryKey: true
+        },
+        spotifyId: {
+            type: DataTypes.STRING,
+            field: 'spotify_id',
+            unique: true,
+            allowNull: false
+        },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        imageUrl: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            field: 'image_url'
+        },
+        totalTracks: {
+            type: DataTypes.INTEGER,
+            field: 'total_tracks'
+        },
+        releaseDate: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            field: 'release_date'
+        }
+    }, {
+        tableName: 'albums',
+        timestamps: true,
+        indexes: [{
+            fields: ['id', 'name', 'spotify_id', 'release_date']
+        }]
     }
-  },
-  {
-    tableName: 'albums',
-    timestamps: true
-  }
 )
 
 module.exports = Album
