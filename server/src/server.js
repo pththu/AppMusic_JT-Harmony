@@ -111,10 +111,8 @@
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
-const morgan = require("morgan");
 const path = require("path");
 const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
 const jwt = require('jsonwebtoken'); // 🆕 Import JWT để xác thực Socket
 const { sequelize, User } = require("./models"); // 🆕 Import User Model để kiểm tra người dùng
 const { API_PREFIX } = require("./configs/constants");
@@ -210,21 +208,31 @@ const protectedRoutes = [
     'history', // Lịch sử nghe nhạc
     'notifications', // Thông báo
     'playlists', // Playlist cá nhân
-    'posts', // Đăng bài, Sửa, Xóa bài đăng
-    'comments', // Comment
-    'albumSongs',
+    'posts', // Đăng bài
+    'comments', // Comment (cần đăng nhập mới comment được)
     'genres', // Xem thể loại nhạc
     'artists', // Xem thông tin nghệ sĩ
     'albums', // Xem album
     'search', // Tìm kiếm công khai
-    'songs', // Xem bài hát (public)
-    'recommend', // Gợi ý (có thể không cá nhân hóa nếu chưa đăng nhập)
+    'songs', // Xem bài hát (public), upload bài hát (private)
+    'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
+    'albumSongs',
     'conversations'
 ];
 // const protectedRoutes = ['albums', 'songs', 'playlists', 'genres', 'follows', 'notifications', 'recommendations', 'history', 'downloads', 'conversations'];
 const publicRoutes = ['auth', 'users', 'posts']; // posts được xử lý riêng
 
 // 1. Xử lý các route yêu cầu authentication bắt buộc
+// Setup public routes
+publicRoutes.forEach(route => {
+    app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`))
+})
+
+// 2. TẠO NGOẠI LỆ CHO GET /posts (LOAD FEED CÔNG KHAI)
+// Dòng này đảm bảo chỉ request GET /posts được xử lý mà không cần Token
+app.get(`${API_PREFIX}/posts`, require('./routes/postsRoute'));
+
+// 3. Setup protected routes với authentication bắt buộc
 protectedRoutes.forEach(route => {
     // Các route này cần authenticateToken toàn cục
     app.use(`${API_PREFIX}/${route}`, authenticateToken, require(`./routes/${route}Route`));

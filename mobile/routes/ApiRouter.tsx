@@ -185,7 +185,7 @@ export const ChangeAvatar = async (payload) => {
     const filename = imageUri.split('/').pop();
     const match = /\.(\w+)$/.exec(filename);
     const type = match ? `image/${match[1]}` : 'image/jpeg';
-
+    
     formData.append('image', {
       uri: imageUri,
       name: filename,

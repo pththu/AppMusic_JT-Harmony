@@ -243,6 +243,7 @@ exports.loginWithFacebook = async (req, res) => {
     const profile = req.body;
     console.log('profile from facebook', profile);
     const existingUser = await User.findOne({ where: { facebookId: profile?.userID } });
+    console.log('existingUser', existingUser);
 
     if (existingUser) {
       if (existingUser.status === 'locked' || existingUser.status === 'banned') {
@@ -253,13 +254,6 @@ exports.loginWithFacebook = async (req, res) => {
       } else if (existingUser.status === 'inactive') {
         return res.status(200).json({
           message: 'Tài khoản của bạn không hoạt động. Vui lòng liên hệ quản trị viên.',
-          success: false
-        });
-      }
-      if (!existingUser.accountType.includes('google')) {
-        return res.json({
-          message: "Tài khoản không bao gồm phương thức đăng nhập này",
-          statusCode: 200,
           success: false
         });
       }

@@ -1,5 +1,5 @@
-const { User, Follow, Post } = require('../models'); // Đảm bảo Follow và Post đã được import
-const sequelize = require('../configs/database'); // Đảm bảo sequelize được import
+const { User, Follow, Post } = require('../models');
+const sequelize = require('../configs/database');
 const { Op } = require("sequelize");
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
@@ -276,7 +276,7 @@ exports.getUserProfileSocial = async(req, res) => {
 };
 
 // ----------------------------------------------------------------------
-// ✅ HÀM MỚI 2: Toggle Theo dõi/Hủy theo dõi
+// Toggle Theo dõi/Hủy theo dõi
 // POST /api/v1/users/:userId/follow
 // ----------------------------------------------------------------------
 exports.toggleFollow = async(req, res) => {
