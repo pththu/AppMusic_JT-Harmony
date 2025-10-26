@@ -191,6 +191,24 @@ const getTracksFromPlaylist = async (req, res) => {
   try {
     const { playlistId } = req.params;
     const data = await spotify.getPlaylistTracks(playlistId);
+
+    console.log('paylistId: ', playlistId)
+    if (!data || data.length === 0) {
+      return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong playlist này', success: false });
+    }
+
+    // for (const track of data) {
+    //   if (!track.videoId) {
+    //     const youtubeData = await youtube.searchVideo(track.name, track.artists.map(artist => artist.name).join(' '));
+    //     track.videoId = youtubeData ? youtubeData.videoId : null;
+    //     track.duration = youtubeData ? youtubeData.duration : null;
+    //   }
+    // }
+
+    // const youtubeData = await youtube.searchVideo(data[0].name, data[0].artists.map(artist => artist.name).join(' '));
+    // data[0].videoId = youtubeData ? youtubeData.videoId : null;
+    // data[0].duration = youtubeData ? youtubeData.duration : null;
+
     return res.status(200).json({
       message: 'Get tracks from playlist successful',
       data,

@@ -15,7 +15,6 @@ router.post('/playlist-for-you', musicController.getPlaylistsForYou);
 router.post('/album-for-you', musicController.getAlbumsForYou);
 router.post('/artist-for-you', musicController.getArtistsForYou);
 
-router.post('/top-50-tracks', musicController.searchTop50Tracks);
 router.post('/search-track', musicController.searchTracks);
 router.post('/search-playlist', musicController.searchPlaylists);
 router.post('/search-album', musicController.searchAlbums);

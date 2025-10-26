@@ -10,16 +10,17 @@ const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
 let accessToken = null;
 
 const formatTrack = (track) => ({
-  id: track.id,
+  spotifyId: track.id,
+  videoId: null,
   name: track.name,
   artists: [
     ...track.artists.map(artist => ({
-      id: artist.id,
+      spotifyId: artist.id,
       name: artist.name,
     })),
   ],
   album: {
-    id: track.album.id,
+    spotifyId: track.album.id,
     name: track.album.name,
     imageUrl: track.album.images[0]?.url,
   },
@@ -28,8 +29,12 @@ const formatTrack = (track) => ({
   type: track.type,
   explicit: track.explicit,
   trackNumber: track.track_number,
+  discNumber: track.disc_number,
   uri: track.uri,
   externalUrl: track.external_urls.spotify,
+  imageUrl: track.album.images[0]?.url,
+  playCount: 0,
+  shareCount: 0,
 });
 
 const formatPlaylist = (playlist) => ({
@@ -46,7 +51,12 @@ const formatPlaylist = (playlist) => ({
 const formatAlbum = (album) => ({
   spotifyId: album.id,
   name: album.name,
-  artists: [...album.artists.map(artist => artist.name)],
+  artists: [
+    ...album.artists.map(artist => ({
+      spotifyId: artist.id,
+      name: artist.name
+    })),
+  ],
   imageUrl: album.images[0]?.url,
   releaseDate: album.release_date ? new Date(album.release_date).toISOString() : null,
   totalTracks: album.total_tracks,
@@ -237,50 +247,17 @@ const searchArtists = async (query, limit) => {
   }
 }
 
-// unfinished
-const searchTop50Tracks = async (playlistId) => {
-  try {
-    console.log(playlistId)
-    const tracksData = await axios.get(`${SPOTIFY_API_URL}/playlists/${playlistId}/tracks`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    });
-    console.log('tracksData.tracks', tracksData)
-    // const formattedTracks = tracksData.tracks.items.map(formatTrack);
-    return tracksData;
-  } catch (error) {
-    console.error(`Error searching top 50 tracks on Spotify:`, error.response ? error.response.data : error.message);
-    throw error;
-  }
-};
-
 const getPlaylistTracks = async (playlistId) => {
   try {
     const tracksData = await spotifyApiRequest(`/playlists/${playlistId}/tracks`);
-    console.log('123456789')
-    return tracksData.items.map(item => ({
-      spotifyId: item.track.id,
-      name: item.track.name,
-      lyrics: "",
-      externalUrl: item.track.external_urls.spotify,
-      duration: item.track.duration_ms,
-      artists: [...item.track.artists.map(artist => artist.name)],
-      album: item.track.album.name,
-      discNumber: item.track.disc_number,
-      trackNumber: item.track.track_number,
-      type: item.track.type,
-      explicit: item.track.explicit,
-      playCount: 0,
-      shareCount: 0
-    }));
+    return tracksData.items.map(item => formatTrack(item.track));
   } catch (error) {
     console.error(`Error getting tracks from playlist on Spotify:`, error.response ? error.response.data : error.message);
     throw error;
   }
 };
 
-const getAlbumTracks = async (albumId, albumName) => {
+const getAlbumTracks = async (albumId) => {
   try {
     const tracksData = await spotifyApiRequest(`/albums/${albumId}/tracks`);
     return tracksData.items.map(item => ({
@@ -289,8 +266,12 @@ const getAlbumTracks = async (albumId, albumName) => {
       lyrics: "",
       externalUrl: item.external_urls.spotify,
       duration: item.duration_ms,
-      artists: [...item.artists.map(artist => artist.name)],
-      album: albumName,
+      artists: [
+        ...item.artists.map(artist => ({
+          spotifyId: artist.id,
+          name: artist.name,
+        })),
+      ],
       discNumber: item.disc_number,
       trackNumber: item.track_number,
       type: item.type,
@@ -304,20 +285,12 @@ const getAlbumTracks = async (albumId, albumName) => {
   }
 }
 
-// unfinished
-const getArtistTopTracks = async (artistId) => {
-  return await spotifyApiRequest(`/artists/${artistId}/top-tracks`, {
-    market: 'VN', // Bắt buộc phải có mã quốc gia
-  });
-};
-
 const shuffle = (array) => {
   let currentIndex = array.length;
   let randomIndex;
 
   // Lặp khi vẫn còn phần tử để xáo trộn
   while (currentIndex !== 0) {
-    // Chọn một phần tử ngẫu nhiên còn lại
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
 
@@ -332,12 +305,10 @@ const shuffle = (array) => {
 }
 
 module.exports = {
-  searchTop50Tracks,
   searchTracks,
   searchAlbums,
   searchPlaylists,
   searchArtists,
-  getArtistTopTracks,
   getPlaylistTracks,
   getAlbumTracks,
   findAlbumById
