@@ -1,45 +1,32 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Animated,
-  FlatList,
-  Image,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from "react-native";
+import { View, Text, useColorScheme, Animated, Image, Pressable, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { router, useLocalSearchParams } from 'expo-router';
+import { usePlayerStore } from '@/store/playerStore';
+import { useNavigate } from '@/hooks/useNavigate';
+import SongItem from '@/components/items/SongItem';
+import { Ionicons } from '@expo/vector-icons';
+import { albumData, trackData } from '@/constants/data';
 import Icon from "react-native-vector-icons/Ionicons";
-import { useNavigate } from "@/hooks/useNavigate";
-import { useRoute } from "@react-navigation/native"; // Dùng để lấy data được truyền qua
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { useTheme } from "@/components/ThemeContext";
-import { SafeAreaView } from "react-native-safe-area-context";
-import CustomButton from "@/components/custom/CustomButton";
-import { router, useLocalSearchParams } from "expo-router";
-import { Entypo, Ionicons } from "@expo/vector-icons";
-import { trackData } from "@/constants/data";
-import SongItem from "@/components/items/SongItem";
-import { usePlayerStore } from "@/store/playerStore";
 
-export default function PlaylistScreen() {
+const AlbumScreen = () => {
+  const params = useLocalSearchParams();
+  const [album, setAlbum] = useState(null);
   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
-  const [playlist, setPlaylist] = useState(null);
-  const params = useLocalSearchParams();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
 
+
   useEffect(() => {
-    const playlistData = params.playlist ? JSON.parse(params.playlist as string) : null;
-    setPlaylist(playlistData);
+    const albumData = params.album ? JSON.parse(params.album as string) : null;
+    setAlbum(albumData);
   }, []);
 
   useEffect(() => {
-    if (playlist) {
+    if (album) {
       Animated.parallel([
         Animated.timing(opacity, {
           toValue: 1,
@@ -53,18 +40,18 @@ export default function PlaylistScreen() {
         }),
       ]).start();
     }
-  }, [playlist]);
+  }, [album]);
 
   const handleSelectSong = (song) => {
     setCurrentSong(song);
     navigate('SongScreen');
   }
 
-  const renderRecentlyPlayedItem = ({ item }: { item: (typeof trackData)[0]; }) => (
+  const renderRecentlyPlayedItem = ({ item }) => (
     <SongItem
-      title={item.name}
-      subtitle={item.artists.map(a => a).join(', ')} // Nối tên nghệ sĩ thành một chuỗi
-      image={item.imageUrl || ''}
+      title={item?.name}
+      subtitle={item?.artists.map(a => a).join(', ')} // Nối tên nghệ sĩ thành một chuỗi
+      image={item?.imageUrl || ''}
       onPress={() => handleSelectSong(item)} // Truyền cả mảng artists
       onOptionsPress={() => { }}
     />
@@ -74,37 +61,28 @@ export default function PlaylistScreen() {
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
       <View className="mb-6 w-full h-64 items-center rounded-lg overflow-hidden shadow-black/30 shadow-lg">
         <Image
-          source={{ uri: playlist?.imageUrl }}
+          source={{ uri: album?.imageUrl }}
           className="w-64 h-64 rounded-lg"
         />
       </View>
       <View className="flex-1 items-end justify-end">
         <View className="w-full h-full items-start justify-end gap-2">
           <Text className={`text-2xl font-bold ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
-            {playlist?.name}
+            {album?.name}
           </Text>
           {/* owner */}
           <View className="flex-row items-end justify-start gap-2">
             <Image
-              source={{ uri: playlist?.owner?.imageUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
+              source={{ uri: album?.artists[0]?.imageUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
               className="w-5 h-5 rounded-full mt-2"
             />
             <Text className={`text-gray-300 text-sm mt-1 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              {playlist?.owner?.name || 'không xác định'}
+              {album?.artists.length > 1 ? "Nhiều nghệ sĩ" : album?.artists[0]?.name || 'không xác định'}
             </Text>
           </View>
           <View className="flex-row items-center justify-start gap-2">
-            <Icon
-              name={playlist?.isPublic ? "lock-closed-outline" : "lock-open-outline"}
-              size={12} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
-            />
-            <Text className={`text-gray-300 text-sm mt-1 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              {playlist?.totalTracks} bài hát
-            </Text>
-          </View>
-          <View className="flex-row items-start justify-start gap-2">
-            <Text className={`text-white text-wrap text-md ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              {playlist?.description || '...'}
+            <Text className={`text-gray-300 text-sm mt-1 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray600'}`}>
+              {album?.totalTracks} bài hát
             </Text>
           </View>
           <View className="flex-row justify-between items-center w-full">
@@ -155,7 +133,7 @@ export default function PlaylistScreen() {
       </View>
 
       {/* Danh sách bài hát */}
-      {playlist ? (
+      {albumData ? (
         <FlatList
           data={trackData}
           renderItem={renderRecentlyPlayedItem}
@@ -173,3 +151,5 @@ export default function PlaylistScreen() {
     </SafeAreaView>
   );
 }
+
+export default AlbumScreen

@@ -268,7 +268,7 @@ export default function HomeScreen() {
                 <AlbumItem
                   title={item.name}
                   image={item.imageUrl}
-                  onPress={() => { }}
+                  onPress={() => handleSelectAlbum(item)}
                 />
               )}
               showsHorizontalScrollIndicator={false}
@@ -350,7 +350,7 @@ export default function HomeScreen() {
                 <AlbumItem
                   title={item.name}
                   image={item.imageUrl}
-                  onPress={() => { }}
+                  onPress={() => handleSelectAlbum(item)}
                 />
               )}
               showsHorizontalScrollIndicator={false}
