@@ -11,7 +11,7 @@ const playlists = [
   { id: '4', title: 'Gryffin Collections', type: 'Playlist', image: 'https://i.scdn.co/image/ab67616d00001e02d4d4d4d4d4d4d4d4d4d4d4d4d4d4d' },
 ];
 
-export default function PlaylistsScreen() {
+export default function AllPlaylistScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const primaryIconColor = theme === 'dark' ? 'white' : 'black';

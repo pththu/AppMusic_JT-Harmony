@@ -1,3 +1,4 @@
+import AllPlaylistScreen from "@/app/(screens)/AllPlaylistScreen";
 import { useRouter } from "expo-router";
 
 const routeMap: Record<any, any> = {
@@ -18,9 +19,10 @@ const routeMap: Record<any, any> = {
   StreamingQuality: '(screens)/StreamingQualityScreen',
   MusicLanguage: '(screens)/MusicLanguageScreen',
 
-  ArtistScreen: '(screens)/ArtistScreen',
-  ArtistsFollowingScreen: '(screens)/ArtistsFollowingScreen',
-  PlaylistsScreen: '(screens)/PlaylistsScreen',
+  ArtistScreen: '(screens)/ArtistScreen', // trang thông tin nghệ sĩ
+  ArtistsFollowingScreen: '(screens)/ArtistsFollowingScreen', // danh sách nghệ sĩ đang theo dõi
+  PlaylistScreen: '(screens)/PlaylistScreen', // thông tin playlist
+  AllPlaylistScreen: '(screens)/AllPlaylistScreen', // danh sách playlist
   DownloadsScreen: '(screens)/DownloadsScreen',
   LikedSongsScreen: '(screens)/LikedSongsScreen',
   YourLibraryScreen: '(screens)/YourLibraryScreen',

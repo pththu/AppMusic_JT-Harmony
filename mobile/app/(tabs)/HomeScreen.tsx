@@ -1,14 +1,12 @@
 import CustomButton from "@/components/custom/CustomButton";
 import AlbumItem from "@/components/items/AlbumItem";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Button,
   FlatList,
   Image,
   ImageBackground,
-  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -27,11 +25,7 @@ import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/service
 import { set } from "date-fns";
 import { da, tr } from "date-fns/locale";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// const tabs = [
-//   { id: "forYou", label: "Dành cho bạn" },
-//   { id: "trending", label: "Thịnh hành" }
-// ];
+import PlaylistItem from "@/components/items/PlaylistItem";
 
 export default function HomeScreen() {
   const { navigate } = useNavigate();
@@ -59,7 +53,16 @@ export default function HomeScreen() {
     albumsTrending: [],
     artistsForYou: [],
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState({
+    playlistForYou: true,
+    albumsForYou: true,
+    playlistTrending: true,
+    albumsTrending: true,
+    artistsForYou: true,
+  });
+
+  const handleSelectPlaylist = (playlist) => navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) });
+  const handleSelectAlbum = (album) => navigate("AlbumScreen", { album: JSON.stringify(album) });
 
   useEffect(() => {
     Animated.parallel([
@@ -93,6 +96,7 @@ export default function HomeScreen() {
             ...prev,
             playlistsForYou: response.data
           }));
+          setIsLoading((prev) => ({ ...prev, playlistForYou: false }));
         }
       } catch (error) {
         console.log('Error fetching playlists: ', error);
@@ -107,6 +111,7 @@ export default function HomeScreen() {
             ...prev,
             albumsForYou: response.data
           }));
+          setIsLoading((prev) => ({ ...prev, albumsForYou: false }));
         }
       } catch (error) {
         console.log('Error fetching albums: ', error);
@@ -121,6 +126,7 @@ export default function HomeScreen() {
             ...prev,
             playlistsTrending: response.data
           }));
+          setIsLoading((prev) => ({ ...prev, playlistTrending: false }));
         }
       } catch (error) {
         console.log('Error fetching trending playlists: ', error);
@@ -135,6 +141,7 @@ export default function HomeScreen() {
             ...prev,
             albumsTrending: response.data
           }));
+          setIsLoading((prev) => ({ ...prev, albumsTrending: false }));
         }
       } catch (error) {
         console.log('Error fetching trending albums: ', error);
@@ -150,19 +157,18 @@ export default function HomeScreen() {
             ...prev,
             artistsForYou: response.data
           }));
+          setIsLoading((prev) => ({ ...prev, artistsForYou: false }));
         }
       } catch (error) {
         console.log('Error fetching artists: ', error);
       }
     };
 
-    Promise.all([
-      fetchPlaylistsForYou(),
-      fetchAlbumsForYou(),
-      fetchTrendingPlaylists(),
-      fetchTrendingAlbums(),
-      fetchArtistsForYou()
-    ]).finally(() => setIsLoading(false));
+    fetchPlaylistsForYou()
+    fetchAlbumsForYou()
+    fetchTrendingPlaylists()
+    fetchTrendingAlbums()
+    fetchArtistsForYou()
   }, []);
 
   return (
@@ -204,7 +210,7 @@ export default function HomeScreen() {
                   {formatDescription(dataForYou.playlistsForYou[0]?.description || '')}
                 </Text>
                 <CustomButton
-                  title="Play"
+                  title="Phát"
                   onPress={() => { }}
                   className="mt-2 bg-green-500 px-4 py-2 rounded-full"
                 />
@@ -220,7 +226,7 @@ export default function HomeScreen() {
               Danh sách phát đề xuất cho bạn
             </Text>
           </View>
-          {isLoading ? (
+          {isLoading.playlistForYou ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
@@ -231,10 +237,12 @@ export default function HomeScreen() {
               data={dataForYou.playlistsForYou.filter((_, index) => index !== 0)}
               keyExtractor={(item) => item.spotifyId}
               renderItem={({ item }) => (
-                <AlbumItem
+                <PlaylistItem
                   title={item.name}
+                  type="Playlist"
+                  songs={item.totalTracks || 0}
                   image={item.imageUrl}
-                  onPress={() => { }}
+                  onPress={() => handleSelectPlaylist(item)}
                 />
               )}
               showsHorizontalScrollIndicator={false}
@@ -246,7 +254,7 @@ export default function HomeScreen() {
           <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Album chọn lọc dành cho bạn
           </Text>
-          {isLoading ? (
+          {isLoading.albumsForYou ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
@@ -272,7 +280,7 @@ export default function HomeScreen() {
           <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Danh sách phát thịnh hành
           </Text>
-          {isLoading ? (
+          {isLoading.playlistTrending ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
@@ -283,10 +291,12 @@ export default function HomeScreen() {
               data={dataForYou.playlistsTrending.filter((_, index) => index !== 0)}
               keyExtractor={(item) => item.spotifyId}
               renderItem={({ item }) => (
-                <AlbumItem
+                <PlaylistItem
                   title={item.name}
+                  type="Playlist"
+                  songs={item.totalTracks || 0}
                   image={item.imageUrl}
-                  onPress={() => { }}
+                  onPress={() => handleSelectPlaylist(item)}
                 />
               )}
               showsHorizontalScrollIndicator={false}
@@ -298,7 +308,7 @@ export default function HomeScreen() {
           <Text className={`text-lg font-bold mb-4 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Nghệ sĩ bạn phù hợp với bạn
           </Text>
-          {isLoading ? (
+          {isLoading.artistsForYou ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
@@ -326,7 +336,7 @@ export default function HomeScreen() {
           <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Album phổ biến
           </Text>
-          {isLoading ? (
+          {isLoading.albumsTrending ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>

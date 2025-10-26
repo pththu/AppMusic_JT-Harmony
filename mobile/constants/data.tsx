@@ -150,64 +150,7 @@ export const trackData = [
     explicit: false,
     playCount: 0,
     shareCount: 0
-  },
-  {
-    id: 9,
-    spotifyId: "1RQ4efnLx0zyowptKD5JEa",
-    name: "Từng Ngày Như Mãi Mãi",
-    lyrics: "",
-    externalUrl: "https://open.spotify.com/track/1RQ4efnLx0zyowptKD5JEa",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b273fe0cbef064f18008462d29ef",
-    duration: 213846,
-    artists: [
-      "buitruonglinh"
-    ],
-    album: "Từng Ngày Như Mãi Mãi",
-    discNumber: 1,
-    trackNumber: 2,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 10,
-    spotifyId: "1RQ4efnLx0zyowptKD5JEa",
-    name: "Từng Ngày Như Mãi Mãi",
-    lyrics: "",
-    externalUrl: "https://open.spotify.com/track/1RQ4efnLx0zyowptKD5JEa",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b273fe0cbef064f18008462d29ef",
-    duration: 213846,
-    artists: [
-      "buitruonglinh"
-    ],
-    album: "Từng Ngày Như Mãi Mãi",
-    discNumber: 1,
-    trackNumber: 2,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 11,
-    spotifyId: "1RQ4efnLx0zyowptKD5JEa",
-    name: "Từng Ngày Như Mãi Mãi",
-    lyrics: "",
-    externalUrl: "https://open.spotify.com/track/1RQ4efnLx0zyowptKD5JEa",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b273fe0cbef064f18008462d29ef",
-    duration: 213846,
-    artists: [
-      "buitruonglinh"
-    ],
-    album: "Từng Ngày Như Mãi Mãi",
-    discNumber: 1,
-    trackNumber: 2,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
+  }
 ];
 
 export const artistData = [
