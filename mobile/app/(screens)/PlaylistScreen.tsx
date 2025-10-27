@@ -16,7 +16,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { Entypo, Ionicons } from "@expo/vector-icons";
+import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
 import { GetTracksByPlaylistId } from "@/services/musicService";
@@ -89,10 +89,10 @@ export default function PlaylistScreen() {
     navigate('SongScreen');
   }
 
-  const renderRecentlyPlayedItem = ({ item }) => (
+  const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
       title={item.name}
-      key={item.spotifyId}
+      key={index}
       subtitle={item.artists.map(a => a.name).join(', ')}
       image={item.imageUrl || ''}
       onPress={() => handleSelectSong(item)}
@@ -139,7 +139,7 @@ export default function PlaylistScreen() {
         )}
         scrollEventThrottle={16}
       >
-        <View className="w-full h-64 items-center rounded-lg overflow-hidden shadow-black/30 shadow-lg">
+        <View className="w-full h-64 items-center rounded-lg overflow-hidden">
           <Image
             source={{ uri: playlist?.imageUrl }}
             className="w-64 h-64 rounded-lg"
@@ -159,8 +159,8 @@ export default function PlaylistScreen() {
             </Text>
           </View>
           <View className="flex-row items-center justify-start gap-2">
-            <Icon
-              name={playlist?.isPublic ? "lock-closed-outline" : "lock-open-outline"}
+            <MaterialIcons
+              name={playlist?.isPublic ? "public" : "lock-outline"}
               size={12} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
             />
             <Text className={`text-gray-300 text-sm mt-1 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -213,9 +213,9 @@ export default function PlaylistScreen() {
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải playlist...</Text>
             </View>
           ) : (
-            tracks.map((item) => {
+            tracks.map((item, index) => {
               return (
-                renderRecentlyPlayedItem({ item })
+                renderRecentlyPlayedItem({ item, index })
               )
             })
           )}

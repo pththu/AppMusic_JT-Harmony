@@ -9,6 +9,8 @@ router.get('/search/playlists', musicController.findSpotifyPlaylist);
 router.get('/search-album/:albumId', musicController.findAlbumById);
 router.post('/playlist', musicController.findPlaylistById);
 
+router.get('/mine/playlists', musicController.getMyPlaylists);
+
 router.get('/album/:albumId/tracks', musicController.getTracksFromAlbum);
 router.get('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
 router.post('/playlist-for-you', musicController.getPlaylistsForYou);

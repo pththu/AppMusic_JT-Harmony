@@ -98,7 +98,7 @@ const protectedRoutes = [
     // 'favorites', // Yêu thích
     // 'history', // Lịch sử nghe nhạc
     'notifications', // Thông báo
-    // 'playlists', // Playlist cá nhân
+    'playlists', // Playlist cá nhân
     'comments', // Comment (cần đăng nhập mới comment được)
     // 'genres', // Xem thể loại nhạc
     // 'artists', // Xem thông tin nghệ sĩ

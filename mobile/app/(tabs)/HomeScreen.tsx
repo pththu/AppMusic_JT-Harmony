@@ -21,11 +21,11 @@ import ArtistItem from "@/components/artists/ArtistItem";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 import { useTheme } from "@/components/ThemeContext";
-import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
 import { set } from "date-fns";
 import { da, tr } from "date-fns/locale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlaylistItem from "@/components/items/PlaylistItem";
+import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
 
 export default function HomeScreen() {
   const { navigate } = useNavigate();
@@ -152,7 +152,6 @@ export default function HomeScreen() {
       try {
         const response = await GetArtistsForYou(queryParam.artistName);
         if (response.success) {
-          console.log('artist', response.data[0]);
           setDataForYou((prev) => ({
             ...prev,
             artistsForYou: response.data
@@ -263,7 +262,7 @@ export default function HomeScreen() {
             <FlatList
               horizontal
               data={dataForYou.albumsForYou.filter((_, index) => index !== 0)}
-              keyExtractor={(item) => item.spotifyId}
+              keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <AlbumItem
                   title={item.name}
@@ -289,7 +288,7 @@ export default function HomeScreen() {
             <FlatList
               horizontal
               data={dataForYou.playlistsTrending.filter((_, index) => index !== 0)}
-              keyExtractor={(item) => item.spotifyId}
+              keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <PlaylistItem
                   title={item.name}
@@ -317,7 +316,7 @@ export default function HomeScreen() {
             <FlatList
               data={dataForYou.artistsForYou}
               horizontal
-              keyExtractor={(item) => item.spotifyId}
+              keyExtractor={(item, index) => index.toString()}
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => (
                 <ArtistItem
@@ -345,7 +344,7 @@ export default function HomeScreen() {
             <FlatList
               horizontal
               data={dataForYou.albumsTrending.filter((_, index) => index !== 0)}
-              keyExtractor={(item) => item.spotifyId}
+              keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <AlbumItem
                   title={item.name}

@@ -64,9 +64,9 @@ export default function YourLibraryScreen() {
         Thư viện của bạn
       </Text>
       <View className="mb-6  flex-row gap-2 flex-wrap justify-between p-1">
-        {libraryItems?.map(item => (
+        {libraryItems?.map((item, index) => (
           <LibraryItemButton
-            key={item.id}
+            key={index.toString()}
             title={item.title}
             icon={item.icon}
             onPress={() => navigate(item.screen)}
@@ -86,7 +86,7 @@ export default function YourLibraryScreen() {
       <FlatList
         data={trackData}
         renderItem={renderRecentlyPlayedItem}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item, index) => index.toString()}
         className=''
       />
     </SafeAreaView>

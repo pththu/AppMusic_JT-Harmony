@@ -38,9 +38,13 @@ const formatTrack = (track) => ({
 });
 
 const formatPlaylist = (playlist) => ({
+  id: null,
   spotifyId: playlist.id,
   name: playlist.name,
-  owner: playlist.owner.name,
+  owner: {
+    spotifyId: playlist.owner.id,
+    name: playlist.owner.display_name,
+  },
   description: playlist.description,
   imageUrl: playlist.images[0]?.url,
   totalTracks: playlist.tracks.total,
@@ -176,7 +180,7 @@ const searchPlaylists = async (query, limit) => {
     }
 
     console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allPlaylists.length} playlist.`);
-    // console.log(allPlaylists[0])
+    console.log(allPlaylists[0])
     return shuffle(allPlaylists).slice(0, limit).map((playlist) => formatPlaylist(playlist));
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm playlist trên Spotify:`, error.response ? error.response.data : error.message);

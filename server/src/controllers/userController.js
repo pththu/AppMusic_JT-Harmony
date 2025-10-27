@@ -304,7 +304,6 @@ exports.changeAvatar = async (req, res) => {
       })
     };
 
-    // console.log('data upload', data);
     if (req.file.path) {
       const user = await User.findByPk(req.user.id);
       user.avatarUrl = req.file.path;

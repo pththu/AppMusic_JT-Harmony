@@ -2,6 +2,7 @@
 const { TOP_50_PLAYLIST_ID } = require('../configs/constants');
 const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
+const { Playlist } = require('../models');
 const { get } = require('../routes/musicRoute');
 
 // Tìm kiếm playlist trên Spotify
@@ -18,7 +19,6 @@ const findSpotifyPlaylist = async (req, res) => {
   }
 };
 
-
 // Lấy các bài hát hàng đầu của nghệ sĩ trên Spotify
 const findArtistTopTracks = async (req, res) => {
   try {
@@ -31,7 +31,6 @@ const findArtistTopTracks = async (req, res) => {
 };
 
 // ví dụ: /youtube/search?song=Hello&artist=Adele
-// Tìm kiếm video trên YouTube
 const findYoutubeVideo = async (req, res) => {
   try {
     const { song, artist } = req.body;
@@ -58,6 +57,26 @@ const findAlbumById = async (req, res) => {
     res.status(500).json({ message: error.message || 'Failed to find album by ID on Spotify' });
   }
 }
+
+const findPlaylistById = async (req, res) => {
+  try {
+    const { market } = req.body;
+    console.log(market)
+    if (!market || !TOP_50_PLAYLIST_ID[market]) {
+      return res.status(400).json({ error: 'Invalid or missing market parameter' });
+    }
+
+    const playlistData = await spotify.findPlaylistById(TOP_50_PLAYLIST_ID[market]);
+    return res.status(200).json({
+      message: 'Playlist retrieval successful',
+      data: playlistData,
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to find playlist by ID on Spotify' });
+  }
+};
 
 ///////////////////////////////////////////////////////////////
 /**
@@ -87,52 +106,6 @@ const searchTracks = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: error.message || 'Failed to search tracks on Spotify' });
-  }
-};
-
-const searchTop50Tracks = async (req, res) => {
-  try {
-    const { market, genre } = req.body;
-    const query = {};
-    if (genre) query.genre = genre;
-    if (market) query.market = market;
-
-    console.log(1)
-    if (!market || !TOP_50_PLAYLIST_ID[market]) {
-      console.log(2)
-      return res.status(400).json({ error: 'Invalid or missing market parameter' });
-    }
-
-    console.log(3)
-    const tracks = await spotify.searchTop50Tracks('37i9dQZEVXbLdGSmz6xilI');
-    console.log(4)
-    return res.status(200).json({
-      message: 'Top 50 tracks search successful',
-      data: tracks,
-      success: true
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to search top 50 tracks on Spotify' });
-  }
-};
-
-const findPlaylistById = async (req, res) => {
-  try {
-    const { market } = req.body;
-    console.log(market)
-    if (!market || !TOP_50_PLAYLIST_ID[market]) {
-      return res.status(400).json({ error: 'Invalid or missing market parameter' });
-    }
-
-    const playlistData = await spotify.findPlaylistById(TOP_50_PLAYLIST_ID[market]);
-    return res.status(200).json({
-      message: 'Playlist retrieval successful',
-      data: playlistData,
-      success: true
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to find playlist by ID on Spotify' });
   }
 };
 
@@ -196,18 +169,6 @@ const getTracksFromPlaylist = async (req, res) => {
     if (!data || data.length === 0) {
       return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong playlist này', success: false });
     }
-
-    // for (const track of data) {
-    //   if (!track.videoId) {
-    //     const youtubeData = await youtube.searchVideo(track.name, track.artists.map(artist => artist.name).join(' '));
-    //     track.videoId = youtubeData ? youtubeData.videoId : null;
-    //     track.duration = youtubeData ? youtubeData.duration : null;
-    //   }
-    // }
-
-    // const youtubeData = await youtube.searchVideo(data[0].name, data[0].artists.map(artist => artist.name).join(' '));
-    // data[0].videoId = youtubeData ? youtubeData.videoId : null;
-    // data[0].duration = youtubeData ? youtubeData.duration : null;
 
     return res.status(200).json({
       message: 'Get tracks from playlist successful',
@@ -308,6 +269,21 @@ const getArtistsForYou = async (req, res) => {
   }
 };
 
+const getMyPlaylists = async (req, res) => {
+  try {
+    const playlists = await Playlist.findAll({ where: { userId: req.user.id } });
+
+    return res.status(200).json({
+      message: 'Get my playlists successful',
+      data: playlists,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get my playlists on Spotify' });
+  }
+};
+
+
 module.exports = {
   findSpotifyPlaylist,
   findArtistTopTracks,
@@ -319,8 +295,8 @@ module.exports = {
   getPlaylistsForYou,
   getAlbumsForYou,
   getArtistsForYou,
+  getMyPlaylists,
   searchTracks,
-  searchTop50Tracks,
   searchPlaylists,
   searchAlbums,
   searchArtists
