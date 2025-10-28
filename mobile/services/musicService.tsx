@@ -1,5 +1,6 @@
 import axiosClient from "@/config/axiosClient";
 
+// get
 export const GetPlaylistsForYou = async (payload) => {
   try {
     const response = await axiosClient.post(`/music/playlist-for-you`, {
@@ -22,7 +23,7 @@ export const GetAlbumsForYou = async (payload) => {
   } catch (error) {
     return { message: error.message, status: "error" };
   }
-}
+};
 
 export const GetArtistsForYou = async (payload) => {
   try {
@@ -38,7 +39,12 @@ export const GetArtistsForYou = async (payload) => {
 
 export const GetTracksByPlaylistId = async (payload) => {
   try {
-    const response = await axiosClient.get(`/music/playlist/${payload}/tracks`);
+    let response = null;
+    if (payload.type === 'local') {
+      response = await axiosClient.get(`/playlists/${payload.playlistId}/tracks`);
+    } else if (payload.type === 'spotify') {
+      response = await axiosClient.get(`/music/playlist/${payload.playlistId}/tracks`);
+    }
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -64,10 +70,10 @@ export const GetMyPlaylists = async () => {
   }
 }
 
+// create
 export const CreatePlaylist = async (payload) => {
   try {
     const formData = new FormData();
-    console.log('payload', payload);
     if (payload.image !== null) {
       const imageUri = payload.image;
       const filename = imageUri.split('/').pop();
@@ -90,7 +96,19 @@ export const CreatePlaylist = async (payload) => {
         'Content-Type': 'multipart/form-data',
       },
     });
-    console.log(response)
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+}
+
+// delete
+export const DeletePlaylist = async (playlistId) => {
+  try {
+    console.log('playlistId', playlistId)
+    const response = await axiosClient.delete(`/playlists/${playlistId}`);
+    console.log('response', response.data)
     return response.data;
   } catch (error) {
     console.log(error.message);

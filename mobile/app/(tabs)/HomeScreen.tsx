@@ -26,8 +26,10 @@ import { da, tr } from "date-fns/locale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlaylistItem from "@/components/items/PlaylistItem";
 import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
+import { usePlayerStore } from "@/store/playerStore";
 
 export default function HomeScreen() {
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const { navigate } = useNavigate();
   const { theme } = useTheme();
   const { success, error } = useCustomAlert();
@@ -61,7 +63,11 @@ export default function HomeScreen() {
     artistsForYou: true,
   });
 
-  const handleSelectPlaylist = (playlist) => navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) });
+  const handleSelectPlaylist = (playlist) => {
+    setCurrentPlaylist(playlist);
+    navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) });
+  };
+
   const handleSelectAlbum = (album) => navigate("AlbumScreen", { album: JSON.stringify(album) });
 
   useEffect(() => {

@@ -12,68 +12,25 @@ import React, { useState } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
-import * as ImagePicker from 'expo-image-picker';
-import { CreatePlaylist } from "@/services/musicService";
 
-const AddPlaylistModal = ({ isModalVisible, setIsModalVisible }) => {
+const AddPlaylistModal = ({
+  isModalVisible,
+  setIsModalVisible,
+  name,
+  setName,
+  description,
+  setDescription,
+  image,
+  setImage,
+  isPublic,
+  setIsPublic,
+  onPickImage,
+  onCreatePlaylist,
+}) => {
   const colorScheme = useColorScheme();
   const iconColor = colorScheme === "dark" ? "#888" : "#666";
   const { success, error, warning } = useCustomAlert();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null);
-  const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
-
-  const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      warning('Ứng dụng cần quyền truy cập thư viện ảnh!');
-      return false;
-    }
-    return true;
-  };
-
-  const handlePickerImage = async () => {
-    const hasPermission = await requestPermissions();
-    if (!hasPermission) {
-      error('Quyền truy cập bị từ chối!');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-  };
-
-  const handleAddPlaylist = async () => {
-    setLoading(true);
-    try {
-      const payload = {
-        image: image || null,
-        name: name,
-        description: description,
-        isPublic: isPublic
-      };
-      const response = await CreatePlaylist(payload);
-      console.log('response from ui', response);
-      if (response.success) {
-        setImage(null);
-        success('Tạo playlist thành công!');
-      }
-    } catch (error) {
-      error('Không thể tạo playlist. Vui lòng thử lại!', error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <Modal
@@ -101,7 +58,7 @@ const AddPlaylistModal = ({ isModalVisible, setIsModalVisible }) => {
           <View className="items-center mb-6">
             <TouchableOpacity className="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-lg items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-600"
               onPress={() => {
-                handlePickerImage();
+                onPickImage();
               }}
             >
               <Icon name="camera-outline" size={40} color={iconColor} />
@@ -166,7 +123,7 @@ const AddPlaylistModal = ({ isModalVisible, setIsModalVisible }) => {
               className="bg-green-500 py-3 px-6 rounded-md shadow"
               onPress={() => {
                 setIsModalVisible(false);
-                handleAddPlaylist();
+                onCreatePlaylist();
               }}
             >
               <Text className="text-white text-base font-semibold">Tạo</Text>

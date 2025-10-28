@@ -21,6 +21,10 @@ import { set } from "date-fns";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Modal } from "react-native";
 import AddPlaylistModal from "@/components/modals/AddPlaylistModal";
+import { usePlayerStore } from "@/store/playerStore";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import * as ImagePicker from 'expo-image-picker';
+import { CreatePlaylist } from "@/services/musicService";
 
 const PlaylistItem = ({ item, index, onPress, primaryIconColor }) => {
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -57,15 +61,15 @@ const PlaylistItem = ({ item, index, onPress, primaryIconColor }) => {
         onPress={() => onPress(item)}
       >
         <Image
-          source={{ uri: item.imageUrl }}
+          source={{ uri: item?.imageUrl }}
           className="w-16 h-16 rounded-md shadow-md"
         />
         <View className="flex-1 mx-4">
           <Text className="dark:text-white text-base" numberOfLines={1}>
-            {item.name}
+            {item?.name}
           </Text>
           <Text className="dark:text-gray-400 text-sm">
-            {item.totalTracks || 0} bài hát
+            {item?.totalTracks || 0} bài hát
           </Text>
         </View>
         <Pressable className="">
@@ -78,6 +82,10 @@ const PlaylistItem = ({ item, index, onPress, primaryIconColor }) => {
 
 export default function AllPlaylistScreen() {
   const user = useAuthStore((state) => state.user);
+  const myPlaylistsStore = usePlayerStore((state) => state.myPlaylists);
+  const setMyPlaylistsStore = usePlayerStore((state) => state.setMyPlaylists);
+  const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
   const primaryIconColor = colorScheme === "dark" ? "white" : "black";
@@ -86,12 +94,74 @@ export default function AllPlaylistScreen() {
   const [savedPlaylists, setSavedPlaylists] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const handleSelectPlaylist = (playlist) => navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) });
+  const { success, error, warning } = useCustomAlert();
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [image, setImage] = useState(null);
+  const [isPublic, setIsPublic] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const handleSelectPlaylist = (playlist) => {
+    setCurrentPlaylist(playlist);
+    navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) })
+  };
+
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      warning('Ứng dụng cần quyền truy cập thư viện ảnh!');
+      return false;
+    }
+    return true;
+  };
+
+  const handlePickerImage = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      error('Quyền truy cập bị từ chối!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleAddPlaylist = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        image: image || null,
+        name: name,
+        description: description,
+        isPublic: isPublic
+      };
+      const response = await CreatePlaylist(payload);
+      console.log('response from ui', response);
+
+      if (response.success) {
+        setImage(null);
+        success('Tạo playlist thành công!');
+        setIsModalVisible(false);
+        addToMyPlaylists(response.playlist);
+      }
+    } catch (error) {
+      error('Không thể tạo playlist. Vui lòng thử lại!', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const fetchSavedPlaylists = async () => {
       try {
-        // Giả sử bạn có hàm API để lấy playlist đã lưu của người dùng
         const response = await GetPlaylistsForYou(["bts", "agustd", "jungkook"]);
         if (response.success) {
           setSavedPlaylists(response.data);
@@ -106,17 +176,19 @@ export default function AllPlaylistScreen() {
         const response = await GetMyPlaylists();
         if (response.success) {
           setMyPlaylists(response.data);
+          setMyPlaylistsStore(response.data);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy playlist của tôi:", error);
+        console.log("Lỗi khi lấy playlist của tôi:", error);
       }
     }
 
     fetchSavedPlaylists();
     fetchMyPlaylists();
+    console.log('my playlist', myPlaylistsStore);
   }, []);
 
-  const currentData = activeTab === "myPlaylists" ? myPlaylists : savedPlaylists;
+  const currentData = activeTab === "myPlaylists" ? myPlaylistsStore : savedPlaylists;
 
   const TabButton = ({ title, tabName }) => {
     const isActive = activeTab === tabName;
@@ -209,7 +281,21 @@ export default function AllPlaylistScreen() {
         </View>
       )}
 
-      {isModalVisible && <AddPlaylistModal isModalVisible={isModalVisible} setIsModalVisible={setIsModalVisible} />}
+      {isModalVisible &&
+        <AddPlaylistModal
+          isModalVisible={isModalVisible}
+          setIsModalVisible={setIsModalVisible}
+          name={name}
+          setName={setName}
+          description={description}
+          setDescription={setDescription}
+          image={image}
+          setImage={setImage}
+          isPublic={isPublic}
+          setIsPublic={setIsPublic}
+          onPickImage={handlePickerImage}
+          onCreatePlaylist={handleAddPlaylist}
+        />}
     </SafeAreaView>
   );
 }

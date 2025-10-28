@@ -19,15 +19,23 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
-import { GetTracksByPlaylistId } from "@/services/musicService";
+import { DeletePlaylist, GetTracksByPlaylistId } from "@/services/musicService";
+import { is, pl } from "date-fns/locale";
+import useAuthStore from "@/store/authStore";
+import PlaylistOptionModal from "@/components/modals/PlaylistOptionModal";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 // Hằng số để xác định khi nào bắt đầu mờ/hiện header
 // 256px là chiều cao của ảnh (h-64). Bạn có thể điều chỉnh
 const HEADER_SCROLL_THRESHOLD = 256;
 
 export default function PlaylistScreen() {
+  const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
+  const user = useAuthStore((state) => state.user);
   const { navigate } = useNavigate();
+  const { info, error, success, confirm, warning } = useCustomAlert();
   const colorScheme = useColorScheme();
   const [playlist, setPlaylist] = useState(null);
   const [tracks, setTracks] = useState([]);
@@ -36,17 +44,121 @@ export default function PlaylistScreen() {
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
   const [isLoading, setIsLoading] = useState(true);
+  const [isMine, setIsMine] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
+
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    const playlistData = params.playlist ? JSON.parse(params.playlist as string) : null;
-    setPlaylist(playlistData);
+  const headerTitleOpacity = scrollY.interpolate({
+    inputRange: [HEADER_SCROLL_THRESHOLD, HEADER_SCROLL_THRESHOLD + 30],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
+  const headerBgOpacity = scrollY.interpolate({
+    inputRange: [HEADER_SCROLL_THRESHOLD / 2, HEADER_SCROLL_THRESHOLD],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  const handleSharePlaylist = () => {
+    console.log('handleSharePlaylist');
+    info('Chức năng chia sẻ playlist sẽ được cập nhật sau!');
+  }
+
+  const handleMoreOptions = () => {
+    console.log('handleMoreOptions')
+    setModalVisible(true);
+  };
+
+  const handleShufflePlay = () => {
+    console.log('handleShufflePlay')
+    info('Chức năng phát ngẫu nhiên sẽ được cập nhật sau!');
+  };
+
+  const handlePlay = () => {
+    console.log('handlePlay')
+    info('Chức năng phát playlist sẽ được cập nhật sau!');
+  };
+
+  const handleDeletePlaylist = async () => {
+    console.log('handleDeletePlaylist')
+    try {
+      if (isMine) {
+        confirm(
+          'Xác nhận xóa',
+          'Bạn có chắc chắn muốn xóa playlist này?',
+          async () => {
+            const response = await DeletePlaylist(playlist.id);
+            console.log('response úi', response);
+            if (response.success) {
+              removeFromMyPlaylists(playlist.id);
+              success('Đã xóa playlist thành công!');
+              router.back();
+            } else {
+              error('Không thể xóa playlist. Vui lòng thử lại sau.');
+            }
+          },
+          () => { }
+        );
+      }
+    } catch (error) {
+      console.log('Lỗi khi xóa playlist:', error);
+      error('Lỗi xóa playlist', 'Đã có lỗi xảy ra khi xóa playlist. Vui lòng thử lại sau.');
+    }
+  }
+
+  const handleEditPlaylist = () => {
+    console.log('handleEditPlaylist')
+    info('Chức năng chỉnh sửa playlist sẽ được cập nhật sau!');
+  };
+
+  const handleDownloadPlaylist = () => {
+    console.log('handleDownloadPlaylist')
+    info('Chức năng tải playlist sẽ được cập nhật sau!');
+  };
+
+  const handleAddToAnotherPlaylist = () => {
+    console.log('handleAddToAnotherPlaylist')
+    info('Chức năng thêm vào playlist khác sẽ được cập nhật sau!');
+  };
+
+  const handleAddTrack = () => {
+    console.log('handleAddTrack')
+    info('Chức năng thêm bài hát vào playlist sẽ được cập nhật sau!');
+  };
+
+  const handleAddToQueue = () => {
+    console.log('handleAddToQueue')
+    info('Chức năng thêm bài hát vào hàng đợi sẽ được cập nhật sau!');
+  };
+
+  useEffect(() => {
+    setPlaylist(currentPlaylist);
+
+    if (!currentPlaylist?.spotifyId && currentPlaylist?.userId === user?.id) {
+      setIsMine(true);
+    }
+
+    setIsLoading(true);
     const fetchTracks = async () => {
-      if (playlistData) {
-        const response = await GetTracksByPlaylistId(playlistData.spotifyId);
+      if (currentPlaylist.spotifyId) {
+        const response = await GetTracksByPlaylistId({
+          playlistId: currentPlaylist.spotifyId,
+          type: 'spotify'
+        });
         if (response.success) {
           setTracks(response.data);
+          setIsLoading(false);
+        }
+      } else {
+        const response = await GetTracksByPlaylistId({
+          playlistId: currentPlaylist.id,
+          type: 'local'
+        });
+        if (response.success) {
+          setTracks(response.data.PlaylistTracks);
           setIsLoading(false);
         }
       }
@@ -72,17 +184,6 @@ export default function PlaylistScreen() {
     }
   }, [playlist]);
 
-  const headerTitleOpacity = scrollY.interpolate({
-    inputRange: [HEADER_SCROLL_THRESHOLD, HEADER_SCROLL_THRESHOLD + 30],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
-
-  const headerBgOpacity = scrollY.interpolate({
-    inputRange: [HEADER_SCROLL_THRESHOLD / 2, HEADER_SCROLL_THRESHOLD],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
 
   const handleSelectSong = (song) => {
     setCurrentSong(song);
@@ -142,7 +243,7 @@ export default function PlaylistScreen() {
         <View className="w-full h-64 items-center rounded-lg overflow-hidden">
           <Image
             source={{ uri: playlist?.imageUrl }}
-            className="w-64 h-64 rounded-lg"
+            className="w-64 h-64 rounded-lg mt-6"
           />
         </View>
         <View className="px-4 mt-2 gap-2">
@@ -151,11 +252,11 @@ export default function PlaylistScreen() {
           </Text>
           <View className="flex-row items-end justify-start gap-2">
             <Image
-              source={{ uri: playlist?.owner?.imageUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
+              source={{ uri: `${isMine ? user?.avatarUrl : playlist?.owner?.imageUrl}` || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
               className="w-5 h-5 rounded-full mt-2"
             />
             <Text className={`text-gray-300 text-sm mt-1 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              {playlist?.owner?.name || 'không xác định'}
+              {isMine ? user?.fullName : playlist?.owner?.name || 'không xác định'}
             </Text>
           </View>
           <View className="flex-row items-center justify-start gap-2">
@@ -164,7 +265,7 @@ export default function PlaylistScreen() {
               size={12} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
             />
             <Text className={`text-gray-300 text-sm mt-1 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              {playlist?.totalTracks} bài hát
+              {playlist?.totalTracks || 0} bài hát
             </Text>
           </View>
           <View className="flex-row items-start justify-start gap-2">
@@ -174,13 +275,13 @@ export default function PlaylistScreen() {
           </View>
           <View className="flex-row justify-between items-center w-full">
             <View className="flex-row items-center justify-start gap-4">
-              <Pressable onPress={() => { }}>
+              <Pressable onPress={() => handleSharePlaylist()}>
                 <Ionicons
                   name="share-social"
                   color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
                   size={22} />
               </Pressable>
-              <Pressable onPress={() => { }}>
+              <Pressable onPress={() => handleMoreOptions()}>
                 <Ionicons
                   name="ellipsis-vertical"
                   color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
@@ -188,13 +289,13 @@ export default function PlaylistScreen() {
               </Pressable>
             </View>
             <View className="flex-row items-center justify-start gap-4">
-              <Pressable onPress={() => { }}>
+              <Pressable onPress={() => handleShufflePlay()}>
                 <Ionicons
                   name="shuffle"
                   color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
                   size={24} />
               </Pressable>
-              <Pressable onPress={() => { }}>
+              <Pressable onPress={() => handlePlay()}>
                 <Ionicons
                   name="play-circle"
                   color="#22c55e"
@@ -213,13 +314,32 @@ export default function PlaylistScreen() {
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải playlist...</Text>
             </View>
           ) : (
-            tracks.map((item, index) => {
-              return (
-                renderRecentlyPlayedItem({ item, index })
-              )
-            })
+            <>
+              {tracks.length === 0 || tracks === undefined ? (
+                <View className="flex-1 justify-center items-center">
+                  <Text className="text-gray-600 dark:text-gray-400">Không có bài hát nào trong playlist này.</Text>
+                </View>
+              ) : (
+                tracks?.map((item, index) => (
+                  renderRecentlyPlayedItem({ item, index })
+                ))
+              )}
+            </>
           )}
         </View>
+        {modalVisible &&
+          <PlaylistOptionModal
+            isVisible={modalVisible}
+            setIsVisible={setModalVisible}
+            data={playlist}
+            onDelete={handleDeletePlaylist}
+            onEdit={handleEditPlaylist}
+            onDownload={handleDownloadPlaylist}
+            onShare={handleSharePlaylist}
+            onAddToPlaylist={handleAddToAnotherPlaylist}
+            onAddTrack={handleAddTrack}
+            onAddToQueue={handleAddToQueue}
+          />}
       </Animated.ScrollView>
     </Animated.View>
   );

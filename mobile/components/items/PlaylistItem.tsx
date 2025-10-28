@@ -1,24 +1,10 @@
-import React from 'react';
+import { usePlayerStore } from '@/store/playerStore';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-interface PlaylistItemProps {
-  title: string;
-  type: string;
-  songs: number;
-  image: string;
-  onPress?: () => void;
-  onOptionsPress?: () => void;
-}
 
-export default function PlaylistItem({
-  title,
-  type,
-  songs,
-  image,
-  onPress,
-  onOptionsPress,
-}: PlaylistItemProps) {
+export default function PlaylistItem({ title, type, songs, image, onPress = () => { }, onOptionsPress = () => { } }) {
 
   const formatTitle = (title: string) => {
     const maxLength = 20;
@@ -27,6 +13,7 @@ export default function PlaylistItem({
     }
     return title;
   };
+
   return (
     <TouchableOpacity
       onPress={onPress}
