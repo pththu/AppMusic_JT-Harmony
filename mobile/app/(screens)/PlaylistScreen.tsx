@@ -19,11 +19,14 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
-import { DeletePlaylist, GetTracksByPlaylistId } from "@/services/musicService";
+import { CreatePlaylist, DeletePlaylist, GetTracksByPlaylistId, UpdatePlaylist } from "@/services/musicService";
 import { is, pl } from "date-fns/locale";
 import useAuthStore from "@/store/authStore";
 import PlaylistOptionModal from "@/components/modals/PlaylistOptionModal";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import EditPlaylistModal from "@/components/modals/EditPlaylistModal";
+import * as ImagePicker from 'expo-image-picker';
+import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
 
 // Hằng số để xác định khi nào bắt đầu mờ/hiện header
 // 256px là chiều cao của ảnh (h-64). Bạn có thể điều chỉnh
@@ -32,6 +35,8 @@ const HEADER_SCROLL_THRESHOLD = 256;
 export default function PlaylistScreen() {
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
   const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const updateCurrentPlaylist = usePlayerStore((state) => state.updateCurrentPlaylist);
+  const updateMyPlaylist = usePlayerStore((state) => state.updateMyPlaylist);
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
   const user = useAuthStore((state) => state.user);
   const { navigate } = useNavigate();
@@ -46,7 +51,14 @@ export default function PlaylistScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMine, setIsMine] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-
+  const [modalEditVisible, setModalEditVisible] = useState(false);
+  const [modalAddToAnotherPlaylistVisible, setModalAddToAnotherPlaylistVisible] = useState(false);
+  const [modalAddTrackVisible, setModalAddTrackVisible] = useState(false);
+  const [modalAddToQueueVisible, setModalAddToQueueVisible] = useState(false);
+  const [name, setName] = useState(currentPlaylist?.name || '');
+  const [description, setDescription] = useState(currentPlaylist?.description || '');
+  const [image, setImage] = useState(currentPlaylist?.imageUrl);
+  const [isPublic, setIsPublic] = useState(currentPlaylist?.isPublic || true);
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -61,6 +73,34 @@ export default function PlaylistScreen() {
     outputRange: [0, 1],
     extrapolate: 'clamp',
   });
+
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      warning('Ứng dụng cần quyền truy cập thư viện ảnh!');
+      return false;
+    }
+    return true;
+  };
+
+  const handlePickerImage = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      error('Quyền truy cập bị từ chối!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
 
   const handleSharePlaylist = () => {
     console.log('handleSharePlaylist');
@@ -109,9 +149,33 @@ export default function PlaylistScreen() {
     }
   }
 
-  const handleEditPlaylist = () => {
+  const handleEditPlaylist = async () => {
     console.log('handleEditPlaylist')
-    info('Chức năng chỉnh sửa playlist sẽ được cập nhật sau!');
+    try {
+      const payload = {
+        id: playlist.id,
+        image: image || null,
+        name: name,
+        description: description,
+        isPublic: isPublic
+      };
+      const response = await UpdatePlaylist(payload);
+
+      if (response.success) {
+        setImage(null);
+        success('Cập nhật playlist thành công!');
+        updateCurrentPlaylist(response.playlist);
+        updateMyPlaylist(response.playlist);
+      }
+    } catch (error) {
+      error('Không thể cập nhật playlist. Vui lòng thử lại!', error.message);
+    } finally {
+      setImage(null);
+      setName("");
+      setDescription("");
+      setIsPublic(false);
+      setModalEditVisible(false);
+    }
   };
 
   const handleDownloadPlaylist = () => {
@@ -136,11 +200,12 @@ export default function PlaylistScreen() {
 
   useEffect(() => {
     setPlaylist(currentPlaylist);
-
     if (!currentPlaylist?.spotifyId && currentPlaylist?.userId === user?.id) {
       setIsMine(true);
     }
+  }, [currentPlaylist]);
 
+  useEffect(() => {
     setIsLoading(true);
     const fetchTracks = async () => {
       if (currentPlaylist.spotifyId) {
@@ -333,12 +398,43 @@ export default function PlaylistScreen() {
             setIsVisible={setModalVisible}
             data={playlist}
             onDelete={handleDeletePlaylist}
-            onEdit={handleEditPlaylist}
+            onEdit={() => setModalEditVisible(true)}
             onDownload={handleDownloadPlaylist}
             onShare={handleSharePlaylist}
-            onAddToPlaylist={handleAddToAnotherPlaylist}
-            onAddTrack={handleAddTrack}
+            onAddToPlaylist={() => {
+              if (tracks.length === 0) {
+                warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
+                return;
+              }
+              setModalAddToAnotherPlaylistVisible(true);
+            }}
+            onAddTrack={() => navigate('AddTrackScreen')}
             onAddToQueue={handleAddToQueue}
+          />}
+
+        {modalEditVisible &&
+          <EditPlaylistModal
+            isModalVisible={modalEditVisible}
+            setIsModalVisible={setModalEditVisible}
+            name={name}
+            setName={setName}
+            description={description}
+            setDescription={setDescription}
+            image={image}
+            setImage={setImage}
+            isPublic={isPublic}
+            setIsPublic={setIsPublic}
+            onPickImage={handlePickerImage}
+            onUpdatePlaylist={handleEditPlaylist}
+          />}
+
+        {modalAddToAnotherPlaylistVisible &&
+          <AddToAnotherPlaylistModal
+            isVisible={modalAddToAnotherPlaylistVisible}
+            setIsVisible={setModalAddToAnotherPlaylistVisible}
+            data={playlist}
+            onAddToPlaylist={handleAddToAnotherPlaylist}
+            onCreateNewPlaylist={() => { }}
           />}
       </Animated.ScrollView>
     </Animated.View>

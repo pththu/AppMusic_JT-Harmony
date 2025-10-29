@@ -1,5 +1,3 @@
-import AlbumScreen from "@/app/(screens)/AlbumScreen";
-import AllPlaylistScreen from "@/app/(screens)/AllPlaylistScreen";
 import { useRouter } from "expo-router";
 
 const routeMap: Record<any, any> = {
@@ -25,6 +23,7 @@ const routeMap: Record<any, any> = {
   ArtistsFollowingScreen: '(screens)/ArtistsFollowingScreen', // danh sách nghệ sĩ đang theo dõi
   PlaylistScreen: '(screens)/PlaylistScreen', // thông tin playlist
   AllPlaylistScreen: '(screens)/AllPlaylistScreen', // danh sách playlist
+  AddTrackScreen: '(screens)/AddTrackScreen', // thêm bài hát vào playlist
   DownloadsScreen: '(screens)/DownloadsScreen',
   LikedSongsScreen: '(screens)/LikedSongsScreen',
   YourLibraryScreen: '(screens)/YourLibraryScreen',

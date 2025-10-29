@@ -1,9 +1,10 @@
 import CustomButton from "@/components/custom/CustomButton";
 import AlbumItem from "@/components/items/AlbumItem";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  Button,
   FlatList,
   Image,
   ImageBackground,
@@ -19,6 +20,7 @@ import useAuthStore from "@/store/authStore";
 import { artistData } from "@/constants/data";
 import ArtistItem from "@/components/artists/ArtistItem";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import YoutubePlayer from "react-native-youtube-iframe";
 
 import { useTheme } from "@/components/ThemeContext";
 import { set } from "date-fns";
@@ -62,6 +64,19 @@ export default function HomeScreen() {
     albumsTrending: true,
     artistsForYou: true,
   });
+
+  const [playing, setPlaying] = useState(false);
+
+  const onStateChange = useCallback((state) => {
+    if (state === "ended") {
+      setPlaying(false);
+    }
+  }, []);
+
+  const togglePlaying = useCallback(() => {
+    setPlaying((prev) => !prev);
+  }, []);
+
 
   const handleSelectPlaylist = (playlist) => {
     setCurrentPlaylist(playlist);
@@ -361,6 +376,15 @@ export default function HomeScreen() {
               showsHorizontalScrollIndicator={false}
             />
           )}
+        </View>
+        <View>
+          <YoutubePlayer
+            height={300}
+            play={playing}
+            videoId={"5BdSZkY6F4M"}
+            onChangeState={onStateChange}
+          />
+          <Button title={playing ? "pause" : "play"} onPress={togglePlaying} />
         </View>
       </ScrollView>
     </SafeAreaView>

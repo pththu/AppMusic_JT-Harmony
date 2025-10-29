@@ -42,6 +42,8 @@ interface PlayerState {
   // playFromPlaylist: (index: number) => void;
 
   addToMyPlaylists: (playlist: any) => void;
+  updateCurrentPlaylist: (playlist: any) => void;
+  updateMyPlaylist: (playlist: any) => void;
   removeFromMyPlaylists: (playlistId: string) => void;
   // === CONTROL ACTIONS ===
   // toggleShuffle: () => void;
@@ -97,6 +99,14 @@ export const usePlayerStore = create<PlayerState>()(
         const existingIndex = myPlaylists.findIndex(p => p.id === playlist.id);
         if (existingIndex !== -1) return;
         set({ myPlaylists: [...myPlaylists, playlist] });
+      },
+      updateCurrentPlaylist: (playlist) => {
+        set({ currentPlaylist: playlist });
+      },
+      updateMyPlaylist: (playlist) => {
+        const { myPlaylists } = get();
+        const updatedPlaylists = myPlaylists.map(p => p.id === playlist.id ? playlist : p);
+        set({ myPlaylists: updatedPlaylists });
       },
       removeFromMyPlaylists: (playlistId) => {
         const { myPlaylists } = get();

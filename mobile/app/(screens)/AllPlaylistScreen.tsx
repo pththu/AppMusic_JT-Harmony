@@ -144,18 +144,21 @@ export default function AllPlaylistScreen() {
         isPublic: isPublic
       };
       const response = await CreatePlaylist(payload);
-      console.log('response from ui', response);
 
       if (response.success) {
         setImage(null);
         success('Tạo playlist thành công!');
-        setIsModalVisible(false);
         addToMyPlaylists(response.playlist);
       }
     } catch (error) {
       error('Không thể tạo playlist. Vui lòng thử lại!', error.message);
     } finally {
       setLoading(false);
+      setName("");
+      setDescription("");
+      setImage(null);
+      setIsPublic(false);
+      setIsModalVisible(false);
     }
   }
 
@@ -185,7 +188,6 @@ export default function AllPlaylistScreen() {
 
     fetchSavedPlaylists();
     fetchMyPlaylists();
-    console.log('my playlist', myPlaylistsStore);
   }, []);
 
   const currentData = activeTab === "myPlaylists" ? myPlaylistsStore : savedPlaylists;

@@ -1,20 +1,12 @@
-import {
-  View,
-  Text,
-  useColorScheme,
-  Modal,
-  TextInput,
-  TouchableOpacity,
-  Switch,
-  Platform,
-  Image,
-} from "react-native";
-import React, { useState } from "react";
+import { View, Text, useColorScheme, TouchableOpacity, Switch, Platform, Image } from 'react-native'
+import React, { useState } from 'react'
+import { useCustomAlert } from '@/hooks/useCustomAlert';
+import { Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from "react-native-vector-icons/Ionicons";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { TextInput } from 'react-native';
 
-const AddPlaylistModal = ({
+const EditPlaylistModal = ({
   isModalVisible,
   setIsModalVisible,
   name,
@@ -26,12 +18,10 @@ const AddPlaylistModal = ({
   isPublic,
   setIsPublic,
   onPickImage,
-  onCreatePlaylist,
+  onUpdatePlaylist,
 }) => {
   const colorScheme = useColorScheme();
   const iconColor = colorScheme === "dark" ? "#888" : "#666";
-  const { success, error, warning } = useCustomAlert();
-  const [loading, setLoading] = useState(false);
 
   return (
     <Modal
@@ -56,7 +46,7 @@ const AddPlaylistModal = ({
         >
           {/* Tiêu đề Modal */}
           <Text className="text-black self-center dark:text-white text-2xl font-bold mb-6">
-            Tạo danh sách phát mới
+            Chỉnh sửa danh sách phát
           </Text>
 
           {/* (MỚI) Chọn ảnh đại diện */}
@@ -135,16 +125,16 @@ const AddPlaylistModal = ({
               className="bg-green-500 py-3 px-6 rounded-md shadow"
               onPress={() => {
                 setIsModalVisible(false);
-                onCreatePlaylist();
+                onUpdatePlaylist();
               }}
             >
-              <Text className="text-white text-base font-semibold">Tạo</Text>
+              <Text className="text-white text-base font-semibold">Cập nhật</Text>
             </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
     </Modal>
   );
-};
+}
 
-export default AddPlaylistModal;
+export default EditPlaylistModal

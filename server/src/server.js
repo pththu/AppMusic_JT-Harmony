@@ -143,7 +143,7 @@ async function startServer() {
     try {
         // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
         // await sequelize.sync({ alter: true });
-        // // await sequelize.sync();
+        await sequelize.sync();
         // console.log('✅ Database synchronized successfully')
 
         // await seedDatabase();
