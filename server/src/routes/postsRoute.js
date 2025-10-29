@@ -7,15 +7,16 @@ const { authenticateToken, optionalAuthenticateToken } = require('../middlewares
 router.get('/', optionalAuthenticateToken, postController.getAllPost); // Lấy tất cả bài đăng (public)
 router.get('/:id', postController.getPostById); // Lấy bài đăng theo ID (public)
 router.get('/user/:userId', postController.getPostsByUserId); // Lấy bài đăng theo User ID (public)
-// ✅ ROUTE MỚI: Lấy bài đăng theo User ID
-router.get('/byUser/:userId', authenticateToken, postController.getPostsByUserId);
+
 
 // --- ROUTE YÊU CẦU LOGIN ---
-// Chuyển /mine lên trước /user/:userId để đảm bảo hoạt động
-router.get('/mine', authenticateToken, postController.getPostsByMe);
-router.post('/', authenticateToken, postController.createPost);
-router.post('/:id/like', authenticateToken, postController.toggleLike);
-router.put('/update/:id', authenticateToken, postController.updatePost);
-router.delete('/remove/:id', authenticateToken, postController.deletePost);
+router.get('/byUser/:userId', authenticateToken, postController.getPostsByUserId); // Lấy bài đăng theo User ID
+router.get('/mine', authenticateToken, postController.getPostsByMe); // Lấy bài đăng của chính mình
+router.post('/', authenticateToken, postController.createPost); // Tạo bài đăng mới
+router.post('/:id/like', authenticateToken, postController.toggleLike); // Thích/ bỏ thích bài đăng
+router.get('/:id/likes', authenticateToken, postController.getLikesByPostId); // Lấy danh sách người đã thích bài đăng
+router.put('/update/:id', authenticateToken, postController.updatePost); // Cập nhật bài đăng
+router.delete('/remove/:id', authenticateToken, postController.deletePost); // Xóa bài đăng
+router.post('/:id/report', authenticateToken, postController.reportPost); // Báo cáo bài đăng
 
 module.exports = router;

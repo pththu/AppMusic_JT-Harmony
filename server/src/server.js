@@ -3,40 +3,38 @@ const http = require("http");
 const cors = require("cors");
 const path = require("path");
 const cookieParser = require("cookie-parser");
-const jwt = require('jsonwebtoken'); // 🆕 Import JWT để xác thực Socket
-const { sequelize, User } = require("./models"); // 🆕 Import User Model để kiểm tra người dùng
+const jwt = require('jsonwebtoken');
+const { sequelize, User } = require("./models");
 const { API_PREFIX } = require("./configs/constants");
 const { authenticateToken } = require("./middlewares/authentication");
 const seedDatabase = require('./utils/seeder');
 
 const dotenv = require("dotenv");
-const { Server } = require("socket.io"); // 🆕 Import Socket.IO Server
+const { Server } = require("socket.io");
 
-// 🆕 Import logic xử lý Socket.IO (Sau khi bạn tạo file này)
 const chatEvents = require('./sockets/chatEvents');
 
 dotenv.config();
 
 const app = express();
-const server = http.createServer(app); // 💡 Khởi tạo Server từ HTTP
+const server = http.createServer(app);
 
 // ==========================================================
-// 🚀 CẤU HÌNH SOCKET.IO
+// CẤU HÌNH SOCKET.IO
 // ==========================================================
 const io = new Server(server, {
     cors: {
-        // Cần khớp với origin của frontend React Native/Expo của bạn
-        origin: ["http://localhost:3000", "http://192.168.0.228:3000", "exp://192.168.0.228:8081"],
+        origin: ["http://localhost:3000", "http://192.168.15.9:3000", "exp://192.168.15.9:8081"],
         methods: ["GET", "POST"],
         credentials: true,
     },
-    pingInterval: 25000, // (25 giây)
-    pingTimeout: 60000, // Tăng lên 60 giây (mặc định là 20 giây). KHỞI ĐỘNG LẠI SERVER!
+    pingInterval: 25000,
+    pingTimeout: 60000,
     transports: ['websocket', 'polling']
 });
 
-// 🆕 Middleware xác thực JWT cho Socket.IO
-io.use(async (socket, next) => {
+// Middleware xác thực JWT cho Socket.IO
+io.use(async(socket, next) => {
     // Lấy token từ handshake query (hoặc header, tùy cách client gửi)
     const token = socket.handshake.auth.token;
 
@@ -64,7 +62,7 @@ io.use(async (socket, next) => {
     }
 });
 
-// 🆕 Khởi tạo các sự kiện chat sau khi xác thực
+// Khởi tạo các sự kiện chat sau khi xác thực
 chatEvents(io);
 
 // ==========================================================
@@ -75,7 +73,7 @@ app.set("trust proxy", true);
 // Middleware CORS cho Express
 app.use(
     cors({
-        origin: ["http://localhost:3000", "http://192.168.0.228:3000"],
+        origin: ["http://localhost:3000", "http://192.168.15.9:3000"],
         credentials: true,
     })
 );
@@ -106,7 +104,7 @@ const protectedRoutes = [
     // 'search', // Tìm kiếm công khai
     // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
     'conversations',
-    'upload',        // Upload hình ảnh, file
+    'upload', // Upload hình ảnh, file
     'music'
     // 'genres',    // Xem thể loại nhạc
     // 'track',        // Xem bài hát (public), upload bài hát (private)
@@ -142,13 +140,11 @@ publicRoutes.forEach(route => {
 async function startServer() {
     try {
         // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
-        // await sequelize.sync({ alter: true });
+        await sequelize.sync({ alter: true });
         // // await sequelize.sync();
-        // console.log('✅ Database synchronized successfully')
+        console.log('✅ Database synchronized successfully')
+            // await seedDatabase();
 
-        // await seedDatabase();
-
-        // 💡 SỬ DỤNG server.listen (thay vì app.listen) để Socket.IO hoạt động
         server.listen(process.env.PORT || 3000, () => {
             console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);
         });

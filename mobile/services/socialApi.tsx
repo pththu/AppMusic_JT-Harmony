@@ -1,34 +1,10 @@
 import axios from 'axios';
-import { Alert } from 'react-native';
-import useAuthStore from '@/store/authStore'; 
+import useAuthStore from '@/store/authStore';
 
-import axiosClient from '@/config/axiosClient'; 
-const api = axiosClient; 
-// const BASE_URL = 'http://192.168.1.212:3000/api/v1'; 
-
-// // === TẠO INSTANCE AXIOS ===
-// const api = axios.create({
-//   baseURL: BASE_URL,
-//   headers: { 'Content-Type': 'application/json' },
-// });
-
-// // === INTERCEPTOR: Thêm TOKEN TỰ ĐỘNG ===
-// api.interceptors.request.use(
-//   async (config) => {
-//     const token = useAuthStore.getState().token;
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//       console.log('Header Authorization được set:', config.headers.Authorization);
-//     } else {
-//       console.log('Không có token trong store');
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
+import axiosClient from '@/config/axiosClient';
+const api = axiosClient;
 
 // === INTERFACES ===
-// Giữ nguyên các interfaces
 export interface UserInfo {
   id: number;
   username: string;
@@ -69,116 +45,18 @@ export interface Post {
   isLiked: boolean;
 }
 
-// === API CHO BÀI ĐĂNG ===
+export interface ProfileSocial {
+    id: number;
+    username: string;
+    avatarUrl: string;
+    fullName: string;
+    bio: string | null;
+    followerCount: number;
+    followingCount: number;
+    isFollowing: boolean;
+}
 
-/** Lấy danh sách bài đăng */
-export const fetchPosts = async (): Promise<Post[]> => {
-  try {
-    const response = await api.get('/posts');
-    const data = response.data;
-
-    if (!Array.isArray(data)) {
-      Alert.alert('Lỗi ❌', 'Dữ liệu bài đăng không hợp lệ.');
-      return [];
-    }
-
-    return data.map((post: any) => {
-      let fileUrl: string[] = [];
-      try {
-        const rawFileUrl = post.file_url || post.fileUrl || [];
-        if (typeof rawFileUrl === 'string') {
-          fileUrl = JSON.parse(rawFileUrl);
-        } else if (Array.isArray(rawFileUrl)) {
-          fileUrl = rawFileUrl;
-        } else {
-          fileUrl = [];
-        }
-      } catch (e) {
-        console.error('Error parsing fileUrl in fetchPosts:', e);
-        fileUrl = [];
-      }
-      return {
-        id: post.id.toString(),
-        userId: post.user_id || post.userId,
-        content: post.content || '',
-        fileUrl,
-        musicLink: post.musicLink || null,
-        heartCount: post.heart_count || post.heartCount || 0,
-        shareCount: post.share_count || post.shareCount || 0,
-        uploadedAt: post.uploaded_at || post.uploadedAt || new Date().toISOString(),
-        User:
-          post.user || post.User || {
-            id: post.user_id || post.userId,
-            username: 'Anonymous',
-          avatarUrl: '',
-          fullName: 'Ẩn danh',
-          },
-        // Đảm bảo lấy đúng commentCount được trả về từ server (sau tối ưu hóa)
-        commentCount: post.commentCount || 0,
-        isLiked: post.isLiked === true || post.isLiked === 't',
-      };
-    }) as Post[];
-  } catch (error) {
-    Alert.alert('Lỗi ❌', 'Không thể tải Feed. Kiểm tra Token, Server URL hoặc Server Status.');
-    throw error;
-  }
-};
-
-// Lấy danh sách bài đăng theo User ID
-export const fetchPostsByUserId = async (userId: number): Promise<Post[]> => {
-  try {
-    // Server Endpoint: GET /api/v1/posts/byUser/:userId
-    const response = await api.get(`/posts/byUser/${userId}`); 
-    const data = response.data;
-
-    if (!Array.isArray(data)) {
-      Alert.alert('Lỗi ❌', 'Dữ liệu bài đăng không hợp lệ.');
-      return [];
-    }
-
-    return data.map((post: any) => {
-      let fileUrl: string[] = [];
-      try {
-        const rawFileUrl = post.file_url || post.fileUrl || post.images || [];
-        if (typeof rawFileUrl === 'string') {
-          fileUrl = JSON.parse(rawFileUrl);
-        } else if (Array.isArray(rawFileUrl)) {
-          fileUrl = rawFileUrl;
-        } else {
-          fileUrl = [];
-        }
-      } catch (e) {
-        console.error('Error parsing fileUrl in fetchPostsByUserId:', e);
-        fileUrl = [];
-      }
-      return {
-        id: post.id.toString(),
-        userId: post.userId,
-        content: post.content || '',
-        fileUrl,
-        musicLink: post.musicLink || null,
-        heartCount: post.likeCount || post.heartCount || 0, // Backend sử dụng likeCount
-        shareCount: post.shareCount || 0,
-        uploadedAt: post.uploadedAt || new Date().toISOString(),
-        User: { // Lấy thông tin User đã được Backend include
-          id: post.User.id,
-          username: post.User.username,
-          avatarUrl: post.User.avatarUrl,
-          fullName: post.User.fullName || post.User.username,
-        },
-        commentCount: post.commentCount || 0,
-        isLiked: post.isLiked === true, // Lấy trạng thái isLiked đã tính toán
-        // ✅ MAP comments đã được xử lý (bao gồm isLiked & likeCount)
-        comments: post.comments?.map(mapCommentData) || [],
-      };
-    }) as Post[];
-  } catch (error) {
-    Alert.alert('Lỗi ❌', 'Không thể tải bài đăng của người dùng.');
-    throw error;
-  }
-};
-
-// ✅ HÀM HỖ TRỢ: Ánh xạ dữ liệu Comment (được sử dụng cho cả Post và Comment API)
+// HÀM HỖ TRỢ: Ánh xạ dữ liệu Comment (được sử dụng cho cả Post và Comment API)
 const mapCommentData = (comment: any): Comment => {
   // Hàm đệ quy để xử lý Replies
   const mapReplies = (replies: any[]): Comment[] => {
@@ -204,205 +82,168 @@ const mapCommentData = (comment: any): Comment => {
       avatarUrl: comment.User?.avatarUrl,
       fullName: comment.User?.fullName || comment.User?.username || 'User',
     },
-    // Tái sử dụng logic ánh xạ Replies
     replies: comment.Replies ? mapReplies(comment.Replies) : [], 
   };
 };
 
-/** * Tạo bài đăng mới.
- * @param content Nội dung bài đăng.
- * @param fileUrl URL của ảnh/video đã được upload (có thể là chuỗi rỗng nếu chỉ đăng văn bản).
- * @param songId ID của bài hát đính kèm (có thể là null).
- * @returns Promise<Post> Bài đăng đã tạo.
- */
-export const createNewPost = async (content: string, fileUrls: string[] | null = null, songId: number | null = null): Promise<Post> => {
-  try {
-    // Lấy thông tin người dùng từ store để sử dụng khi cần thiết
-    const user = useAuthStore.getState().user;
-    if (!user) throw new Error('Chưa đăng nhập');
+// === API CHO BÀI ĐĂNG ===
 
-    // Gửi yêu cầu POST với content, fileUrl và songId
-    const response = await api.post('/posts', {
-      content,
-      fileUrls, // Bao gồm URL của ảnh/video
-      songId,  // Bao gồm ID bài hát
-      // KHÔNG GỬI userId LÊN SERVER. SERVER SẼ LẤY NÓ TỪ TOKEN.
-    });
-
-    const newPostResponse = response.data.post; // Server trả về { message, post }
-    
-    return {
-      ...newPostResponse,
-      id: newPostResponse.id.toString(),
-      // Sử dụng thông tin User được server trả về (đã tối ưu hóa ở backend)
-      // Nếu server không gửi User kèm theo, dùng thông tin local user
-      User: newPostResponse.User || {
-        id: user.id,
-        username: user.username || 'User',
-        avatarUrl: user.avatarUrl || '',
-        fullName: user.fullName || user.username || 'User',
-      },
-      commentCount: newPostResponse.commentCount || 0,
-      heartCount: newPostResponse.heartCount || 0,
-      shareCount: newPostResponse.shareCount || 0,
-      isLiked: false,
-      fileUrl: Array.isArray(newPostResponse.fileUrl) ? newPostResponse.fileUrl : [],
-      musicLink: newPostResponse.musicLink || null,
-    } as Post;
-  } catch (error) {
-    console.error('❌ Lỗi tạo bài đăng:', error);
-    Alert.alert('Lỗi ❌', 'Không thể tạo bài đăng mới.');
-    throw error;
-  }
+/** Lấy danh sách tất cả bài đăng mới nhất 
+ * Endpoint: GET /api/v1/posts
+*/
+export const fetchPosts = async (): Promise<Post[]> => {
+    try {
+        const response = await api.get('/posts');
+        return response.data as Post[];
+    } catch (error) {
+        console.error('Lỗi khi tải bài đăng:', error);
+        throw error;
+    }
 };
 
-/** * Thích / Bỏ thích bài đăng.
- * @returns {isLiked: boolean, heartCount: number} Trạng thái like và số lượng like mới nhất.
+/**
+ * Lấy danh sách Bài đăng theo User ID từ server.
+ * Backend (Controller) đã đảm bảo dữ liệu là chuẩn hóa:
+ * - fileUrl là Array<string>.
+ * - isLiked là boolean.
+ * * @param userId ID của người dùng.
+ * @returns Promise<Post[]> Danh sách bài đăng đã chuẩn hóa.
+ * Endpoint: GET /posts/byUser/:userId
  */
-export const togglePostLike = async (postId: string): Promise<{ isLiked: boolean, heartCount: number }> => {
-  try {
-    // Gửi yêu cầu POST đến endpoint toggleLike
-    const response = await api.post(`/posts/${postId}/like`); 
+export const fetchPostsByUserId = async (userId: number): Promise<Post[] | { message: string, status: string }> => {
+    try {
+        const response = await axiosClient.get(`/posts/byUser/${userId}`);
+        const data = response.data;
+        if (!Array.isArray(data)) {
+            return { message: 'Dữ liệu bài đăng không hợp lệ.', status: 'error' };
+        }
+        return data as Post[];
 
-    // ✅ LẤY DỮ LIỆU CẬP NHẬT TỪ SERVER
-    const { isLiked, heartCount } = response.data;
-    
-    // Trả về trạng thái đã được cập nhật
-    return {
-      isLiked: !!isLiked, // Đảm bảo là boolean
-      heartCount: heartCount || 0,
-    };
-  } catch (error) {
-    console.error('❌ Lỗi togglePostLike:', error);
-    Alert.alert('Lỗi ❌', 'Không thể cập nhật trạng thái thích.');
-    throw error;
-  }
+    } catch (error) {
+        console.error('Lỗi khi tải bài đăng của người dùng:', error);
+        return { message: 'Không thể tải bài đăng của người dùng.', status: 'error' };
+    }
+};
+
+/** * Tạo bài đăng mới.
+ * @param content Nội dung bài đăng.
+ * @param fileUrls URL của ảnh/video đã được upload (string[] | null).
+ * @param songId ID của bài hát đính kèm (number | null).
+ * @returns Promise<Post> Bài đăng đã tạo, đã được chuẩn hóa.
+ */
+export const createNewPost = async (
+    content: string,
+    fileUrls: string[] | null = null,
+    songId: number | null = null
+): Promise<Post | { message: string, status: string }> => {
+    try {
+        if (!useAuthStore.getState().user) return { message: 'Chưa đăng nhập', status: 'error' };
+        // Gửi yêu cầu POST. LƯU Ý: Frontend gửi `fileUrls` (là Array<string>).
+        const response = await api.post('/posts', {
+            content,
+            fileUrls, // Backend sẽ nhận Array<string> và chuyển thành chuỗi JSON
+            songId,
+        });
+        const newPostResponse = response.data.post;
+        return newPostResponse as Post;
+    } catch (error) {
+        console.error('Lỗi tạo bài đăng:', error);
+        return { message: 'Không thể tạo bài đăng mới.', status: 'error' };
+    }
+};
+
+/** Thích / Bỏ thích bài đăng.
+ * @returns {isLiked: boolean, heartCount: number} Trạng thái like và số lượng like mới nhất.
+ * Endpoint: POST /api/v1/posts/:postId/like
+ */
+export const togglePostLike = async (postId: string): Promise<{ isLiked: boolean, heartCount: number } | { message: string, status: string }> => {
+  try {
+    const response = await api.post(`/posts/${postId}/like`);
+    const { isLiked, heartCount } = response.data;
+    return {
+      isLiked: !!isLiked,
+      heartCount: heartCount || 0,
+    };
+  } catch (error) {
+    console.error('Lỗi khi cập nhật trạng thái thích bài đăng:', error);
+    return { message: 'Không thể cập nhật trạng thái thích.', status: 'error' };
+  }
 };
 
 // === API CHO BÌNH LUẬN ===
 
-/** Lấy tất cả bình luận theo Post ID */
-// export const fetchCommentsByPostId = async (postId: string): Promise<Comment[]> => {
-//     try {
-//         // Gọi API đến Endpoint đã định nghĩa trong commentController.js
-//         const response = await api.get(`/comments/byPost/${postId}`);
-//         const data = response.data;
-
-//         if (!Array.isArray(data)) {
-//             Alert.alert('Lỗi ❌', 'Dữ liệu bình luận không hợp lệ.');
-//             return [];
-//         }
-
-//         // 💡 MAP DỮ LIỆU ĐỂ ĐẢM BẢO CẤU TRÚC ĐỒNG NHẤT
-//         // Giả định API trả về các trường cần thiết như id, User, content, isLiked, likeCount, v.v.
-//         return data.map((comment: any) => ({
-//             ...comment,
-//             id: comment.id.toString(),
-//             likeCount: comment.likeCount || 0,
-//             isLiked: comment.isLiked || false, // Đảm bảo trường này tồn tại
-//             User: {
-//                 id: comment.User?.id,
-//                 username: comment.User?.username,
-//                 avatarUrl: comment.User?.avatarUrl
-//             },
-//             // Nếu có trường replies, cần map recursive ở đây
-//             replies: comment.replies?.map((reply: any) => ({
-//                 ...reply,
-//                 id: reply.id.toString(),
-//                 likeCount: reply.likeCount || 0,
-//                 isLiked: reply.isLiked || false,
-//             })) || [],
-//         })) as Comment[];
-//     } catch (error) {
-//         Alert.alert('Lỗi ❌', 'Không thể tải bình luận.');
-//         throw error;
-//     }
-// };
+/**  Endpoint GET /api/v1/comments/byPost/:postId
+* Trường parentId để trả lời comment khác
+* userId: user.id Server nên tự lấy từ token, nhưng gửi thêm để đồng bộ
+*/
 export const fetchCommentsByPostId = async (postId: string): Promise<Comment[]> => {
-    try {
-        // Gọi API đến Endpoint đã định nghĩa trong commentController.js
-        const response = await api.get(`/comments/byPost/${postId}`);
-        const data = response.data;
-
-        if (!Array.isArray(data)) {
-            Alert.alert('Lỗi ❌', 'Dữ liệu bình luận không hợp lệ.');
-            return [];
-        }
-
-        // SỬ DỤNG HÀM ÁNH XẠ CHUNG
-        return data.map(mapCommentData) as Comment[];
-    } catch (error) {
-        Alert.alert('Lỗi ❌', 'Không thể tải bình luận.');
-        throw error;
-    }
-};
-/** Tạo bình luận mới */
-export const createNewComment = async (postId: string, content: string, parentId: string | null = null): Promise<Comment> => {
     try {
-        const user = useAuthStore.getState().user;
-        if (!user) throw new Error('Chưa đăng nhập');
+        const response = await api.get(`/comments/byPost/${postId}`);
+        const data = response.data;
+        if (!Array.isArray(data)) {
+            return [];
+        }
+        return data.map(mapCommentData) as Comment[];
+    } catch (error) {
+        console.error('Lỗi khi tải bình luận:', error);
+        return [];
+    }
+};
+
+/** * Tạo bình luận mới.
+ * postId: ID của bài đăng.
+ * content: Nội dung bình luận.
+ * parentId: ID của bình luận cha (nếu là trả lời), null nếu bình luận gốc.
+ * Endpoint : POST /api/v1/comments
+ * @returns Promise<Comment> Bình luận đã tạo.
+ */
+export const createNewComment = async (
+    postId: string,
+    content: string,
+    parentId: string | null = null
+): Promise<Comment | { message: string, status: string }> => {
+    try {
+        if (!useAuthStore.getState().user) return { message: 'Chưa đăng nhập', status: 'error' };
 
         const response = await api.post('/comments', {
             postId: postId,
             content: content,
-            parentId: parentId, // Trường parentId để trả lời comment khác
-            userId: user.id, // Server nên tự lấy từ token, nhưng gửi thêm để đồng bộ
+            parentId: parentId,
         });
-
-        // 💡 Server nên trả về Comment object đầy đủ bao gồm cả thông tin User
-        return {
-            ...response.data,
-            id: response.data.id.toString(),
-            User: response.data.User || { id: user.id, username: user.username, avatarUrl: user.avatarUrl },
-            likeCount: response.data.likeCount || 0,
-            isLiked: false,
-            // ... (thêm các trường khác nếu cần)
-        } as Comment;
+        return response.data as Comment;
 
     } catch (error) {
-        Alert.alert('Lỗi ❌', 'Không thể đăng bình luận.');
-        throw error;
+        console.error('Lỗi khi đăng bình luận:', error);
+        return { message: 'Không thể đăng bình luận.', status: 'error' };
     }
 };
 
 
 /** Thích / Bỏ thích bình luận.
+ * commentId: ID của bình luận.
  * @returns {isLiked: boolean, likeCount: number} Trạng thái like và số lượng like mới nhất.
+ * Endpoint: POST /api/v1/comments/:commentId/like
  */
-export const toggleCommentLike = async (commentId: string): Promise<{ isLiked: boolean, likeCount: number }> => {
+export const toggleCommentLike = async (commentId: string): Promise<{ isLiked: boolean, likeCount: number } | { message: string, status: string }> => {
     try {
-        // Server Endpoint: POST /api/v1/comments/:commentId/like
-        const response = await api.post(`/comments/${commentId}/like`); 
-        
+        const response = await api.post(`/comments/${commentId}/like`);
         const { isLiked, likeCount } = response.data;
-        
         return {
             isLiked: !!isLiked,
             likeCount: likeCount || 0,
         };
     } catch (error) {
-        console.error('❌ Lỗi toggleCommentLike:', error);
-        Alert.alert('Lỗi ❌', 'Không thể cập nhật trạng thái thích bình luận.');
-        throw error;
+        console.error('Lỗi khi cập nhật trạng thái thích bình luận:', error);
+        return { message: 'Không thể cập nhật trạng thái thích bình luận.', status: 'error' };
     }
 };
 
-// === INTERFACES MỚI ===
-export interface ProfileSocial {
-    id: number;
-    username: string;
-    avatarUrl: string;
-    fullName: string;
-    bio: string | null;
-    followerCount: number;
-    followingCount: number;
-    isFollowing: boolean; // Trạng thái theo dõi của người dùng hiện tại
-}
-
 // === API CHO SOCIAL PROFILE ===
 
-/** Lấy thông tin Profile xã hội (bao gồm follow count và isFollowing) */
-export const fetchUserProfileSocial = async (userId: number): Promise<ProfileSocial> => {
+/** Lấy thông tin Profile xã hội (bao gồm follow count và isFollowing)
+ * Endpoint: GET /api/v1/users/:userId/profile
+*/
+export const fetchUserProfileSocial = async (userId: number): Promise<ProfileSocial | { message: string, status: string }> => {
     try {
         const response = await api.get(`/users/${userId}/profile`);
         const data = response.data;
@@ -415,33 +256,32 @@ export const fetchUserProfileSocial = async (userId: number): Promise<ProfileSoc
             isFollowing: data.isFollowing === true,
         } as ProfileSocial;
     } catch (error) {
-        Alert.alert('Lỗi ❌', 'Không thể tải thông tin profile.');
-        throw error;
+        console.error('Lỗi khi tải thông tin profile:', error);
+        return { message: 'Không thể tải thông tin profile.', status: 'error' };
     }
 };
 
-/** Toggle Theo dõi/Hủy theo dõi */
-export const toggleFollow = async (userId: number): Promise<{ isFollowing: boolean }> => {
+/** Toggle Theo dõi/Hủy theo dõi
+ * Endpoint: POST /api/v1/follows/users/:userId/follow
+*/
+export const toggleFollow = async (userId: number): Promise<{ isFollowing: boolean } | { message: string, status: string }> => {
     try {
-        // ➡️ Endpoint: POST /api/v1/users/:userId/follow (sử dụng userId của người được theo dõi)
-        // Đây là endpoint đã được định nghĩa trong followsController.js
         const response = await api.post(`/follows/users/${userId}/follow`);
-        
-        // Server trả về { message: string, isFollowing: boolean }
         return {
             isFollowing: response.data.isFollowing
         };
     } catch (error) {
-        // Bắt lỗi cụ thể hơn nếu cần
-        Alert.alert('Lỗi ❌', 'Không thể thay đổi trạng thái theo dõi.');
-        throw error;
+        console.error('Lỗi khi thay đổi trạng thái theo dõi:', error);
+        return { message: 'Không thể thay đổi trạng thái theo dõi.', status: 'error' };
     }
 };
 
-/** Lấy danh sách Người theo dõi (Followers) */
+/** Lấy danh sách Người theo dõi (Followers) 
+ * userId: ID của người dùng.
+ *  Endpoint: GET /api/v1/users/:userId/followers
+*/
 export const fetchFollowers = async (userId: number): Promise<UserInfo[]> => {
     try {
-        // Endpoint: GET /api/v1/users/:userId/followers
         const response = await api.get(`/follows/users/${userId}/followers`);
         return response.data as UserInfo[];
     } catch (error) {
@@ -450,7 +290,10 @@ export const fetchFollowers = async (userId: number): Promise<UserInfo[]> => {
     }
 };
 
-/** Lấy danh sách Đang theo dõi (Following) */
+/** Lấy danh sách Đang theo dõi (Following)
+ * userId: ID của người dùng.
+ * Endpoint: GET /api/v1/users/:userId/following
+*/
 export const fetchFollowing = async (userId: number): Promise<UserInfo[]> => {
     try {
         // Endpoint: GET /api/v1/users/:userId/following
@@ -459,5 +302,80 @@ export const fetchFollowing = async (userId: number): Promise<UserInfo[]> => {
     } catch (error) {
         console.error('Lỗi khi tải danh sách đang theo dõi:', error);
         throw error;
+    }
+};
+
+// === API CHO LIKE ===
+
+/** Lấy danh sách người đã thích bài đăng
+ * postId: ID của bài đăng.
+ * Endpoint: GET /api/v1/posts/:postId/likes
+*/
+export const fetchLikesByPostId = async (postId: string): Promise<{ id: number; userId: number; postId: number; likedAt: string; User: UserInfo }[]> => {
+    try {
+        const response = await api.get(`/posts/${postId}/likes`);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách người đã thích:', error);
+        throw error;
+    }
+};
+
+/** Báo cáo bài đăng
+ * postId: ID của bài đăng.
+ * reason: Lý do báo cáo ('adult_content', 'self_harm', 'misinformation', 'unwanted_content').
+ * Endpoint: POST /api/v1/posts/:postId/report
+*/
+export const reportPost = async (postId: string, reason: string): Promise<{ message: string; report: any } | { message: string; status: string }> => {
+    try {
+        const response = await api.post(`/posts/${postId}/report`, { reason });
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi khi báo cáo bài đăng:', error);
+        return { message: 'Không thể gửi báo cáo.', status: 'error' };
+    }
+};
+
+/** Cập nhật bài đăng
+ * postId: ID của bài đăng.
+ * content: Nội dung mới.
+ * fileUrls: Mảng URL file mới (có thể null).
+ * songId: ID bài hát mới (có thể null).
+ * Endpoint: PUT /api/v1/posts/update/:postId
+*/
+export const updatePost = async (
+    postId: string,
+    content: string,
+    fileUrls: string[] | null = null,
+    songId: number | null = null
+): Promise<Post | { message: string; status: string }> => {
+    try {
+        if (!useAuthStore.getState().user) return { message: 'Chưa đăng nhập', status: 'error' };
+
+        const response = await api.put(`/posts/update/${postId}`, {
+            content,
+            fileUrls,
+            songId,
+        });
+        return response.data as Post;
+    } catch (error) {
+        console.error('Lỗi khi cập nhật bài đăng:', error);
+        return { message: 'Không thể cập nhật bài đăng.', status: 'error' };
+    }
+};
+
+/** Xóa bài đăng
+ * postId: ID của bài đăng.
+ * Endpoint: DELETE /api/v1/posts/remove/:postId
+*/
+export const deletePost = async (postId: string): Promise<{ message: string } | { message: string; status: string }> => {
+    try {
+        if (!useAuthStore.getState().user) return { message: 'Chưa đăng nhập', status: 'error' };
+
+        const response = await api.delete(`/posts/remove/${postId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Lỗi khi xóa bài đăng:', error);
+        return { message: 'Không thể xóa bài đăng.', status: 'error' };
     }
 };

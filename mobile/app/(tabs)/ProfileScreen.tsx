@@ -1,7 +1,16 @@
 import { SettingsContext } from "@/context/SettingsContext";
 import { useNavigate } from "@/hooks/useNavigate";
 import React, { useContext, useState } from "react";
-import { Image, Pressable, Text, View, ScrollView, ActivityIndicator, useColorScheme, TouchableOpacity } from "react-native";
+import {
+  Image,
+  Pressable,
+  Text,
+  View,
+  ScrollView,
+  ActivityIndicator,
+  useColorScheme,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -9,22 +18,22 @@ import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
 import useAuthStore from "@/store/authStore";
-import { ChangeAvatar, Logout } from "@/routes/ApiRouter";
-import { useCustomAlert } from '@/hooks/useCustomAlert';
+import { ChangeAvatar, Logout, UploadMultipleFile } from "@/routes/ApiRouter";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LoginManager } from "react-native-fbsdk-next";
-import * as ImagePicker from 'expo-image-picker';
-// import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
-  const user = useAuthStore(state => state.user);
-  const loginType = useAuthStore(state => state.loginType);
-  const updateUser = useAuthStore(state => state.updateUser);
+  const user = useAuthStore((state) => state.user);
+  const loginType = useAuthStore((state) => state.loginType);
+  const updateUser = useAuthStore((state) => state.updateUser);
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error, warning } = useCustomAlert();
-  const logout = useAuthStore(state => state.logout);
+  const logout = useAuthStore((state) => state.logout);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -33,8 +42,8 @@ export default function ProfileScreen() {
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      warning('Ứng dụng cần quyền truy cập thư viện ảnh!');
+    if (status !== "granted") {
+      warning("Ứng dụng cần quyền truy cập thư viện ảnh!");
       return false;
     }
     return true;
@@ -43,12 +52,12 @@ export default function ProfileScreen() {
   const handlePickSingleImage = async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
-      error('Quyền truy cập bị từ chối!');
+      error("Quyền truy cập bị từ chối!");
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       allowsEditing: true,
       quality: 0.8,
     });
@@ -61,7 +70,7 @@ export default function ProfileScreen() {
 
   const handleUploadSingle = async () => {
     if (!selectedImage) {
-      warning('Vui lòng chọn hình ảnh trước!');
+      warning("Vui lòng chọn hình ảnh trước!");
       return;
     }
 
@@ -73,57 +82,54 @@ export default function ProfileScreen() {
         setSelectedImage(null);
         setIsChoosedImage(false);
         updateUser({ ...user, avatarUrl: response.data?.url });
-        success('Upload hình ảnh thành công!');
+        success("Upload hình ảnh thành công!");
       }
     } catch (error) {
-      error('Không thể upload hình ảnh. Vui lòng thử lại!', error.message);
+      error("Không thể upload hình ảnh. Vui lòng thử lại!", error.message);
     } finally {
       setLoading(false);
     }
   };
 
   // up nhiều file lên cloudinary và server
-  // const handlePickMultipleFile = async () => {
-  //   try {
-  //     const result = await DocumentPicker.getDocumentAsync({
-  //       type: [
-  //         'audio/*',
-  //         'video/*'
-  //       ],
-  //       multiple: true,
-  //       copyToCacheDirectory: true,
-  //     });
+  const handlePickMultipleFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["audio/*", "video/*", "image/*"],
+        multiple: true,
+        copyToCacheDirectory: true,
+      });
 
-  //     if (!result.canceled) {
-  //       // Truyền trực tiếp mảng result.assets vào hàm upload
-  //       console.log('Files selected:', result.assets);
-  //       const uploadResult = await UploadMultipleFile(result.assets);
+      if (!result.canceled) {
+        // Truyền trực tiếp mảng result.assets vào hàm upload
+        console.log("Files selected:", result.assets);
+        const uploadResult = await UploadMultipleFile(result.assets);
 
-  //       if (uploadResult.success) {
-  //         success('Upload thành công nhiều file!', '');
-  //         console.log('Server response:', uploadResult);
-  //       } else {
-  //         error('Upload thất bại', uploadResult.message);
-  //       }
-  //     } else {
-  //       warning('Bạn chưa chọn file nào để upload!');
-  //     }
-  //   } catch (error) {
-  //     error('Không thể chọn file. Vui lòng thử lại!', error.message);
-  //   }
-  // };
+        if (uploadResult.success) {
+          success("Upload thành công nhiều file!", "");
+          console.log("Server response:", uploadResult);
+        } else {
+          error("Upload thất bại", uploadResult.message);
+        }
+      } else {
+        warning("Bạn chưa chọn file nào để upload!");
+      }
+    } catch (error) {
+      error("Không thể chọn file. Vui lòng thử lại!", error.message);
+    }
+  };
 
   const handleLogout = async () => {
     try {
       const response = await Logout();
-      if (loginType === 'google') {
+      if (loginType === "google") {
         await GoogleSignin.signOut();
       }
-      if (loginType === 'facebook') {
+      if (loginType === "facebook") {
         LoginManager.logOut();
       }
       if (response.success) {
-        success('Đăng xuất thành công', '');
+        success("Đăng xuất thành công", "");
       }
       logout();
     } catch (error) {
@@ -133,7 +139,8 @@ export default function ProfileScreen() {
 
   const ModalConfirm = () => {
     return (
-      <View className={`absolute top-[40%] left-[10%] right-[10%] items-center justify-center mb-4 p-8 m-4 rounded-lg border ${colorScheme === "dark" ? "bg-gray-800 border-gray-700" : "bg-gray-100 border-gray-300"}`}
+      <View
+        className={`absolute top-[40%] left-[10%] right-[10%] items-center justify-center mb-4 p-8 m-4 rounded-lg border ${colorScheme === "dark" ? "bg-gray-800 border-gray-700" : "bg-gray-100 border-gray-300"}`}
         style={{
           shadowColor: colorScheme === "dark" ? "#000" : "#000",
           shadowOffset: { width: 0, height: 2 },
@@ -143,7 +150,9 @@ export default function ProfileScreen() {
           zIndex: 9999,
         }}
       >
-        <Text className={`text-center text-lg mb-4 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>
+        <Text
+          className={`text-center text-lg mb-4 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}
+        >
           Xác nhận đổi ảnh đại diện?
         </Text>
         <View className={`flex-row items-center justify-center gap-5`}>
@@ -154,25 +163,32 @@ export default function ProfileScreen() {
               setSelectedImage(null);
             }}
           >
-            <Text className={`${colorScheme === "dark" ? "text-white" : "text-white"}`}>Hủy bỏ</Text>
+            <Text
+              className={`${colorScheme === "dark" ? "text-white" : "text-white"}`}
+            >
+              Hủy bỏ
+            </Text>
           </Pressable>
           <Pressable
             className={`px-6 py-4 rounded bg-green-600`}
             onPress={() => handleUploadSingle()}
           >
-            <Text className={`text-white`}>{loading ? "Đang tải..." : "Cập nhật"}</Text>
+            <Text className={`text-white`}>
+              {loading ? "Đang tải..." : "Cập nhật"}
+            </Text>
           </Pressable>
         </View>
       </View>
     );
-  }
-
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F]">
       <ScrollView contentContainerStyle={{ padding: 24 }}>
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-black dark:text-white text-3xl font-bold">Hồ sơ</Text>
+          <Text className="text-black dark:text-white text-3xl font-bold">
+            Hồ sơ
+          </Text>
           <CustomButton
             title="Cài đặt"
             onPress={() => navigate("Setting")}
@@ -181,12 +197,15 @@ export default function ProfileScreen() {
         </View>
 
         <View className="items-center my-4">
-          <Pressable className={`items-center w-24 h-24 mb-4 border-2 rounded-full border-green-500 shadow-xl`}
+          <Pressable
+            className={`items-center w-24 h-24 mb-4 border-2 rounded-full border-green-500 shadow-xl`}
             onPress={() => handlePickSingleImage()}
           >
             <Image
               source={{
-                uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg',
+                uri:
+                  user?.avatarUrl ||
+                  "https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg",
               }}
               className="w-[80px] h-[80px] rounded-full items-center"
             />
@@ -194,7 +213,11 @@ export default function ProfileScreen() {
               <Icon name="camera" size={16} color="white" />
             </View>
           </Pressable>
-          <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F]"}`}>{user?.fullName || user?.username}</Text>
+          <Text
+            className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F]"}`}
+          >
+            {user?.fullName || user?.username}
+          </Text>
         </View>
 
         {isChoosedImage && <ModalConfirm />}
@@ -207,8 +230,16 @@ export default function ProfileScreen() {
               size={20}
               color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
             />
-            <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Email:</Text>
-            <Text className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>{user?.email || 'Chưa có thông tin'}</Text>
+            <Text
+              className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}
+            >
+              Email:
+            </Text>
+            <Text
+              className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}
+            >
+              {user?.email || "Chưa có thông tin"}
+            </Text>
           </View>
 
           <View className="flex-row items-center mb-2 gap-2">
@@ -217,8 +248,16 @@ export default function ProfileScreen() {
               size={20}
               color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
             />
-            <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Ngày sinh:</Text>
-            <Text className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}>{new Date(user?.dob).toLocaleDateString() || 'Chưa có thông tin'}</Text>
+            <Text
+              className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}
+            >
+              Ngày sinh:
+            </Text>
+            <Text
+              className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}
+            >
+              {new Date(user?.dob).toLocaleDateString() || "Chưa có thông tin"}
+            </Text>
           </View>
 
           <View className="flex-row items-center mb-1 gap-2">
@@ -227,16 +266,25 @@ export default function ProfileScreen() {
               size={20}
               color={`${colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}`}
             />
-            <Text className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}>Tiểu sử:</Text>
+            <Text
+              className={`${colorScheme === "dark" ? "text-gray-400" : "text-gray-900"}`}
+            >
+              Tiểu sử:
+            </Text>
           </View>
-          <Text className={`${colorScheme === "dark" ? "text-white" : "text-gray-800 bg-green-100 py-2 px-4 rounded-md"}`}>{user?.bio || '...'}</Text>
+          <Text
+            className={`${colorScheme === "dark" ? "text-white" : "text-gray-800 bg-green-100 py-2 px-4 rounded-md"}`}
+          >
+            {user?.bio || "..."}
+          </Text>
         </View>
 
-        {/* <Pressable className="p-5 border border-slate-300"
-        onPress={() => handlePickMultipleFile()}
-      >
-        <Text>Chọn nhiều file</Text>
-      </Pressable> */}
+        {/* <Pressable
+          className="p-5 border border-slate-300"
+          onPress={() => handlePickMultipleFile()}
+        >
+          <Text>Chọn nhiều file</Text>
+        </Pressable> */}
 
         {/* Các nút Thư viện (Library) */}
         <View className="flex-row justify-between mb-4">
@@ -261,7 +309,9 @@ export default function ProfileScreen() {
         </View>
 
         <View>
-          <Text className="text-black dark:text-white font-semibold mb-2 text-2xl">Cấu hình</Text>
+          <Text className="text-black dark:text-white font-semibold mb-2 text-2xl">
+            Cấu hình
+          </Text>
           <SettingItem
             title="Chế độ Tối/Sáng"
             rightComponent={
@@ -269,7 +319,7 @@ export default function ProfileScreen() {
                 <ThemeToggle />
               </View>
             }
-            onPress={() => { }}
+            onPress={() => {}}
           />
           <SettingItem
             title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
