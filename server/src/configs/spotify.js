@@ -158,7 +158,7 @@ const searchTracks = async (query, type, limit = null) => {
 const searchPlaylists = async (query, limit) => {
   let allPlaylists = [];
   let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=playlist&limit=50`; // Bắt đầu với URL đầu tiên
-  console.log(`Bắt đầu tìm kiếm tất cả playlist cho query: "${query}"`);
+  // console.log(`Bắt đầu tìm kiếm tất cả playlist cho query: "${query}"`);
 
   try {
     while (nextUrl) {
@@ -172,15 +172,15 @@ const searchPlaylists = async (query, limit) => {
       const validItems = playlistsPage.items.filter(Boolean);
       allPlaylists = allPlaylists.concat(validItems);
       nextUrl = playlistsPage.next;
-      console.log(`Đã lấy được ${validItems.length} playlist. Tổng cộng: ${allPlaylists.length}. Đang tải trang tiếp theo...`);
+      // console.log(`Đã lấy được ${validItems.length} playlist. Tổng cộng: ${allPlaylists.length}. Đang tải trang tiếp theo...`);
       if (allPlaylists.length >= 3) {
-        console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
+        // console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
         break;
       }
     }
 
-    console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allPlaylists.length} playlist.`);
-    console.log(allPlaylists[0])
+    // console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allPlaylists.length} playlist.`);
+    // console.log(allPlaylists[0])
     return shuffle(allPlaylists).slice(0, limit).map((playlist) => formatPlaylist(playlist));
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm playlist trên Spotify:`, error.response ? error.response.data : error.message);
@@ -191,7 +191,7 @@ const searchPlaylists = async (query, limit) => {
 const searchAlbums = async (query, limit) => {
   let allAlbums = [];
   let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=album&limit=50`; // Bắt đầu với URL đầu tiên
-  console.log(`Bắt đầu tìm kiếm tất cả album cho query: "${query}"`);
+  // console.log(`Bắt đầu tìm kiếm tất cả album cho query: "${query}"`);
 
   try {
     while (nextUrl) {
@@ -205,14 +205,14 @@ const searchAlbums = async (query, limit) => {
       const validItems = albumPage.items.filter(Boolean);
       allAlbums = allAlbums.concat(validItems);
       nextUrl = albumPage.next;
-      console.log(`Đã lấy được ${validItems.length} album. Tổng cộng: ${allAlbums.length}. Đang tải trang tiếp theo...`);
+      // console.log(`Đã lấy được ${validItems.length} album. Tổng cộng: ${allAlbums.length}. Đang tải trang tiếp theo...`);
       if (allAlbums.length >= 3) {
-        console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
+        // console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
         break;
       }
     }
 
-    console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allAlbums.length} album.`);
+    // console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allAlbums.length} album.`);
     return shuffle(allAlbums).slice(0, limit).map((album) => formatAlbum(album));
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm album trên Spotify:`, error.response ? error.response.data : error.message);
@@ -224,7 +224,7 @@ const searchArtists = async (query, limit) => {
   try {
     let allArtists = [];
     let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=50`; // Bắt đầu với URL đầu tiên
-    console.log(`Bắt đầu tìm kiếm tất cả nghệ sĩ cho query: "${query}"`);
+    // console.log(`Bắt đầu tìm kiếm tất cả nghệ sĩ cho query: "${query}"`);
 
     while (nextUrl) {
       const response = await axios.get(nextUrl, {
@@ -237,9 +237,9 @@ const searchArtists = async (query, limit) => {
       const validItems = artistPage.items.filter(Boolean);
       allArtists = allArtists.concat(validItems);
       nextUrl = artistPage.next;
-      console.log(`Đã lấy được ${validItems.length} nghệ sĩ. Tổng cộng: ${allArtists.length}. Đang tải trang tiếp theo...`);
+      // console.log(`Đã lấy được ${validItems.length} nghệ sĩ. Tổng cộng: ${allArtists.length}. Đang tải trang tiếp theo...`);
       if (allArtists.length >= limit) {
-        console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
+        // console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
         break;
       }
     }
@@ -293,13 +293,10 @@ const shuffle = (array) => {
   let currentIndex = array.length;
   let randomIndex;
 
-  // Lặp khi vẫn còn phần tử để xáo trộn
   while (currentIndex !== 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
 
-    // Và hoán đổi nó với phần tử hiện tại
-    // (Sử dụng cú pháp ES6 để hoán đổi)
     [array[currentIndex], array[randomIndex]] = [
       array[randomIndex], array[currentIndex]
     ];

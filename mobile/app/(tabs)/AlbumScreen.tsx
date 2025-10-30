@@ -12,7 +12,7 @@ import { GetTracksByAlbumId } from '@/services/musicService';
 const HEADER_SCROLL_THRESHOLD = 256;
 
 const AlbumScreen = () => {
-  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
   const [album, setAlbum] = useState(null);
@@ -31,6 +31,7 @@ const AlbumScreen = () => {
     const fetchTracks = async () => {
       if (albumData) {
         const response = await GetTracksByAlbumId(albumData.spotifyId);
+        console.log('response ui: ', response);
         if (response.success) {
           response.data.map(track => {
             track.imageUrl = albumData.imageUrl;
@@ -73,18 +74,18 @@ const AlbumScreen = () => {
     extrapolate: 'clamp',
   });
 
-  const handleSelectSong = (song) => {
-    setCurrentSong(song);
+  const handleSelectTrack = (track) => {
+    setCurrentTrack(track);
     navigate('SongScreen');
   }
 
-  const renderRecentlyPlayedItem = ({ item }) => (
+  const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
       title={item.name}
-      key={item.spotifyId}
+      key={index}
       subtitle={item.artists.map(a => a.name).join(', ')}
       image={item.imageUrl || ''}
-      onPress={() => handleSelectSong(item)}
+      onPress={() => handleSelectTrack(item)}
       onOptionsPress={() => { }}
     />
   );
@@ -193,9 +194,9 @@ const AlbumScreen = () => {
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải album...</Text>
             </View>
           ) : (
-            tracks.map((item) => {
+            tracks.map((item, index) => {
               return (
-                renderRecentlyPlayedItem({ item })
+                renderRecentlyPlayedItem({ item, index })
               )
             })
           )}

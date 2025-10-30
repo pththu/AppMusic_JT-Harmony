@@ -54,6 +54,7 @@ export const GetTracksByPlaylistId = async (payload) => {
 export const GetTracksByAlbumId = async (payload) => {
   try {
     const response = await axiosClient.get(`/music/album/${payload}/tracks`);
+    console.log('response api: ', response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
