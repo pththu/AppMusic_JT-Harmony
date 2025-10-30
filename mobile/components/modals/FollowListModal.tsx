@@ -10,19 +10,13 @@ import {
     Image,
     Alert,
 } from 'react-native';
-import { useNavigation } from "@react-navigation/native"; // Cần thiết cho navigation
 import { useNavigate } from "@/hooks/useNavigate"; // 💡 Giả định hook này có sẵn trong dự án của bạn
 import Icon from 'react-native-vector-icons/Feather';
 import { fetchFollowers, fetchFollowing, UserInfo, toggleFollow } from '../../services/socialApi'; //
-import useAuthStore from '@/store/authStore'; //
+import useAuthStore from '@/store/authStore'; 
 
-// --- INTERFACES ĐÃ CẬP NHẬT ---
 
-// // Interface cho dữ liệu người dùng trong Modal (thêm isFollowing)
-// export interface UserDataInModal extends UserInfo {
-//     isFollowing: boolean; // Trạng thái này là của CURRENT USER đối với người này
-// }
-
+// INTERFACE
 interface FollowListModalProps {
     visible: boolean;
     onClose: () => void;
@@ -33,12 +27,10 @@ interface FollowListModalProps {
 interface FollowItemProps { 
     user: UserInfo; 
     onCloseModal: () => void; // Prop để đóng modal
-    onToggleFollow: (userId: number) => Promise<boolean>; // Hàm gọi API và cập nhật state cha
+    onToggleFollow: (userId: number) => Promise<boolean>; 
 }
 
-// =========================================================
-// 1. COMPONENT CON: FollowItem
-// =========================================================
+// FollowItem
 const FollowItem: React.FC<FollowItemProps> = ({ user, onCloseModal, onToggleFollow }) => {
     const colorScheme = useColorScheme();
     const { navigate } = useNavigate(); // Sử dụng useNavigate hook để điều hướng
@@ -46,15 +38,13 @@ const FollowItem: React.FC<FollowItemProps> = ({ user, onCloseModal, onToggleFol
 
     // State để quản lý trạng thái follow của người dùng này
     const [isFollowingState, setIsFollowingState] = useState(user.isFollowing === true);
-
+    const [loading, setLoading] = useState(false); // State để quản lý trạng thái loading khi gọi API
+    const isCurrentUser = currentUserId === user.id; // Kiểm tra xem người dùng trong danh sách có phải là chính mình không
+    
+    // Cập nhật trạng thái isFollowingState khi prop user.isFollowing thay đổi
     useEffect(() => {
         setIsFollowingState(user.isFollowing === true);
     }, [user.isFollowing]);
-
-    const [loading, setLoading] = useState(false);
-    // Kiểm tra xem người dùng trong danh sách có phải là chính mình không
-    const isCurrentUser = currentUserId === user.id;
-    
 
     // --- HÀM XỬ LÝ THEO DÕI/HỦY THEO DÕI ---
     const handleToggleFollow = async () => {
@@ -84,7 +74,7 @@ const FollowItem: React.FC<FollowItemProps> = ({ user, onCloseModal, onToggleFol
         }
     };
     
-    // --- HÀM XỬ LÝ NHẤN VÀO USER HOẶC AVATAR (Điều hướng) ---
+    // --- HÀM XỬ LÝ NHẤN VÀO USER ---
     const handleUserNavigate = () => {
         // 1. Đóng Modal trước
         onCloseModal(); 
@@ -114,7 +104,7 @@ const FollowItem: React.FC<FollowItemProps> = ({ user, onCloseModal, onToggleFol
                 <Text className="text-sm text-gray-500 dark:text-gray-400">{user.fullName}</Text>
             </View>
 
-            {/* ✅ NÚT FOLLOW/UNFOLLOW - Chỉ hiển thị khi không phải là chính mình */}
+            {/* NÚT FOLLOW/UNFOLLOW - Chỉ hiển thị khi không phải là chính mình */}
             {!isCurrentUser && (
                 <TouchableOpacity
                     onPress={handleToggleFollow}
@@ -134,18 +124,12 @@ const FollowItem: React.FC<FollowItemProps> = ({ user, onCloseModal, onToggleFol
     );
 };
 
-
-// =========================================================
-// 2. COMPONENT CHÍNH: FollowListModal
-// =========================================================
-
+// FollowListModal
 export default function FollowListModal({ visible, onClose, userId, listType }: FollowListModalProps) {
     const colorScheme = useColorScheme();
-    // 💡 Sửa lại state type để bao gồm isFollowing
     const [data, setData] = useState<UserInfo[]>([]); 
     const [loading, setLoading] = useState(true);
     const title = listType === 'followers' ? 'Người Theo Dõi' : 'Đang Theo Dõi';
-    const currentUserId = useAuthStore(state => state.user?.id); 
     
     // --- HÀM XỬ LÝ API VÀ CẬP NHẬT STATE ---
     const handleToggleFollow = async (userIdToToggle: number): Promise<boolean> => {
@@ -176,12 +160,8 @@ export default function FollowListModal({ visible, onClose, userId, listType }: 
             const fetcher = listType === 'followers' ? fetchFollowers : fetchFollowing; //
             const fetchedUsers: UserInfo[] = await fetcher(userId); //
 
-            // ⚠️ LƯU Ý: Vì interface UserInfo không có isFollowing, 
-            // tôi phải giả định Backend đã trả về (hoặc bạn sẽ cập nhật Backend). 
-            // Nếu không, bạn cần một API bổ sung để kiểm tra trạng thái follow của từng người.
             const finalData = fetchedUsers.map(user => ({
                 ...user,
-                // GIẢ ĐỊNH: isFollowing được Backend trả về hoặc mặc định là false nếu không có.
                 isFollowing: (user as any).isFollowing === true, 
             })) as UserInfo[];
 
@@ -194,11 +174,12 @@ export default function FollowListModal({ visible, onClose, userId, listType }: 
         }
     };
 
-        useEffect(() => {
-            if (visible && userId) {
-                fetchData();
-            }
-        }, [visible, userId, listType]);
+    // Tự động tải dữ liệu khi modal được mở
+    useEffect(() => {
+        if (visible && userId) {
+            fetchData();
+        }
+    }, [visible, userId, listType]);
 
     return (
         <Modal
@@ -222,7 +203,7 @@ export default function FollowListModal({ visible, onClose, userId, listType }: 
                     {/* Content */}
                     {loading ? (
                         <View className="flex-1 justify-center items-center">
-                            <ActivityIndicator size="large" color="#10B981" />
+                            <ActivityIndicator size="large" color="#4F46E5" />
                         </View>
                     ) : (
                         <FlatList
@@ -231,8 +212,8 @@ export default function FollowListModal({ visible, onClose, userId, listType }: 
                             renderItem={({ item }) => (
                                 <FollowItem 
                                     user={item} 
-                                    onCloseModal={onClose} // ✅ Truyền hàm đóng Modal
-                                    onToggleFollow={handleToggleFollow} // ✅ Truyền hàm xử lý API
+                                    onCloseModal={onClose}
+                                    onToggleFollow={handleToggleFollow}
                                 />
                             )}
                             ListEmptyComponent={() => (

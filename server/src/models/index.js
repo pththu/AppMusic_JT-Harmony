@@ -15,6 +15,7 @@ const ConversationMember = require('./conversationMember');
 const Message = require('./message');
 const FollowArtist = require('./follow_artist');
 const FollowUser = require('./follow_user');
+const PostReport = require('./postReport');
 
 const Role = require('./role');
 const Genres = require('./genres');
@@ -38,6 +39,14 @@ Post.belongsTo(User, {
     foreignKey: 'userId',
     as: 'User'
 });
+
+// User - PostReport
+User.hasMany(PostReport, { foreignKey: 'reporterId' });
+PostReport.belongsTo(User, { foreignKey: 'reporterId', as: 'Reporter' });
+
+// Post - PostReport
+Post.hasMany(PostReport, { foreignKey: 'postId' });
+PostReport.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
 
 // User - Comment
 User.hasMany(Comment, { foreignKey: 'userId' });
@@ -204,6 +213,7 @@ module.exports = {
     Comment,
     FollowArtist,
     FollowUser,
+    PostReport,
     Genres,
     Notification,
     Role,

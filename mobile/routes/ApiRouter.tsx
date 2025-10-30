@@ -204,33 +204,41 @@ export const ChangeAvatar = async (payload) => {
 
 export const UploadMultipleFile = async (payload) => {
   try {
-    const assets = payload; // array of file URIs
+    const assets = payload; // array of expo assets
     if (!assets || assets.length === 0) {
       console.log("Không có file nào được chọn để upload.");
-      return { message: "Không có file nào được chọn", status: "info" };
+      return { success: false, message: "Không có file nào được chọn", status: "info" };
     }
 
     const formData = new FormData();
     assets.forEach((asset) => {
+      const filename = asset.uri.split('/').pop();
+      const type = asset.type === 'image' ? 'image/jpeg' : asset.type === 'video' ? 'video/mp4' : 'application/octet-stream';
       const fileToUpload = {
         uri: asset.uri,
-        name: asset.name,
-        type: asset.mimeType || 'application/octet-stream',
+        name: filename,
+        type: type,
       };
 
       // Tên field 'files' phải khớp với tên mà backend
       formData.append('files', fileToUpload as any);
     });
 
-    const response = await axiosClient.post(`/upload/multiple-file`,       formData, {
+    const response = await axiosClient.post(`/upload/multiple-file`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
     console.log('response.data', response.data);
-    return response.data;
+
+    // Check if the server response indicates failure
+    if (response.data.success === false) {
+      return { success: false, message: response.data.message, status: "error" };
+    }
+
+    return { success: true, data: response.data, message: "Upload successful" };
   } catch (error) {
-    return { message: error.message, status: "error" };
+    return { success: false, message: error.message, status: "error" };
   }
 };
 
