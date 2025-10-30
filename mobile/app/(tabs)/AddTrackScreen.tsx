@@ -136,7 +136,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
 
       <FlatList
         data={item.data}
-        keyExtractor={(track) => track.id}
+        keyExtractor={(track, index) => index.toString()}
         showsVerticalScrollIndicator={false}
         renderItem={({ item: trackItem }) => (
           <TrackItem item={trackItem} isDarkMode={isDarkMode} onAdd={handleAddTrack} />
@@ -149,7 +149,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
   const renderSearchMode = () => (
     <FlatList
       data={searchResults}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item, index) => index.toString()}
       showsVerticalScrollIndicator={false}
       className="px-4"
       renderItem={({ item }) => (
@@ -208,7 +208,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
             <FlatList
               ref={flatListRef}
               data={MOCK_TRACKS_GROUPS}
-              keyExtractor={item => item.title}
+              keyExtractor={(item, index) => index.toString()}
               horizontal
               pagingEnabled // Quan trọng: Bật chế độ trượt theo trang
               showsHorizontalScrollIndicator={false}

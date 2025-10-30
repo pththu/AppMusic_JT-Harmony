@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from "react";
 import {
-  Button,
   Dimensions,
-  FlatList,
   Image,
+  ScrollView,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -18,39 +18,43 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useQueueStore } from "@/store/queueStore";
 import { router } from "expo-router";
 import { useTheme } from "@/components/ThemeContext";
-import { useAudioPlayer } from 'expo-audio';
 import { albumData, trackData } from "@/constants/data";
-// import YoutubePlayer from "react-native-youtube-iframe";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function SongScreen() {
-  const song = usePlayerStore((state) => state.currentSong);
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
+  const playNext = usePlayerStore((state) => state.playNext);
+  const playPrevious = usePlayerStore((state) => state.playPrevious);
+
+  console.log('song', currentTrack)
+
   const { navigate } = useNavigate();
   const { theme } = useTheme();
+  const colorScheme = useColorScheme();
+  const setNowPlaying = useQueueStore((state) => state.setNowPlaying);
+  const setQueue = useQueueStore((state) => state.setQueue);
 
   const primaryIconColor = theme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    console.log('play')
-  };
-
   const handleSelectQueue = () => {
-    const { setNowPlaying, setQueue } = useQueueStore.getState();
-    setNowPlaying(song);
-    setQueue(trackData.filter((s) => s.spotifyId !== song.spotifyId));
+    setNowPlaying(currentTrack);
+    if (!currentTrack) return;
+    setQueue(trackData.filter((s) => s.spotifyId !== currentTrack.spotifyId));
     navigate("QueueScreen");
   };
 
-  const handleSelectInfo = (song) => {
-    navigate("SongInfoScreen", { song: JSON.stringify(song) });
+  const handleSelectInfo = (track) => {
+    navigate("SongInfoScreen", { track: JSON.stringify(track) });
   };
 
-  const renderUpNextItem = ({ item }: { item }) => (
+  const renderUpNextItem = ({ item }) => (
     <View className="flex-row items-center py-2 border-b border-gray-300 dark:border-gray-700">
       <Image source={{ uri: item.imageUrl || albumData.find(album => album.name === item.album)?.imageUrl || '' }} className="w-12 h-12 rounded-md" />
       <View className="flex-1 ml-3">
@@ -74,7 +78,7 @@ export default function SongScreen() {
         </TouchableOpacity>
         <View className="flex-1 items-center">
           <Text className="text-black dark:text-white text-base font-semibold">
-            {song.name}
+            {currentTrack.name}
           </Text>
         </View>
       </View>
@@ -83,7 +87,7 @@ export default function SongScreen() {
       <View className="items-center mb-4">
         <View className="relative">
           <Image
-            source={{ uri: song.imageUrl || albumData.find(album => album.name === song.album)?.imageUrl || '' }}
+            source={{ uri: currentTrack.imageUrl || albumData.find(album => album.name === currentTrack.album)?.imageUrl || '' }}
             style={{ width: screenWidth - 32, height: screenWidth - 32 }}
             className="rounded-xl"
             resizeMode="cover"
@@ -93,10 +97,10 @@ export default function SongScreen() {
           />
           <View className="absolute inset-0 justify-center pb-6 items-center bg-opacity-50 rounded-xl px-4">
             <Text className="text-black dark:text-white text-3xl font-bold mb-2 text-center">
-              {song.name}
+              {currentTrack.name}
             </Text>
             <Text className="text-gray-500 dark:text-gray-300 text-lg mb-1 text-center">
-              {song.artists?.map((a) => a.name).join(", ")}
+              {currentTrack.artists?.map((a) => a.name).join(", ")}
             </Text>
           </View>
         </View>
@@ -105,15 +109,15 @@ export default function SongScreen() {
       {/* Song Info and Action Buttons */}
       <View className="flex-row justify-between items-center mb-4">
         <View>
-          <Text className="text-black dark:text-white text-2xl font-bold">{song.name}</Text>
+          <Text className="text-black dark:text-white text-2xl font-bold">{currentTrack.name}</Text>
           <Text className="text-gray-600 dark:text-gray-400 text-base">
-            {song.artists?.map((a) => a.name).join(", ")}
+            {currentTrack.artists?.map((a) => a.name).join(", ")}
           </Text>
         </View>
         <View className="flex-row">
           <TouchableOpacity
             className="mr-4"
-            onPress={() => handleSelectInfo(song)}
+            onPress={() => handleSelectInfo(currentTrack)}
           >
             <Ionicons
               name="information-circle-outline"
@@ -138,7 +142,7 @@ export default function SongScreen() {
         <TouchableOpacity>
           <Icon name="shuffle" size={24} color={secondaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={playPrevious}>
           <Icon name="skip-previous" size={30} color={primaryIconColor} />
         </TouchableOpacity>
         <TouchableOpacity
@@ -148,10 +152,10 @@ export default function SongScreen() {
           <Icon
             name={isPlaying ? "pause" : "play-arrow"}
             size={40}
-            color={primaryIconColor}
+            color={`${colorScheme === 'dark' ? 'black' : 'white'}`}
           />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={playNext}>
           <Icon name="skip-next" size={30} color={primaryIconColor} />
         </TouchableOpacity>
         <TouchableOpacity>
@@ -181,21 +185,23 @@ export default function SongScreen() {
   const ListFooter = () => (
     <View>
       <LyricsSection />
-      <ArtistsSection artists={song.artists} />
+      <ArtistsSection artists={currentTrack.artists} />
     </View>
   );
 
   return (
-    <View className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
-      <FlatList
-        data={trackData.filter((s) => s.spotifyId !== song.spotifyId).slice(0, 5)}
-        renderItem={renderUpNextItem}
-        keyExtractor={(item, index) => index.toString()}
-        ListHeaderComponent={ListHeader}
-        ListFooterComponent={ListFooter}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 60 }}
-      />
-    </View>
+    <SafeAreaView className="flex-1">
+      <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
+        <ListHeader />
+        {
+          trackData.filter((s) => s.spotifyId !== currentTrack.spotifyId).slice(0, 5).map((item, index) => (
+            <View key={index.toString().concat(item.spotifyId)}>
+              {renderUpNextItem({ item })}
+            </View>
+          ))
+        }
+        <ListFooter />
+      </ScrollView>
+    </SafeAreaView>
   );
 }

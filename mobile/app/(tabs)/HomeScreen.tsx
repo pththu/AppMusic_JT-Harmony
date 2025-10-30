@@ -40,12 +40,11 @@ export default function HomeScreen() {
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
   const [hasNotification] = useState(true);
-
   const iconColor = theme === 'light' ? '#000' : '#fff';
 
   const [queryParam, setQueryParam] = useState({
     playlistForYou: ["Chill Hits", "kpop", "tình yêu", "thời thanh xuân"],
-    albumForYou: ["BTS", "love", "2025"],
+    albumForYou: ["BTS", "Love Yourself", "buitruonglinh"],
     playlistTrending: ["Vietnam đang hot", "Thịnh Hành", "Viral 2025"],
     albumTrending: ["Adele", "Ed Sheeran", "2025"],
     artistName: ["bts", "buitruonglinh", "Hoàng Dũng"],
@@ -64,19 +63,6 @@ export default function HomeScreen() {
     albumsTrending: true,
     artistsForYou: true,
   });
-
-  const [playing, setPlaying] = useState(false);
-
-  const onStateChange = useCallback((state) => {
-    if (state === "ended") {
-      setPlaying(false);
-    }
-  }, []);
-
-  const togglePlaying = useCallback(() => {
-    setPlaying((prev) => !prev);
-  }, []);
-
 
   const handleSelectPlaylist = (playlist) => {
     setCurrentPlaylist(playlist);
@@ -192,7 +178,9 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F]">
+    <SafeAreaView
+      className="flex-1 bg-white dark:bg-[#0E0C1F]"
+    >
       <View className={`fixed flex-row justify-between items-center mx-5 mb-4 `}>
         <Text className="text-black dark:text-white text-2xl font-bold">
           Hi, {String(user?.fullName || user?.username)} 👋
@@ -255,7 +243,7 @@ export default function HomeScreen() {
             <FlatList
               horizontal
               data={dataForYou.playlistsForYou.filter((_, index) => index !== 0)}
-              keyExtractor={(item) => item.spotifyId}
+              keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <PlaylistItem
                   title={item.name}
@@ -376,15 +364,6 @@ export default function HomeScreen() {
               showsHorizontalScrollIndicator={false}
             />
           )}
-        </View>
-        <View>
-          <YoutubePlayer
-            height={300}
-            play={playing}
-            videoId={"5BdSZkY6F4M"}
-            onChangeState={onStateChange}
-          />
-          <Button title={playing ? "pause" : "play"} onPress={togglePlaying} />
         </View>
       </ScrollView>
     </SafeAreaView>

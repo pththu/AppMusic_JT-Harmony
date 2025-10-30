@@ -104,7 +104,7 @@ export default function ArtistsFollowingScreen({ route }: { route: any }) {
       </View>
       <FlatList
         data={artists}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => index.toString()}
         numColumns={3}
         columnWrapperStyle={{ justifyContent: "space-between" }}
         renderItem={({ item }) => (

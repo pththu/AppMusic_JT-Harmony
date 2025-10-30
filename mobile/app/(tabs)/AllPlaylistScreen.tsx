@@ -25,6 +25,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import * as ImagePicker from 'expo-image-picker';
 import { CreatePlaylist } from "@/services/musicService";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 const PlaylistItem = ({ item, index, onPress, primaryIconColor }) => {
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -86,6 +87,9 @@ export default function AllPlaylistScreen() {
   const setMyPlaylistsStore = usePlayerStore((state) => state.setMyPlaylists);
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
+
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
   const primaryIconColor = colorScheme === "dark" ? "white" : "black";
@@ -100,6 +104,9 @@ export default function AllPlaylistScreen() {
   const [image, setImage] = useState(null);
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  const playerPadding = currentTrack ? MINI_PLAYER_HEIGHT : 0;
+  const totalPaddingBottom = (tabBarHeight || 0) + playerPadding;
 
   const handleSelectPlaylist = (playlist) => {
     setCurrentPlaylist(playlist);
@@ -273,7 +280,8 @@ export default function AllPlaylistScreen() {
       )}
 
       {activeTab === "myPlaylists" && (
-        <View className="absolute bottom-6 right-6 z-10 justify-end items-end p-6">
+        <View className="absolute bottom-14 right-6 z-10 justify-end items-end p-6"
+        >
           <TouchableOpacity
             className=" bg-green-500 p-4 rounded-full shadow-lg"
             onPress={() => setIsModalVisible(true)}

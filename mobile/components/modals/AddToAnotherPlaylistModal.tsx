@@ -139,7 +139,7 @@ const AddToAnotherPlaylistModal = ({
           <View className="flex-1">
             <FlatList
               data={myPlaylists.filter(p => p.id !== data.id)}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item, index) => index.toString()}
               showsVerticalScrollIndicator={false}
               className="mt-2 flex-1"
               renderItem={({ item }) => (

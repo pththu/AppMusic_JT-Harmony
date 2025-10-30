@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
-// const { sequelize } = require('../configs/database');
 
 const Playlist = sequelize.define(
   'Playlist',
@@ -36,6 +35,9 @@ const Playlist = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
       field: 'is_public'
+    },
+    type: {
+      type: DataTypes.STRING // local or api
     },
     totalTracks: {
       type: DataTypes.INTEGER,
