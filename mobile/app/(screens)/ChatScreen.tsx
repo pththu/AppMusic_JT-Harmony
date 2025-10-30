@@ -393,7 +393,7 @@ const ChatScreen: React.FC = () => {
     if (isLoading) {
         return (
             <SafeAreaView className="flex-1 justify-center items-center bg-white dark:bg-gray-900">
-                <ActivityIndicator size="large" color="#10B981" />
+                <ActivityIndicator size="large" color="#4F46E5" />
             </SafeAreaView>
         );
     }
