@@ -142,7 +142,7 @@ export default function ArtistScreen() {
         </View>
         <FlatList
           data={popularReleases.slice(0, 5)}
-          keyExtractor={item => item.id}
+          keyExtractor={(item, index) => index.toString()}
           renderItem={renderItem}
           scrollEnabled={false}
         />

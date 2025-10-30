@@ -5,7 +5,7 @@ import { useNavigate } from '@/hooks/useNavigate';
 import LibraryItemButton from '@/components/button/LibraryItemButton';
 import SongItem from '@/components/items/SongItem';
 import { usePlayerStore } from '@/store/playerStore';
-import { trackData, albumData } from '@/constants/data';
+import { trackData, albumData } from "@/constants/data";
 
 const libraryItems = [
   {
@@ -39,27 +39,64 @@ const libraryItems = [
 ];
 
 export default function YourLibraryScreen() {
-  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const playPlaylist = usePlayerStore((state) => state.playPlaylist);
+
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
 
-  const handleSelectSong = (song) => {
-    setCurrentSong(song);
-    navigate('SongScreen');
-  }
 
-  const renderRecentlyPlayedItem = ({ item }: { item: (typeof trackData)[0]; }) => (
+  const handleSelectSong = (song, index) => {
+    // Giả sử 'trackData' là danh sách đầy đủ
+    // Chúng ta cần chuẩn bị dữ liệu đúng định dạng (có videoId)
+    // Ở đây tôi giả định 'trackData' của bạn đã có 'videoId'
+    const playlistWithVideoId = trackData.map((item) => ({
+      ...item,
+      videoId: item.videoId || "5BdSZkY6F4M", // CẦN THAY THẾ: Lấy videoId thực
+      artists: item.artists, // Đảm bảo artists là mảng string
+      imageUrl:
+        item.imageUrl ||
+        albumData.find((album) => album.name === item.album)?.imageUrl ||
+        "",
+    }));
+
+    // Bắt đầu phát tại vị trí 'index'
+    playPlaylist(playlistWithVideoId, index);
+
+    // Bỏ navigate, vì player giờ là global, không cần chuyển màn hình
+    // navigate('SongScreen');
+  };
+
+  // const renderRecentlyPlayedItem = ({ item }: { item: (typeof trackData)[0]; }) => (
+  //   <SongItem
+  //     title={item.name}
+  //     subtitle={item.artists.map(a => a).join(', ')} // Nối tên nghệ sĩ thành một chuỗi
+  //     image={item.imageUrl || albumData.find(album => album.name === item.album)?.imageUrl || ''}
+  //     onPress={() => handleSelectSong(item)} // Truyền cả mảng artists
+  //     onOptionsPress={() => { }}
+  //   />
+  // );
+
+  const renderRecentlyPlayedItem = ({
+    item,
+    index, // 👈 Thêm index vào đây
+  }) => (
     <SongItem
       title={item.name}
-      subtitle={item.artists.map(a => a).join(', ')} // Nối tên nghệ sĩ thành một chuỗi
-      image={item.imageUrl || albumData.find(album => album.name === item.album)?.imageUrl || ''}
-      onPress={() => handleSelectSong(item)} // Truyền cả mảng artists
+      subtitle={item.artists.map((a) => a).join(", ")}
+      image={
+        item.imageUrl ||
+        albumData.find((album) => album.name === item.album)?.imageUrl ||
+        ""
+      }
+      onPress={() => handleSelectSong(item, index)} // 👈 Truyền index
       onOptionsPress={() => { }}
     />
   );
 
   return (
-    <SafeAreaView className={`flex-1 px-4 pt-4 ${colorScheme === 'dark' ? 'bg-black' : 'bg-white'}`}>
+    <SafeAreaView
+      className={`flex-1 px-4 pt-4 ${colorScheme === 'dark' ? 'bg-black' : 'bg-white'}`}
+    >
       <Text className="text-black dark:text-white text-2xl font-semibold mb-4">
         Thư viện của bạn
       </Text>

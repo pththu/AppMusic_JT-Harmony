@@ -1,21 +1,28 @@
 import { View, LayoutChangeEvent, useColorScheme } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import TabBarButton from './TabBarButton';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { usePlayerStore } from '@/store/playerStore';
 
 function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
+  const setTabBarHeight = usePlayerStore((state) => state.setTabBarHeight);
+  const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
   const tabPositionX = useSharedValue(0);
   const colorScheme = useColorScheme();
   const [dimemsions, setDimemsions] = useState({ height: 20, width: 100 });
   const buttonWidth = dimemsions.width / state.routes.length;
 
   const onTabBarLayout = (e: LayoutChangeEvent) => {
+    const { height, width } = e.nativeEvent.layout;
     setDimemsions({
-      height: e.nativeEvent.layout.height,
-      width: e.nativeEvent.layout.width,
+      height,
+      width,
     });
+    if (height > 0 && height !== tabBarHeight) {
+      setTabBarHeight(height);
+    }
   };
 
   const animatiedStyle = useAnimatedStyle(() => {
@@ -40,6 +47,11 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       />
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
+
+        if (options.tabBarItemStyle?.display === 'none') {
+          return null;
+        }
+
         const label = options?.tabBarLabel !== undefined
           ? options.tabBarLabel : options?.title !== undefined
             ? options.title : route.name;

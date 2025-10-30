@@ -2,6 +2,7 @@ export const trackData = [
   {
     id: 1,
     spotifyId: "5YMXGBD6vcYP7IolemyLtK",
+    videoId: "5BdSZkY6F4M",
     name: "Euphoria",
     lyrics: "",
     externalUrl: "https://www.youtube.com/embed/dj0MgHYbFYI?si=vBAAhaIIxworrzHc",
@@ -21,6 +22,7 @@ export const trackData = [
   {
     id: 2,
     spotifyId: "4YDHRtzm0OGuieCTVQjVuk",
+    videoId: "IiW1kEJDBDQ",
     name: "Trivia 起 : Just Dance",
     lyrics: "",
     externalUrl: "https://www.youtube.com/embed/IiW1kEJDBDQ?si=fv4GlCBWV-x3D37z",
@@ -40,6 +42,7 @@ export const trackData = [
   {
     id: 3,
     spotifyId: "1dS4l6xmdgEhCZTAhdOm4N",
+    videoId: "ejR5zKaPZ0g",
     name: "Serendipity (Full Length Edition)",
     lyrics: "",
     externalUrl: "https://www.youtube.com/embed/ejR5zKaPZ0g?si=SRkv0exUJBLaOFni",
@@ -59,6 +62,7 @@ export const trackData = [
   {
     id: 4,
     spotifyId: "2ngmiq1KoYn3x25VOmvd8F",
+    videoId: "Rx6D5FN1pvg",
     name: "DNA",
     lyrics: "",
     externalUrl: "https://www.youtube.com/embed/Rx6D5FN1pvg?si=Y_JImAhXOzDNBtWq",
@@ -78,6 +82,7 @@ export const trackData = [
   {
     id: 5,
     spotifyId: "5TA0pfOtzeYDWtZlZ3JwcN",
+    videoId: "0CjFN2LuqAc",
     name: "Vô Cực - Chill Mix",
     lyrics: "",
     externalUrl: "https://open.spotify.com/track/5TA0pfOtzeYDWtZlZ3JwcN",
@@ -97,6 +102,7 @@ export const trackData = [
   {
     id: 6,
     spotifyId: "0gZjxVfCcwIDpZWkxhHDkV",
+    videoId: "P69q6rJ5Rc4",
     name: "Hư Vô - Chill Mix",
     lyrics: "",
     externalUrl: "https://open.spotify.com/track/0gZjxVfCcwIDpZWkxhHDkV",
@@ -116,6 +122,7 @@ export const trackData = [
   {
     id: 7,
     spotifyId: "4bc5tsjeIEkQDk4D7fHA1O",
+    videoId: "BgkUcC5tsjo",
     name: "Độc Nhất - Chill Mix",
     lyrics: "",
     externalUrl: "https://open.spotify.com/track/4bc5tsjeIEkQDk4D7fHA1O",
@@ -135,6 +142,7 @@ export const trackData = [
   {
     id: 8,
     spotifyId: "01XrNHfoHYc151TTwqtQEx",
+    videoId: "fuF_-UHX23o",
     name: "Intro (Mong Em Hạnh Phúc Suốt Cuộc Đời Này)",
     lyrics: "",
     externalUrl: "https://open.spotify.com/track/01XrNHfoHYc151TTwqtQEx",

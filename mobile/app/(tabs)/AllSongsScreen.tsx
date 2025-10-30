@@ -95,7 +95,7 @@ export default function AllSongsScreen() {
       </Text>
       <FlatList
         data={sampleSongs}
-        keyExtractor={item => item.id}
+        keyExtractor={(item, index) => index.toString()}
         renderItem={renderItem}
       />
       <TouchableOpacity className="bg-green-600 rounded-full px-5 py-3 m-4 flex-row items-center justify-center">

@@ -2,7 +2,7 @@
 const { TOP_50_PLAYLIST_ID } = require('../configs/constants');
 const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
-const { Playlist } = require('../models');
+const { Playlist, Track, Album } = require('../models');
 const { get } = require('../routes/musicRoute');
 
 // Tìm kiếm playlist trên Spotify
@@ -184,12 +184,26 @@ const getTracksFromAlbum = async (req, res) => {
   try {
     const { albumId } = req.params;
     console.log(albumId)
-    const data = await spotify.getAlbumTracks(albumId);
-    return res.status(200).json({
-      message: 'Get tracks from album successful',
-      data,
-      success: true
-    });
+
+    const existingAlbum = await Album.findOne({ where: { spotifyId: albumId }, include: Track });
+
+    console.log('existingAlbum', existingAlbum);
+
+    // Nếu album đã tồn tại trong cơ sở dữ liệu, có thể sử dụng dữ liệu đó
+    if (existingAlbum) {
+      return res.status(200).json({
+        message: 'Get tracks from album successful (from database)',
+        data: existingAlbum.Tracks,
+        success: true
+      });
+    } else {
+      const data = await spotify.getAlbumTracks(albumId);
+      return res.status(200).json({
+        message: 'Get tracks from album successful',
+        data,
+        success: true
+      });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message || 'Failed to get tracks from album on Spotify' });
   }
