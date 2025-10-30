@@ -17,31 +17,31 @@ import {
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
-import { 
-    connectSocket, 
-    disconnectSocket, 
-    joinConversation, 
-    sendMessage, 
-    subscribeToNewMessages, 
+import {
+    connectSocket,
+    disconnectSocket,
+    joinConversation,
+    sendMessage,
+    subscribeToNewMessages,
     subscribeToTypingStatus,
     startTyping,
     stopTyping,
     Message,
-} from '@/services/chatService'; 
+} from '@/services/chatService';
 import useAuthStore from '@/store/authStore';
-import { fetchMessages } from '@/services/chatApi'; 
+import { fetchMessages } from '@/services/chatApi';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
 // Định nghĩa Route Params
 type RootStackParamList = {
-    ChatScreen: { 
-        conversationId: number, 
-        user: { id: number, fullName: string, avatarUrl: string | null } 
+    ChatScreen: {
+        conversationId: number,
+        user: { id: number, fullName: string, avatarUrl: string | null }
     };
 };
-type ChatRouteProp = RouteProp<RootStackParamList, 'ChatScreen'>; 
+type ChatRouteProp = RouteProp<RootStackParamList, 'ChatScreen'>;
 
 
 // ==========================================================
@@ -70,11 +70,10 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isMyMessage }) => {
                 />
             )}
             <View
-                className={`max-w-[75%] p-3 rounded-xl ${
-                    isMyMessage
-                    ? 'bg-blue-500 rounded-br-none'
-                    : 'bg-gray-200 dark:bg-gray-700 rounded-tl-none'
-                }`}
+                className={`max-w-[75%] p-3 rounded-xl ${isMyMessage
+                        ? 'bg-blue-500 rounded-br-none'
+                        : 'bg-gray-200 dark:bg-gray-700 rounded-tl-none'
+                    }`}
             >
                 {!isMyMessage && (
                     <Text className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">
@@ -93,7 +92,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isMyMessage }) => {
                     className={`text-xs mt-1 ${isMyMessage
                         ? 'text-blue-200 text-right'
                         : 'text-gray-500 dark:text-gray-400 text-left'
-                    }`}
+                        }`}
                 >
                     {timeAgo}
                 </Text>
@@ -188,7 +187,7 @@ const ChatScreen: React.FC = () => {
             }
         }
     }, [conversationId]);
-    
+
     // Tải tin nhắn lần đầu khi focus screen
     useFocusEffect(
         useCallback(() => {
@@ -231,7 +230,7 @@ const ChatScreen: React.FC = () => {
         // 3. Đăng ký lắng nghe trạng thái gõ
         const unsubscribeTyping = subscribeToTypingStatus(({ userId, isTyping }) => {
             // Bỏ qua tin nhắn gõ của chính mình
-            if (userId === currentUserId) return; 
+            if (userId === currentUserId) return;
 
             setTypingUsers(prev => {
                 if (isTyping && !prev.includes(userId)) {
@@ -247,7 +246,7 @@ const ChatScreen: React.FC = () => {
         return () => {
             unsubscribeNewMessages();
             unsubscribeTyping();
-            disconnectSocket(); 
+            disconnectSocket();
         };
     }, [conversationId, currentUserId]); // Chỉ chạy lại khi conversationId hoặc currentUserId thay đổi
 
@@ -267,12 +266,12 @@ const ChatScreen: React.FC = () => {
             setIsTyping(true);
             startTyping(conversationId);
         }
-        
+
         // Reset timer
         if (typingTimer.current) {
             clearTimeout(typingTimer.current);
         }
-        
+
         // Thiết lập timer dừng gõ
         typingTimer.current = setTimeout(() => {
             setIsTyping(false);
@@ -323,7 +322,7 @@ const ChatScreen: React.FC = () => {
 
         // 1. Thêm tin nhắn tạm thời vào danh sách (để hiển thị ngay)
         // Thêm vào ĐẦU MẢNG (vì FlatList bị đảo ngược - inverted)
-        setMessages(prevMessages => [tempMessage, ...prevMessages]); 
+        setMessages(prevMessages => [tempMessage, ...prevMessages]);
         setInputMessage(''); // Xóa input
 
         try {
@@ -339,13 +338,13 @@ const ChatScreen: React.FC = () => {
                 type: 'text',
                 fileUrl: null,
             });
-            
-            if (result.status === 'error') {
-                 // Nếu gửi thất bại, hiển thị lại lỗi và có thể xóa tin nhắn tạm
-                 Alert.alert("Lỗi Gửi", "Không thể gửi tin nhắn. Vui lòng thử lại.");
 
-                 // Xóa tin nhắn tạm khỏi danh sách
-                 setMessages(prevMessages => prevMessages.filter(m => m.id !== tempMessage.id));
+            if (result.status === 'error') {
+                // Nếu gửi thất bại, hiển thị lại lỗi và có thể xóa tin nhắn tạm
+                Alert.alert("Lỗi Gửi", "Không thể gửi tin nhắn. Vui lòng thử lại.");
+
+                // Xóa tin nhắn tạm khỏi danh sách
+                setMessages(prevMessages => prevMessages.filter(m => m.id !== tempMessage.id));
             }
 
 
@@ -412,7 +411,7 @@ const ChatScreen: React.FC = () => {
         <SafeAreaView className="flex-1 bg-white dark:bg-gray-900">
             {/* Custom Header */}
             <View className="flex-row items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                
+
                 {/* NHÓM MŨI TÊN VÀ AVATAR/TÊN */}
                 <View className="flex-row items-center">
                     <TouchableOpacity
@@ -441,7 +440,7 @@ const ChatScreen: React.FC = () => {
                         </View>
                     )}
                 </View>
-                
+
                 {/* Nút Ba chấm */}
                 <TouchableOpacity className="p-2">
                     <Icon name="more-vertical" size={20} color="#10B981" />

@@ -190,7 +190,7 @@ export default function SongScreen() {
       <FlatList
         data={trackData.filter((s) => s.spotifyId !== song.spotifyId).slice(0, 5)}
         renderItem={renderUpNextItem}
-        keyExtractor={(item) => item.spotifyId}
+        keyExtractor={(item, index) => index.toString()}
         ListHeaderComponent={ListHeader}
         ListFooterComponent={ListFooter}
         showsVerticalScrollIndicator={false}

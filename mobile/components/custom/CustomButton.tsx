@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 interface CustomButtonProps {
@@ -66,6 +66,7 @@ export default function CustomButton({
   };
 
   const { baseStyles, textStyles, iconClassName, iconMargin, iconSize } = getButtonStyles();
+  const colorScheme = useColorScheme();
 
   return (
     <TouchableOpacity className={`${baseStyles} px-4 py-2`} onPress={onPress}>
@@ -74,6 +75,7 @@ export default function CustomButton({
           name={iconName}
           size={iconSize}
           className={`${iconClassName} ${iconMargin}`}
+          color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
         />
       )}
       <Text className={textStyles}>{title}</Text>

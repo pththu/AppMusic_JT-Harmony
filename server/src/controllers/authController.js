@@ -410,15 +410,16 @@ exports.resetPassword = async (req, res) => {
 exports.verifyOtpEmail = async (req, res) => {
   try {
     const { email, otp, facebookId } = req.body;
-    const user = await User.findOne({
-      where: {
-        [Op.or]: [
-          { email: email.toLowerCase() },
-          { facebookId },
-        ]
-      }
-    });
-    console.log(otp, user, email)
+    console.log('email: ', email);
+
+    let user = null;
+
+    if (facebookId) {
+      user = await User.findOne({ where: { facebookId } });
+    } else if (email) {
+      user = await User.findOne({ where: { email: email.toLowerCase() } });
+    }
+
     if (!user) return res.status(200).json({ message: 'Không tìm thấy người dùng', success: false });
     console.log(otp, user.otp)
     if (!user.otp) {
@@ -454,15 +455,13 @@ exports.verifyOtpEmail = async (req, res) => {
 exports.sendOtpEmail = async (req, res) => {
   try {
     const { email, facebookId } = req.body;
-    console.log(req.body)
-    const user = await User.findOne({
-      where: {
-        [Op.or]: [
-          { email: email.toLowerCase() },
-          { facebookId: facebookId },
-        ]
-      }
-    });
+    console.log(email, facebookId)
+    let user = null;
+    if (facebookId) {
+      user = await User.findOne({ where: { facebookId: facebookId } });
+    } else if (email) {
+      user = await User.findOne({ where: { email: email.toLowerCase() } });
+    }
     console.log('user found', user);
     if (!user) return res.status(404).json({ error: 'User not found' });
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -482,7 +481,7 @@ exports.sendOtpEmail = async (req, res) => {
 
     return res.json({
       message: 'OTP đã được gửi lại thành công',
-      otp, // For testing purposes only. Remove in production.
+      otp,
       success: true,
       user
     });

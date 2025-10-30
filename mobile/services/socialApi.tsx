@@ -6,43 +6,43 @@ const api = axiosClient;
 
 // === INTERFACES ===
 export interface UserInfo {
-  id: number;
-  username: string;
-  avatarUrl: string;
-  fullName: string;
+    id: number;
+    username: string;
+    avatarUrl: string;
+    fullName: string;
 
     isFollowing?: boolean;
 }
 
 export interface Comment {
-  id: string;
-  userId: number;
-  postId: number;
-  content: string;
-  parentId: number | null;
-  commentedAt: string;
-  User: UserInfo;
-  likeCount: number;
-  isLiked: boolean;
-  Replies?: Comment[];
-  quote?: {
-    username: string;
+    id: string;
+    userId: number;
+    postId: number;
     content: string;
-  };
+    parentId: number | null;
+    commentedAt: string;
+    User: UserInfo;
+    likeCount: number;
+    isLiked: boolean;
+    Replies?: Comment[];
+    quote?: {
+        username: string;
+        content: string;
+    };
 }
 
 export interface Post {
-  id: string;
-  userId: number;
-  content: string;
-  fileUrl: string[] | string;
-  musicLink: string | null;
-  heartCount: number;
-  shareCount: number;
-  uploadedAt: string;
-  User: UserInfo;
-  commentCount: number;
-  isLiked: boolean;
+    id: string;
+    userId: number;
+    content: string;
+    fileUrl: string[] | string;
+    musicLink: string | null;
+    heartCount: number;
+    shareCount: number;
+    uploadedAt: string;
+    User: UserInfo;
+    commentCount: number;
+    isLiked: boolean;
 }
 
 export interface ProfileSocial {
@@ -58,32 +58,32 @@ export interface ProfileSocial {
 
 // HÀM HỖ TRỢ: Ánh xạ dữ liệu Comment (được sử dụng cho cả Post và Comment API)
 const mapCommentData = (comment: any): Comment => {
-  // Hàm đệ quy để xử lý Replies
-  const mapReplies = (replies: any[]): Comment[] => {
-    return replies.map((reply: any) => ({
-      ...reply,
-      id: reply.id.toString(),
-      likeCount: reply.likeCount || 0,
-      isLiked: reply.isLiked || false,
-      // Nếu Replies có Replies, tiếp tục đệ quy (chỉ nên áp dụng cho Replies trong Post API)
-      // Ở đây, ta chỉ cần một cấp Replies
-      replies: reply.Replies ? mapReplies(reply.Replies) : [] 
-    }));
-  };
-  
-  return {
-    ...comment,
-    id: comment.id.toString(),
-    likeCount: comment.likeCount || 0,
-    isLiked: comment.isLiked || false,
-    User: {
-      id: comment.User?.id,
-      username: comment.User?.username,
-      avatarUrl: comment.User?.avatarUrl,
-      fullName: comment.User?.fullName || comment.User?.username || 'User',
-    },
-    replies: comment.Replies ? mapReplies(comment.Replies) : [], 
-  };
+    // Hàm đệ quy để xử lý Replies
+    const mapReplies = (replies: any[]): Comment[] => {
+        return replies.map((reply: any) => ({
+            ...reply,
+            id: reply.id.toString(),
+            likeCount: reply.likeCount || 0,
+            isLiked: reply.isLiked || false,
+            // Nếu Replies có Replies, tiếp tục đệ quy (chỉ nên áp dụng cho Replies trong Post API)
+            // Ở đây, ta chỉ cần một cấp Replies
+            replies: reply.Replies ? mapReplies(reply.Replies) : []
+        }));
+    };
+
+    return {
+        ...comment,
+        id: comment.id.toString(),
+        likeCount: comment.likeCount || 0,
+        isLiked: comment.isLiked || false,
+        User: {
+            id: comment.User?.id,
+            username: comment.User?.username,
+            avatarUrl: comment.User?.avatarUrl,
+            fullName: comment.User?.fullName || comment.User?.username || 'User',
+        },
+        replies: comment.Replies ? mapReplies(comment.Replies) : [],
+    };
 };
 
 // === API CHO BÀI ĐĂNG ===
@@ -157,17 +157,17 @@ export const createNewPost = async (
  * Endpoint: POST /api/v1/posts/:postId/like
  */
 export const togglePostLike = async (postId: string): Promise<{ isLiked: boolean, heartCount: number } | { message: string, status: string }> => {
-  try {
-    const response = await api.post(`/posts/${postId}/like`);
-    const { isLiked, heartCount } = response.data;
-    return {
-      isLiked: !!isLiked,
-      heartCount: heartCount || 0,
-    };
-  } catch (error) {
-    console.error('Lỗi khi cập nhật trạng thái thích bài đăng:', error);
-    return { message: 'Không thể cập nhật trạng thái thích.', status: 'error' };
-  }
+    try {
+        const response = await api.post(`/posts/${postId}/like`);
+        const { isLiked, heartCount } = response.data;
+        return {
+            isLiked: !!isLiked,
+            heartCount: heartCount || 0,
+        };
+    } catch (error) {
+        console.error('Lỗi khi cập nhật trạng thái thích bài đăng:', error);
+        return { message: 'Không thể cập nhật trạng thái thích.', status: 'error' };
+    }
 };
 
 // === API CHO BÌNH LUẬN ===

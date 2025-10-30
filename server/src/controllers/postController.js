@@ -410,7 +410,11 @@ exports.getPostsByUserId = async(req, res) => {
             };
         }));
 
-        res.json(postsWithExtras);
+        // res.json(postsWithExtras);
+        res.status(200).json({
+            message: 'Lấy bài đăng theo User ID thành công.',
+            data: postsWithExtras
+        })
 
     } catch (err) {
         console.error("Lỗi khi lấy bài đăng theo User ID:", err);

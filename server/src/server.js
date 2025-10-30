@@ -34,7 +34,7 @@ const io = new Server(server, {
 });
 
 // Middleware xác thực JWT cho Socket.IO
-io.use(async(socket, next) => {
+io.use(async (socket, next) => {
     // Lấy token từ handshake query (hoặc header, tùy cách client gửi)
     const token = socket.handshake.auth.token;
 
@@ -96,7 +96,7 @@ const protectedRoutes = [
     // 'favorites', // Yêu thích
     // 'history', // Lịch sử nghe nhạc
     'notifications', // Thông báo
-    // 'playlists', // Playlist cá nhân
+    'playlists', // Playlist cá nhân
     'comments', // Comment (cần đăng nhập mới comment được)
     // 'genres', // Xem thể loại nhạc
     // 'artists', // Xem thông tin nghệ sĩ
@@ -140,10 +140,10 @@ publicRoutes.forEach(route => {
 async function startServer() {
     try {
         // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
-        await sequelize.sync({ alter: true });
+        // await sequelize.sync({ alter: true });
         // // await sequelize.sync();
-        console.log('✅ Database synchronized successfully')
-            // await seedDatabase();
+        // console.log('✅ Database synchronized successfully')
+        // await seedDatabase();
 
         server.listen(process.env.PORT || 3000, () => {
             console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);

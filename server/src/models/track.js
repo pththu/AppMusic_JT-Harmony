@@ -16,6 +16,10 @@ const Track = sequelize.define(
       field: 'spotify_id',
       allowNull: false
     },
+    videoId: {
+      type: DataTypes.STRING,
+      field: 'video_id'
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false

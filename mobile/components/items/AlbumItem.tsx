@@ -24,7 +24,7 @@ export default function AlbumItem({ title, subtitle, image, onPress }: AlbumItem
   return (
     <TouchableOpacity className="mr-4" onPress={onPress}>
       <Image source={{ uri: image }} className="w-32 h-32 rounded-lg" />
-      <Text className={`mt-1 text-sm text-wrap font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>{formatTitle(title)}</Text>
+      <Text className={`mt-2 text-sm text-wrap font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>{formatTitle(title)}</Text>
       {subtitle && <Text className="text-gray-400 text-sm">{subtitle}</Text>}
     </TouchableOpacity>
   );

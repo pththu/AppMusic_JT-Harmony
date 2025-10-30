@@ -18,9 +18,12 @@ const routeMap: Record<any, any> = {
   StreamingQuality: '(screens)/StreamingQualityScreen',
   MusicLanguage: '(screens)/MusicLanguageScreen',
 
-  ArtistScreen: '(screens)/ArtistScreen',
-  ArtistsFollowingScreen: '(screens)/ArtistsFollowingScreen',
-  PlaylistsScreen: '(screens)/PlaylistsScreen',
+  AlbumScreen: '(screens)/AlbumScreen', // trang thông tin album
+  ArtistScreen: '(screens)/ArtistScreen', // trang thông tin nghệ sĩ
+  ArtistsFollowingScreen: '(screens)/ArtistsFollowingScreen', // danh sách nghệ sĩ đang theo dõi
+  PlaylistScreen: '(screens)/PlaylistScreen', // thông tin playlist
+  AllPlaylistScreen: '(screens)/AllPlaylistScreen', // danh sách playlist
+  AddTrackScreen: '(screens)/AddTrackScreen', // thêm bài hát vào playlist
   DownloadsScreen: '(screens)/DownloadsScreen',
   LikedSongsScreen: '(screens)/LikedSongsScreen',
   YourLibraryScreen: '(screens)/YourLibraryScreen',
@@ -28,9 +31,11 @@ const routeMap: Record<any, any> = {
   QueueScreen: '(screens)/QueueScreen',
   SongInfoScreen: '(screens)/SongInfoScreen',
   SongScreen: '(screens)/SongScreen',
+
   Setting: '(screens)/SettingScreen',
   ChangePassword: '(screens)/ChangePasswordScreen',
   UpdateEmail: '(screens)/UpdateEmailScreen',
+
   ProfileSocialScreen: '(screens)/ProfileSocialScreen',
   ChatScreen: '(screens)/ChatScreen'
 };

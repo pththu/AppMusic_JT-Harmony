@@ -85,12 +85,27 @@ export const useCustomAlert = () => {
     });
   };
 
+  const info = (title: string, message?: string, onPress?: () => void) => {
+    showAlert({
+      title,
+      message,
+      type: 'info',
+      buttons: [
+        {
+          text: 'OK',
+          onPress,
+        },
+      ],
+    });
+  };
+
   return {
     alert,
     confirm,
     success,
     error,
     warning,
+    info,
     hideAlert,
   };
 };

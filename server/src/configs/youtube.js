@@ -9,13 +9,7 @@ const formatVideo = (video, duration) => ({
   videoId: video.id.videoId || video.id,
   title: video.snippet.title,
   description: video.snippet.description,
-  duration: duration,
-  thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.default.url,
-  channelId: video.snippet.channelId,
-  channelTitle: video.snippet.channelTitle,
-  publishedAt: video.snippet.publishedAt,
-  embedUrl: `https://www.youtube.com/embed/${video.id.videoId}?autoplay=1&controls=1&showinfo=1`,
-  watchUrl: `https://www.youtube.com/watch?v=${video.id.videoId || video.id}`
+  duration: duration
 });
 
 const youtubeApiRequest = async (endpoint, params) => {
@@ -66,7 +60,6 @@ const searchVideo = async (songName, artistName) => {
     });
 
     const resultWithDetails = await searchVideoWithDuration(response.items[0].id.videoId);
-    console.log('resultWithDetails', resultWithDetails);
 
     const video = formatVideo(response.items[0], parseISO8601Duration(resultWithDetails[0]?.contentDetails?.duration || null));
     return video;

@@ -275,7 +275,7 @@ export default function SearchScreen() {
               <Icon name="arrow-back" size={20} color={colorScheme === "dark" ? "#888" : "#000"} />
             </TouchableOpacity>
           ) : (
-            <Icon name="search" size={20} color={colorScheme === "dark" ? "#888" : "#000"} className="mr-2" />
+            <Icon name="search" size={20} color={colorScheme === "dark" ? "#888" : "#000"} />
           )}
           <TextInput
             ref={inputRef}
@@ -344,7 +344,6 @@ export default function SearchScreen() {
                         name={iconName}
                         size={18}
                         color={colorScheme === "dark" ? "#888" : "#000"}
-                        className="mr-3"
                       />
                       <View>
                         <Text className={`text-${colorScheme === "dark" ? "white" : "black"} font-bold text-sm`}>

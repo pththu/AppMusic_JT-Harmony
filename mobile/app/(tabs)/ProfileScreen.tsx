@@ -279,8 +279,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        {/* <Pressable
-          className="p-5 border border-slate-300"
+        {/* <Pressable className="p-5 border border-slate-300"
           onPress={() => handlePickMultipleFile()}
         >
           <Text>Chọn nhiều file</Text>

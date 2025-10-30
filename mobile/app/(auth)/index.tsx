@@ -169,7 +169,7 @@ export default function AuthScreen() {
           onPress={() => handleLoginWithGoogle()}
           activeOpacity={0.7}
         >
-          <AntDesign name="google" size={20} color={colorScheme === "dark" ? "white" : "black"} className="mr-2" />
+          <AntDesign name="google" size={20} color={colorScheme === "dark" ? "white" : "black"} />
           <Text className={`text-base font-semibold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Đăng nhập với Google
           </Text>
@@ -179,7 +179,7 @@ export default function AuthScreen() {
           onPress={() => handleLoginWithFacebook()}
           activeOpacity={0.7}
         >
-          <Icon name="facebook" size={20} color={colorScheme === "dark" ? "white" : "black"} className="mr-2" />
+          <Icon name="facebook" size={20} color={colorScheme === "dark" ? "white" : "black"} />
           <Text className={`text-base font-semibold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Đăng nhập với Facebook
           </Text>
@@ -192,7 +192,7 @@ export default function AuthScreen() {
           onPress={() => navigate('SignUp')}
           activeOpacity={0.7}
         >
-          <Icon name="person-add" size={20} color="black" className="mr-2" />
+          <Icon name="person-add" size={20} color="black" />
           <Text className="text-black font-semibold text-lg">Đăng ký</Text>
         </TouchableOpacity>
       </View>
