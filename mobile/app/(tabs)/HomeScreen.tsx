@@ -29,6 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PlaylistItem from "@/components/items/PlaylistItem";
 import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
 import { usePlayerStore } from "@/store/playerStore";
+import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
 
 export default function HomeScreen() {
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
@@ -41,12 +42,15 @@ export default function HomeScreen() {
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
   const [hasNotification] = useState(true);
   const iconColor = theme === 'light' ? '#000' : '#fff';
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+
+  const totalMarginBottom = isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0;
 
   const [queryParam, setQueryParam] = useState({
     playlistForYou: ["Chill Hits", "kpop", "tình yêu", "thời thanh xuân"],
     albumForYou: ["BTS", "Love Yourself", "buitruonglinh"],
     playlistTrending: ["Vietnam đang hot", "Thịnh Hành", "Viral 2025"],
-    albumTrending: ["Adele", "Ed Sheeran", "2025"],
+    albumTrending: ["Adele", "Ed Sheeran", "mtp"],
     artistName: ["bts", "buitruonglinh", "Hoàng Dũng"],
   });
   const [dataForYou, setDataForYou] = useState({
@@ -179,7 +183,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-white dark:bg-[#0E0C1F]"
+      className={`flex-1 pt-4 ${colorScheme === "dark" ? "bg-black" : "bg-white"} ${isMiniPlayerVisible ? `mb-[${MINI_PLAYER_HEIGHT}px] pb-6` : ""}`}
     >
       <View className={`fixed flex-row justify-between items-center mx-5 mb-4 `}>
         <Text className="text-black dark:text-white text-2xl font-bold">

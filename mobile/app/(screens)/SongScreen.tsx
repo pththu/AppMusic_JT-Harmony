@@ -20,6 +20,7 @@ import { router } from "expo-router";
 import { useTheme } from "@/components/ThemeContext";
 import { albumData, trackData } from "@/constants/data";
 import { SafeAreaView } from "react-native-safe-area-context";
+import SongItem from "@/components/items/SongItem";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -31,8 +32,10 @@ export default function SongScreen() {
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const playPrevious = usePlayerStore((state) => state.playPrevious);
+  const duration = usePlayerStore((state) => state.duration);
 
-  console.log('song', currentTrack)
+  console.log('song', currentTrack);
+  console.log('duration', duration);
 
   const { navigate } = useNavigate();
   const { theme } = useTheme();
@@ -54,19 +57,19 @@ export default function SongScreen() {
     navigate("SongInfoScreen", { track: JSON.stringify(track) });
   };
 
-  const renderUpNextItem = ({ item }) => (
-    <View className="flex-row items-center py-2 border-b border-gray-300 dark:border-gray-700">
-      <Image source={{ uri: item.imageUrl || albumData.find(album => album.name === item.album)?.imageUrl || '' }} className="w-12 h-12 rounded-md" />
-      <View className="flex-1 ml-3">
-        <Text className="text-black dark:text-white font-bold text-base">{item.name}</Text>
-        <Text className="text-gray-600 dark:text-gray-400 text-sm">
-          {item.artists?.map(a => a).join(", ")}
-        </Text>
-      </View>
-      <TouchableOpacity>
-        <Icon name="more-vert" size={24} color={secondaryIconColor} />
-      </TouchableOpacity>
-    </View>
+  const handleSelectTrack = (track) => {
+    setCurrentTrack(track);
+    navigate('SongScreen');
+  }
+
+  const renderUpNextItem = ({ item, index }) => (
+    <SongItem
+      item={item}
+      key={index}
+      image={item.imageUrl || ''}
+      onPress={() => handleSelectTrack(item)}
+      onOptionsPress={() => { }}
+    />
   );
 
   const ListHeader = () => (
@@ -152,7 +155,7 @@ export default function SongScreen() {
           <Icon
             name={isPlaying ? "pause" : "play-arrow"}
             size={40}
-            color={`${colorScheme === 'dark' ? 'black' : 'white'}`}
+            color={'black'}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={playNext}>
@@ -169,7 +172,7 @@ export default function SongScreen() {
         <View className="flex-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-sm mx-2">
           <View className="w-1/3 h-1 bg-black dark:bg-white rounded-sm" />
         </View>
-        <Text className="text-gray-600 dark:text-gray-400 text-xs w-8 text-center">3:15</Text>
+        <Text className="text-gray-600 dark:text-gray-400 text-xs w-8 text-center">{duration}</Text>
       </View>
 
       {/* Up Next Header */}
@@ -194,11 +197,13 @@ export default function SongScreen() {
       <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
         <ListHeader />
         {
-          trackData.filter((s) => s.spotifyId !== currentTrack.spotifyId).slice(0, 5).map((item, index) => (
-            <View key={index.toString().concat(item.spotifyId)}>
-              {renderUpNextItem({ item })}
-            </View>
-          ))
+          trackData.filter((s) => s.spotifyId !== currentTrack.spotifyId)
+            .slice(0, 5)
+            .map((item, index) => (
+              <View key={index.toString().concat(item.spotifyId)}>
+                {renderUpNextItem({ item, index })}
+              </View>
+            ))
         }
         <ListFooter />
       </ScrollView>

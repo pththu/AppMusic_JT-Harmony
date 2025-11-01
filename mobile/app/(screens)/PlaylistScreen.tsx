@@ -27,6 +27,7 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import EditPlaylistModal from "@/components/modals/EditPlaylistModal";
 import * as ImagePicker from 'expo-image-picker';
 import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
+import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
 
 // Hằng số để xác định khi nào bắt đầu mờ/hiện header
 // 256px là chiều cao của ảnh (h-64). Bạn có thể điều chỉnh
@@ -34,10 +35,11 @@ const HEADER_SCROLL_THRESHOLD = 256;
 
 export default function PlaylistScreen() {
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
-  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const updateCurrentPlaylist = usePlayerStore((state) => state.updateCurrentPlaylist);
   const updateMyPlaylist = usePlayerStore((state) => state.updateMyPlaylist);
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const user = useAuthStore((state) => state.user);
   const { navigate } = useNavigate();
   const { info, error, success, confirm, warning } = useCustomAlert();
@@ -59,6 +61,7 @@ export default function PlaylistScreen() {
   const [description, setDescription] = useState(currentPlaylist?.description || '');
   const [image, setImage] = useState(currentPlaylist?.imageUrl);
   const [isPublic, setIsPublic] = useState(currentPlaylist?.isPublic || true);
+  const imageDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -208,7 +211,7 @@ export default function PlaylistScreen() {
   useEffect(() => {
     setIsLoading(true);
     const fetchTracks = async () => {
-      if (currentPlaylist.spotifyId) {
+      if (currentPlaylist?.spotifyId) {
         const response = await GetTracksByPlaylistId({
           playlistId: currentPlaylist.spotifyId,
           type: 'spotify'
@@ -250,18 +253,17 @@ export default function PlaylistScreen() {
   }, [playlist]);
 
 
-  const handleSelectSong = (song) => {
-    setCurrentSong(song);
+  const handleSelectTrack = (track) => {
+    setCurrentTrack(track);
     navigate('SongScreen');
   }
 
   const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
-      title={item.name}
+      item={item}
       key={index}
-      subtitle={item.artists.map(a => a.name).join(', ')}
       image={item.imageUrl || ''}
-      onPress={() => handleSelectSong(item)}
+      onPress={() => handleSelectTrack(item)}
       onOptionsPress={() => { }}
     />
   );
@@ -271,8 +273,9 @@ export default function PlaylistScreen() {
   return (
     <Animated.View
       style={{ opacity, transform: [{ translateY }] }}
-      className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'}`}>
-      <View>
+      className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'}
+      `}>
+      <View className={`${isMiniPlayerVisible ? `mb-[${MINI_PLAYER_HEIGHT}px] pb-6` : 'mb-0'}`}>
         <Animated.View
           style={{
             ...StyleSheet.absoluteFillObject,
@@ -298,7 +301,7 @@ export default function PlaylistScreen() {
         </SafeAreaView>
       </View>
       <Animated.ScrollView
-        className="flex-1"
+        className={`flex-1`}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true }
@@ -317,7 +320,7 @@ export default function PlaylistScreen() {
           </Text>
           <View className="flex-row items-end justify-start gap-2">
             <Image
-              source={{ uri: `${isMine ? user?.avatarUrl : playlist?.owner?.imageUrl}` || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
+              source={{ uri: `${isMine === true ? user?.avatarUrl : (playlist?.owner?.imageUrl || imageDefault)}` }}
               className="w-5 h-5 rounded-full mt-2"
             />
             <Text className={`text-gray-300 text-sm mt-1 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -330,7 +333,7 @@ export default function PlaylistScreen() {
               size={12} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
             />
             <Text className={`text-gray-300 text-sm mt-1 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              {playlist?.totalTracks || 0} bài hát
+              {tracks.length || 0} bài hát
             </Text>
           </View>
           <View className="flex-row items-start justify-start gap-2">
@@ -369,7 +372,7 @@ export default function PlaylistScreen() {
             </View>
           </View>
         </View>
-        <View className="px-4">
+        <View className={`px-4`}>
           <Text className="text-black dark:text-white text-xl font-bold mb-4">
             Danh sách bài hát
           </Text>

@@ -2,7 +2,7 @@
 const { TOP_50_PLAYLIST_ID } = require('../configs/constants');
 const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
-const { Playlist, Track, Album } = require('../models');
+const { Playlist, Track, Album, Artist } = require('../models');
 const { get } = require('../routes/musicRoute');
 
 // Tìm kiếm playlist trên Spotify
@@ -185,18 +185,34 @@ const getTracksFromAlbum = async (req, res) => {
     const { albumId } = req.params;
     console.log(albumId)
 
-    const existingAlbum = await Album.findOne({ where: { spotifyId: albumId }, include: Track });
+    const existingAlbum = await Album.findOne(
+      {
+        where: { spotifyId: albumId },
+        include: {
+          model: Track,
+          include: [
+            {
+              model: Artist,
+              as: 'artists',
+              attributes: ['id', 'name', 'spotifyId', 'imageUrl'],
+              through: { attributes: [] }
+            }
+          ]
+        }
+      });
 
     console.log('existingAlbum', existingAlbum);
 
     // Nếu album đã tồn tại trong cơ sở dữ liệu, có thể sử dụng dữ liệu đó
     if (existingAlbum) {
+      console.log('local')
       return res.status(200).json({
         message: 'Get tracks from album successful (from database)',
         data: existingAlbum.Tracks,
         success: true
       });
     } else {
+      console.log('api')
       const data = await spotify.getAlbumTracks(albumId);
       return res.status(200).json({
         message: 'Get tracks from album successful',

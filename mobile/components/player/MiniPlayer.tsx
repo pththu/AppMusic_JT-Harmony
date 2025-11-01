@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, Pressable } from "react-native";
 import { useSegments } from "expo-router";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -18,21 +18,35 @@ export default function MiniPlayer() {
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
+  const playPrevious = usePlayerStore((state) => state.playPrevious);
   const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
-
+  const setMiniPlayerVisible = usePlayerStore((state) => state.setMiniPlayerVisible);
   // không hiển thị ở auth và song screen
   const isAuthScreen = segments[0] === "(auth)";
   const isSongScreen = segments[1] === "SongScreen";
+  const isQueueScreen = segments[1] === "QueueScreen";
+  const isTabScreen = segments[0] === "(tabs)";
 
-  if (!currentTrack || isAuthScreen || isSongScreen) {
-    return null;
-  }
+  const isVisible = !!currentTrack && !isAuthScreen && !isSongScreen && !isQueueScreen;
 
   const iconColor = theme === "light" ? "#000" : "#fff";
 
+  useEffect(() => {
+    setMiniPlayerVisible(isVisible);
+    return () => {
+      if (!isVisible) {
+        setMiniPlayerVisible(false);
+      }
+    }
+  }, [isVisible, setMiniPlayerVisible]); // <-- THÊM HOOK NÀY
+
+  if (!isVisible) { // <-- SỬA DÒNG NÀY
+    return null;
+  }
+
   return (
     <Pressable
-      style={{ height: MINI_PLAYER_HEIGHT, bottom: tabBarHeight || 0 }}
+      style={{ height: MINI_PLAYER_HEIGHT, bottom: isTabScreen === true ? tabBarHeight : 0 }}
       className="absolute left-0 right-0 bg-gray-100 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700"
       onPress={() => {
         navigate('SongScreen');
@@ -51,10 +65,13 @@ export default function MiniPlayer() {
             {currentTrack.name}
           </Text>
           <Text className="text-gray-600 dark:text-gray-400 text-xs">
-            {currentTrack.artists.join(", ")}
+            {currentTrack.artists.map(artist => artist.name).join(", ")}
           </Text>
         </View>
 
+        <TouchableOpacity onPress={playPrevious} className="p-2 ml-2">
+          <Icon name="play-skip-back" size={24} color={iconColor} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={togglePlayPause} className="p-2">
           <Icon
             name={isPlaying ? "pause" : "play"}

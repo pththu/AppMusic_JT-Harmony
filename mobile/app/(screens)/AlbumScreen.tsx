@@ -1,7 +1,7 @@
 import { View, Text, useColorScheme, Animated, Image, Pressable, TouchableOpacity, FlatList, ActivityIndicator, StyleSheet } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { usePlayerStore } from '@/store/playerStore';
 import { useNavigate } from '@/hooks/useNavigate';
 import SongItem from '@/components/items/SongItem';
@@ -13,11 +13,12 @@ const HEADER_SCROLL_THRESHOLD = 256;
 
 const AlbumScreen = () => {
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
+  const params = useLocalSearchParams();
+
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
   const [album, setAlbum] = useState(null);
   const [tracks, setTracks] = useState([]);
-  const params = useLocalSearchParams();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
@@ -31,7 +32,6 @@ const AlbumScreen = () => {
     const fetchTracks = async () => {
       if (albumData) {
         const response = await GetTracksByAlbumId(albumData.spotifyId);
-        console.log('response ui: ', response);
         if (response.success) {
           response.data.map(track => {
             track.imageUrl = albumData.imageUrl;
@@ -81,10 +81,9 @@ const AlbumScreen = () => {
 
   const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
-      title={item.name}
+      item={item}
       key={index}
-      subtitle={item.artists.map(a => a.name).join(', ')}
-      image={item.imageUrl || ''}
+      image={item?.imageUrl || ''}
       onPress={() => handleSelectTrack(item)}
       onOptionsPress={() => { }}
     />
@@ -95,7 +94,7 @@ const AlbumScreen = () => {
   return (
     <Animated.View
       style={{ opacity, transform: [{ translateY }] }}
-      className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'}`}>
+      className={`flex-1 top-0 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'}`}>
       <View>
         <Animated.View
           style={{
@@ -129,7 +128,7 @@ const AlbumScreen = () => {
         )}
         scrollEventThrottle={16}
       >
-        <View className="w-full h-64 items-center rounded-lg overflow-hidden shadow-black/30 shadow-lg">
+        <View className="w-full h-64 items-center rounded-lg ">
           <Image
             source={{ uri: album?.imageUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
             className="w-64 h-64 rounded-lg"
@@ -194,7 +193,7 @@ const AlbumScreen = () => {
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải album...</Text>
             </View>
           ) : (
-            tracks.map((item, index) => {
+            tracks?.map((item, index) => {
               return (
                 renderRecentlyPlayedItem({ item, index })
               )

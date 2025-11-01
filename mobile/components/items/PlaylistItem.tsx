@@ -25,9 +25,9 @@ export default function PlaylistItem({ title, type, songs, image, onPress = () =
       />
       <View className="flex-1 justify-center">
         <Text className="text-white text-base font-semibold">{formatTitle(title)}</Text>
-        <Text className="text-gray-400 text-sm">
+        {/* <Text className="text-gray-400 text-sm">
           {songs} bài hát
-        </Text>
+        </Text> */}
       </View>
     </TouchableOpacity>
   );

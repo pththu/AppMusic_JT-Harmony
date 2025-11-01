@@ -1,5 +1,5 @@
 // components/player/GlobalPlayer.js
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { usePlayerStore } from "@/store/playerStore";
 
@@ -11,12 +11,28 @@ export default function GlobalPlayer() {
   const playbackPosition = usePlayerStore((state) => state.playbackPosition);
   const playNext = usePlayerStore((state) => state.playNext);
   const setPlaybackPosition = usePlayerStore((state) => state.setPlaybackPosition);
+  const setDuration = usePlayerStore((state) => state.setDuration);
 
   const onPlayerReady = () => {
     if (playerRef.current && playbackPosition > 0) {
       playerRef.current.seekTo(playbackPosition, true);
     }
   };
+
+  useEffect(() => {
+    const fetchDuration = async () => {
+      try {
+        const duration = await playerRef.current?.getDuration();
+        if (typeof duration === "number") {
+          setDuration(duration);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy độ dài video Youtube:", error);
+      }
+    };
+
+    fetchDuration();
+  });
 
   const onPlayerStateChange = async (state) => {
     const latestState = usePlayerStore.getState();

@@ -5,7 +5,6 @@ import Icon from "react-native-vector-icons/Ionicons";
 import SettingButton from "@/components/button/SettingButton";
 import CustomButton from "@/components/custom/CustomButton";
 import { useNavigate } from "@/hooks/useNavigate";
-import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
@@ -13,6 +12,7 @@ import { ENV } from "@/config/env";
 import { LoginManager, Profile, Settings } from "react-native-fbsdk-next";
 import { LinkSocialAccount, Logout, MergeAccount, SelfLockAccount } from "@/routes/ApiRouter";
 import { useTheme } from "@/components/ThemeContext"; // Import useTheme
+import { useRouter } from "expo-router";
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
@@ -24,6 +24,7 @@ Settings.initializeSDK();
 export default function SettingScreen() {
 
   const { theme } = useTheme(); // Lấy theme hiện tại
+  const router = useRouter();
   const user = useAuthStore(state => state.user);
   const loginType = useAuthStore(state => state.loginType);
   const updateUser = useAuthStore(state => state.updateUser);
