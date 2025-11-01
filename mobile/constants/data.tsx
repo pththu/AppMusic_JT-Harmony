@@ -8,7 +8,9 @@ export const trackData = [
     externalUrl: "https://www.youtube.com/embed/dj0MgHYbFYI?si=vBAAhaIIxworrzHc",
     duration: 228615,
     artists: [
-      "BTS"
+      {
+        name: "BTS"
+      }
     ],
     album: "Love Yourself 結 'Answer'",
     imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
@@ -28,7 +30,9 @@ export const trackData = [
     externalUrl: "https://www.youtube.com/embed/IiW1kEJDBDQ?si=fv4GlCBWV-x3D37z",
     duration: 225220,
     artists: [
-      "BTS"
+      {
+        name: "BTS"
+      }
     ],
     album: "Love Yourself 結 'Answer'",
     imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
@@ -48,7 +52,9 @@ export const trackData = [
     externalUrl: "https://www.youtube.com/embed/ejR5zKaPZ0g?si=SRkv0exUJBLaOFni",
     duration: 276707,
     artists: [
-      "BTS"
+      {
+        name: "BTS"
+      }
     ],
     album: "Love Yourself 結 'Answer'",
     imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
@@ -68,7 +74,9 @@ export const trackData = [
     externalUrl: "https://www.youtube.com/embed/Rx6D5FN1pvg?si=Y_JImAhXOzDNBtWq",
     duration: 223122,
     artists: [
-      "BTS"
+      {
+        name: "BTS"
+      }
     ],
     album: "Love Yourself 結 'Answer'",
     imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
@@ -89,7 +97,9 @@ export const trackData = [
     imageUrl: "https://i.scdn.co/image/ab67616d0000b2739ac548c878dcfacf8bd868b9",
     duration: 252500,
     artists: [
-      "Vũ Cát Tường"
+      {
+        name: "Vũ Cát Tường"
+      }
     ],
     album: "Vi Nhất (Chill Mix)",
     discNumber: 1,
@@ -109,7 +119,9 @@ export const trackData = [
     imageUrl: "https://i.scdn.co/image/ab67616d0000b2739ac548c878dcfacf8bd868b9",
     duration: 238285,
     artists: [
-      "Vũ Cát Tường"
+      {
+        name: "Vũ Cát Tường"
+      }
     ],
     album: "Vi Nhất (Chill Mix)",
     discNumber: 1,
@@ -129,7 +141,9 @@ export const trackData = [
     imageUrl: "https://i.scdn.co/image/ab67616d0000b2739ac548c878dcfacf8bd868b9",
     duration: 220421,
     artists: [
-      "Vũ Cát Tường"
+      {
+        name: "Vũ Cát Tường"
+      }
     ],
     album: "Vi Nhất (Chill Mix)",
     discNumber: 1,
@@ -149,7 +163,9 @@ export const trackData = [
     imageUrl: "https://i.scdn.co/image/ab67616d0000b273fe0cbef064f18008462d29ef",
     duration: 121749,
     artists: [
-      "buitruonglinh"
+      {
+        name: "buitruonglinh"
+      }
     ],
     album: "Từng Ngày Như Mãi Mãi",
     discNumber: 1,
@@ -158,7 +174,87 @@ export const trackData = [
     explicit: false,
     playCount: 0,
     shareCount: 0
-  }
+  },
+  {
+    "spotifyId": "3smbno1dKL410vC27M5KOS",
+    "videoId": "L7hZ8Z9sM38",
+    "name": "Tear",
+    "lyrics": "",
+    "externalUrl": "https://open.spotify.com/track/3smbno1dKL410vC27M5KOS",
+    "duration": 284980,
+    "artists": [
+      {
+        name: "BTS"
+      }
+    ],
+    "album": "Love Yourself 結 'Answer'",
+    "discNumber": 1,
+    "trackNumber": 12,
+    "type": "track",
+    "explicit": false,
+    "playCount": 0,
+    "shareCount": 0
+  },
+  {
+    "spotifyId": "6L88EH68XwlaXwvChlTS41",
+    "videoId": "_GiBbhq7hfI",
+    "name": "Epiphany",
+    "lyrics": "",
+    "externalUrl": "https://open.spotify.com/track/6L88EH68XwlaXwvChlTS41",
+    "duration": 240361,
+    "artists": [
+      {
+        name: "BTS"
+      }
+    ],
+    "album": "Love Yourself 結 'Answer'",
+    "discNumber": 1,
+    "trackNumber": 13,
+    "type": "track",
+    "explicit": false,
+    "playCount": 0,
+    "shareCount": 0
+  },
+  {
+    "spotifyId": "7HYJqAMbKDJYRyEfUGOCBB",
+    "videoId": "dyXhcS04MVY",
+    "name": "I'm Fine",
+    "lyrics": "",
+    "externalUrl": "https://open.spotify.com/track/7HYJqAMbKDJYRyEfUGOCBB",
+    "duration": 240339,
+    "artists": [
+      {
+        name: "BTS"
+      }
+    ],
+    "album": "Love Yourself 結 'Answer'",
+    "discNumber": 1,
+    "trackNumber": 14,
+    "type": "track",
+    "explicit": false,
+    "playCount": 0,
+    "shareCount": 0
+  },
+  {
+    "spotifyId": "1e8J3XClxZbFmvIHLI8CE4",
+    "videoId": "vgJeQvGYYpk",
+    "name": "IDOL",
+    "lyrics": "",
+    "externalUrl": "https://open.spotify.com/track/1e8J3XClxZbFmvIHLI8CE4",
+    "duration": 222732,
+    "artists": [
+      {
+        name: "BTS"
+      }
+    ],
+    "album": "Love Yourself 結 'Answer'",
+    "discNumber": 1,
+    "trackNumber": 15,
+    "type": "track",
+    "explicit": false,
+    "playCount": 0,
+    "shareCount": 0
+  },
 ];
 
 export const artistData = [

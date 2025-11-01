@@ -20,9 +20,9 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       height,
       width,
     });
-    if (height > 0 && height !== tabBarHeight) {
-      setTabBarHeight(height);
-    }
+    // if (height > 0 && height !== tabBarHeight) {
+    setTabBarHeight(height);
+    // }
   };
 
   const animatiedStyle = useAnimatedStyle(() => {
@@ -47,10 +47,6 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       />
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
-
-        if (options.tabBarItemStyle?.display === 'none') {
-          return null;
-        }
 
         const label = options?.tabBarLabel !== undefined
           ? options.tabBarLabel : options?.title !== undefined

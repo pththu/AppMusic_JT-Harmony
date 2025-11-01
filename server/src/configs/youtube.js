@@ -5,11 +5,10 @@ const axios = require('axios');
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
 
-const formatVideo = (video, duration) => ({
+const formatVideo = (video) => ({
   videoId: video.id.videoId || video.id,
   title: video.snippet.title,
   description: video.snippet.description,
-  duration: duration
 });
 
 const youtubeApiRequest = async (endpoint, params) => {
@@ -24,28 +23,12 @@ const youtubeApiRequest = async (endpoint, params) => {
   }
 };
 
-
 /**
  * Tìm kiếm video trên YouTube theo tên bài hát và nghệ sĩ.
  * @param {string} songName - Tên bài hát.
  * @param {string} artistName - Tên nghệ sĩ.
  * @returns {Promise<Object>} - Dữ liệu video tìm được.
  */
-
-const searchVideoWithDuration = async (id) => {
-  try {
-    const detailsResult = await youtubeApiRequest('/videos', {
-      key: YOUTUBE_API_KEY,
-      part: 'contentDetails,snippet', // Lấy cả contentDetails (cho duration) và snippet (cho title, etc.)
-      id: id
-    });
-    console.log(detailsResult.items);
-    return detailsResult.items;
-  } catch (error) {
-    console.error('Error fetching video details:', error.response ? error.response.data : error.message);
-    throw error;
-  }
-};
 
 const searchVideo = async (songName, artistName) => {
   const query = `${songName} ${artistName} lyric`;
@@ -59,9 +42,7 @@ const searchVideo = async (songName, artistName) => {
       type: 'video',
     });
 
-    const resultWithDetails = await searchVideoWithDuration(response.items[0].id.videoId);
-
-    const video = formatVideo(response.items[0], parseISO8601Duration(resultWithDetails[0]?.contentDetails?.duration || null));
+    const video = formatVideo(response.items[0]);
     return video;
   } catch (err) {
     console.error('Error searching YouTube video:', err.response ? err.response.data : err.message);
@@ -69,19 +50,7 @@ const searchVideo = async (songName, artistName) => {
   }
 };
 
-const parseISO8601Duration = (durationString) => {
-  // Biểu thức chính quy để tìm các số đi kèm với H, M, S
-  const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
-  const matches = durationString.match(regex);
-
-  const hours = matches[1] ? parseInt(matches[1], 10) : 0;
-  const minutes = matches[2] ? parseInt(matches[2], 10) : 0;
-  const seconds = matches[3] ? parseInt(matches[3], 10) : 0;
-
-  // Tính tổng số giây
-  return ((hours * 3600) + (minutes * 60) + seconds) * 1000;
-}
-
 module.exports = {
   searchVideo,
 };
+

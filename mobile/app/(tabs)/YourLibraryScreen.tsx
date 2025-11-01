@@ -6,6 +6,7 @@ import LibraryItemButton from '@/components/button/LibraryItemButton';
 import SongItem from '@/components/items/SongItem';
 import { usePlayerStore } from '@/store/playerStore';
 import { trackData, albumData } from "@/constants/data";
+import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
 
 const libraryItems = [
   {
@@ -40,55 +41,35 @@ const libraryItems = [
 
 export default function YourLibraryScreen() {
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
 
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
 
 
   const handleSelectSong = (song, index) => {
-    // Giả sử 'trackData' là danh sách đầy đủ
-    // Chúng ta cần chuẩn bị dữ liệu đúng định dạng (có videoId)
-    // Ở đây tôi giả định 'trackData' của bạn đã có 'videoId'
     const playlistWithVideoId = trackData.map((item) => ({
       ...item,
-      videoId: item.videoId || "5BdSZkY6F4M", // CẦN THAY THẾ: Lấy videoId thực
-      artists: item.artists, // Đảm bảo artists là mảng string
+      videoId: item.videoId || "5BdSZkY6F4M",
+      artists: item.artists,
       imageUrl:
         item.imageUrl ||
         albumData.find((album) => album.name === item.album)?.imageUrl ||
         "",
     }));
 
-    // Bắt đầu phát tại vị trí 'index'
     playPlaylist(playlistWithVideoId, index);
-
-    // Bỏ navigate, vì player giờ là global, không cần chuyển màn hình
-    // navigate('SongScreen');
   };
 
-  // const renderRecentlyPlayedItem = ({ item }: { item: (typeof trackData)[0]; }) => (
-  //   <SongItem
-  //     title={item.name}
-  //     subtitle={item.artists.map(a => a).join(', ')} // Nối tên nghệ sĩ thành một chuỗi
-  //     image={item.imageUrl || albumData.find(album => album.name === item.album)?.imageUrl || ''}
-  //     onPress={() => handleSelectSong(item)} // Truyền cả mảng artists
-  //     onOptionsPress={() => { }}
-  //   />
-  // );
-
-  const renderRecentlyPlayedItem = ({
-    item,
-    index, // 👈 Thêm index vào đây
-  }) => (
+  const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
-      title={item.name}
-      subtitle={item.artists.map((a) => a).join(", ")}
+      item={item}
       image={
         item.imageUrl ||
         albumData.find((album) => album.name === item.album)?.imageUrl ||
         ""
       }
-      onPress={() => handleSelectSong(item, index)} // 👈 Truyền index
+      onPress={() => handleSelectSong(item, index)}
       onOptionsPress={() => { }}
     />
   );
@@ -124,7 +105,6 @@ export default function YourLibraryScreen() {
         data={trackData}
         renderItem={renderRecentlyPlayedItem}
         keyExtractor={(item, index) => index.toString()}
-        className=''
       />
     </SafeAreaView>
   );

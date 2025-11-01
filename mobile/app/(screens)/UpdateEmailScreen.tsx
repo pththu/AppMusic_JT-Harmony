@@ -3,16 +3,18 @@ import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomTextInput from "@/components/custom/CustomTextInput";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+// import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
 import { isEmailExist, SendOtpEmail, VerifyEmail } from "@/routes/ApiRouter";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
+import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/Ionicons";
 
 export default function UpdateEmailScreen() {
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const { error, success } = useCustomAlert();
   const { navigate } = useNavigate();

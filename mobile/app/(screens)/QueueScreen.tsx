@@ -39,11 +39,6 @@ export default function QueueScreen() {
         className={`flex-row items-center py-2 ${index > 0 ? 'border-b border-gray-300 dark:border-gray-700' : ''}`}
       >
         <View className="mr-4">
-          {isPlaying ? (
-            <Ionicons name="volume-medium" size={24} color="#1ED760" />
-          ) : (
-            <Text className="text-gray-600 dark:text-gray-400 text-base w-6">{displayIndex}</Text>
-          )}
         </View>
         <Image source={{ uri: item.imageUrl }} className="w-12 h-12 rounded-md" />
         <View className="ml-4 flex-1">
@@ -53,7 +48,7 @@ export default function QueueScreen() {
             {item.name}
           </Text>
           <Text className="text-gray-600 dark:text-gray-400">
-            {item.artists?.map(a => a).join(', ')}
+            {item.artists?.map(a => a.name).join(', ')}
           </Text>
         </View>
         <TouchableOpacity>

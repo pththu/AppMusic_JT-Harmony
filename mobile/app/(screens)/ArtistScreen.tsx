@@ -66,15 +66,18 @@ export default function ArtistScreen() {
   const artist = params.artist ? JSON.parse(params.artist as string) : sampleArtist;
   const popularReleases = artist.popularReleases || [];
 
+  console.log('artist', artist)
+
   const handlePressSeeMore = () => {
     navigate("AllSongsScreen", { artist: JSON.stringify(artist) });
   }
 
-  const renderItem = ({ item }: any) => (
+  const renderItem = ({ item, index }: any) => (
     <SongItem
-      title={item.title}
-      subtitle={item.album}
-      image={item.image}
+      item={item}
+      key={index}
+      image={item.imageUrl || ''}
+      onPress={() => { }}
       onOptionsPress={() => { }}
     />
   );

@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -21,6 +22,7 @@ interface PlayerState {
   isShuffled: boolean;
   repeatMode: 'none' | 'one' | 'all';
   isLoading: boolean;
+  isMiniPlayerVisible: boolean;
 
   setCurrentTrack: (track: any) => void;
   setPlaylist: (tracks: any[]) => void;
@@ -30,6 +32,8 @@ interface PlayerState {
   setPlaybackPosition: (position: number) => void;
   setTabBarHeight: (height: number) => void;
   setQueue: (tracks: any[]) => void;
+  setMiniPlayerVisible: (visible: boolean) => void;
+  setDuration: (duration: number) => void;
 
   addToMyPlaylists: (playlist: any) => void;
   updateCurrentPlaylist: (playlist: any) => void;
@@ -45,6 +49,7 @@ interface PlayerState {
   addTrackToQueue: (tracks: any[]) => void;
   removeTrackFromQueue: (tracks: any[]) => void;
   clearQueue: () => void;
+  clear: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -67,6 +72,7 @@ export const usePlayerStore = create<PlayerState>()(
       isShuffled: false,
       repeatMode: 'none',
       isLoading: false,
+      isMiniPlayerVisible: false,
 
       // === BASIC ACTIONS ===
       setCurrentTrack: (track) => {
@@ -150,7 +156,9 @@ export const usePlayerStore = create<PlayerState>()(
           playbackPosition: 0,
         });
       },
-
+      setDuration: (duration) => {
+        set({ duration });
+      },
       // Dùng cho nút play/pause ở SongScreen, MiniPlayer
       togglePlayPause: () => {
         set((state) => ({ isPlaying: !state.isPlaying }))
@@ -179,11 +187,23 @@ export const usePlayerStore = create<PlayerState>()(
       clearQueue: () => {
         set({ queue: [] });
       },
+      setMiniPlayerVisible: (visible) => set({ isMiniPlayerVisible: visible }),
+      clear: () => set({
+        currentTrack: null,
+        isPlaying: false,
+        currentIndex: -1,
+        playbackPosition: 0,
+        // playlist: [],
+      }),
     }),
 
     {
-      name: 'music-player-storage',
-      storage: createJSONStorage(() => localStorage),
+      name: 'player-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        // gọi khi load từ AsyncStorage xong
+        console.log("✅ Player store rehydrated");
+      },
       partialize: (state) => ({
         currentTrack: state.currentTrack,
         playlist: state.playlist,
@@ -191,7 +211,6 @@ export const usePlayerStore = create<PlayerState>()(
         playbackPosition: state.playbackPosition,
         myPlaylist: state.myPlaylists,
       }),
-      version: 1,
     }
   )
 );

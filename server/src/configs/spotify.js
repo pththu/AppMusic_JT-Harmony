@@ -10,19 +10,19 @@ const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
 let accessToken = null;
 
 const formatTrack = (track) => ({
-  spotifyId: track.id,
+  spotifyId: track.id || null,
   videoId: null,
-  name: track.name,
+  name: track.name || null,
   artists: [
     ...track.artists.map(artist => ({
-      spotifyId: artist.id,
-      name: artist.name,
+      spotifyId: artist?.id || null,
+      name: artist?.name || null,
     })),
   ],
   album: {
-    spotifyId: track.album.id,
-    name: track.album.name,
-    imageUrl: track.album.images[0]?.url,
+    spotifyId: track.album?.id || null,
+    name: track.album?.name || null,
+    imageUrl: track.album?.images[0]?.url || null,
   },
   duration: track.duration_ms,
   href: track.href,
@@ -72,7 +72,7 @@ const formatArtist = (artist) => ({
   spotifyId: artist.id,
   name: artist.name,
   genres: artist.genres,
-  imgUrl: artist.images[0]?.url,
+  imageUrl: artist.images[0]?.url,
   totalFollowers: artist.followers.total,
   type: artist.type,
 });
@@ -254,7 +254,12 @@ const searchArtists = async (query, limit) => {
 const getPlaylistTracks = async (playlistId) => {
   try {
     const tracksData = await spotifyApiRequest(`/playlists/${playlistId}/tracks`);
-    return tracksData.items.map(item => formatTrack(item.track));
+    tracksData.items.map(item => {
+      if (!item.track) {
+        console.log('track null: ', item);
+      }
+    });
+    return tracksData.items.filter(item => item.track).map(item => formatTrack(item.track));
   } catch (error) {
     console.error(`Error getting tracks from playlist on Spotify:`, error.response ? error.response.data : error.message);
     throw error;
