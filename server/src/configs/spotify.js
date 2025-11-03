@@ -81,10 +81,8 @@ const searchPlaylists = async (searchParams, limit) => {
   if (name) queryParts.push(`playlist:${name}`);
   if (artist) {
     if (Array.isArray(artist)) {
-      // Nếu là mảng, thêm từng nghệ sĩ
       artist.forEach(art => queryParts.push(`artist:${art}`));
     } else {
-      // Nếu là string
       queryParts.push(`artist:${artist}`);
     }
   }
@@ -194,9 +192,21 @@ const searchArtists = async (query) => {
 }
 
 const getPlaylistTracks = async (playlistId) => {
+  let allTracks = [];
+  let nextUrl = `/playlists/${playlistId}/tracks?limit=100`;
   try {
-    const tracksData = await spotifyApiRequest(`/playlists/${playlistId}/tracks`);
-    return tracksData.items.filter(item => item.track.name).map(item => item.track);
+    while (nextUrl) {
+      const tracksPage = await spotifyApiRequest(nextUrl);
+
+      const validTracks = tracksPage.items
+        .filter(item => item && item.track && item.track.name)
+        .map(item => item.track);
+
+      allTracks = allTracks.concat(validTracks);
+      nextUrl = tracksPage.next ? tracksPage.next.replace('https://api.spotify.com/v1', '') : null;
+
+    }
+    return allTracks;
   } catch (error) {
     console.error(`Error getting tracks from playlist on Spotify:`, error.response ? error.response.data : error.message);
     throw error;

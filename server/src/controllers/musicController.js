@@ -160,6 +160,23 @@ const findPlaylistById = async (req, res) => {
 /**
  * Tìm kiếm bài hát trên Spotify với các tham số linh hoạt
  */
+
+const buildSearchCondition = (param, key, queryObj, whereObj) => {
+  if (!param) return;
+  const values = Array.isArray(param) ? param : [param];
+
+  // const orConditions = values.map(value => ({
+  //   name: { [Op.iLike]: `%${value}%` }
+  // }));
+
+  const orConditions = values.map(value => (
+    { [Op.iLike]: `%${value}%` }
+  ));
+
+  whereObj.name = orConditions.length > 1 ? { [Op.or]: orConditions } : orConditions[0];
+  queryObj[key] = values.map(v => String(v).toLowerCase()).join(' OR ');
+};
+
 const searchTracks = async (req, res) => {
   try {
     const query = {};
@@ -179,21 +196,9 @@ const searchTracks = async (req, res) => {
       whereTrack.name = { [Op.iLike]: `%${trackName}%` };
     };
 
-    if (album) {
-      query.album = album;
-      whereAlbum.name = { [Op.iLike]: `%${album}%` };
-    };
-
-    if (artist) {
-      query.artist = artist;
-      whereArtist.name = { [Op.iLike]: `%${artist}%` };
-    }
-
-    if (genre) {
-      query.genre = genre;
-      whereGenre.name = { [Op.iLike]: `%${genre}%` };
-    }
-
+    buildSearchCondition(album, 'album', query, whereAlbum);
+    buildSearchCondition(artist, 'artist', query, whereArtist);
+    buildSearchCondition(genre, 'genre', query, whereGenre);
 
     const dataFormated = [];
     let data = await Track.findAll({
@@ -235,23 +240,23 @@ const searchTracks = async (req, res) => {
       }
     }
 
-    if (dataFormated.length > 30) {
-      return res.status(200).json({
-        message: 'Track search successful',
-        data: dataFormated,
-        success: true
-      });
+    // chuyển đổi thành chuỗi truy vấn
+    const spotifyQueryString = Object.entries(query)
+      .map(([key, value]) => `${key.toLowerCase()}:("${String(value)}")`)
+      .join(' ');
+    console.log("Spotify Query:", spotifyQueryString);
+
+    if ((limit && dataFormated.length < limit) || dataFormated.length < 30) {
+      let spotifyData = [];
+      if (spotifyQueryString.length > 0) {
+        spotifyData = await spotify.searchTracks(spotifyQueryString, type || 'track', Number.parseInt(limit) || null);
+      }
+      spotifyData.map(track => dataFormated.push(formatTrack(track, null, null, null)));
     }
 
-    // chuyển đổi thành chuỗi truy vấn
-    const queryString = Object.entries(query).map(([key, value]) => `${key.toLowerCase()}:${String(value.toLowerCase()).replace(/ /g, '+') + '"'}`).join(' ');
-    console.log(queryString);
-
-    data = await spotify.searchTracks(queryString, type || 'track', Number.parseInt(limit) || null);
-    data.map(track => dataFormated.push(formatTrack(track, null, null, null)));
     console.log("toonrg", dataFormated.length)
     return res.status(200).json({
-      message: 'Track search successful',
+      message: 'Tìm bài hát thành công',
       data: dataFormated,
       success: true
     });
@@ -453,7 +458,7 @@ const getTracksFromPlaylist = async (req, res) => {
       return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong playlist này', success: false });
     }
 
-    console.log('Tổng: ',dataFormated.length)
+    console.log('Tổng: ', dataFormated.length)
 
     return res.status(200).json({
       message: 'Get tracks from playlist successful',
@@ -650,7 +655,7 @@ const addTrackToPlaylist = async (req, res) => {
     if (trackId) data.trackId = trackId;
     if (trackSpotifyId) data.trackSpotifyId = trackSpotifyId;
 
-    const isExisting = await Playlist.findByPk(playlistId, {
+    const playlist = await Playlist.findByPk(playlistId, {
       include: [
         {
           model: PlaylistTrack,
@@ -660,21 +665,21 @@ const addTrackToPlaylist = async (req, res) => {
       ]
     });
 
-    if (!isExisting) {
+    if (!playlist) {
       return res.status(400).json({
         message: 'Không tìm thấy playlist',
         success: false
       })
     }
 
-    if (isExisting.userId !== userId) {
+    if (playlist.userId !== userId) {
       return res.status(403).json({
         message: 'Bạn không có quyền thêm bài hát vào playlist này',
         success: false
       });
     }
 
-    const isExistingTrackInPlaylist = isExisting.PlaylistTracks.some(pt => {
+    const isExistingTrackInPlaylist = playlist.PlaylistTracks.some(pt => {
       if (trackId) {
         return pt.trackId === trackId;
       }
@@ -691,9 +696,22 @@ const addTrackToPlaylist = async (req, res) => {
       });
     }
 
-    await PlaylistTrack.create(data);
+    const row = await PlaylistTrack.create(data);
+    if (!row) {
+      return res.status(500).json({
+        message: 'Thêm bài hát vào playlist thất bại',
+        success: false
+      });
+    }
+
+    playlist.totalTracks += 1;
+    await playlist.save();
+
+    const track = await spotify.findTrackById(trackSpotifyId)
+
     return res.status(200).json({
       message: 'Thêm bài hát vào playlist thành công',
+      data: formatTrack(track, null, null, null),
       success: true
     });
 
@@ -710,10 +728,30 @@ const addTrackToPlaylistAfterConfirm = async (req, res) => {
     if (playlistId) data.playlistId = playlistId;
     if (trackId) data.trackId = trackId;
     if (trackSpotifyId) data.trackSpotifyId = trackSpotifyId;
+    const playlist = await Playlist.findByPk(playlistId);
+    if (!playlist) {
+      return res.status(400).json({
+        message: 'Không tìm thấy playlist',
+        success: false
+      });
+    }
 
-    await PlaylistTrack.create(data);
+    const row = await PlaylistTrack.create(data);
+    if (!row) {
+      return res.status(500).json({
+        message: 'Thêm bài hát vào playlist thất bại',
+        success: false
+      });
+    }
+
+    playlist.totalTracks += 1;
+    await playlist.save();
+
+    const track = await spotify.findTrackById(trackSpotifyId)
+
     return res.status(200).json({
       message: 'Thêm bài hát vào playlist thành công',
+      data: formatTrack(track, null, null, null),
       success: true
     });
   } catch (error) {

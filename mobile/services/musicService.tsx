@@ -68,6 +68,18 @@ export const GetMyPlaylists = async () => {
   }
 }
 
+export const GetTracks = async (payload) => {
+  try {
+    console.log('payload: ', payload);
+    const response = await axiosClient.post(`/music//search-track`, payload);
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+}
+
+// add
 export const AddTrackToPlaylist = async (payload) => {
   try {
     console.log('payload 1 api: ', payload);

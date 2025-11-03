@@ -27,12 +27,13 @@ import { set } from "date-fns";
 import { da, tr } from "date-fns/locale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlaylistItem from "@/components/items/PlaylistItem";
-import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
+import { GetAlbumsForYou, GetArtistsForYou, GetMyPlaylists, GetPlaylistsForYou } from "@/services/musicService";
 import { usePlayerStore } from "@/store/playerStore";
 import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
 
 export default function HomeScreen() {
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
   const { navigate } = useNavigate();
   const { theme } = useTheme();
   const { success, error } = useCustomAlert();
@@ -99,6 +100,17 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
+    const fetchMyPlaylists = async () => {
+      try {
+        const response = await GetMyPlaylists();
+        if (response.success) {
+          setMyPlaylists(response.data);
+        }
+      } catch (error) {
+        console.log("Lỗi khi lấy playlist của tôi:", error);
+      }
+    }
+
     const fetchPlaylistsForYou = async () => {
       try {
         const response = await GetPlaylistsForYou(queryParam.playlistForYou);
@@ -179,6 +191,7 @@ export default function HomeScreen() {
     fetchTrendingPlaylists()
     fetchTrendingAlbums()
     fetchArtistsForYou()
+    fetchMyPlaylists();
   }, []);
 
   return (
@@ -250,10 +263,8 @@ export default function HomeScreen() {
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <PlaylistItem
-                  title={item.name}
-                  type="Playlist"
-                  songs={item.totalTracks || 0}
-                  image={item.imageUrl}
+                  item={item}
+                  totalTrack={item.totalTracks || 0}
                   onPress={() => handleSelectPlaylist(item)}
                 />
               )}
@@ -304,10 +315,8 @@ export default function HomeScreen() {
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <PlaylistItem
-                  title={item.name}
-                  type="Playlist"
-                  songs={item.totalTracks || 0}
-                  image={item.imageUrl}
+                  item={item}
+                  totalTrack={item.totalTracks || 0}
                   onPress={() => handleSelectPlaylist(item)}
                 />
               )}

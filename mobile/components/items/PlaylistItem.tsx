@@ -4,7 +4,7 @@ import { View, Text, TouchableOpacity, Image, useColorScheme } from 'react-nativ
 import Icon from 'react-native-vector-icons/Ionicons';
 
 
-export default function PlaylistItem({ title, type, songs, image, onPress = () => { }, onOptionsPress = () => { } }) {
+export default function PlaylistItem({ item, totalTrack, onPress = () => { }, onOptionsPress = () => { } }) {
 
   const colorScheme = useColorScheme();
 
@@ -22,11 +22,12 @@ export default function PlaylistItem({ title, type, songs, image, onPress = () =
       className="items-start py-3 active:opacity-75 mr-4"
     >
       <Image
-        source={{ uri: image }}
+        source={{ uri: item?.imageUrl }}
         className="w-32 h-32 rounded-md shadow-md"
       />
       <View className="flex-1 justify-center">
-        <Text className={`text-sm mt-2 font-semibold ${colorScheme === 'dark' ? 'text-gray-400' : 'text-black'}`}>{formatTitle(title)}</Text>
+        <Text className={`text-sm mt-2 font-semibold ${colorScheme === 'dark' ? 'text-gray-400' : 'text-black'}`}>{formatTitle(item?.name)}</Text>
+        <Text className={`text-xs ${colorScheme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{totalTrack || '..'} bài hát</Text>
       </View>
     </TouchableOpacity>
   );

@@ -31,6 +31,7 @@ export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const loginType = useAuthStore((state) => state.loginType);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const clearPlayerStore = usePlayerStore((state) => state.clear);
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error, warning } = useCustomAlert();
@@ -133,6 +134,7 @@ export default function ProfileScreen() {
         success("Đăng xuất thành công", "");
       }
       logout();
+      clearPlayerStore();
     } catch (error) {
       console.log(error);
     }
@@ -319,7 +321,7 @@ export default function ProfileScreen() {
                 <ThemeToggle />
               </View>
             }
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <SettingItem
             title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}

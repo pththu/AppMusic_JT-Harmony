@@ -16,7 +16,7 @@ import { playlistData } from "@/constants/data";
 import { useNavigate } from "@/hooks/useNavigate";
 import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
-import { GetMyPlaylists, GetPlaylistsForYou } from "@/services/musicService";
+import { GetPlaylistsForYou } from "@/services/musicService";
 import { set } from "date-fns";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Modal } from "react-native";
@@ -83,28 +83,25 @@ const PlaylistItem = ({ item, index, onPress, primaryIconColor }) => {
 
 export default function AllPlaylistScreen() {
   const user = useAuthStore((state) => state.user);
-  const myPlaylistsStore = usePlayerStore((state) => state.myPlaylists);
-  const setMyPlaylistsStore = usePlayerStore((state) => state.setMyPlaylists);
+  const myPlaylists = usePlayerStore((state) => state.myPlaylists);
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
-
+  const { success, error, warning } = useCustomAlert();
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
-  const primaryIconColor = colorScheme === "dark" ? "white" : "black";
+
   const [activeTab, setActiveTab] = useState("myPlaylists");
-  const [myPlaylists, setMyPlaylists] = useState([]);
   const [savedPlaylists, setSavedPlaylists] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const { success, error, warning } = useCustomAlert();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
 
+  const primaryIconColor = colorScheme === "dark" ? "white" : "black";
   const playerPadding = currentTrack ? MINI_PLAYER_HEIGHT : 0;
   const totalPaddingBottom = (tabBarHeight || 0) + playerPadding;
 
@@ -181,23 +178,10 @@ export default function AllPlaylistScreen() {
       }
     };
 
-    const fetchMyPlaylists = async () => {
-      try {
-        const response = await GetMyPlaylists();
-        if (response.success) {
-          setMyPlaylists(response.data);
-          setMyPlaylistsStore(response.data);
-        }
-      } catch (error) {
-        console.log("Lỗi khi lấy playlist của tôi:", error);
-      }
-    }
-
     fetchSavedPlaylists();
-    fetchMyPlaylists();
   }, []);
 
-  const currentData = activeTab === "myPlaylists" ? myPlaylistsStore : savedPlaylists;
+  const currentData = activeTab === "myPlaylists" ? myPlaylists : savedPlaylists;
 
   const TabButton = ({ title, tabName }) => {
     const isActive = activeTab === tabName;
@@ -267,7 +251,7 @@ export default function AllPlaylistScreen() {
             <PlaylistItem
               item={item}
               index={index}
-              onPress={handleSelectPlaylist}
+              onPress={() => handleSelectPlaylist(item)}
               primaryIconColor={primaryIconColor}
             />
           )}
