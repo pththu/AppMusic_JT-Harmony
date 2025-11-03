@@ -2,8 +2,86 @@
 const { TOP_50_PLAYLIST_ID } = require('../configs/constants');
 const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
-const { Playlist, Track, Album, Artist } = require('../models');
-const { get } = require('../routes/musicRoute');
+const { Playlist, Track, Album, Artist, PlaylistTrack, User, Genres } = require('../models');
+const Op = require('sequelize').Op;
+
+const formatTrack = (track, artist, album, videoId) => {
+  return {
+    id: track?.spotifyId && track.id ? track.id : null,
+    spotifyId: track?.spotifyId || (!track?.spotifyId ? track.id : null) || null,
+    videoId: videoId || null,
+    name: track?.name || null,
+    artists: [
+      ...track?.artists?.map(artist => ({
+        spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
+        name: artist?.name || null,
+        imageUrl: artist?.images?.[0]?.uri || artist?.imageUrl || null
+      })) || artist || [],
+    ],
+    album: {
+      spotifyId: track.album?.id || album?.spotifyId || null,
+      name: track.album?.name || album?.name || null,
+      imageUrl: track.album?.images?.[0]?.url || album?.imageUrl || null,
+    },
+    lyrics: track?.lyrics || null,
+    duration: track?.duration_ms || track?.duration || 0,
+    explicit: track?.explicit,
+    trackNumber: track?.track_number || track?.trackNumber || null,
+    discNumber: track?.disc_number || track?.discNumber || null,
+    imageUrl: track?.album?.images?.[0]?.url || album?.imageUrl || null,
+    playCount: track?.playCount || 0,
+    shareCount: track?.shareCount || 0,
+  }
+};
+
+const formatPlaylist = (playlist, owner) => {
+  return {
+    id: owner?.id ? playlist?.id : (!playlist?.spotifyId ? null : playlist?.id),
+    spotifyId: owner?.id ? null : (!playlist?.spotifyId ? playlist?.id : playlist?.spotifyId),
+    name: playlist.name,
+    owner: {
+      id: owner?.id || null,
+      spotifyId: owner?.spotifyId || (!owner?.spotifyId ? playlist?.owner?.id : null) || null,
+      name: playlist?.owner?.display_name || owner?.fullName || null,
+    },
+    description: playlist.description,
+    imageUrl: playlist?.images?.[0]?.url || playlist?.imageUrl || null,
+    totalTracks: playlist?.tracks?.total || playlist?.totalTracks || 0,
+    isPublic: playlist?.public || playlist?.isPublic || false,
+    type: playlist.type,
+  }
+}
+
+const formatAlbum = (album, artists) => {
+  return {
+    id: album?.spotifyId && album.id ? album.id : null,
+    spotifyId: album?.spotifyId || (!album?.spotifyId ? album.id : null) || null,
+    name: album.name,
+    artists: [
+      ...album?.artists?.map(artist => ({
+        spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
+        name: artist.name,
+        imageUrl: artist?.images?.[0]?.uri || artist?.imageUrl || null,
+      })) || artists || [],
+    ],
+    imageUrl: album?.images?.[0]?.url || album?.imageUrl || null,
+    releaseDate: album?.release_date ? new Date(album.release_date).toISOString() : null,
+    totalTracks: album?.total_tracks || album?.totalTracks || 0,
+    type: album.type,
+  }
+}
+
+const formatArtist = (artist, genres) => {
+  return {
+    id: artist?.spotifyId && artist.id ? artist.id : null,
+    spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
+    name: artist.name,
+    genres: genres || artist?.genres,
+    imageUrl: artist?.images?.[0]?.url || artist?.imageUrl,
+    type: artist?.type,
+  }
+}
+
 
 // Tìm kiếm playlist trên Spotify
 const findSpotifyPlaylist = async (req, res) => {
@@ -81,26 +159,100 @@ const findPlaylistById = async (req, res) => {
 ///////////////////////////////////////////////////////////////
 /**
  * Tìm kiếm bài hát trên Spotify với các tham số linh hoạt
- * @param {*} req 
- * @param {*} res 
- * @returns 
  */
 const searchTracks = async (req, res) => {
   try {
     const query = {};
-    const { artist, track, album, type, genre, limit } = req.body;
-    if (track) query.track = track;
-    if (album) query.album = album;
-    if (artist) query.artist = artist;
-    if (genre) query.genre = genre;
+    const whereTrack = {};
+    const whereArtist = {};
+    const whereAlbum = {};
+    const whereGenre = {};
+
+    const { artist, trackName, album, type, genre, limit } = req.body;
+
+    if (!artist && !trackName && !album && !genre) {
+      return res.status(400).json({ error: 'At least one search parameter (trackName, artist, album, or genre) is required' });
+    }
+
+    if (trackName) {
+      query.track = trackName;
+      whereTrack.name = { [Op.iLike]: `%${trackName}%` };
+    };
+
+    if (album) {
+      query.album = album;
+      whereAlbum.name = { [Op.iLike]: `%${album}%` };
+    };
+
+    if (artist) {
+      query.artist = artist;
+      whereArtist.name = { [Op.iLike]: `%${artist}%` };
+    }
+
+    if (genre) {
+      query.genre = genre;
+      whereGenre.name = { [Op.iLike]: `%${genre}%` };
+    }
+
+
+    const dataFormated = [];
+    let data = await Track.findAll({
+      where: whereTrack,
+      include: [
+        {
+          model: Album,
+          where: Object.keys(whereAlbum).length ? whereAlbum : undefined,
+          required: Object.keys(whereAlbum).length > 0
+        },
+        {
+          model: Artist,
+          as: 'artists',
+          where: Object.keys(whereArtist).length ? whereArtist : undefined,
+          required: Object.keys(whereArtist).length > 0,
+          include: [
+            {
+              model: Genres,
+              as: 'genres',
+              where: Object.keys(whereGenre).length ? whereGenre : undefined,
+              required: Object.keys(whereGenre).length > 0
+            }
+          ]
+        }
+      ],
+      limit: Number.parseInt(limit) || 20,
+      order: [['createdAt', 'DESC']]
+    });
+
+    if (data.length > 0) {
+      for (const track of data) {
+        const album = track.Album;
+        const artist = [];
+        for (const a of track.artists) {
+          artist.push(a);
+        }
+        const itemFormat = formatTrack(track, artist, album, track?.videoId || null)
+        dataFormated.push(itemFormat);
+      }
+    }
+
+    if (dataFormated.length > 30) {
+      return res.status(200).json({
+        message: 'Track search successful',
+        data: dataFormated,
+        success: true
+      });
+    }
+
     // chuyển đổi thành chuỗi truy vấn
     const queryString = Object.entries(query).map(([key, value]) => `${key.toLowerCase()}:${String(value.toLowerCase()).replace(/ /g, '+') + '"'}`).join(' ');
     console.log(queryString);
 
-    const data = await spotify.searchTracks(queryString, type || 'track', Number.parseInt(limit) || null);
+    data = await spotify.searchTracks(queryString, type || 'track', Number.parseInt(limit) || null);
+    data.map(track => dataFormated.push(formatTrack(track, null, null, null)));
+    console.log("toonrg", dataFormated.length)
     return res.status(200).json({
       message: 'Track search successful',
-      data,
+      data: dataFormated,
       success: true
     });
 
@@ -111,14 +263,44 @@ const searchTracks = async (req, res) => {
 
 const searchPlaylists = async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: 'Name parameter is required' });
+    const { name, artist } = req.body;
+
+    if (!name && !artist) {
+      return res.status(400).json({ error: 'Name or artist parameter is required' });
     }
-    const data = await spotify.searchPlaylists(name);
+    const dataFormated = [];
+    let data = await Playlist.findAll(
+      { where: { name: { [Op.iLike]: '%' + name.toLowerCase() + '%' } } }
+    );
+
+    console.log('data playlsist', data.length);
+    if (data.length > 0) {
+      for (const playlist of data) {
+        let user = null;
+        if (playlist.userId) {
+          user = await User.findByPk(playlist.userId);
+        }
+        const itemFormat = formatPlaylist(playlist, user);
+        dataFormated.push(itemFormat);
+      }
+    }
+    console.log('dataFormated 1', dataFormated);
+
+    if (dataFormated.length > 20) {
+      return res.status(200).json({
+        message: 'Playlist search successful',
+        data: dataFormated,
+        success: true
+      });
+    }
+
+    data = await spotify.searchPlaylists({ name, artist });
+    console.log(data[0])
+    data.map(item => dataFormated.push(formatPlaylist(item, null)));
+
     return res.status(200).json({
       message: 'Playlist search successful',
-      data,
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -128,14 +310,46 @@ const searchPlaylists = async (req, res) => {
 
 const searchAlbums = async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: 'Name parameter is required' });
+    const { name, artist } = req.body;
+    if (!name && !artist) {
+      return res.status(400).json({ error: 'Name or artist parameter is required' });
     }
-    const data = await spotify.searchAlbums(name);
+
+    const dataFormated = [];
+    let data = await Album.findAll(
+      {
+        where: { name: { [Op.like]: '%' + name + '%' } },
+        include: { model: Artist, as: 'artists' }
+      });
+    if (data.length > 0) {
+      data.forEach(album => {
+        const dataArtist = [];
+        album.artists.forEach(artist => {
+          dataArtist.push(artist)
+        });
+        const itemFormat = formatAlbum(album, dataArtist)
+        dataFormated.push(itemFormat);
+      })
+    }
+
+    console.log('local', dataFormated)
+    if (data.length > 20) {
+      return res.status(200).json({
+        message: 'Album search successful',
+        data: dataFormated,
+        success: true
+      });
+    }
+
+    data = await spotify.searchAlbums({ name, artist });
+    data.map(item => {
+      const itemFormat = formatAlbum(item, []);
+      dataFormated.push(itemFormat);
+    });
+
     return res.status(200).json({
       message: 'Album search successful',
-      data,
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -143,16 +357,44 @@ const searchAlbums = async (req, res) => {
   }
 };
 
+
 const searchArtists = async (req, res) => {
   try {
     const { name } = req.body;
     if (!name) {
       return res.status(400).json({ error: 'Name parameter is required' });
     }
-    const data = await spotify.searchArtists(name);
+
+    const dataFormated = [];
+    let data = await Artist.findAll({
+      where: { name: { [Op.iLike]: '%' + name + '%' } },
+      include: { model: Genres, as: 'genres' }
+    });
+
+    if (data.length > 0) {
+      for (const artist of data) {
+        const genres = [];
+        for (const genre of artist.genres) {
+          genres.push(genre.name);
+        }
+        console.log(genres)
+        const itemFormat = formatArtist(artist, genres);
+        dataFormated.push(itemFormat);
+      }
+    }
+
+    if (dataFormated.length > 20) {
+      return res.status(200).json({
+        message: 'Artist search successful',
+        data: dataFormated,
+        success: true
+      });
+    }
+    data = await spotify.searchArtists(name);
+    data.map(item => { dataFormated.push(formatArtist(item, null)) });
     return res.status(200).json({
       message: 'Artist search successful',
-      data,
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -163,16 +405,59 @@ const searchArtists = async (req, res) => {
 const getTracksFromPlaylist = async (req, res) => {
   try {
     const { playlistId } = req.params;
-    const data = await spotify.getPlaylistTracks(playlistId);
+    const { type } = req.body;
+    let playlist = null;
+    let data = [];
+    const dataFormated = [];
+    if (type === 'local') {
+      playlist = await Playlist.findByPk(playlistId, {
+        include: [{ model: PlaylistTrack }]
+      })
+
+      if (playlist.PlaylistTracks.length > 0) {
+        for (const item of playlist.PlaylistTracks) {
+          const spotifyId = item.trackSpotifyId;
+          let album = null;
+          let artist = [];
+          if (spotifyId) {
+            let track = await Track.findOne({
+              where: { spotifyId },
+              include: [
+                { model: Album },
+                { model: Artist, as: 'artists' }
+              ]
+            });
+
+            if (!track) {
+              track = await spotify.findTrackById(spotifyId);
+              console.log(track)
+            } else {
+              album = track.Album;
+              artist = [];
+              for (const a of track.artists) {
+                artist.push(a);
+              }
+            }
+            const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+            dataFormated.push(itemFormat);
+          }
+        }
+      }
+    } else if (type === 'api') {
+      data = await spotify.getPlaylistTracks(playlistId);
+      data.map(track => dataFormated.push(formatTrack(track, null, null, null)))
+    }
 
     console.log('paylistId: ', playlistId)
-    if (!data || data.length === 0) {
+    if (!dataFormated || dataFormated.length === 0) {
       return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong playlist này', success: false });
     }
 
+    console.log('Tổng: ',dataFormated.length)
+
     return res.status(200).json({
       message: 'Get tracks from playlist successful',
-      data,
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -185,7 +470,7 @@ const getTracksFromAlbum = async (req, res) => {
     const { albumId } = req.params;
     console.log(albumId)
 
-    const existingAlbum = await Album.findOne(
+    let data = await Album.findOne(
       {
         where: { spotifyId: albumId },
         include: {
@@ -201,49 +486,68 @@ const getTracksFromAlbum = async (req, res) => {
         }
       });
 
-    console.log('existingAlbum', existingAlbum);
-
-    // Nếu album đã tồn tại trong cơ sở dữ liệu, có thể sử dụng dữ liệu đó
-    if (existingAlbum) {
+    if (data) {
       console.log('local')
+
+      const dataFormated = []
+      for (const track of data.Tracks) {
+        const artists = [];
+        for (const artist of track.artists) {
+          artists.push(artist);
+        }
+        const itemFormat = formatTrack(track, artists, data, null);
+        dataFormated.push(itemFormat);
+      }
+
       return res.status(200).json({
-        message: 'Get tracks from album successful (from database)',
-        data: existingAlbum.Tracks,
+        message: 'Lấy nhạc thành công',
+        data: dataFormated,
         success: true
       });
     } else {
       console.log('api')
-      const data = await spotify.getAlbumTracks(albumId);
+      let albumData = null;
+      Promise.all([
+        albumData = formatAlbum(await spotify.findAlbumById(albumId), null),
+        data = await spotify.getAlbumTracks(albumId)
+      ]);
+      const dataFormated = data.map(item => formatTrack(item, null, albumData, null));
       return res.status(200).json({
-        message: 'Get tracks from album successful',
-        data,
+        message: 'Lấy nhạc thành công',
+        data: dataFormated,
         success: true
       });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to get tracks from album on Spotify' });
+    res.status(500).json({ message: error.message || 'Lỗi không xác định' });
   }
 };
 
 const getPlaylistsForYou = async (req, res) => {
   try {
-    const { playlistName, limit } = req.body;
+    const { playlistName } = req.body;
     const playlists = [];
+    const dataFormated = [];
 
     if (playlistName?.length === 0) {
       return res.status(200).json({ message: 'Playlist name parameter is required', success: false });
     }
 
     for (const name of playlistName) {
-      const responsePlaylist = await spotify.searchPlaylists(name, limit);
+      const responsePlaylist = await spotify.searchPlaylists({ name });
       playlists.push(...responsePlaylist);
+    }
+
+    for (const playlist of playlists) {
+      console.log(playlist)
+      dataFormated.push(formatPlaylist(playlist, null));
     }
 
     console.log('tổng số playlist nhận được: ', playlists.length);
 
     return res.status(200).json({
       message: 'Get personalized playlists successful',
-      data: playlists,
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -253,21 +557,26 @@ const getPlaylistsForYou = async (req, res) => {
 
 const getAlbumsForYou = async (req, res) => {
   try {
-    const { albumName, limit } = req.body;
+    const { albumName } = req.body;
     const albums = [];
+    const dataFormated = [];
 
     if (albumName.length === 0) {
       return res.status(200).json({ message: 'Album name parameter is required', success: false });
     }
 
     for (const name of albumName) {
-      const responseAlbum = await spotify.searchAlbums(name, limit);
+      const responseAlbum = await spotify.searchAlbums({ name });
       albums.push(...responseAlbum);
+    }
+
+    for (const album of albums) {
+      dataFormated.push(formatAlbum(album, null));
     }
 
     return res.status(200).json({
       message: 'Album search successful',
-      data: albums,
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -277,21 +586,27 @@ const getAlbumsForYou = async (req, res) => {
 
 const getArtistsForYou = async (req, res) => {
   try {
-    const { artistName, limit } = req.body;
+    const { artistName } = req.body;
     const artists = [];
+    const dataFormated = [];
 
     if (artistName.length === 0) {
       return res.status(200).json({ message: 'Artist name parameter is required', success: false });
     }
 
     for (const name of artistName) {
-      const responseArtist = await spotify.searchArtists(name, limit);
+      const responseArtist = await spotify.searchArtists({ name });
       artists.push(...responseArtist);
+    }
+
+    for (const artist of artists) {
+      console.log(artist)
+      dataFormated.push(formatArtist(artist, null));
     }
 
     return res.status(200).json({
       message: 'Get artist for you successful',
-      data: artists,
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -301,11 +616,19 @@ const getArtistsForYou = async (req, res) => {
 
 const getMyPlaylists = async (req, res) => {
   try {
-    const playlists = await Playlist.findAll({ where: { userId: req.user.id } });
+    const user = await User.findByPk(req.user.id, {
+      include: [{ model: Playlist }]
+    })
+    const dataFormated = [];
+    if (!user) return res.status(404).json({ message: 'Người dùng không tìm thấy', success: false });
+    console.log(user);
+    for (const playlist of user.Playlists) {
+      dataFormated.push(formatPlaylist(playlist, user));
+    }
 
     return res.status(200).json({
       message: 'Get my playlists successful',
-      data: playlists,
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -313,6 +636,90 @@ const getMyPlaylists = async (req, res) => {
   }
 };
 
+const addTrackToPlaylist = async (req, res) => {
+  try {
+    const { playlistId } = req.params;
+    const { trackId, trackSpotifyId } = req.body;
+    const userId = req.user.id;
+    const data = {};
+
+    console.log(req.params);
+    console.log(req.body);
+
+    if (playlistId) data.playlistId = playlistId;
+    if (trackId) data.trackId = trackId;
+    if (trackSpotifyId) data.trackSpotifyId = trackSpotifyId;
+
+    const isExisting = await Playlist.findByPk(playlistId, {
+      include: [
+        {
+          model: PlaylistTrack,
+          attributes: ['id', 'playlistId', 'trackId', 'trackSpotifyId'],
+          order: [['createdAt', 'ASC']]
+        }
+      ]
+    });
+
+    if (!isExisting) {
+      return res.status(400).json({
+        message: 'Không tìm thấy playlist',
+        success: false
+      })
+    }
+
+    if (isExisting.userId !== userId) {
+      return res.status(403).json({
+        message: 'Bạn không có quyền thêm bài hát vào playlist này',
+        success: false
+      });
+    }
+
+    const isExistingTrackInPlaylist = isExisting.PlaylistTracks.some(pt => {
+      if (trackId) {
+        return pt.trackId === trackId;
+      }
+      if (trackSpotifyId) {
+        return pt.trackSpotifyId === trackSpotifyId;
+      }
+    });
+
+    if (isExistingTrackInPlaylist) {
+      return res.status(200).json({
+        message: 'Bài hát đã tồn tại trong playlist. Bạn có muốn thêm lần nữa không?',
+        success: false,
+        isExisting: true
+      });
+    }
+
+    await PlaylistTrack.create(data);
+    return res.status(200).json({
+      message: 'Thêm bài hát vào playlist thành công',
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to add track to playlist' });
+  }
+};
+
+const addTrackToPlaylistAfterConfirm = async (req, res) => {
+  try {
+    const { playlistId } = req.params;
+    const { trackId, trackSpotifyId } = req.body;
+    const data = {};
+    if (playlistId) data.playlistId = playlistId;
+    if (trackId) data.trackId = trackId;
+    if (trackSpotifyId) data.trackSpotifyId = trackSpotifyId;
+
+    await PlaylistTrack.create(data);
+    return res.status(200).json({
+      message: 'Thêm bài hát vào playlist thành công',
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to add track to playlist after confirm' });
+  }
+};
 
 module.exports = {
   findSpotifyPlaylist,
@@ -329,5 +736,7 @@ module.exports = {
   searchTracks,
   searchPlaylists,
   searchAlbums,
-  searchArtists
+  searchArtists,
+  addTrackToPlaylist,
+  addTrackToPlaylistAfterConfirm
 };

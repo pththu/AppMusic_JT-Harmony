@@ -1,10 +1,12 @@
 import { usePlayerStore } from '@/store/playerStore';
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 
 export default function PlaylistItem({ title, type, songs, image, onPress = () => { }, onOptionsPress = () => { } }) {
+
+  const colorScheme = useColorScheme();
 
   const formatTitle = (title: string) => {
     const maxLength = 20;
@@ -24,10 +26,7 @@ export default function PlaylistItem({ title, type, songs, image, onPress = () =
         className="w-32 h-32 rounded-md shadow-md"
       />
       <View className="flex-1 justify-center">
-        <Text className="text-white text-base font-semibold">{formatTitle(title)}</Text>
-        {/* <Text className="text-gray-400 text-sm">
-          {songs} bài hát
-        </Text> */}
+        <Text className={`text-sm mt-2 font-semibold ${colorScheme === 'dark' ? 'text-gray-400' : 'text-black'}`}>{formatTitle(title)}</Text>
       </View>
     </TouchableOpacity>
   );

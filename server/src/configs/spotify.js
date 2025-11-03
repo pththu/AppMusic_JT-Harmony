@@ -1,81 +1,11 @@
 require('dotenv').config();
 const axios = require('axios');
-const { DATE } = require('sequelize');
-const { format } = require('sequelize/lib/utils');
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
 
 let accessToken = null;
-
-const formatTrack = (track) => ({
-  spotifyId: track.id || null,
-  videoId: null,
-  name: track.name || null,
-  artists: [
-    ...track.artists.map(artist => ({
-      spotifyId: artist?.id || null,
-      name: artist?.name || null,
-    })),
-  ],
-  album: {
-    spotifyId: track.album?.id || null,
-    name: track.album?.name || null,
-    imageUrl: track.album?.images[0]?.url || null,
-  },
-  duration: track.duration_ms,
-  href: track.href,
-  type: track.type,
-  explicit: track.explicit,
-  trackNumber: track.track_number,
-  discNumber: track.disc_number,
-  uri: track.uri,
-  externalUrl: track.external_urls.spotify,
-  imageUrl: track.album.images[0]?.url,
-  playCount: 0,
-  shareCount: 0,
-});
-
-const formatPlaylist = (playlist) => ({
-  id: null,
-  spotifyId: playlist.id,
-  name: playlist.name,
-  owner: {
-    spotifyId: playlist.owner.id,
-    name: playlist.owner.display_name,
-  },
-  description: playlist.description,
-  imageUrl: playlist.images[0]?.url,
-  totalTracks: playlist.tracks.total,
-  isPublic: playlist.public,
-  type: playlist.type,
-});
-
-const formatAlbum = (album) => ({
-  spotifyId: album.id,
-  name: album.name,
-  artists: [
-    ...album.artists.map(artist => ({
-      spotifyId: artist.id,
-      name: artist.name
-    })),
-  ],
-  imageUrl: album.images[0]?.url,
-  releaseDate: album.release_date ? new Date(album.release_date).toISOString() : null,
-  totalTracks: album.total_tracks,
-  externalUrl: album.external_urls.spotify,
-  type: album.type,
-});
-
-const formatArtist = (artist) => ({
-  spotifyId: artist.id,
-  name: artist.name,
-  genres: artist.genres,
-  imageUrl: artist.images[0]?.url,
-  totalFollowers: artist.followers.total,
-  type: artist.type,
-});
 
 /** Lấy Access Token từ Spotify để xác thực các yêu cầu API. */
 const getAccessToken = async () => {
@@ -97,7 +27,7 @@ const getAccessToken = async () => {
   }
 };
 
-/* Lấy token lần đầu và tự động làm mới sau mỗi 55 phút và Làm mới trước khi hết hạn (thường là 60 phút) */
+/* Lấy token lần đầu và tự động làm mới sau mỗi 55 phút và Làm mới trước khi hết hạn */
 getAccessToken();
 setInterval(getAccessToken, 1000 * 60 * 55);
 
@@ -107,12 +37,9 @@ const spotifyApiRequest = async (endpoint, params = {}) => {
     throw new Error('Spotify access token is not available.');
   }
 
-  console.log('params', params);
   try {
     const response = await axios.get(`${SPOTIFY_API_URL}${endpoint}`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+      headers: { 'Authorization': `Bearer ${accessToken}` },
       ...(params ? { params: params } : {})
     });
     return response.data;
@@ -122,10 +49,10 @@ const spotifyApiRequest = async (endpoint, params = {}) => {
   }
 };
 
-const findTrackById = async (trackId) => formatTrack(await spotifyApiRequest(`/tracks/${trackId}`));
-const findArtistById = async (artistId) => formatArtist(await spotifyApiRequest(`/artists/${artistId}`));
-const findAlbumById = async (albumId) => formatAlbum(await spotifyApiRequest(`/albums/${albumId}`));
-const findPlaylistById = async (playlistId) => formatPlaylist(await spotifyApiRequest(`/playlists/${playlistId}`));
+const findTrackById = async (trackId) => await spotifyApiRequest(`/tracks/${trackId}`);
+const findArtistById = async (artistId) => await spotifyApiRequest(`/artists/${artistId}`);
+const findAlbumById = async (albumId) => await spotifyApiRequest(`/albums/${albumId}`);
+const findPlaylistById = async (playlistId) => await spotifyApiRequest(`/playlists/${playlistId}`);
 
 /**
  * Tìm kiếm bài hát hoặc nhiều bài hát trên Spotify
@@ -141,24 +68,31 @@ const searchTracks = async (query, type, limit = null) => {
       type: type,
       ...(limit ? { limit: limit } : {})
     });
-    const formattedTracks = tracksData.tracks.items.map(formatTrack);
-    return formattedTracks;
+    return tracksData.tracks.items;
   } catch (error) {
     console.error(`Error searching Spotify:`, error.response ? error.response.data : error.message);
     throw error;
   }
 };
 
-/** Hàm để tìm id playlist từ tên playlist 
- * B1. Vòng lặp cho đến khi không còn trang tiếp theo (nextUrl không phải là null)
- * B2. Lọc bỏ các item null trong trang hiện tại
- * B3. Thêm các playlist hợp lệ vào mảng tổng
- * B4. Cập nhật nextUrl cho vòng lặp tiếp theo
- */
-const searchPlaylists = async (query, limit) => {
+const searchPlaylists = async (searchParams, limit) => {
+  const { name, artist } = searchParams;
+  let queryParts = [];
+  if (name) queryParts.push(`playlist:${name}`);
+  if (artist) {
+    if (Array.isArray(artist)) {
+      // Nếu là mảng, thêm từng nghệ sĩ
+      artist.forEach(art => queryParts.push(`artist:${art}`));
+    } else {
+      // Nếu là string
+      queryParts.push(`artist:${artist}`);
+    }
+  }
+
+  const query = queryParts.join(' ');
+
   let allPlaylists = [];
   let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=playlist&limit=50`; // Bắt đầu với URL đầu tiên
-  // console.log(`Bắt đầu tìm kiếm tất cả playlist cho query: "${query}"`);
 
   try {
     while (nextUrl) {
@@ -172,26 +106,28 @@ const searchPlaylists = async (query, limit) => {
       const validItems = playlistsPage.items.filter(Boolean);
       allPlaylists = allPlaylists.concat(validItems);
       nextUrl = playlistsPage.next;
-      // console.log(`Đã lấy được ${validItems.length} playlist. Tổng cộng: ${allPlaylists.length}. Đang tải trang tiếp theo...`);
       if (allPlaylists.length >= 3) {
-        // console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
         break;
       }
     }
 
-    // console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allPlaylists.length} playlist.`);
-    // console.log(allPlaylists[0])
-    return shuffle(allPlaylists).slice(0, limit).map((playlist) => formatPlaylist(playlist));
+    return shuffle(allPlaylists).slice(0, 20).map((playlist) => playlist);
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm playlist trên Spotify:`, error.response ? error.response.data : error.message);
     throw error;
   }
 }
 
-const searchAlbums = async (query, limit) => {
+const searchAlbums = async (searchParams) => {
+  const { name, artist } = searchParams;
+  let queryParts = [];
+  if (name) queryParts.push(`album:${name}`);
+  if (artist) queryParts.push(`artist:${artist}`);
+
+  const query = queryParts.join(' ');
+
   let allAlbums = [];
-  let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=album&limit=50`; // Bắt đầu với URL đầu tiên
-  // console.log(`Bắt đầu tìm kiếm tất cả album cho query: "${query}"`);
+  let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=album&limit=25`; // Bắt đầu với URL đầu tiên
 
   try {
     while (nextUrl) {
@@ -205,26 +141,22 @@ const searchAlbums = async (query, limit) => {
       const validItems = albumPage.items.filter(Boolean);
       allAlbums = allAlbums.concat(validItems);
       nextUrl = albumPage.next;
-      // console.log(`Đã lấy được ${validItems.length} album. Tổng cộng: ${allAlbums.length}. Đang tải trang tiếp theo...`);
       if (allAlbums.length >= 3) {
-        // console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
         break;
       }
     }
 
-    // console.log(`Tìm kiếm hoàn tất! Tổng cộng tìm thấy ${allAlbums.length} album.`);
-    return shuffle(allAlbums).slice(0, limit).map((album) => formatAlbum(album));
+    return shuffle(allAlbums).slice(0, 20).map((album) => album);
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm album trên Spotify:`, error.response ? error.response.data : error.message);
     throw error;
   }
 };
 
-const searchArtists = async (query, limit) => {
+const searchArtists = async (query) => {
   try {
     let allArtists = [];
-    let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=50`; // Bắt đầu với URL đầu tiên
-    // console.log(`Bắt đầu tìm kiếm tất cả nghệ sĩ cho query: "${query}"`);
+    let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=30`; // Bắt đầu với URL đầu tiên
 
     while (nextUrl) {
       const response = await axios.get(nextUrl, {
@@ -234,17 +166,27 @@ const searchArtists = async (query, limit) => {
       });
 
       const artistPage = response.data.artists;
-      const validItems = artistPage.items.filter(Boolean);
+      const validItems = artistPage.items.filter(item => {
+        const invalidNames = ["Object Object", "[object Object]"];
+        if (!item) return false;
+
+        const itemName = item.name;
+        if (!itemName) return false;
+
+        const lowerCaseName = String(itemName).toLowerCase();
+        const isInvalid = invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
+
+        return !isInvalid;
+      });
+
       allArtists = allArtists.concat(validItems);
       nextUrl = artistPage.next;
-      // console.log(`Đã lấy được ${validItems.length} nghệ sĩ. Tổng cộng: ${allArtists.length}. Đang tải trang tiếp theo...`);
-      if (allArtists.length >= limit) {
-        // console.log('Đã đủ số lượng, dừng tìm kiếm thêm.');
+      if (allArtists.length >= 3) {
         break;
       }
     }
 
-    return allArtists.slice(0, limit).map((artist) => formatArtist(artist));
+    return allArtists.slice(0, 12).map((artist) => artist);
   } catch (error) {
     console.error(`Error searching artists on Spotify:`, error.response ? error.response.data : error.message);
     throw error;
@@ -254,12 +196,7 @@ const searchArtists = async (query, limit) => {
 const getPlaylistTracks = async (playlistId) => {
   try {
     const tracksData = await spotifyApiRequest(`/playlists/${playlistId}/tracks`);
-    tracksData.items.map(item => {
-      if (!item.track) {
-        console.log('track null: ', item);
-      }
-    });
-    return tracksData.items.filter(item => item.track).map(item => formatTrack(item.track));
+    return tracksData.items.filter(item => item.track.name).map(item => item.track);
   } catch (error) {
     console.error(`Error getting tracks from playlist on Spotify:`, error.response ? error.response.data : error.message);
     throw error;
@@ -269,25 +206,7 @@ const getPlaylistTracks = async (playlistId) => {
 const getAlbumTracks = async (albumId) => {
   try {
     const tracksData = await spotifyApiRequest(`/albums/${albumId}/tracks`);
-    return tracksData.items.map(item => ({
-      spotifyId: item.id,
-      name: item.name,
-      lyrics: "",
-      externalUrl: item.external_urls.spotify,
-      duration: item.duration_ms,
-      artists: [
-        ...item.artists.map(artist => ({
-          spotifyId: artist.id,
-          name: artist.name,
-        })),
-      ],
-      discNumber: item.disc_number,
-      trackNumber: item.track_number,
-      type: item.type,
-      explicit: item.explicit,
-      playCount: 0,
-      shareCount: 0
-    }));
+    return tracksData.items.map(item => item);
   } catch (error) {
     console.error(`Error getting album tracks from Spotify:`, error.response ? error.response.data : error.message);
     throw error;
@@ -306,7 +225,6 @@ const shuffle = (array) => {
       array[randomIndex], array[currentIndex]
     ];
   }
-
   return array;
 }
 
@@ -317,5 +235,8 @@ module.exports = {
   searchArtists,
   getPlaylistTracks,
   getAlbumTracks,
-  findAlbumById
+  findAlbumById,
+  findPlaylistById,
+  findTrackById,
+  findArtistById
 };

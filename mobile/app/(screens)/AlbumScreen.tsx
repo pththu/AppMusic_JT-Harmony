@@ -33,7 +33,7 @@ const AlbumScreen = () => {
       if (albumData) {
         const response = await GetTracksByAlbumId(albumData.spotifyId);
         if (response.success) {
-          response.data.map(track => {
+          response.data?.map(track => {
             track.imageUrl = albumData.imageUrl;
           })
           setTracks(response.data);

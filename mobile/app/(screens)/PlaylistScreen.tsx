@@ -214,7 +214,7 @@ export default function PlaylistScreen() {
       if (currentPlaylist?.spotifyId) {
         const response = await GetTracksByPlaylistId({
           playlistId: currentPlaylist.spotifyId,
-          type: 'spotify'
+          type: 'api'
         });
         if (response.success) {
           setTracks(response.data);
@@ -337,7 +337,7 @@ export default function PlaylistScreen() {
             </Text>
           </View>
           <View className="flex-row items-start justify-start gap-2">
-            <Text className={`text-white text-wrap text-md ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <Text className={`text-wrap text-sm ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               {playlist?.description || '...'}
             </Text>
           </View>

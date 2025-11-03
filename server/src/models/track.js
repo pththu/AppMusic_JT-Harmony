@@ -28,7 +28,7 @@ const Track = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true
     },
-    externalUrl: { // youtube link
+    externalUrl: {
       type: DataTypes.STRING,
       allowNull: true,
       field: 'external_url'

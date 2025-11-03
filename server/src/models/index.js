@@ -162,6 +162,24 @@ PlaylistTrack.belongsTo(Track, { foreignKey: 'trackId', onDelete: 'CASCADE', hoo
 Playlist.hasMany(PlaylistTrack, { foreignKey: 'playlistId', onDelete: 'CASCADE', hooks: true });
 PlaylistTrack.belongsTo(Playlist, { foreignKey: 'playlistId', onDelete: 'CASCADE', hooks: true });
 
+// Track.belongsToMany(Playlist, {
+//     through: PlaylistTrack,
+//     foreignKey: 'trackId',
+//     otherKey: 'playlistId',
+//     as: 'playlists',
+//     onDelete: 'CASCADE',
+//     hooks: true
+// });
+
+// Playlist.belongsToMany(Track, {
+//     through: PlaylistTrack,
+//     foreignKey: 'playlistId',
+//     otherKey: 'trackId',
+//     as: 'tracks',
+//     onDelete: 'CASCADE',
+//     hooks: true
+// });
+
 // Like - User & Post
 Like.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 Like.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });

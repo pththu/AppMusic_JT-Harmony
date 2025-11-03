@@ -65,7 +65,7 @@ export default function MiniPlayer() {
             {currentTrack.name}
           </Text>
           <Text className="text-gray-600 dark:text-gray-400 text-xs">
-            {currentTrack.artists.map(artist => artist.name).join(", ")}
+            {currentTrack?.artists?.map(artist => artist.name).join(", ")}
           </Text>
         </View>
 

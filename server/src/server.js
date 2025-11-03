@@ -143,7 +143,7 @@ async function startServer() {
         // await sequelize.sync({ alter: true });
         // // await sequelize.sync();
         // console.log('✅ Database synchronized successfully')
-        await seedDatabase();
+        // await seedDatabase();
 
         server.listen(process.env.PORT || 3000, () => {
             console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);

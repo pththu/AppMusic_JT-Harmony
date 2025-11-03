@@ -39,12 +39,9 @@ export const GetArtistsForYou = async (payload) => {
 
 export const GetTracksByPlaylistId = async (payload) => {
   try {
-    let response = null;
-    if (payload.type === 'local') {
-      response = await axiosClient.get(`/playlists/${payload.playlistId}/tracks`);
-    } else if (payload.type === 'spotify') {
-      response = await axiosClient.get(`/music/playlist/${payload.playlistId}/tracks`);
-    }
+    const response = await axiosClient.post(`music/playlist/${payload.playlistId}/tracks`, {
+      type: payload.type
+    })
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -67,6 +64,36 @@ export const GetMyPlaylists = async () => {
     return response.data;
   } catch (error) {
     console.log(error.message);
+    throw error;
+  }
+}
+
+export const AddTrackToPlaylist = async (payload) => {
+  try {
+    console.log('payload 1 api: ', payload);
+    const response = await axiosClient.post(`/music/playlist/${payload.playlistId}/add-track`, {
+      trackId: payload.trackId,
+      trackSpotifyId: payload.trackSpotifyId
+    });
+    console.log('response add 1 api: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error.message)
+    throw error;
+  }
+};
+
+export const AddTrackToPlaylistAfterConfirm = async (payload) => {
+  try {
+    console.log('payload 2 api: ', payload);
+    const response = await axiosClient.post(`/music/playlist/${payload.playlistId}/add-track-confirm`, {
+      trackId: payload.trackId,
+      trackSpotifyId: payload.trackSpotifyId
+    });
+    console.log('response add 2 api: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error.data);
     throw error;
   }
 }

@@ -1,4 +1,6 @@
-const { Playlist, PlaylistTrack } = require('../models');
+const { Playlist, PlaylistTrack, Track } = require('../models');
+const Op = require('sequelize').Op;
+const spotify = require('../configs/spotify');
 
 exports.getAllPlaylist = async (req, res) => {
   try {
@@ -52,33 +54,6 @@ exports.createOne = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-};
-
-exports.GetTracksFromPlaylist = async (req, res) => {
-  try {
-    const { playlistId } = req.params;
-    const data = await Playlist.findByPk(playlistId, {
-      include: [
-        {
-          model: PlaylistTrack,
-          attributes: ['id', 'playlistId', 'trackId', 'trackSpotifyId'],
-          order: [['createdAt', 'ASC']]
-        }
-      ]
-    });
-
-    if (!data) {
-      return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong playlist này', success: false });
-    }
-
-    res.status(200).json({
-      message: 'Lấy danh sách bài hát trong playlist thành công',
-      success: true,
-      data
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to get tracks from playlist on Spotify' });
   }
 };
 
@@ -136,5 +111,3 @@ exports.deletePlaylist = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-

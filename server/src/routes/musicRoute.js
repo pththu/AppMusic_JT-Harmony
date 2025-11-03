@@ -12,8 +12,12 @@ router.post('/playlist', musicController.findPlaylistById);
 router.get('/mine/playlists', musicController.getMyPlaylists);
 
 router.get('/album/:albumId/tracks', musicController.getTracksFromAlbum);
-router.get('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
+
+router.post('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
 router.post('/playlist-for-you', musicController.getPlaylistsForYou);
+router.post('/playlist/:playlistId/add-track', musicController.addTrackToPlaylist);
+router.post('/playlist/:playlistId/add-track-confirm', musicController.addTrackToPlaylistAfterConfirm);
+
 router.post('/album-for-you', musicController.getAlbumsForYou);
 router.post('/artist-for-you', musicController.getArtistsForYou);
 
