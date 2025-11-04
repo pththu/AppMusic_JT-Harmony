@@ -103,8 +103,8 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
         removeTrackFromState(setFavoriteData, track.spotifyId);
         removeTrackFromState(setRecommendData, track.spotifyId);
 
-        updateTotalTracksInCurrentPlaylist(currentPlaylist.totalTracks + 1);
-        updateTotalTracksInMyPlaylists(currentPlaylist.id, currentPlaylist.totalTracks + 1);
+        updateTotalTracksInCurrentPlaylist(1);
+        updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
         addTrackToPlaylist(response.data);
 
         success('Thành công', 'Đã thêm bài hát vào danh sách phát.');
@@ -126,8 +126,8 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
                 removeTrackFromState(setFavoriteData, track.spotifyId);
                 removeTrackFromState(setRecommendData, track.spotifyId);
 
-                updateTotalTracksInCurrentPlaylist(currentPlaylist.totalTracks + 1);
-                updateTotalTracksInMyPlaylists(currentPlaylist.id, currentPlaylist.totalTracks + 1);
+                updateTotalTracksInCurrentPlaylist(1);
+                updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
                 addTrackToPlaylist(response.data);
 
                 success('Thành công', 'Đã thêm bài hát vào danh sách phát.');

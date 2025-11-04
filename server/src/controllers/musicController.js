@@ -720,6 +720,75 @@ const addTrackToPlaylist = async (req, res) => {
   }
 };
 
+const addTracksToPlaylists = async (req, res) => {
+  try {
+    const { playlistIds, trackIds } = req.body;
+    console.log(req.body)
+    let dataFormated = [];
+
+    if (!playlistIds || !trackIds || playlistIds.length === 0 || trackIds.length === 0) {
+      return res.status(400).json({ message: 'Playlist IDs and Track IDs are required', success: false });
+    }
+
+    for (const trackId of trackIds) {
+      const track = await spotify.findTrackById(trackId)
+      if (!track) continue;
+      dataFormated.push(formatTrack(track, null, null, null));
+    }
+
+    for (const playlistId of playlistIds) {
+      let data = [];
+
+      if (!playlistId) continue;
+
+      const playlist = await Playlist.findByPk(playlistId, {
+        include: [
+          {
+            model: PlaylistTrack,
+            attributes: ['id', 'playlistId', 'trackId', 'trackSpotifyId'],
+            order: [['createdAt', 'ASC']]
+          }
+        ]
+      });
+      console.log(playlist)
+
+      if (!playlist) {
+        return res.status(400).json({
+          message: `Không tìm thấy playlist với ID: ${playlistId}`,
+          success: false
+        })
+      }
+
+      for (const trackId of trackIds) {
+        data.push({
+          playlistId: playlistId,
+          trackSpotifyId: trackId
+        })
+      }
+
+      const row = await PlaylistTrack.bulkCreate(data, { ignoreDuplicates: true });
+      if (!row) {
+        return res.status(500).json({
+          message: 'Thêm bài hát vào playlist thất bại',
+          success: false
+        });
+      }
+
+      playlist.totalTracks += trackIds.length;
+      await playlist.save();
+    }
+
+    return res.status(200).json({
+      message: 'Thêm bài hát vào playlist thành công',
+      data: dataFormated,
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to add tracks to playlists' });
+  }
+};
+
 const addTrackToPlaylistAfterConfirm = async (req, res) => {
   try {
     const { playlistId } = req.params;
@@ -776,5 +845,6 @@ module.exports = {
   searchAlbums,
   searchArtists,
   addTrackToPlaylist,
-  addTrackToPlaylistAfterConfirm
+  addTrackToPlaylistAfterConfirm,
+  addTracksToPlaylists,
 };

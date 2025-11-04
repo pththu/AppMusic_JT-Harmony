@@ -53,7 +53,6 @@ interface PlayerState {
   removeTrackFromQueue: (tracks: any[]) => void;
   clearQueue: () => void;
   clear: () => void;
-  clearCurrent: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -119,7 +118,7 @@ export const usePlayerStore = create<PlayerState>()(
           set({
             currentPlaylist: {
               ...currentPlaylist,
-              totalTracks: total,
+              totalTracks: currentPlaylist.totalTracks + total,
             }
           });
         }
@@ -131,7 +130,7 @@ export const usePlayerStore = create<PlayerState>()(
           if (p.id === playlistId) {
             return {
               ...p,
-              totalTracks: total,
+              totalTracks: p.totalTracks + total,
             };
           }
           return p;
@@ -238,10 +237,6 @@ export const usePlayerStore = create<PlayerState>()(
         repeatMode: 'none',
         isLoading: false,
         isMiniPlayerVisible: false,
-      }),
-      clearCurrent: () => set({
-        currentPlaylist: null,
-        playlistTracks: []
       }),
     }),
 

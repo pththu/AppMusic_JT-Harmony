@@ -17,6 +17,7 @@ router.post('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylis
 router.post('/playlist-for-you', musicController.getPlaylistsForYou);
 router.post('/playlist/:playlistId/add-track', musicController.addTrackToPlaylist);
 router.post('/playlist/:playlistId/add-track-confirm', musicController.addTrackToPlaylistAfterConfirm);
+router.post('/playlist/add-tracks', musicController.addTracksToPlaylists);
 
 router.post('/album-for-you', musicController.getAlbumsForYou);
 router.post('/artist-for-you', musicController.getArtistsForYou);

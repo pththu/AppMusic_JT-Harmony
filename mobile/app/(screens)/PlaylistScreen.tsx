@@ -19,7 +19,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
-import { CreatePlaylist, DeletePlaylist, GetTracksByPlaylistId, UpdatePlaylist } from "@/services/musicService";
+import { AddTracksToPlaylists, CreatePlaylist, DeletePlaylist, GetTracksByPlaylistId, UpdatePlaylist } from "@/services/musicService";
 import { is, pl } from "date-fns/locale";
 import useAuthStore from "@/store/authStore";
 import PlaylistOptionModal from "@/components/modals/PlaylistOptionModal";
@@ -28,6 +28,7 @@ import EditPlaylistModal from "@/components/modals/EditPlaylistModal";
 import * as ImagePicker from 'expo-image-picker';
 import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
 import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
+import { set } from "date-fns";
 
 // Hằng số để xác định khi nào bắt đầu mờ/hiện header
 // 256px là chiều cao của ảnh (h-64). Bạn có thể điều chỉnh
@@ -38,12 +39,12 @@ export default function PlaylistScreen() {
   const playlistTracks = usePlayerStore((state) => state.playlistTracks);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
-  const addTrackToPlaylist = usePlayerStore((state) => state.addTrackToPlaylist);
   const setPlaylistTracks = usePlayerStore((state) => state.setPlaylistTracks);
   const updateCurrentPlaylist = usePlayerStore((state) => state.updateCurrentPlaylist);
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
+  const updateTotalTracksInCurrentPlaylist = usePlayerStore((state) => state.updateTotalTracksInCurrentPlaylist);
+  const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
-  const clearCurrent = usePlayerStore((state) => state.clearCurrent);
   const user = useAuthStore((state) => state.user);
   const { navigate } = useNavigate();
   const { info, error, success, confirm, warning } = useCustomAlert();
@@ -65,6 +66,7 @@ export default function PlaylistScreen() {
   const [description, setDescription] = useState(currentPlaylist?.description || '');
   const [image, setImage] = useState(currentPlaylist?.imageUrl);
   const [isPublic, setIsPublic] = useState(currentPlaylist?.isPublic || true);
+  const [trackIds, setTrackIds] = useState([]);
   const imageDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
 
 
@@ -192,9 +194,36 @@ export default function PlaylistScreen() {
     info('Chức năng tải playlist sẽ được cập nhật sau!');
   };
 
-  const handleAddToAnotherPlaylist = () => {
+  const handleAddToAnotherPlaylist = async (playlistIds) => {
     console.log('handleAddToAnotherPlaylist')
-    info('Chức năng thêm vào playlist khác sẽ được cập nhật sau!');
+    console.log(playlistIds);
+    if (!playlistTracks || !playlistTracks.length) {
+      warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
+      return;
+    }
+
+    if (!playlistIds || !playlistIds.length) {
+      warning('Vui lòng chọn ít nhất một playlist để thêm bài hát!');
+      return;
+    }
+
+    try {
+      const response = await AddTracksToPlaylists({
+        playlistIds: playlistIds,
+        trackSpotifyIds: trackIds
+      })
+
+      if (response.success) {
+        playlistIds.forEach(id => {
+          updateTotalTracksInMyPlaylists(id, playlistTracks.length);
+        });
+        success('Đã thêm bài hát vào playlist thành công!');
+      }
+
+    } catch (err) {
+      console.log(err);
+      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát vào playlist. Vui lòng thử lại sau.');
+    }
   };
 
   const handleAddToQueue = () => {
@@ -211,7 +240,6 @@ export default function PlaylistScreen() {
 
   useEffect(() => {
     const fetchTracks = async () => {
-
       setIsLoading(true);
       if (currentPlaylist?.spotifyId) {
         const response = await GetTracksByPlaylistId({
@@ -238,6 +266,10 @@ export default function PlaylistScreen() {
     };
 
     fetchTracks();
+    playlistTracks.forEach(track => {
+      setTrackIds(prev => [...prev, track.spotifyId]);
+    });
+
     console.log('currentPlaylist: ', currentPlaylist);
   }, []);
 

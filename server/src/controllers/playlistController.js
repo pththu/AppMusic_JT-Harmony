@@ -45,7 +45,7 @@ exports.createOne = async (req, res) => {
     }
 
     console.log(6)
-    const row = await Playlist.create({ name, description, imageUrl, isPublic, userId: req.user.id });
+    const row = await Playlist.create({ name, description, imageUrl, isPublic, userId: req.user.id, totalTracks: 0 });
     console.log(7)
     res.status(201).json({
       message: 'Tạo danh sách phát thành công',

@@ -110,6 +110,21 @@ export const AddTrackToPlaylistAfterConfirm = async (payload) => {
   }
 }
 
+export const AddTracksToPlaylists = async (payload) => {
+  try {
+    console.log(payload);
+    const response = await axiosClient.post(`/music/playlist/add-tracks`, {
+      playlistIds: payload.playlistIds,
+      trackIds: payload.trackSpotifyIds,
+    })
+    console.log('response add multiple api: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+}
+
 // create
 export const CreatePlaylist = async (payload) => {
   try {
