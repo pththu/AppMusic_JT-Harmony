@@ -2,7 +2,7 @@ const { Follow, User, sequelize } = require('../models');
 const Sequelize = require('sequelize'); // Import module gốc
 const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 
-// // 🆕 HÀM TIỆN ÍCH MỚI: Kiểm tra trạng thái follow của người dùng hiện tại đối với 1 người
+// //  HÀM TIỆN ÍCH MỚI: Kiểm tra trạng thái follow của người dùng hiện tại đối với 1 người
 // async function checkIsFollowing(currentUserId, targetUserId) {
 //     if (!currentUserId || currentUserId === targetUserId) {
 //         return false;
@@ -61,7 +61,7 @@ const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 // };
 
 // // ----------------------------------------------------
-// // 🆕 CHỨC NĂNG LẤY DANH SÁCH NGƯỜI THEO DÕI (FOLLOWERS)
+// //  CHỨC NĂNG LẤY DANH SÁCH NGƯỜI THEO DÕI (FOLLOWERS)
 // // ----------------------------------------------------
 // /**
 //  * Lấy danh sách những người đang theo dõi user có userId (Followers)
@@ -69,7 +69,7 @@ const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 //  */
 // exports.getUserFollowers = async(req, res) => {
 //     const userId = req.params.userId; // ID của người được theo dõi (Followee, vd: user7916)
-//     // 💡 Lấy ID của người dùng đang đăng nhập (vd: user2718)
+//     //  Lấy ID của người dùng đang đăng nhập (vd: user2718)
 //     const currentUserId = req.user.id;
 
 //     try {
@@ -93,7 +93,7 @@ const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 //             .filter(follow => follow.Follower)
 //             .map(follow => follow.Follower.get({ plain: true }));
 
-//         // ✅ THÊM LOGIC KIỂM TRA isFollowing
+//         //  THÊM LOGIC KIỂM TRA isFollowing
 //         const finalData = await Promise.all(rawUsers.map(async(user) => {
 //             const isFollowing = await checkIsFollowing(currentUserId, user.id);
 //             return {
@@ -113,7 +113,7 @@ const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 // };
 
 // // ----------------------------------------------------
-// // 🆕 CHỨC NĂNG LẤY DANH SÁCH ĐANG THEO DÕI (FOLLOWING)
+// //  CHỨC NĂNG LẤY DANH SÁCH ĐANG THEO DÕI (FOLLOWING)
 // // ----------------------------------------------------
 // /**
 //  * Lấy danh sách những người mà user có userId đang theo dõi (Following)
@@ -121,7 +121,7 @@ const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 //  */
 // exports.getUserFollowing = async(req, res) => {
 //     const userId = req.params.userId; // ID của người đang theo dõi (Follower, vd: user7916)
-//     // 💡 Lấy ID của người dùng đang đăng nhập (vd: user2718)
+//     //  Lấy ID của người dùng đang đăng nhập (vd: user2718)
 //     const currentUserId = req.user.id;
 
 //     try {
@@ -149,7 +149,7 @@ const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 //             .filter(follow => follow.Followee)
 //             .map(follow => follow.Followee.get({ plain: true }));
 
-//         // ✅ THÊM LOGIC KIỂM TRA isFollowing
+//         //  THÊM LOGIC KIỂM TRA isFollowing
 //         const finalData = await Promise.all(rawUsers.map(async(user) => {
 //             const isFollowing = await checkIsFollowing(currentUserId, user.id);
 //             return {

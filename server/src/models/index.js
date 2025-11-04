@@ -13,6 +13,8 @@ const Like = require('./like');
 const Conversation = require('./conversation');
 const ConversationMember = require('./conversationMember');
 const Message = require('./message');
+const MessageHide = require('./messageHide');
+const PostHide = require('./postHide');
 const FollowArtist = require('./follow_artist');
 const FollowUser = require('./follow_user');
 const PostReport = require('./postReport');
@@ -47,6 +49,14 @@ PostReport.belongsTo(User, { foreignKey: 'reporterId', as: 'Reporter' });
 // Post - PostReport
 Post.hasMany(PostReport, { foreignKey: 'postId' });
 PostReport.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+
+// User - PostHide
+User.hasMany(PostHide, { foreignKey: 'userId' });
+PostHide.belongsTo(User, { foreignKey: 'userId', as: 'User' });
+
+// Post - PostHide
+Post.hasMany(PostHide, { foreignKey: 'postId' });
+PostHide.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
 
 // User - Comment
 User.hasMany(Comment, { foreignKey: 'userId' });
@@ -213,4 +223,6 @@ module.exports = {
     Conversation,
     ConversationMember,
     Message,
+    MessageHide,
+    PostHide,
 }

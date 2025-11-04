@@ -15,7 +15,7 @@ import {
     Share
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
-import { togglePostLike, reportPost, updatePost } from "../../services/socialApi";
+import { togglePostLike, reportPost, updatePost, hidePost } from "../../services/socialApi";
 import PostOptionsModal from "../modals/PostOptionsModal";
 import ReportReasonModal from "../modals/ReportReasonModal";
 
@@ -210,7 +210,6 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                 if (result.activityType) {
                     // Shared with activity type of result.activityType
                 } else {
-                    // Shared
                 }
                 // Update share count after successful share
                 if (onPostUpdate) {
@@ -255,12 +254,18 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
     };
 
     // Hàm xử lý ẩn bài viết với undo
-    const handleHide = () => {
+    const handleHide = async () => {
         setIsTemporarilyHidden(true);
         // Đặt timer để ẩn vĩnh viễn sau 10 giây
-        const timer = setTimeout(() => {
-            if (onHidePost) {
-                onHidePost(postId);
+        const timer = setTimeout(async () => {
+            try {
+                await hidePost(postId.toString());
+                if (onHidePost) {
+                    onHidePost(postId);
+                }
+            } catch (error) {
+                console.error('Lỗi khi ẩn bài viết:', error);
+                Alert.alert('Lỗi', 'Không thể ẩn bài viết. Vui lòng thử lại.');
             }
             setIsTemporarilyHidden(false);
         }, 10000); // 10 giây
@@ -288,7 +293,6 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
             Alert.alert('Lỗi', 'Nội dung không được để trống.');
             return;
         }
-
         try {
             const result = await updatePost(postId.toString(), editContent);
             if ('status' in result && result.status === 'error') {
@@ -341,7 +345,6 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
     // --- PHẦN RENDER LOGIC ---
     return (
         <View className="bg-white dark:bg-[#171431] p-4 mb-3 rounded-xl shadow-md shadow-gray-400 dark:shadow-black">
-
             {/* Header  */}
             <View className="flex-row items-center mb-3">
                 <TouchableOpacity
@@ -406,7 +409,7 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                         horizontal
                         pagingEnabled //  Cho phép cuộn từng trang
                         showsHorizontalScrollIndicator={false}
-                        onScroll={handleScroll} //  Bắt sự kiện cuộn
+                        onScroll={handleScroll}
                         scrollEventThrottle={16}
                         className="rounded-xl overflow-hidden"
                         style={{ height: IMAGE_HEIGHT }} 
@@ -455,7 +458,6 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                 </TouchableOpacity>
             ) : null} */}
 
-
             {/* Interaction Stats Bar */}
             <View className="flex-row justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
                 {/* KHỐI TRÁI: Thích  */}
@@ -482,12 +484,10 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                     <Text className="text-xs text-gray-500 dark:text-gray-400">
                         {shareCount} Chia sẻ
                     </Text>
-                </View>
-               
+                </View>               
             </View>
 
-
-            {/* Interaction Buttons (Lớn hơn, rõ ràng hơn) */}
+            {/* Interaction Buttons */}
             <View className="flex-row justify-around">
                 {/* NÚT LIKE (TIM) */}
                 <TouchableOpacity

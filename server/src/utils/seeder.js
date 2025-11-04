@@ -17,7 +17,7 @@ const albumData = require('../seeders/albums.json');
 const trackData = require('../seeders/tracks.json');
 const playlistData = require('../seeders/playlists.json');
 
-const mapArtist = async () => {
+const mapArtist = async() => {
     const artists = await Artist.findAll({ attributes: ['id', 'name'] });
     const artistMap = artists.reduce((map, artist) => {
         map[artist.name] = artist.id;
@@ -26,7 +26,7 @@ const mapArtist = async () => {
     return artistMap;
 }
 
-const mapAlbum = async () => {
+const mapAlbum = async() => {
     const albums = await Album.findAll({ attributes: ['id', 'name'] });
     const albumMap = albums.reduce((map, album) => {
         map[album.name] = album.id;
@@ -35,7 +35,7 @@ const mapAlbum = async () => {
     return albumMap;
 }
 
-const mapGenres = async () => {
+const mapGenres = async() => {
     const genres = await Genres.findAll({ attributes: ['id', 'name'] });
     const genreMap = genres.reduce((map, genre) => {
         map[genre.name] = genre.id;
@@ -44,7 +44,7 @@ const mapGenres = async () => {
     return genreMap;
 }
 
-const mapTrack = async () => {
+const mapTrack = async() => {
     const tracks = await Track.findAll({ attributes: ['id', 'name'] });
     const trackMap = tracks.reduce((map, track) => {
         map[track.name] = track.id;
@@ -58,14 +58,14 @@ const mapTrack = async () => {
  * Kiểm tra nếu bảng Role đã có dữ liệu (quan trọng để tránh trùng lặp)
  * Sử dụng bulkCreate để chèn tất cả data cùng lúc (hiệu suất cao)
  */
-const seedDataRole = async () => {
+const seedDataRole = async() => {
     try {
         const roleCount = await Role.count();
         if (roleCount === 0) {
             console.log('Start insert Role...');
 
             await Role.bulkCreate(roleData, { ignoreDuplicates: true });
-            console.log('✅ Finish insert Role.');
+            console.log(' Finish insert Role.');
         } else {
             console.log('Pass insert Role');
         }
@@ -80,7 +80,7 @@ const seedDataRole = async () => {
  * Sau đó ánh xạ (map) dữ liệu User để thay thế roleName bằng roleId 
  * và Xóa roleName khỏi object vì nó không có trong Model User
  */
-const seedDataUser = async () => {
+const seedDataUser = async() => {
     try {
         const userCount = await User.count();
         if (userCount === 0) {
@@ -98,7 +98,7 @@ const seedDataUser = async () => {
             }));
 
             await User.bulkCreate(usersToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert User.');
+            console.log(' Finish insert User.');
         } else {
             console.log('Pass insert User');
         }
@@ -110,13 +110,13 @@ const seedDataUser = async () => {
 /**
  * --- 3. SEED DATA CHO GENRES ---
  */
-const seedDataGenres = async () => {
+const seedDataGenres = async() => {
     try {
         const genresCount = await Genres.count();
         if (genresCount === 0) {
             console.log('Start insert Genres...');
             await Genres.bulkCreate(genresData, { ignoreDuplicates: true });
-            console.log('✅ Finish insert Genres.');
+            console.log(' Finish insert Genres.');
         } else {
             console.log('Pass insert Genres');
         }
@@ -130,7 +130,7 @@ const seedDataGenres = async () => {
  * Trước tiên ánh xạ dữ liệu thô (artistData) sang cấu trúc model Artist
  * các trường không tồn tại trong model sẽ bị bỏ qua
  */
-const seedDataArtists = async () => {
+const seedDataArtists = async() => {
     try {
         const artistCount = await Artist.count();
         if (artistCount === 0) {
@@ -143,7 +143,7 @@ const seedDataArtists = async () => {
             }));
 
             await Artist.bulkCreate(artistsToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert Artists.');
+            console.log(' Finish insert Artists.');
         } else {
             console.log('Pass insert Artists');
         }
@@ -161,7 +161,7 @@ const seedDataArtists = async () => {
  * Bước 4: Duyệt qua dữ liệu thô (artistData) để tạo mảng dữ liệu cho bảng trung gian
  * Bước 5: Chèn dữ liệu vào bảng trung gian sử dụng bulkCreate
  */
-const seedDataArtistGenres = async () => {
+const seedDataArtistGenres = async() => {
     try {
         const junctionTable = sequelize.models.artist_genres;
 
@@ -178,7 +178,7 @@ const seedDataArtistGenres = async () => {
                 }
 
                 const artistId = artistMap[artist.name];
-                if (!artistId) continue;  /* Bỏ qua nếu không tìm thấy artist (lỗi data) */
+                if (!artistId) continue; /* Bỏ qua nếu không tìm thấy artist (lỗi data) */
 
                 for (const genreName of artist.genres) {
                     const genreId = genreMap[genreName];
@@ -190,7 +190,7 @@ const seedDataArtistGenres = async () => {
 
             // console.log('artistGenresToInsert', artistGenresToInsert);
             await junctionTable.bulkCreate(artistGenresToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert artist_genres.');
+            console.log(' Finish insert artist_genres.');
         } else {
             console.log('Pass insert artist_genres.');
         }
@@ -203,7 +203,7 @@ const seedDataArtistGenres = async () => {
  * --- 6. SEED DATA CHO ALBUM ---
  * tuong tự như Artists
  */
-const seedDataAlbum = async () => {
+const seedDataAlbum = async() => {
     try {
         const albumCount = await Album.count();
 
@@ -218,7 +218,7 @@ const seedDataAlbum = async () => {
             }));
 
             await Album.bulkCreate(albumsToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert Album.');
+            console.log(' Finish insert Album.');
         } else {
             console.log('Pass insert Album.');
         }
@@ -231,7 +231,7 @@ const seedDataAlbum = async () => {
 /**
  * --- 7. SEED DATA CHO BẢNG TRUNG GIAN ARTIST_ALBUMS ---
  */
-const seedDataArtistAlbums = async () => {
+const seedDataArtistAlbums = async() => {
     try {
         const junctionTable = sequelize.models.artist_albums;
 
@@ -250,7 +250,7 @@ const seedDataArtistAlbums = async () => {
                 }
 
                 const albumId = albumMap[album.name];
-                if (!albumId) continue;  /* Bỏ qua nếu không tìm thấy album (lỗi data) */
+                if (!albumId) continue; /* Bỏ qua nếu không tìm thấy album (lỗi data) */
 
                 for (const artistName of album.artists) {
                     const artistId = artistMap[artistName];
@@ -261,7 +261,7 @@ const seedDataArtistAlbums = async () => {
             }
 
             await junctionTable.bulkCreate(artistAlbumsToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert artist_albums.');
+            console.log(' Finish insert artist_albums.');
         } else {
             console.log('Pass insert artist_albums.');
         }
@@ -274,7 +274,7 @@ const seedDataArtistAlbums = async () => {
 /**
  * --- 8. SEED DATA CHO TRACK ---
  */
-const seedDataTrack = async () => {
+const seedDataTrack = async() => {
     try {
         const trackCount = await Track.count();
 
@@ -298,7 +298,7 @@ const seedDataTrack = async () => {
             }));
 
             await Track.bulkCreate(tracksToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert Tracks.');
+            console.log(' Finish insert Tracks.');
         } else {
             console.log('Pass insert Tracks.');
         }
@@ -310,7 +310,7 @@ const seedDataTrack = async () => {
 /**
  * --- 9. SEED DATA CHO BẢNG TRUNG GIAN ARTIST_TRACKS ---
  */
-const seedDataArtistTracks = async () => {
+const seedDataArtistTracks = async() => {
     try {
         const junctionTable = sequelize.models.artist_tracks;
         const junctionCount = await junctionTable.count();
@@ -327,7 +327,7 @@ const seedDataArtistTracks = async () => {
                 }
 
                 const trackId = trackMap[track.name];
-                if (!trackId) continue;  /* Bỏ qua nếu không tìm thấy track (lỗi data) */
+                if (!trackId) continue; /* Bỏ qua nếu không tìm thấy track (lỗi data) */
 
                 for (const artistName of track.artists) {
                     const artistId = artistMap[artistName];
@@ -338,7 +338,7 @@ const seedDataArtistTracks = async () => {
             }
 
             await junctionTable.bulkCreate(artistTracksToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert artist_tracks.');
+            console.log(' Finish insert artist_tracks.');
         } else {
             console.log('Pass insert artist_tracks.');
         }
@@ -351,7 +351,7 @@ const seedDataArtistTracks = async () => {
 /**
  * --- 10. SEED DATA CHO PLAYLIST ---
  */
-const seedDataPlaylist = async () => {
+const seedDataPlaylist = async() => {
     try {
         const playlistCount = await Playlist.count();
 
@@ -369,7 +369,7 @@ const seedDataPlaylist = async () => {
             }));
 
             await Playlist.bulkCreate(playlistsToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert Playlists.');
+            console.log(' Finish insert Playlists.');
         } else {
             console.log('Pass insert Playlist.');
         }
@@ -399,10 +399,10 @@ async function seedDatabase() {
         await seedDataArtistTracks(); /* Bảng trung gian */
 
         await seedDataPlaylist();
-        console.log('✅ Finish seeding database.');
+        console.log(' Finish seeding database.');
 
     } catch (error) {
-        console.error('❌ Lỗi khi chèn dữ liệu (Seeding):', error);
+        console.error('Lỗi khi chèn dữ liệu (Seeding):', error);
     }
 }
 

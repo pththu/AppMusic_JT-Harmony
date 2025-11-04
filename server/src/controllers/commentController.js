@@ -9,17 +9,16 @@ exports.getAllComment = async(req, res) => {
     }
 };
 
-// HÀM MỚI: Lấy tất cả bình luận cho một Post cụ thể
+// LẤY COMMENT THEO postId KÈM THEO SỐ LƯỢNG LIKE VÀ TRẠNG THÁI ISLIKED CỦA USER HIỆN TẠI
 exports.getCommentsByPostId = async(req, res) => {
     const userId = req.user.id; // Lấy ID của người dùng hiện tại
     try {
         const { postId } = req.params;
-        // ... (kiểm tra postId)
 
         const rows = await Comment.findAll({
             attributes: {
                 include: [
-                    // 💡 TÍNH TỔNG SỐ LIKE SỬ DỤNG SEQUELIZE LITERAL VÀ SUBQUERY
+                    //  TÍNH TỔNG SỐ LIKE SỬ DỤNG SEQUELIZE LITERAL VÀ SUBQUERY
                     [
                         sequelize.literal(`(
                             SELECT COUNT(*)
@@ -48,7 +47,7 @@ exports.getCommentsByPostId = async(req, res) => {
                     attributes: ['id', 'username', 'avatarUrl']
                 }]
             }, {
-                // 💡 CHỈ DÙNG ĐỂ KIỂM TRA TRẠNG THÁI LIKE CỦA USER HIỆN TẠI
+                //  CHỈ DÙNG ĐỂ KIỂM TRA TRẠNG THÁI LIKE CỦA USER HIỆN TẠI
                 model: CommentLike,
                 as: 'Likes',
                 where: { userId: userId },
@@ -61,7 +60,7 @@ exports.getCommentsByPostId = async(req, res) => {
             ]
         });
 
-        // 💡 XỬ LÝ DỮ LIỆU: Thêm trường isLiked
+        //  XỬ LÝ DỮ LIỆU: Thêm trường isLiked
         const processedRows = rows.map(comment => {
             const commentJson = comment.toJSON();
 
@@ -79,15 +78,15 @@ exports.getCommentsByPostId = async(req, res) => {
             return commentJson;
         });
 
-
         res.json(processedRows);
     } catch (err) {
-        // 💡 IN LỖI CHI TIẾT RA CONSOLE SERVER
+        //  IN LỖI CHI TIẾT RA CONSOLE SERVER
         console.error('LỖI SERVER KHI TẢI COMMENT (500):', err.message, err.stack);
         res.status(500).json({ error: 'Server error when fetching comments.', detail: err.message });
     }
 };
 
+// LẤY COMMENT THEO ID
 exports.getCommentById = async(req, res) => {
     try {
         const row = await Comment.findByPk(req.params.id);
@@ -98,6 +97,7 @@ exports.getCommentById = async(req, res) => {
     }
 };
 
+// TẠO MỚI COMMENT
 exports.createComment = async(req, res) => {
     try {
         const payload = {...req.body };
@@ -129,6 +129,7 @@ exports.createComment = async(req, res) => {
     }
 };
 
+// CẬP NHẬT COMMENT
 exports.updateComment = async(req, res) => {
     try {
         const [updated] = await Comment.update(req.body, { where: { id: req.params.id } });
@@ -140,6 +141,7 @@ exports.updateComment = async(req, res) => {
     }
 };
 
+// XÓA COMMENT
 exports.deleteComment = async(req, res) => {
     try {
         const deleted = await Comment.destroy({ where: { id: req.params.id } });
@@ -150,7 +152,7 @@ exports.deleteComment = async(req, res) => {
     }
 };
 
-// HÀM MỚI: Thích / Bỏ thích bình luận
+// THÍCH / BỎ THÍCH COMMENT
 exports.toggleCommentLike = async(req, res) => {
     const userId = req.user.id;
     const { commentId } = req.params;

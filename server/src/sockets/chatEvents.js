@@ -1,7 +1,7 @@
 const { User, Message, Conversation, ConversationMember, sequelize } = require('../models');
 
 /**
- * 💡 Export một hàm nhận instance của Socket.IO Server (io)
+ *  Export một hàm nhận instance của Socket.IO Server (io)
  * @param {import('socket.io').Server} io - Instance của Socket.IO Server
  */
 module.exports = function(io) {
@@ -10,7 +10,7 @@ module.exports = function(io) {
         const userId = socket.user.id;
         console.log(`[CONNECT] User ID: ${userId} connected. Socket ID: ${socket.id}`);
 
-        // 1. 🚀 Đánh dấu người dùng là ONLINE và tham gia phòng cá nhân của họ
+        // 1. Đánh dấu người dùng là ONLINE và tham gia phòng cá nhân của họ
 
         // Tạo một "room" cho cá nhân người dùng để gửi thông báo/trạng thái riêng
         const personalRoom = `user_${userId}`;
@@ -21,14 +21,14 @@ module.exports = function(io) {
         // io.emit('user_status', { userId, status: 'online' }); // Quá tốn kém
         // => Tốt hơn: Chỉ thông báo cho những người dùng trong cùng một conversation mà họ đang tham gia.
 
-        // 2. 👂 Xử lý sự kiện `disconnect` (Ngắt kết nối)
+        // 2. Xử lý sự kiện `disconnect` (Ngắt kết nối)
         socket.on('disconnect', () => {
             console.log(`[DISCONNECT] User ID: ${userId} disconnected. Socket ID: ${socket.id}`);
             // Xử lý logic OFFLINE ở đây (sau khi có cơ chế lưu trữ trạng thái)
             // io.emit('user_status', { userId, status: 'offline' }); 
         });
 
-        // 3. 💬 Xử lý sự kiện `send_message` (Gửi tin nhắn)
+        // 3. Xử lý sự kiện `send_message` (Gửi tin nhắn)
         socket.on('send_message', async(data, callback) => {
             const { conversationId, content, type = 'text', fileUrl = null } = data;
 
@@ -81,7 +81,7 @@ module.exports = function(io) {
             }
         });
 
-        // 4. 🚪 Xử lý sự kiện `join_conversation` (Tham gia phòng chat)
+        // 4. Xử lý sự kiện `join_conversation` (Tham gia phòng chat)
         socket.on('join_conversation', (conversationId) => {
             const roomName = `conversation_${conversationId}`;
             socket.join(roomName);
@@ -89,7 +89,7 @@ module.exports = function(io) {
 
         });
 
-        // 5. ✍️ Xử lý sự kiện `typing_start` (Đang gõ)
+        // 5. Xử lý sự kiện `typing_start` (Đang gõ)
         socket.on('typing_start', (conversationId) => {
             // Phát sóng tới tất cả thành viên trong phòng (trừ người gửi)
             socket.to(`conversation_${conversationId}`).emit('user_typing', {
@@ -99,7 +99,7 @@ module.exports = function(io) {
             });
         });
 
-        // 6. 🛑 Xử lý sự kiện `typing_stop` (Dừng gõ)
+        // 6. Xử lý sự kiện `typing_stop` (Dừng gõ)
         socket.on('typing_stop', (conversationId) => {
             // Phát sóng tới tất cả thành viên trong phòng (trừ người gửi)
             socket.to(`conversation_${conversationId}`).emit('user_typing', {

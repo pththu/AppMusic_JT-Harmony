@@ -5,7 +5,7 @@ require('dotenv').config();
 /**
  * Middleware xác thực token (JWT) từ Cookie hoặc Header Authorization.
  */
-exports.authenticateToken = async (req, res, next) => {
+exports.authenticateToken = async(req, res, next) => {
     // console.log("--- BẮT ĐẦU AUTHENTICATE ---");
     // console.log("Raw Headers:", req.headers); // Có thể bật lại log này nếu cần debug sâu
 
@@ -67,7 +67,7 @@ exports.authenticateToken = async (req, res, next) => {
     }
 };
 
-exports.optionalAuthenticateToken = async (req, res, next) => {
+exports.optionalAuthenticateToken = async(req, res, next) => {
     let token;
 
     // 1. Lấy token từ Cookie ('accessToken')
@@ -86,7 +86,7 @@ exports.optionalAuthenticateToken = async (req, res, next) => {
         }
     }
 
-    // 🎯 LOG MỚI: Báo hiệu kết quả tìm kiếm Token
+    //  LOG MỚI: Báo hiệu kết quả tìm kiếm Token
     if (!token) {
         req.user = null;
         req.currentUser = null;
@@ -104,7 +104,7 @@ exports.optionalAuthenticateToken = async (req, res, next) => {
         });
 
         if (user) {
-            // 🎯 Gán THÀNH CÔNG: Đảm bảo ID là kiểu Number
+            //  Gán THÀNH CÔNG: Đảm bảo ID là kiểu Number
             req.user = {
                 id: Number(user.id), // Ép kiểu an toàn
                 username: user.username,

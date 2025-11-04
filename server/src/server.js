@@ -24,7 +24,7 @@ const server = http.createServer(app);
 // ==========================================================
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:3000", "http://192.168.15.9:3000", "exp://192.168.15.9:8081"],
+        origin: ["http://localhost:3000", "http://192.168.1.14:3000", "exp://192.168.1.14:8081"],
         methods: ["GET", "POST"],
         credentials: true,
     },
@@ -54,7 +54,7 @@ io.use(async(socket, next) => {
         // 2. Gắn thông tin User vào socket để sử dụng trong các sự kiện chat
         socket.user = user;
 
-        console.log(`✅ Socket ID: ${socket.id} - User ID: ${user.id} authenticated.`);
+        console.log(` Socket ID: ${socket.id} - User ID: ${user.id} authenticated.`);
         next();
     } catch (error) {
         console.error('❌ Socket Auth Error:', error.message);
@@ -73,7 +73,7 @@ app.set("trust proxy", true);
 // Middleware CORS cho Express
 app.use(
     cors({
-        origin: ["http://localhost:3000", "http://192.168.15.9:3000"],
+        origin: ["http://localhost:3000", "http://192.168.1.14:3000"],
         credentials: true,
     })
 );
@@ -140,9 +140,9 @@ publicRoutes.forEach(route => {
 async function startServer() {
     try {
         // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
-        await sequelize.sync({ alter: true });
+        // await sequelize.sync({ alter: true });
         // // await sequelize.sync();
-        console.log('✅ Database synchronized successfully')
+        console.log(' Database synchronized successfully')
             // await seedDatabase();
 
         server.listen(process.env.PORT || 3000, () => {

@@ -10,9 +10,9 @@ import {
     Image,
     Alert,
 } from 'react-native';
-import { useNavigate } from "@/hooks/useNavigate"; // 💡 Giả định hook này có sẵn trong dự án của bạn
+import { useNavigate } from "@/hooks/useNavigate";
 import Icon from 'react-native-vector-icons/Feather';
-import { fetchFollowers, fetchFollowing, UserInfo, toggleFollow } from '../../services/socialApi'; //
+import { fetchFollowers, fetchFollowing, UserInfo, toggleFollow } from '../../services/socialApi';
 import useAuthStore from '@/store/authStore'; 
 
 
@@ -33,11 +33,11 @@ interface FollowItemProps {
 // FollowItem
 const FollowItem: React.FC<FollowItemProps> = ({ user, onCloseModal, onToggleFollow }) => {
     const colorScheme = useColorScheme();
-    const { navigate } = useNavigate(); // Sử dụng useNavigate hook để điều hướng
-    const currentUserId = useAuthStore(state => state.user?.id); // Lấy ID người dùng hiện tại
+    const { navigate } = useNavigate();
+    const currentUserId = useAuthStore(state => state.user?.id);
 
     // State để quản lý trạng thái follow của người dùng này
-    const [isFollowingState, setIsFollowingState] = useState(user.isFollowing === true);
+    const [isFollowingState, setIsFollowingState] = useState(user.isFollowing === true); // Khởi tạo từ prop
     const [loading, setLoading] = useState(false); // State để quản lý trạng thái loading khi gọi API
     const isCurrentUser = currentUserId === user.id; // Kiểm tra xem người dùng trong danh sách có phải là chính mình không
     
@@ -112,7 +112,7 @@ const FollowItem: React.FC<FollowItemProps> = ({ user, onCloseModal, onToggleFol
                     disabled={loading} // Vô hiệu hóa khi đang xử lý API
                 >
                     {loading ? (
-                        <ActivityIndicator color={isFollowingState ? "#ef4444" : "#fff"} />
+                        <ActivityIndicator color={isFollowingState ? "#4F46E5" : "#4F46E5"} />
                     ) : (
                         <Text className={`text-sm font-semibold ${isFollowingState ? "text-red-500" : "text-white"}`}>
                             {followButtonText}
@@ -127,11 +127,11 @@ const FollowItem: React.FC<FollowItemProps> = ({ user, onCloseModal, onToggleFol
 // FollowListModal
 export default function FollowListModal({ visible, onClose, userId, listType }: FollowListModalProps) {
     const colorScheme = useColorScheme();
-    const [data, setData] = useState<UserInfo[]>([]); 
-    const [loading, setLoading] = useState(true);
-    const title = listType === 'followers' ? 'Người Theo Dõi' : 'Đang Theo Dõi';
+    const [data, setData] = useState<UserInfo[]>([]); // State để lưu danh sách người dùng
+    const [loading, setLoading] = useState(true); // State để quản lý trạng thái tải dữ liệu
+    const title = listType === 'followers' ? 'Người Theo Dõi' : 'Đang Theo Dõi'; // Tiêu đề modal
     
-    // --- HÀM XỬ LÝ API VÀ CẬP NHẬT STATE ---
+    // --- HÀM XỬ LÝ TOGGLE FOLLOW ---
     const handleToggleFollow = async (userIdToToggle: number): Promise<boolean> => {
         try {
             // Gọi API toggleFollow
@@ -153,7 +153,7 @@ export default function FollowListModal({ visible, onClose, userId, listType }: 
         }
     };
 
-    // --- HÀM LẤY DỮ LIỆU ---
+    // --- HÀM TẢI DỮ LIỆU DANH SÁCH FOLLOW ---
     const fetchData = async () => {
         setLoading(true);
         try {

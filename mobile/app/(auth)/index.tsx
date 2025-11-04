@@ -51,7 +51,7 @@ export default function AuthScreen() {
   // };
 
   const handleLoginWithGoogle = async () => {
-    // 🎯 Đổi tên alert để tránh xung đột với biến 'error' trong khối catch
+    //  Đổi tên alert để tránh xung đột với biến 'error' trong khối catch
 
     const loginType = 'google';
 

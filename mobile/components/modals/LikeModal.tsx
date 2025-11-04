@@ -30,11 +30,11 @@ const LikeItem: React.FC<LikeItemProps> = ({ user, onCloseModal }) => {
     const colorScheme = useColorScheme();
     const { navigate } = useNavigate();
 
-    // --- HÀM XỬ LÝ NHẤN VÀO USER HOẶC AVATAR (Điều hướng) ---
+    // --- HÀM XỬ LÝ NHẤN VÀO USER HOẶC AVATAR ---
     const handleUserNavigate = () => {
-        // 1. Đóng Modal trước
+        // Đóng Modal trước
         onCloseModal();
-        // 2. Điều hướng đến ProfileSocialScreen
+        // Điều hướng đến ProfileSocialScreen
         navigate('ProfileSocialScreen', { userId: user.userId });
     };
 
@@ -59,8 +59,8 @@ const LikeItem: React.FC<LikeItemProps> = ({ user, onCloseModal }) => {
 // LikeModal
 export default function LikeModal({ visible, onClose, postId }: LikeModalProps) {
     const colorScheme = useColorScheme();
-    const [data, setData] = useState<{ id: number; userId: number; postId: number; likedAt: string; User: UserInfo }[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<{ id: number; userId: number; postId: number; likedAt: string; User: UserInfo }[]>([]); // State để lưu danh sách người dùng đã like
+    const [loading, setLoading] = useState(true); // State để quản lý trạng thái tải dữ liệu
 
     // --- HÀM LẤY DỮ LIỆU ---
     const fetchData = async () => {

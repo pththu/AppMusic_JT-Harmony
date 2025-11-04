@@ -1,7 +1,15 @@
-const { Post, User, Comment, sequelize, Like, CommentLike, PostReport } = require('../models');
+const {
+    Post,
+    User,
+    Comment,
+    sequelize,
+    Like,
+    CommentLike,
+    PostReport,
+    PostHide,
+} = require("../models");
 
-// --- HÀM LẤY TẤT CẢ BÀI ĐĂNG ---
-// --- HÀM KIỂM TRA ISLIKED MỚI ---
+// Hàm này kiểm tra xem người dùng đã thích bài đăng cụ thể chưa
 async function checkIsLiked(userId, postId) {
     if (!userId) {
         return false;
@@ -10,8 +18,8 @@ async function checkIsLiked(userId, postId) {
         const like = await Like.findOne({
             where: {
                 userId: userId,
-                postId: postId
-            }
+                postId: postId,
+            },
         });
         return !!like; // Trả về true nếu tìm thấy, false nếu không
     } catch (e) {
@@ -20,161 +28,174 @@ async function checkIsLiked(userId, postId) {
     }
 }
 
-// KIỂM TRA ISLIKED CHO COMMENT
-async function checkCommentIsLiked(userId, commentId) {
-    if (!userId) return false;
-    try {
-        const like = await CommentLike.findOne({
-            where: { userId: userId, commentId: commentId }
-        });
-        return !!like;
-    } catch (e) {
-        console.error("Lỗi khi kiểm tra isLiked cho Comment:", e.message);
-        return false;
-    }
-}
+// Hàm này kiểm tra xem người dùng đã thích comment cụ thể chưa
+// async function checkCommentIsLiked(userId, commentId) {
+//     if (!userId) return false;
+//     try {
+//         const like = await CommentLike.findOne({
+//             where: { userId: userId, commentId: commentId },
+//         });
+//         return !!like;
+//     } catch (e) {
+//         console.error("Lỗi khi kiểm tra isLiked cho Comment:", e.message);
+//         return false;
+//     }
+// }
 
 // ĐẾM LIKE CHO COMMENT
-async function getCommentLikeCount(commentId) {
-    try {
-        return await CommentLike.count({
-            where: { commentId: commentId }
-        });
-    } catch (e) {
-        console.error("Lỗi khi đếm Like Comment:", e.message);
-        return 0;
-    }
-}
+// async function getCommentLikeCount(commentId) {
+//     try {
+//         return await CommentLike.count({
+//             where: { commentId: commentId },
+//         });
+//     } catch (e) {
+//         console.error("Lỗi khi đếm Like Comment:", e.message);
+//         return 0;
+//     }
+// }
 
 // --- HÀM LẤY TẤT CẢ BÀI ĐĂNG ---
 exports.getAllPost = async(req, res) => {
     //  Kiểm tra xác thực
     const userId = req.user && req.user.id;
     if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated or missing ID' });
+        return res
+            .status(401)
+            .json({ error: "User not authenticated or missing ID" });
     }
-    console.log("Danh sách bài đăng: ", userId);
+    console.log("Danh sách bài đăng của userId: ", userId);
 
     let ids = [];
 
     try {
-        // 1. Dùng Common Table Expression (CTE) để lọc bài đăng mới nhất
+        // 1. Dùng Common Table Expression (CTE) để lọc bài đăng mới nhất, loại trừ bài đăng đã ẩn
         const latestPostsQuery = `
             WITH RankedPosts AS (
-                SELECT 
-                    id, 
-                    user_id,
+                SELECT
+                    p.id,
+                    p.user_id,
                     ROW_NUMBER() OVER (
-                        PARTITION BY user_id 
-                        ORDER BY "uploaded_at" DESC
+                        PARTITION BY p.user_id
+                        ORDER BY p."uploaded_at" DESC
                     ) as rn
-                FROM 
-                    posts
+                FROM
+                    posts p
+                LEFT JOIN post_hides ph ON p.id = ph.post_id AND ph.user_id = ?
+                WHERE ph.id IS NULL
             )
-            SELECT 
+            SELECT
                 id
-            FROM 
+            FROM
                 RankedPosts
-            WHERE 
+            WHERE
                 rn = 1
         `;
 
-        // 2. Thực thi CTE để lấy ra ID của các bài đăng mới nhất
+        // 2. Thực thi CTE để lấy ra ID của các bài đăng mới nhất, loại trừ bài đăng đã ẩn
         const latestPostIds = await sequelize.query(latestPostsQuery, {
-            type: sequelize.QueryTypes.SELECT
+            replacements: [userId],
+            type: sequelize.QueryTypes.SELECT,
         });
 
         // Gán giá trị an toàn cho ids
-        ids = latestPostIds.map(row => row.id);
-
+        ids = latestPostIds.map((row) => row.id);
 
         // 3. Truy vấn chính (Sử dụng ids đã được xác định)
         const posts = await Post.findAll({
             where: {
                 // Nếu CTE trả về 0 kết quả, ids là [], Post.findAll sẽ trả về [] (Đúng logic)
-                id: ids.length > 0 ? ids : [0] // Thêm [0] nếu ids rỗng để tránh lỗi WHERE IN ()
+                id: ids.length > 0 ? ids : [0], // Thêm [0] nếu ids rỗng để tránh lỗi WHERE IN ()
             },
             attributes: [
-                'id', 'userId', 'content', 'fileUrl',
-                'heartCount', 'shareCount', 'uploadedAt',
-                'commentCount', 'songId', [
+                "id",
+                "userId",
+                "content",
+                "fileUrl",
+                "heartCount",
+                "shareCount",
+                "uploadedAt",
+                "commentCount",
+                "songId", [
                     sequelize.literal(
                         `(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")`
                     ),
-                    'commentCountOptimized'
+                    "commentCountOptimized",
                 ],
             ],
             include: [{
                 model: User,
-                as: 'User',
-                attributes: ['id', 'username', 'avatarUrl', 'fullName']
-            }],
+                as: "User",
+                attributes: ["id", "username", "avatarUrl", "fullName"],
+            }, ],
             order: [
-                ['uploadedAt', 'DESC']
-            ]
+                ["uploadedAt", "DESC"]
+            ],
         });
 
         // 4. Map kết quả VÀ GỌI HÀM CHECK ASYNC
-        const postsWithExtras = await Promise.all(posts.map(async post => {
-            const postJson = post.toJSON();
-            const commentCountFromDb = parseInt(postJson.commentCountOptimized) || 0;
+        const postsWithExtras = await Promise.all(
+            posts.map(async(post) => {
+                const postJson = post.toJSON();
+                const commentCountFromDb =
+                    parseInt(postJson.commentCountOptimized) || 0;
 
-            // 🎯 GỌI HÀM CHECK ISLIKED BẰNG SEQUELIZE CHUẨN
-            const isLiked = await checkIsLiked(userId, postJson.id);
+                //  GỌI HÀM CHECK ISLIKED
+                const isLiked = await checkIsLiked(userId, postJson.id);
 
-            // LOGIC PARSE CHUỖI JSON fileUrl THÀNH MẢNG (Giữ nguyên)
-            let parsedFileUrls = [];
-            try {
-                if (postJson.fileUrl) {
-                    parsedFileUrls = JSON.parse(postJson.fileUrl);
-                    if (!Array.isArray(parsedFileUrls)) {
-                        parsedFileUrls = [postJson.fileUrl];
+                // LOGIC PARSE CHUỖI JSON fileUrl THÀNH MẢNG
+                let parsedFileUrls = [];
+                try {
+                    if (postJson.fileUrl) {
+                        parsedFileUrls = JSON.parse(postJson.fileUrl);
+                        if (!Array.isArray(parsedFileUrls)) {
+                            parsedFileUrls = [postJson.fileUrl];
+                        }
                     }
+                } catch (e) {
+                    parsedFileUrls = postJson.fileUrl ? [postJson.fileUrl] : [];
                 }
-            } catch (e) {
-                parsedFileUrls = postJson.fileUrl ? [postJson.fileUrl] : [];
-            }
 
-            return {
-                ...postJson,
-                userId: post.userId,
-                commentCount: commentCountFromDb,
-                commentCountOptimized: undefined,
-                isLiked: isLiked,
-                fileUrl: parsedFileUrls,
-            };
-        }));
+                return {
+                    ...postJson, // Giữ nguyên các trường khác
+                    userId: post.userId, // Đảm bảo userId đúng kiểu
+                    commentCount: commentCountFromDb, // Cập nhật commentCount từ trường tối ưu
+                    commentCountOptimized: undefined, // Xóa trường tạm
+                    isLiked: isLiked, // Thêm trường isLiked
+                    fileUrl: parsedFileUrls, // Thay thế fileUrl bằng mảng đã parse
+                };
+            })
+        );
 
         res.json(postsWithExtras);
-
     } catch (error) {
-        // Nếu lỗi xảy ra ở đây, chúng ta đảm bảo thông báo lỗi rõ ràng hơn
         console.error("Lỗi khi tải bài đăng:", error.message, error.stack);
-        res.status(500).json({ error: 'Server Error: ' + error.message });
+        res.status(500).json({ error: "Server Error: " + error.message });
     }
 };
 
-// --- HÀM TẠO BÀI ĐĂNG (Tối ưu hóa: Lấy userId chỉ từ token) ---
+// --- HÀM TẠO BÀI ĐĂNG ---
 exports.createPost = async(req, res) => {
     try {
         //  Kiểm tra xác thực
         const userId = req.user && req.user.id;
         if (!userId) {
-            return res.status(401).json({ error: 'User not authenticated or missing ID' });
+            return res
+                .status(401)
+                .json({ error: "User not authenticated or missing ID" });
         }
         console.log("Tạo bài đăng: User ID từ token:", userId);
 
-        //  Lấy fileUrls (MẢNG) từ body thay vì fileUrl (chuỗi)
         const { content, fileUrls, songId } = req.body;
 
-        const hasContent = content && typeof content === 'string' && content.trim().length > 0;
+        const hasContent =
+            content && typeof content === "string" && content.trim().length > 0;
         const hasFile = Array.isArray(fileUrls) && fileUrls.length > 0;
 
-        // Nếu cả nội dung (sau khi loại bỏ khoảng trắng) và fileUrl đều trống, trả về lỗi 400
+        // Nếu cả nội dung và fileUrl đều trống, trả về lỗi 400
         if (!hasContent && !hasFile) {
             return res.status(400).json({
                 message: "Nội dung bài đăng không hợp lệ.",
-                error: "Bài đăng phải có ít nhất Văn bản hoặc Ảnh/Video đính kèm."
+                error: "Bài đăng phải có ít nhất Văn bản hoặc Ảnh/Video đính kèm.",
             });
         }
 
@@ -190,15 +211,21 @@ exports.createPost = async(req, res) => {
         //  Lấy lại bài đăng kèm user (để client render ngay)
         const postWithUser = await Post.findByPk(post.id, {
             attributes: [
-                'id', 'userId', 'content', 'fileUrl',
-                'heartCount', 'shareCount', 'uploadedAt',
-                'commentCount', 'songId'
+                "id",
+                "userId",
+                "content",
+                "fileUrl",
+                "heartCount",
+                "shareCount",
+                "uploadedAt",
+                "commentCount",
+                "songId",
             ],
             include: [{
                 model: User,
-                as: 'User',
-                attributes: ['id', 'username', 'avatarUrl', 'fullName']
-            }]
+                as: "User",
+                attributes: ["id", "username", "avatarUrl", "fullName"],
+            }, ],
         });
 
         //  Trả về kết quả (Phải parse JSON trước khi trả về client)
@@ -219,27 +246,24 @@ exports.createPost = async(req, res) => {
         }
 
         return res.status(201).json({
-            message: 'Tạo bài đăng thành công!',
-            post: returnedPost
+            message: "Tạo bài đăng thành công!",
+            post: returnedPost,
         });
-
     } catch (error) {
-        console.error('❌ Lỗi khi tạo bài đăng:', error.message);
+        console.error("Lỗi khi tạo bài đăng:", error.message);
         return res.status(500).json({
-            error: 'Tạo bài đăng thất bại',
-            details: error.message
+            error: "Tạo bài đăng thất bại",
+            details: error.message,
         });
     }
 };
 
-
-// --- CÁC HÀM KHÁC (Giữ nguyên) ---
-
+// --- HÀM LẤY BÀI ĐĂNG THEO ID ---
 exports.getPostById = async(req, res) => {
     try {
         const post = await Post.findByPk(req.params.id);
         if (!post) {
-            return res.status(404).json({ error: 'Post not found' });
+            return res.status(404).json({ error: "Post not found" });
         }
         //  Thêm logic parse JSON cho fileUrl
         let postJson = post.toJSON();
@@ -262,11 +286,12 @@ exports.getPostById = async(req, res) => {
     }
 };
 
+// --- HÀM LẤY BÀI ĐĂNG CỦA CHÍNH MÌNH ---
 exports.getPostsByMe = async(req, res) => {
     try {
         const posts = await Post.findAll({ where: { userId: req.user.id } });
         //  Lặp qua và parse JSON cho fileUrl
-        const parsedPosts = posts.map(post => {
+        const parsedPosts = posts.map((post) => {
             let postJson = post.toJSON();
             try {
                 if (postJson.fileUrl) {
@@ -289,52 +314,6 @@ exports.getPostsByMe = async(req, res) => {
     }
 };
 
-// function formatPostData(post, isLiked) {
-//     if (!post) return null;
-
-//     // Đảm bảo dữ liệu là đối tượng JavaScript thuần túy
-//     const postJson = post.toJSON ? post.toJSON() : post;
-
-//     let parsedFileUrls = null;
-
-//     // 1. Xử lý fileUrl: Phân tích chuỗi JSON thành mảng
-//     if (typeof postJson.fileUrl === 'string' && postJson.fileUrl.startsWith('[')) {
-//         try {
-//             parsedFileUrls = JSON.parse(postJson.fileUrl);
-//             if (!Array.isArray(parsedFileUrls)) {
-//                 // Nếu parse không ra mảng (ví dụ: ra object), dùng chuỗi gốc làm phần tử duy nhất
-//                 parsedFileUrls = [postJson.fileUrl];
-//             }
-//         } catch (e) {
-//             console.error("Lỗi parse JSON cho fileUrl:", e);
-//             parsedFileUrls = postJson.fileUrl ? [postJson.fileUrl] : null;
-//         }
-//     } else if (typeof postJson.fileUrl === 'string' && postJson.fileUrl.length > 0) {
-//         // Trường hợp fileUrl là chuỗi URL đơn
-//         parsedFileUrls = [postJson.fileUrl];
-//     }
-
-//     // 2. Trích xuất URL đầu tiên để Frontend dễ xử lý
-//     // Nếu Frontend (PostItem.tsx) mong đợi một string URL (hoặc null), ta trích xuất ở đây.
-//     const finalFileUrl = Array.isArray(parsedFileUrls) && parsedFileUrls.length > 0 ?
-//         parsedFileUrls[0] :
-//         null;
-
-//     // 3. Lấy commentCount từ trường tối ưu (nếu có)
-//     const commentCountFromDb = parseInt(postJson.commentCountOptimized) || postJson.commentCount || 0;
-
-//     return {
-//         ...postJson,
-//         // Chỉ trả về URL đầu tiên (hoặc null)
-//         fileUrl: finalFileUrl,
-//         // Cập nhật commentCount và xóa trường tạm
-//         commentCount: commentCountFromDb,
-//         commentCountOptimized: undefined, // Xóa trường tạm
-//         isLiked: isLiked,
-//     };
-// }
-
-
 // --- HÀM LẤY BÀI ĐĂNG THEO USER ID ---
 exports.getPostsByUserId = async(req, res) => {
     // 1. Xác định User ID của người dùng hiện tại (cho việc kiểm tra isLiked)
@@ -351,73 +330,82 @@ exports.getPostsByUserId = async(req, res) => {
 
     // 3. Kiểm tra tính hợp lệ của User ID
     if (!profileUserId) {
-        return res.status(400).json({ error: 'User ID không được cung cấp.' });
+        return res.status(400).json({ error: "User ID không được cung cấp." });
     }
 
     try {
         // 4. Truy vấn bài đăng
         const posts = await Post.findAll({
-            where: { userId: profileUserId }, // 🎯 Lọc theo ID của Profile
+            where: { userId: profileUserId }, //  Lọc theo ID của Profile
             attributes: [
-                'id', 'userId', 'content', 'fileUrl',
-                'heartCount', 'shareCount', 'uploadedAt',
-                'commentCount', 'songId', [
+                "id",
+                "userId",
+                "content",
+                "fileUrl",
+                "heartCount",
+                "shareCount",
+                "uploadedAt",
+                "commentCount",
+                "songId", [
                     sequelize.literal(
                         // SỬ DỤNG LITERAL để đếm số comment trực tiếp từ DB
                         `(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")`
                     ),
-                    'commentCountOptimized' // Alias để sử dụng trong bước Map
+                    "commentCountOptimized", // Alias để sử dụng trong bước Map
                 ],
             ],
             include: [{
                 model: User,
-                as: 'User',
-                attributes: ['id', 'username', 'avatarUrl', 'fullName'],
-            }],
+                as: "User",
+                attributes: ["id", "username", "avatarUrl", "fullName"],
+            }, ],
             order: [
-                ['uploadedAt', 'DESC']
-            ]
+                ["uploadedAt", "DESC"]
+            ],
         });
 
         // 5. Map kết quả và XỬ LÝ DỮ LIỆU
-        const postsWithExtras = await Promise.all(posts.map(async post => {
-            const postJson = post.toJSON();
-            const commentCountFromDb = parseInt(postJson.commentCountOptimized) || 0;
+        const postsWithExtras = await Promise.all(
+            posts.map(async(post) => {
+                const postJson = post.toJSON();
+                const commentCountFromDb =
+                    parseInt(postJson.commentCountOptimized) || 0;
 
-            // 🎯 GỌI HÀM CHECK ISLIKED BẰNG SEQUELIZE CHUẨN
-            const isLiked = await checkIsLiked(numericUserId, postJson.id);
+                //  GỌI HÀM CHECK ISLIKED
+                const isLiked = await checkIsLiked(numericUserId, postJson.id);
 
-            // LOGIC PARSE CHUỖI JSON fileUrl THÀNH MẢNG (Giữ nguyên)
-            let parsedFileUrls = [];
-            try {
-                if (postJson.fileUrl) {
-                    parsedFileUrls = JSON.parse(postJson.fileUrl);
-                    if (!Array.isArray(parsedFileUrls)) {
-                        parsedFileUrls = [postJson.fileUrl];
+                // LOGIC PARSE CHUỖI JSON fileUrl THÀNH MẢNG
+                let parsedFileUrls = [];
+                try {
+                    if (postJson.fileUrl) {
+                        parsedFileUrls = JSON.parse(postJson.fileUrl);
+                        if (!Array.isArray(parsedFileUrls)) {
+                            parsedFileUrls = [postJson.fileUrl];
+                        }
                     }
+                } catch (e) {
+                    parsedFileUrls = postJson.fileUrl ? [postJson.fileUrl] : [];
                 }
-            } catch (e) {
-                parsedFileUrls = postJson.fileUrl ? [postJson.fileUrl] : [];
-            }
 
-            return {
-                ...postJson,
-                userId: post.userId,
-                commentCount: commentCountFromDb,
-                commentCountOptimized: undefined,
-                isLiked: isLiked,
-                fileUrl: parsedFileUrls,
-            };
-        }));
+                return {
+                    ...postJson,
+                    userId: post.userId,
+                    commentCount: commentCountFromDb,
+                    commentCountOptimized: undefined,
+                    isLiked: isLiked,
+                    fileUrl: parsedFileUrls,
+                };
+            })
+        );
 
         res.json(postsWithExtras);
-
     } catch (err) {
         console.error("Lỗi khi lấy bài đăng theo User ID:", err);
-        res.status(500).json({ error: 'Server Error: ' + err.message });
+        res.status(500).json({ error: "Server Error: " + err.message });
     }
 };
 
+// --- HÀM CẬP NHẬT BÀI ĐĂNG ---
 exports.updatePost = async(req, res) => {
     try {
         //  Lấy fileUrls nếu có và chuyển thành JSON string
@@ -429,7 +417,7 @@ exports.updatePost = async(req, res) => {
 
         const [updated] = await Post.update(body, { where: { id: req.params.id } });
         if (!updated) {
-            return res.status(404).json({ error: 'Post not found' });
+            return res.status(404).json({ error: "Post not found" });
         }
         const post = await Post.findByPk(req.params.id);
 
@@ -447,7 +435,6 @@ exports.updatePost = async(req, res) => {
         } catch (e) {
             postJson.fileUrl = [postJson.fileUrl];
         }
-        // ------------------------------------
 
         res.json(postJson);
     } catch (error) {
@@ -455,18 +442,20 @@ exports.updatePost = async(req, res) => {
     }
 };
 
+// --- HÀM XÓA BÀI ĐĂNG ---
 exports.deletePost = async(req, res) => {
     try {
         const deleted = await Post.destroy({ where: { id: req.params.id } });
         if (!deleted) {
-            return res.status(404).json({ error: 'Post not found' });
+            return res.status(404).json({ error: "Post not found" });
         }
-        res.json({ message: 'Post deleted successfully' });
+        res.json({ message: "Post deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+// --- HÀM THÍCH / BỎ THÍCH BÀI ĐĂNG ---
 exports.toggleLike = async(req, res) => {
     const userId = req.user.id;
     const postId = req.params.id;
@@ -476,7 +465,7 @@ exports.toggleLike = async(req, res) => {
         const existingLike = await Like.findOne({
             where: {
                 userId: userId,
-            }
+            },
         });
 
         let post = await Post.findByPk(postId);
@@ -492,23 +481,37 @@ exports.toggleLike = async(req, res) => {
             post.heartCount = Math.max(0, post.heartCount - 1);
             await post.save();
 
-            return res.status(200).json({ message: "Bỏ thích thành công.", isLiked: false, heartCount: post.heartCount });
+            return res
+                .status(200)
+                .json({
+                    message: "Bỏ thích thành công.",
+                    isLiked: false,
+                    heartCount: post.heartCount,
+                });
         } else {
             // 3. THÍCH: Tạo bản ghi Like mới
             await Like.create({
                 userId: userId,
-                postId: postId
+                postId: postId,
             });
 
             // Cập nhật heartCount
             post.heartCount += 1;
             await post.save();
 
-            return res.status(201).json({ message: "Thích thành công.", isLiked: true, heartCount: post.heartCount });
+            return res
+                .status(201)
+                .json({
+                    message: "Thích thành công.",
+                    isLiked: true,
+                    heartCount: post.heartCount,
+                });
         }
     } catch (error) {
         console.error("Lỗi khi toggle like:", error);
-        res.status(500).json({ error: "Lỗi server khi xử lý thao tác thích/bỏ thích." });
+        res
+            .status(500)
+            .json({ error: "Lỗi server khi xử lý thao tác thích/bỏ thích." });
     }
 };
 
@@ -528,27 +531,29 @@ exports.getLikesByPostId = async(req, res) => {
             where: { postId: postId },
             include: [{
                 model: User,
-                as: 'User',
-                attributes: ['id', 'username', 'avatarUrl', 'fullName']
-            }],
+                as: "User",
+                attributes: ["id", "username", "avatarUrl", "fullName"],
+            }, ],
             order: [
-                    ['liked_at', 'DESC']
-                ] // Sắp xếp theo thời gian thích mới nhất
+                ["liked_at", "DESC"]
+            ], // Sắp xếp theo thời gian thích mới nhất
         });
 
         // Map dữ liệu để trả về
-        const likesData = likes.map(like => ({
+        const likesData = likes.map((like) => ({
             id: like.id,
             userId: like.userId,
             postId: like.postId,
             likedAt: like.liked_at,
-            User: like.User
+            User: like.User,
         }));
 
         res.json(likesData);
     } catch (error) {
         console.error("Lỗi khi lấy danh sách likes:", error);
-        res.status(500).json({ error: "Lỗi server khi lấy danh sách người đã thích." });
+        res
+            .status(500)
+            .json({ error: "Lỗi server khi lấy danh sách người đã thích." });
     }
 };
 
@@ -566,7 +571,12 @@ exports.reportPost = async(req, res) => {
         }
 
         // Kiểm tra lý do báo cáo hợp lệ
-        const validReasons = ['adult_content', 'self_harm', 'misinformation', 'unwanted_content'];
+        const validReasons = [
+            "adult_content",
+            "self_harm",
+            "misinformation",
+            "unwanted_content",
+        ];
         if (!validReasons.includes(reason)) {
             return res.status(400).json({ message: "Lý do báo cáo không hợp lệ." });
         }
@@ -575,12 +585,14 @@ exports.reportPost = async(req, res) => {
         const existingReport = await PostReport.findOne({
             where: {
                 reporterId: userId,
-                postId: postId
-            }
+                postId: postId,
+            },
         });
 
         if (existingReport) {
-            return res.status(409).json({ message: "Bạn đã báo cáo bài đăng này rồi." });
+            return res
+                .status(409)
+                .json({ message: "Bạn đã báo cáo bài đăng này rồi." });
         }
 
         // Tạo báo cáo mới
@@ -592,11 +604,53 @@ exports.reportPost = async(req, res) => {
 
         res.status(201).json({
             message: "Báo cáo đã được gửi thành công. Chúng tôi sẽ xem xét bài viết này.",
-            report: report
+            report: report,
         });
-
     } catch (error) {
         console.error("Lỗi khi báo cáo bài đăng:", error);
         res.status(500).json({ error: "Lỗi server khi gửi báo cáo." });
+    }
+};
+
+// --- HÀM ẨN BÀI ĐĂNG ---
+exports.hidePost = async(req, res) => {
+    const currentUserId = req.user.id;
+    const postId = parseInt(req.params.id, 10); // Chuyển postId sang kiểu số nguyên
+
+    // Kiểm tra tính hợp lệ của postId
+    if (isNaN(postId)) {
+        return res.status(400).json({ error: "Invalid post ID." });
+    }
+
+    try {
+        // 1. Tìm bài đăng
+        const post = await Post.findByPk(postId);
+
+        if (!post) {
+            return res.status(404).json({ error: "Post not found." });
+        }
+
+        // 2. Kiểm tra người dùng đã ẩn bài đăng này chưa
+        const existingHide = await PostHide.findOne({
+            where: {
+                postId: postId,
+                userId: currentUserId,
+            },
+        });
+
+        if (existingHide) {
+            return res.status(409).json({ message: "Bạn đã ẩn bài đăng này rồi." });
+        }
+
+        // 3. Tạo bản ghi ẩn bài đăng
+        await PostHide.create({
+            postId: postId,
+            userId: currentUserId,
+        });
+
+        res.status(200).json({ message: "Bài đăng đã được ẩn thành công." });
+    } catch (error) {
+        console.error("Error hiding post:", error);
+        res.status(500).json({ error: "Failed to hide post." });
     }
 };

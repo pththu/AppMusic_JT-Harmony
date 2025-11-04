@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
-// Định nghĩa lý do (Bạn có thể đặt trong một file constants nếu cần)
+// Định nghĩa lý do
 const REPORT_REASONS = [
     { id: 'adult_content', title: 'Nội dung người lớn', icon: 'zap' },
     { id: 'self_harm', title: 'Tự hại bản thân', icon: 'frown' },
@@ -22,8 +22,7 @@ interface ReportReasonModalProps {
   visible: boolean;
   onClose: () => void;
   postId: number | null;
-  // Hàm xử lý gửi báo cáo cuối cùng
-  onFinalReport: (postId: number, reason: ReportReasonId) => void; 
+  onFinalReport: (postId: number, reason: ReportReasonId) => void;   // Hàm xử lý gửi báo cáo cuối cùng
 }
 
 const ReportReasonModal: React.FC<ReportReasonModalProps> = ({
@@ -122,4 +121,4 @@ const ReportReasonModal: React.FC<ReportReasonModalProps> = ({
   );
 };
 
-export default ReportReasonModal;
+export default ReportReasonModal; 

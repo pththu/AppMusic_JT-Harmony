@@ -1,6 +1,6 @@
-const { Conversation, Message, User, ConversationMember, sequelize } = require('../models');
-const Sequelize = require('sequelize'); // Import module gốc
-const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
+const { Conversation, Message, User, ConversationMember, MessageHide, sequelize } = require('../models');
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 
 // ==========================================================
 // 1. LẤY DANH SÁCH CONVERSATIONS CỦA USER HIỆN TẠI
@@ -10,14 +10,46 @@ exports.getConversations = async(req, res) => {
     const currentUserId = req.user.id;
 
     try {
+        // Trước tiên, lấy danh sách conversationId mà user là thành viên active
+        const userConversations = await ConversationMember.findAll({
+            where: {
+                userId: currentUserId,
+                status: 'active'
+            },
+            attributes: ['conversationId'],
+            raw: true,
+        });
+
+        const conversationIds = userConversations.map(cm => cm.conversationId);
+
+        if (conversationIds.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // Lọc chỉ lấy conversations có ít nhất 2 thành viên (để loại bỏ self-chat)
+        const validConversationIds = [];
+
+        for (const convId of conversationIds) {
+            const memberCount = await ConversationMember.count({
+                where: { conversationId: convId }
+            });
+            if (memberCount >= 2) {
+                validConversationIds.push(convId);
+            }
+        }
+
+        if (validConversationIds.length === 0) {
+            return res.status(200).json([]);
+        }
+
         const conversations = await Conversation.findAll({
+            where: {
+                id: {
+                    [Op.in]: validConversationIds
+                }
+            },
             // Tìm Conversation mà người dùng là thành viên
             include: [{
-                model: ConversationMember,
-                as: 'Members',
-                where: { userId: currentUserId },
-                attributes: [] // Không cần lấy trường từ ConversationMember
-            }, {
                 // Lấy tin nhắn cuối cùng
                 model: Message,
                 as: 'LastMessage',
@@ -43,7 +75,7 @@ exports.getConversations = async(req, res) => {
             ],
         });
 
-        // 💡 Xử lý tên cho Private Chat (Lấy tên người còn lại)
+        //  Xử lý tên cho Private Chat (Lấy tên người còn lại)
         const formattedConversations = conversations.map(conv => {
             const isPrivate = conv.type === 'private';
             let chatTitle = conv.name;
@@ -81,7 +113,7 @@ exports.getConversations = async(req, res) => {
 exports.createOrGetPrivateConversation = async(req, res) => {
     // 1. Lấy ID người dùng
     const currentUserId = req.user.id;
-    const targetUserId = parseInt(req.params.userId, 10);
+    const targetUserId = parseInt(req.params.userId, 10); // Chuyển sang số nguyên
 
     if (isNaN(targetUserId) || currentUserId === targetUserId) {
         return res.status(400).json({ message: 'Invalid request or Cannot chat with yourself' });
@@ -90,7 +122,7 @@ exports.createOrGetPrivateConversation = async(req, res) => {
     try {
         let conversationId = null;
 
-        // --- BƯỚC 1: TÌM CONVERSATION ID ĐÃ TỒN TẠI ---
+        // --- TÌM CONVERSATION ID ĐÃ TỒN TẠI ---
         // Truy vấn bảng trung gian ConversationMember để tìm Conversation ID
         const existingConversationMembers = await ConversationMember.findAll({
             // Chỉ chọn conversationId và đếm số lượng thành viên
@@ -113,7 +145,7 @@ exports.createOrGetPrivateConversation = async(req, res) => {
         if (existingConversationMembers.length > 0) {
             const existingId = existingConversationMembers[0].conversationId;
 
-            // 💡 Bước kiểm tra bổ sung: Đảm bảo Conversation đó là 'private'
+            //  Bước kiểm tra bổ sung: Đảm bảo Conversation đó là 'private'
             const existingConversation = await Conversation.findOne({
                 where: { id: existingId, type: 'private' },
                 attributes: ['id']
@@ -124,7 +156,7 @@ exports.createOrGetPrivateConversation = async(req, res) => {
             }
         }
 
-        // --- BƯỚC 2: TẠO MỚI NẾU KHÔNG TÌM THẤY ---
+        // --- TẠO MỚI NẾU KHÔNG TÌM THẤY ---
         if (!conversationId) {
             // Tạo Conversation mới
             const newConversation = await Conversation.create({
@@ -202,5 +234,149 @@ exports.getConversationMessages = async(req, res) => {
     } catch (error) {
         console.error('Error getting conversation messages:', error);
         res.status(500).json({ error: 'Failed to retrieve messages.' });
+    }
+};
+
+// ==========================================================
+// 4. XÓA TIN NHẮN
+// [DELETE] /api/v1/conversations/messages/:messageId
+// ==========================================================
+exports.deleteMessage = async(req, res) => {
+    const currentUserId = req.user.id;
+    const messageId = parseInt(req.params.messageId, 10);
+
+    if (isNaN(messageId)) {
+        return res.status(400).json({ error: 'Invalid message ID.' });
+    }
+
+    try {
+        // 1. Tìm tin nhắn
+        const message = await Message.findByPk(messageId);
+
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found.' });
+        }
+
+        // 2. Kiểm tra quyền: Chỉ người gửi mới có thể xóa
+        if (message.senderId !== currentUserId) {
+            return res.status(403).json({ error: 'Forbidden: You can only delete your own messages.' });
+        }
+
+        // 3. Xóa tin nhắn (soft delete nếu paranoid = true)
+        await message.destroy();
+
+        res.status(200).json({ message: 'Message deleted successfully.' });
+
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        res.status(500).json({ error: 'Failed to delete message.' });
+    }
+};
+
+// ==========================================================
+// 5. ẨN TIN NHẮN
+// [POST] /api/v1/conversations/messages/:messageId/hide
+// ==========================================================
+exports.hideMessage = async(req, res) => {
+    const currentUserId = req.user.id;
+    const messageId = parseInt(req.params.messageId, 10);
+
+    if (isNaN(messageId)) {
+        return res.status(400).json({ error: 'Invalid message ID.' });
+    }
+
+    try {
+        // 1. Tìm tin nhắn
+        const message = await Message.findByPk(messageId);
+
+        if (!message) {
+            return res.status(404).json({ error: 'Message not found.' });
+        }
+
+        // 2. Kiểm tra người dùng có phải là thành viên của cuộc trò chuyện không
+        const isMember = await ConversationMember.findOne({
+            where: {
+                conversationId: message.conversationId,
+                userId: currentUserId,
+            }
+        });
+
+        if (!isMember) {
+            return res.status(403).json({ error: 'Forbidden: Not a member of this conversation.' });
+        }
+
+        // 3. Tạo bản ghi ẩn tin nhắn
+        await MessageHide.create({
+            messageId: messageId,
+            userId: currentUserId,
+        });
+
+        res.status(200).json({ message: 'Message hidden successfully.' });
+
+    } catch (error) {
+        console.error('Error hiding message:', error);
+        res.status(500).json({ error: 'Failed to hide message.' });
+    }
+};
+
+// ==========================================================
+// 6. XÓA CUỘC TRÒ CHUYỆN (CHỈ XÓA BÊN PHÍA NGƯỜI DÙNG HIỆN TẠI)
+// [DELETE] /api/v1/conversations/:conversationId
+// ==========================================================
+exports.deleteConversation = async(req, res) => {
+    const currentUserId = req.user.id;
+    const conversationId = parseInt(req.params.conversationId, 10);
+
+    if (isNaN(conversationId)) {
+        return res.status(400).json({ error: 'Invalid conversation ID.' });
+    }
+
+    try {
+        // 1. Kiểm tra người dùng có phải là thành viên của cuộc trò chuyện không
+        const isMember = await ConversationMember.findOne({
+            where: {
+                conversationId: conversationId,
+                userId: currentUserId,
+            }
+        });
+
+        if (!isMember) {
+            return res.status(403).json({ error: 'Forbidden: Not a member of this conversation.' });
+        }
+
+        // 2. Cập nhật trạng thái thành viên của người dùng hiện tại thành 'left'
+        await ConversationMember.update({ status: 'left' }, {
+            where: {
+                conversationId: conversationId,
+                userId: currentUserId,
+            }
+        });
+
+        // 3. Kiểm tra xem còn thành viên active nào khác không
+        const remainingActiveMembers = await ConversationMember.count({
+            where: {
+                conversationId: conversationId,
+                status: 'active'
+            }
+        });
+
+        // Nếu không còn thành viên active nào, xóa luôn cuộc trò chuyện và tất cả tin nhắn liên quan
+        if (remainingActiveMembers === 0) {
+            // Xóa tất cả tin nhắn của cuộc trò chuyện
+            await Message.destroy({
+                where: { conversationId: conversationId }
+            });
+
+            // Xóa cuộc trò chuyện
+            await Conversation.destroy({
+                where: { id: conversationId }
+            });
+        }
+
+        res.status(200).json({ message: 'Conversation deleted successfully from your side.' });
+
+    } catch (error) {
+        console.error('Error deleting conversation:', error);
+        res.status(500).json({ error: 'Failed to delete conversation.' });
     }
 };

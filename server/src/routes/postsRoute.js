@@ -18,5 +18,6 @@ router.get('/:id/likes', authenticateToken, postController.getLikesByPostId); //
 router.put('/update/:id', authenticateToken, postController.updatePost); // Cập nhật bài đăng
 router.delete('/remove/:id', authenticateToken, postController.deletePost); // Xóa bài đăng
 router.post('/:id/report', authenticateToken, postController.reportPost); // Báo cáo bài đăng
+router.post('/:id/hide', authenticateToken, postController.hidePost); // Ẩn bài đăng
 
 module.exports = router;

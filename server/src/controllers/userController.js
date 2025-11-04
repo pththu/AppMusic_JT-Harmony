@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const cloudinary = require('../configs/cloudinary');
 
-exports.getAllUser = async (req, res) => {
+exports.getAllUser = async(req, res) => {
     try {
         const rows = await User.findAll();
         res.json(rows);
@@ -14,7 +14,7 @@ exports.getAllUser = async (req, res) => {
     }
 };
 
-exports.getUserById = async (req, res) => {
+exports.getUserById = async(req, res) => {
     try {
         const row = await User.findByPk(req.params.id);
         if (!row) return res.status(404).json({ error: 'User not found' });
@@ -32,7 +32,7 @@ exports.getUserById = async (req, res) => {
  * /search?status=active
  * /search?username=abc&gender=false
  */
-exports.search = async (req, res) => {
+exports.search = async(req, res) => {
     try {
         const { id, username, email, fullName, gender, status } = req.query;
         const where = {};
@@ -56,9 +56,9 @@ exports.search = async (req, res) => {
 }
 
 // không sử dụng
-exports.createUser = async (req, res) => {
+exports.createUser = async(req, res) => {
     try {
-        const payload = { ...req.body };
+        const payload = {...req.body };
         if (payload.password) {
             payload.password = await bcrypt.hash(payload.password, 10);
         }
@@ -69,9 +69,9 @@ exports.createUser = async (req, res) => {
     }
 };
 
-exports.updateInforUser = async (req, res) => {
+exports.updateInforUser = async(req, res) => {
     try {
-        const payload = { ...req.body };
+        const payload = {...req.body };
         const user = await User.findByPk(req.user.id);
 
         if (!payload.gender && user.gender === null) {
@@ -105,7 +105,7 @@ exports.updateInforUser = async (req, res) => {
 };
 
 // Đổi mật khẩu sau khi đăng nhập
-exports.changePassword = async (req, res) => {
+exports.changePassword = async(req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -128,7 +128,7 @@ exports.changePassword = async (req, res) => {
     }
 };
 
-exports.deleteUser = async (req, res) => {
+exports.deleteUser = async(req, res) => {
     try {
         const deleted = await User.destroy({ where: { id: req.params.id } });
         if (!deleted) return res.status(404).json({ error: 'User not found' });
@@ -138,7 +138,7 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
-exports.linkSocialAccount = async (req, res) => {
+exports.linkSocialAccount = async(req, res) => {
     try {
         const { userInfor, provider } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -199,7 +199,7 @@ exports.linkSocialAccount = async (req, res) => {
     }
 };
 
-exports.selfLockAccount = async (req, res) => {
+exports.selfLockAccount = async(req, res) => {
     try {
         const { password } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -219,7 +219,7 @@ exports.selfLockAccount = async (req, res) => {
     }
 };
 
-exports.mergeAccount = async (req, res) => {
+exports.mergeAccount = async(req, res) => {
     try {
         const { userId } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -250,7 +250,7 @@ exports.mergeAccount = async (req, res) => {
     }
 };
 
-exports.changeAvatar = async (req, res) => {
+exports.changeAvatar = async(req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -291,7 +291,7 @@ exports.changeAvatar = async (req, res) => {
     }
 };
 
-exports.getUserProfileSocial = async (req, res) => {
+exports.getUserProfileSocial = async(req, res) => {
     const { userId } = req.params;
     const currentUserId = req.user.id; // ID của người dùng đang xem (từ authenticateToken)
 
@@ -328,7 +328,7 @@ exports.getUserProfileSocial = async (req, res) => {
         // const isFollowing = await Follow.findOne({
         //     where: {
         //         followerId: currentUserId, // Người dùng hiện tại
-        //         // ✅ SỬ DỤNG userFolloweeId: đang theo dõi người dùng này
+        //         //  SỬ DỤNG userFolloweeId: đang theo dõi người dùng này
         //         userFolloweeId: userId,
         //         artistFolloweeId: null, // Đảm bảo chỉ kiểm tra việc theo dõi User
         //     }
@@ -359,7 +359,7 @@ exports.getUserProfileSocial = async (req, res) => {
 // Toggle Theo dõi/Hủy theo dõi
 // POST /api/v1/users/:userId/follow
 // ----------------------------------------------------------------------
-exports.toggleFollow = async (req, res) => {
+exports.toggleFollow = async(req, res) => {
     // const targetUserId = req.params.userId;
     // const currentUserId = req.user.id;
 
@@ -377,9 +377,9 @@ exports.toggleFollow = async (req, res) => {
     //         defaults: {
     //             followerId: currentUserId,
     //             userFolloweeId: targetUserId,
-    //             // ✅ CẦN THIẾT: Gán artistFolloweeId = null (Hoặc giá trị mặc định của bạn)
+    //             //  CẦN THIẾT: Gán artistFolloweeId = null (Hoặc giá trị mặc định của bạn)
     //             artistFolloweeId: null,
-    //             // ✅ CẦN THIẾT: Gán followedAt (Nếu không để defaultValue)
+    //             //  CẦN THIẾT: Gán followedAt (Nếu không để defaultValue)
     //             followedAt: new Date(),
     //         }
     //     });

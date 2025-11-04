@@ -73,10 +73,11 @@ const CommentModal: React.FC<CommentModalProps> = ({
 }) => {
   const colorScheme = useColorScheme();
   
-  const [isSending, setIsSending] = useState(false); 
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [expandedReplies, setExpandedReplies] = useState({});
+  const [isSending, setIsSending] = useState(false); // Trạng thái gửi bình luận
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false); // Trạng thái bàn phím
+  const [expandedReplies, setExpandedReplies] = useState({}); // Quản lý trạng thái mở rộng replies
 
+  // Lắng nghe sự kiện bàn phím
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
@@ -97,6 +98,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
     };
   }, []);
 
+  // Xử lý thêm bình luận
   const handleAddComment = async () => {
     if (newComment.trim()) {
       try {
@@ -117,6 +119,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
     }
   };
 
+  // Xử lý trả lời bình luận
   const handleReply = (comment: Comment) => {
     setReplyTo(comment); 
     setQuote(null);
@@ -127,11 +130,13 @@ const CommentModal: React.FC<CommentModalProps> = ({
     console.warn("Nút Trích dẫn đã bị xóa khỏi UI.");
   };
 
+  // Hủy trả lời hoặc trích dẫn
   const cancelReplyOrQuote = () => {
     setReplyTo(null); 
     setQuote(null); 
   };
   
+  // Chuyển đổi trạng thái mở rộng replies
   const toggleExpandedReplies = (commentId: string) => {
     setExpandedReplies((prev) => ({
       ...prev,
@@ -139,12 +144,14 @@ const CommentModal: React.FC<CommentModalProps> = ({
     }));
   };
 
+  // Tính tổng số bình luận bao gồm cả replies
   const totalCommentCount = comments.reduce((total, comment) => {
       let count = 1; 
       count += comment.Replies ? comment.Replies.length : 0; 
       return total + count;
   }, 0);
 
+  // Component hiển thị từng bình luận
   const CommentItem = ({ comment, isReply = false }) => {
     const isDark = colorScheme === "dark";
     const avatarSize = isReply ? 28 : 36;
@@ -329,7 +336,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
               className={`ml-2 px-4 py-2 rounded-full ${(!newComment.trim() || isSending) ? "bg-gray-400" : "bg-[#4F46E5]"}`}
             >
               {isSending ? (
-                <ActivityIndicator size="small" color="white" />
+                <ActivityIndicator size="small" color="4F46E5" />
               ) : (
                 <Text className="text-white font-bold">Gửi</Text>
               )}
@@ -341,4 +348,4 @@ const CommentModal: React.FC<CommentModalProps> = ({
   );
 };
 
-export default CommentModal;
+export default CommentModal; 

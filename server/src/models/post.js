@@ -1,8 +1,5 @@
-// Post.js (Backend Sequelize Model)
-
 const { DataTypes } = require('sequelize');
 const sequelize = require('../configs/database')
-    // const { sequelize } = require('../configs/database');
 
 const Post = sequelize.define(
     'Post', {
@@ -20,7 +17,7 @@ const Post = sequelize.define(
         content: {
             type: DataTypes.TEXT,
         },
-        fileUrl: {
+        fileUrl: { // URL tệp đính kèm (nếu có)
             type: DataTypes.TEXT,
             allowNull: true,
             field: 'file_url'
@@ -37,29 +34,26 @@ const Post = sequelize.define(
             defaultValue: 0,
             field: 'share_count'
         },
-        // Cột thời gian tùy chỉnh được giữ lại
         uploadedAt: {
             type: DataTypes.DATE,
             allowNull: false,
-            defaultValue: DataTypes.NOW, // Sequelize tự động điền giá trị này
+            defaultValue: DataTypes.NOW,
             field: 'uploaded_at'
         },
-        commentCount: {
+        commentCount: { // Số lượng bình luận
             type: DataTypes.INTEGER,
             allowNull: false,
             defaultValue: 0,
             field: 'comment_count'
         },
-        songId: {
+        songId: { // Liên kết đến bài hát nếu bài đăng chia sẻ bài hát
             type: DataTypes.INTEGER,
             allowNull: true,
             field: 'song_id'
         }
     }, {
         tableName: 'posts',
-        // CHÍNH XÁC: TẮT timestamps vì bạn dùng uploadedAt
         timestamps: true,
-        // Giữ underscored vì các trường DB là snake_case
         underscored: false
     }
 );

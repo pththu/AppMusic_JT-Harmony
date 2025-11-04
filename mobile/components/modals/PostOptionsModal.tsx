@@ -13,7 +13,6 @@ interface PostOptionsModalProps {
   onClose: () => void;
   onReport: () => void;
   onHide: () => void;
-  // Bạn có thể thêm các tùy chọn khác tại đây, ví dụ:
   onEdit?: () => void; // Nếu bài đăng là của người dùng hiện tại
   onDelete?: () => void; // Nếu bài đăng là của người dùng hiện tại
   isUserPost?: boolean; // Xác định xem đây có phải bài đăng của user hiện tại không
@@ -35,7 +34,6 @@ const PostOptionsModal: React.FC<PostOptionsModalProps> = ({
   const baseIconColor = isDark ? '#ffffff' : '#000000';
   const separatorColor = isDark ? 'border-gray-700' : 'border-gray-200';
 
-  // --- PHẦN RENDER UI ĐÃ NÂNG CẤP ---
   return (
     <Modal
       visible={visible}
