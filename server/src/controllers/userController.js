@@ -142,6 +142,7 @@ exports.linkSocialAccount = async(req, res) => {
     try {
         const { userInfor, provider } = req.body;
         const user = await User.findByPk(req.user.id);
+        console.log('user', user.dataValues)
         if (!user) {
             return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
         }
@@ -157,6 +158,13 @@ exports.linkSocialAccount = async(req, res) => {
 
             const existingUser = await User.findOne({ where: { facebookId: userInfor.userID } });
             if (existingUser) {
+                if (existingUser.googleId === null || !existingUser.googleId) {
+                    return res.status(200).json({
+                        message: 'Một tài khoản đã tổn tại với Facebook này. Bạn có muốn gộp tài khoản không?',
+                        success: false,
+                        userId: existingUser.id
+                    })
+                }
                 return res.status(200).json({ message: 'Tài khoản Facebook đã được liên kết với người dùng khác', success: false });
             };
 
@@ -172,12 +180,25 @@ exports.linkSocialAccount = async(req, res) => {
             user.accountType = Array.from(new Set([...user.accountType, 'facebook']));
 
         } else if (provider === 'google') {
-            if (user.email !== userInfor.email) {
+            if (user.email && user.email !== userInfor.email) {
                 return res.status(200).json({ message: 'Email không khớp, vui lòng sử dụng đúng email đã đăng ký', success: false });
             };
 
             if (user.googleId !== null) {
                 return res.status(200).json({ message: 'Tài khoản đã được liên kết với Google', success: false });
+            };
+
+            const existingUser = await User.findOne({ where: { googleId: userInfor.id } });
+            if (existingUser) {
+                if (existingUser.facebookId === null || !existingUser.facebookId) {
+                    return res.status(200).json({
+                        message: 'Một tài khoản đã tổn tại với Google này. Bạn có muốn gộp tài khoản không?',
+                        success: false,
+                        userId: existingUser.id
+                    })
+                }
+
+                return res.status(200).json({ message: 'Tài khoản Google đã được liên kết với người dùng khác', success: false });
             };
 
             if (userInfor.photo !== null && user.avatarUrl === null) {
@@ -188,13 +209,26 @@ exports.linkSocialAccount = async(req, res) => {
                 user.fullName = userInfor.name;
             }
 
+            if (user.email === null) {
+                user.email = userInfor.email;
+            }
+
+            if (user.emailVerified === false || user.emailVerified === null) {
+                user.emailVerified = true;
+            }
+
+            user.password = user.password || await bcrypt.hash('12345678', 10);
             user.googleId = userInfor.id;
             user.accountType = Array.from(new Set([...user.accountType, 'google']));
+            if (!user.accountType.includes('local')) {
+                user.accountType = Array.from(new Set([...user.accountType, 'local']));
+            }
         }
 
         await user.save();
         return res.json({ message: 'Liên kết tài khoản thành công', success: true, user });
     } catch (error) {
+        console.log(error.message)
         res.status(500).json({ error: error.message });
     }
 };
@@ -239,6 +273,7 @@ exports.mergeAccount = async(req, res) => {
         user.avatarUrl = user.avatarUrl || mergeUser.avatarUrl;
         user.fullName = user.fullName || mergeUser.fullName;
         user.accountType = Array.from(new Set([...user.accountType, ...mergeUser.accountType]));
+        user.emailVerified = true;
 
         await Promise.all([
             user.save(),
@@ -269,7 +304,6 @@ exports.changeAvatar = async(req, res) => {
             })
         };
 
-        // console.log('data upload', data);
         if (req.file.path) {
             const user = await User.findByPk(req.user.id);
             user.avatarUrl = req.file.path;
@@ -328,7 +362,7 @@ exports.getUserProfileSocial = async(req, res) => {
         // const isFollowing = await Follow.findOne({
         //     where: {
         //         followerId: currentUserId, // Người dùng hiện tại
-        //         //  SỬ DỤNG userFolloweeId: đang theo dõi người dùng này
+        //         // ✅ SỬ DỤNG userFolloweeId: đang theo dõi người dùng này
         //         userFolloweeId: userId,
         //         artistFolloweeId: null, // Đảm bảo chỉ kiểm tra việc theo dõi User
         //     }
@@ -377,9 +411,9 @@ exports.toggleFollow = async(req, res) => {
     //         defaults: {
     //             followerId: currentUserId,
     //             userFolloweeId: targetUserId,
-    //             //  CẦN THIẾT: Gán artistFolloweeId = null (Hoặc giá trị mặc định của bạn)
+    //             // ✅ CẦN THIẾT: Gán artistFolloweeId = null (Hoặc giá trị mặc định của bạn)
     //             artistFolloweeId: null,
-    //             //  CẦN THIẾT: Gán followedAt (Nếu không để defaultValue)
+    //             // ✅ CẦN THIẾT: Gán followedAt (Nếu không để defaultValue)
     //             followedAt: new Date(),
     //         }
     //     });

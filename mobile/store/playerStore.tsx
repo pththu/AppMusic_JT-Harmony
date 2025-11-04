@@ -1,80 +1,70 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-interface Artist {
-  name: string;
-  image: string;
-}
-
-interface Song {
-  id: string;
-  spotifyId: string;
-  name: string;
-  artists: Artist[];
-  imageUrl: string;
-  album: string;
-  mimeType: string;
-  bitrate: string;
-  externalUrl: string;
-  fileUri: string;
-}
-
 interface PlayerState {
-  // === STATE ===
-  currentSong: Song | null;
-  playlist: Song[];
+  // state lưu
+  currentTrack: any | null;
+  currentPlaylist: any | null;
   currentIndex: number;
+  playbackPosition: number;
+  playlist: any[];
+  myPlaylists: any[];
+  queue: any[];
+
+  // state không lưu
   isPlaying: boolean;
+  tabBarHeight: number;
+
   volume: number;
   currentTime: number;
   duration: number;
   isShuffled: boolean;
   repeatMode: 'none' | 'one' | 'all';
   isLoading: boolean;
+  isMiniPlayerVisible: boolean;
 
-  // === BASIC ACTIONS ===
-  setCurrentSong: (song: Song) => void;
-  setPlaylist: (songs: Song[]) => void;
+  setCurrentTrack: (track: any) => void;
+  setPlaylist: (tracks: any[]) => void;
+  setCurrentPlaylist: (playlist: any) => void;
+  setMyPlaylists: (playlists: any[]) => void;
   setIsPlaying: (playing: boolean) => void;
-  setVolume: (volume: number) => void;
-  setCurrentTime: (time: number) => void;
+  setPlaybackPosition: (position: number) => void;
+  setTabBarHeight: (height: number) => void;
+  setQueue: (tracks: any[]) => void;
+  setMiniPlayerVisible: (visible: boolean) => void;
   setDuration: (duration: number) => void;
-  setIsLoading: (loading: boolean) => void;
 
-  // === PLAYER ACTIONS ===
-  play: () => void;
-  pause: () => void;
-  togglePlay: () => void;
-  nextSong: () => void;
-  previousSong: () => void;
-  seekTo: (time: number) => void;
+  addToMyPlaylists: (playlist: any) => void;
+  updateCurrentPlaylist: (playlist: any) => void;
+  updateMyPlaylist: (playlist: any) => void;
+  removeFromMyPlaylists: (playlistId: string) => void;
 
-  // === PLAYLIST ACTIONS ===
-  addToPlaylist: (song: Song) => void;
-  removeFromPlaylist: (songId: string) => void;
-  clearPlaylist: () => void;
-  playFromPlaylist: (index: number) => void;
+  playTrack: (track: any) => void;
+  playPlaylist: (tracks: any[], startIndex?: number) => void;
+  playNext: () => void;
+  playPrevious: () => void;
+  togglePlayPause: () => void;
 
-  // === CONTROL ACTIONS ===
-  toggleShuffle: () => void;
-  toggleRepeat: () => void;
-  setRepeatMode: (mode: 'none' | 'one' | 'all') => void;
-
-  // === HELPER FUNCTIONS ===
-  getCurrentSongIndex: () => number;
-  hasNextSong: () => boolean;
-  hasPreviousSong: () => boolean;
-  getPlaylistDuration: () => number;
-  findSongInPlaylist: (songId: string) => Song | undefined;
+  addTrackToQueue: (tracks: any[]) => void;
+  removeTrackFromQueue: (tracks: any[]) => void;
+  clearQueue: () => void;
+  clear: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
       // === STATE ===
-      currentSong: null,
+      currentTrack: null,
       playlist: [],
+      currentPlaylist: null,
+      myPlaylists: [],
       currentIndex: -1,
+      playbackPosition: 0,
+      tabBarHeight: 0,
+      queue: [],
+
       isPlaying: false,
       volume: 1,
       currentTime: 0,
@@ -82,247 +72,145 @@ export const usePlayerStore = create<PlayerState>()(
       isShuffled: false,
       repeatMode: 'none',
       isLoading: false,
+      isMiniPlayerVisible: false,
 
       // === BASIC ACTIONS ===
-      setCurrentSong: (song) => {
+      setCurrentTrack: (track) => {
         const { playlist } = get();
-        const index = playlist.findIndex(s => s.id === song.id);
-
+        const index = playlist.findIndex(s => s.id === track.id);
         set({
-          currentSong: song,
+          currentTrack: track,
           currentIndex: index !== -1 ? index : -1,
           currentTime: 0,
         });
       },
-
       setPlaylist: (songs) => {
         set({ playlist: songs });
       },
-
-      setIsPlaying: (playing) => {
-        set({ isPlaying: playing });
+      setCurrentPlaylist: (playlist) => {
+        set({ currentPlaylist: playlist });
       },
-
-      setVolume: (volume) => {
-        // Clamp volume between 0 and 1
-        const clampedVolume = Math.max(0, Math.min(1, volume));
-        set({ volume: clampedVolume });
+      setMyPlaylists: (playlists) => {
+        set({ myPlaylists: playlists });
       },
-
-      setCurrentTime: (time) => {
-        set({ currentTime: Math.max(0, time) });
+      setQueue: (tracks) => {
+        set({ queue: tracks });
       },
-
-      setDuration: (duration) => {
-        set({ duration: Math.max(0, duration) });
-      },
-
-      setIsLoading: (loading) => {
-        set({ isLoading: loading });
-      },
-
-      // === PLAYER ACTIONS ===
-      play: () => {
-        set({ isPlaying: true });
-      },
-
-      pause: () => {
-        set({ isPlaying: false });
-      },
-
-      togglePlay: () => {
-        const { isPlaying } = get();
-        set({ isPlaying: !isPlaying });
-      },
-
-      nextSong: () => {
-        const { playlist, currentIndex, isShuffled, repeatMode } = get();
-
-        if (playlist.length === 0) return;
-
-        let nextIndex = currentIndex;
-
-        if (repeatMode === 'one') {
-          // Repeat current song - don't change index
-          return;
-        }
-
-        if (isShuffled) {
-          // Random next song
-          nextIndex = Math.floor(Math.random() * playlist.length);
-        } else {
-          nextIndex = currentIndex + 1;
-
-          if (nextIndex >= playlist.length) {
-            if (repeatMode === 'all') {
-              nextIndex = 0; // Loop back to start
-            } else {
-              // End of playlist
-              set({ isPlaying: false });
-              return;
-            }
-          }
-        }
-
-        const nextSong = playlist[nextIndex];
-        if (nextSong) {
-          set({
-            currentSong: nextSong,
-            currentIndex: nextIndex,
-            currentTime: 0,
-          });
-        }
-      },
-
-      previousSong: () => {
-        const { playlist, currentIndex } = get();
-
-        if (playlist.length === 0 || currentIndex <= 0) return;
-
-        const prevIndex = currentIndex - 1;
-        const prevSong = playlist[prevIndex];
-
-        if (prevSong) {
-          set({
-            currentSong: prevSong,
-            currentIndex: prevIndex,
-            currentTime: 0,
-          });
-        }
-      },
-
-      seekTo: (time) => {
-        const { duration } = get();
-        const clampedTime = Math.max(0, Math.min(duration, time));
-        set({ currentTime: clampedTime });
-      },
-
-      // === PLAYLIST ACTIONS ===
-      addToPlaylist: (song) => {
-        const { playlist } = get();
-
-        // Check if song already exists
-        const existingIndex = playlist.findIndex(s => s.id === song.id);
+      addToMyPlaylists: (playlist) => {
+        const { myPlaylists } = get();
+        const existingIndex = myPlaylists.findIndex(p => p.id === playlist.id);
         if (existingIndex !== -1) return;
-
-        set({ playlist: [...playlist, song] });
+        set({ myPlaylists: [...myPlaylists, playlist] });
       },
-
-      removeFromPlaylist: (songId) => {
-        const { playlist, currentSong, currentIndex } = get();
-        const newPlaylist = playlist.filter(song => song.id !== songId);
-
-        // Update current index if needed
-        let newCurrentIndex = currentIndex;
-        if (currentSong?.id === songId) {
-          // Removed current song
-          set({
-            currentSong: null,
-            currentIndex: -1,
-            isPlaying: false,
-            playlist: newPlaylist,
-          });
-          return;
-        } else if (currentIndex > -1) {
-          // Recalculate index
-          const newIndex = newPlaylist.findIndex(s => s.id === currentSong?.id);
-          newCurrentIndex = newIndex;
-        }
-
-        set({
-          playlist: newPlaylist,
-          currentIndex: newCurrentIndex,
-        });
+      updateCurrentPlaylist: (playlist) => {
+        set({ currentPlaylist: playlist });
       },
-
-      clearPlaylist: () => {
-        set({
-          playlist: [],
-          currentSong: null,
-          currentIndex: -1,
-          isPlaying: false,
-          currentTime: 0,
-        });
+      updateMyPlaylist: (playlist) => {
+        const { myPlaylists } = get();
+        const updatedPlaylists = myPlaylists.map(p => p.id === playlist.id ? playlist : p);
+        set({ myPlaylists: updatedPlaylists });
       },
-
-      playFromPlaylist: (index) => {
-        const { playlist } = get();
-
-        if (index < 0 || index >= playlist.length) return;
-
-        const song = playlist[index];
+      removeFromMyPlaylists: (playlistId) => {
+        const { myPlaylists } = get();
+        const newPlaylists = myPlaylists.filter(p => p.id !== playlistId);
+        set({ myPlaylists: newPlaylists });
+      },
+      playPlaylist: (tracks, startIndex = 0) =>
         set({
-          currentSong: song,
-          currentIndex: index,
-          currentTime: 0,
+          playlist: tracks,
+          currentIndex: startIndex,
+          currentTrack: tracks[startIndex],
           isPlaying: true,
+          playbackPosition: 0,
+        }),
+
+      playTrack: (track) =>
+        set({
+          playlist: [track],
+          currentIndex: 0,
+          currentTrack: track,
+          isPlaying: true,
+          playbackPosition: 0,
+        }),
+
+      playNext: () => {
+        const { playlist, currentIndex } = get();
+        if (playlist.length === 0) return;
+        const nextIndex = (currentIndex + 1) % playlist.length;
+        set({
+          currentIndex: nextIndex,
+          currentTrack: playlist[nextIndex],
+          isPlaying: true,
+          playbackPosition: 0,
         });
       },
 
-      // === CONTROL ACTIONS ===
-      toggleShuffle: () => {
-        const { isShuffled } = get();
-        set({ isShuffled: !isShuffled });
+      playPrevious: () => {
+        const { playlist, currentIndex } = get();
+        if (playlist.length === 0) return;
+        const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+        set({
+          currentIndex: prevIndex,
+          currentTrack: playlist[prevIndex],
+          isPlaying: true,
+          playbackPosition: 0,
+        });
       },
-
-      toggleRepeat: () => {
-        const { repeatMode } = get();
-        const modes: Array<'none' | 'one' | 'all'> = ['none', 'one', 'all'];
-        const currentModeIndex = modes.indexOf(repeatMode);
-        const nextModeIndex = (currentModeIndex + 1) % modes.length;
-
-        set({ repeatMode: modes[nextModeIndex] });
+      setDuration: (duration) => {
+        set({ duration });
       },
-
-      setRepeatMode: (mode) => {
-        set({ repeatMode: mode });
+      // Dùng cho nút play/pause ở SongScreen, MiniPlayer
+      togglePlayPause: () => {
+        set((state) => ({ isPlaying: !state.isPlaying }))
       },
-
-      // === HELPER FUNCTIONS ===
-      getCurrentSongIndex: () => {
-        const { currentIndex } = get();
-        return currentIndex;
+      // Dùng cho YoutubePlayer component
+      setIsPlaying: (playing) => {
+        set({ isPlaying: playing })
       },
-
-      hasNextSong: () => {
-        const { playlist, currentIndex, repeatMode } = get();
-
-        if (repeatMode === 'one' || repeatMode === 'all') return true;
-
-        return currentIndex < playlist.length - 1;
+      setPlaybackPosition: (position) => {
+        set({ playbackPosition: position })
       },
-
-      hasPreviousSong: () => {
-        const { currentIndex } = get();
-        return currentIndex > 0;
+      // Dùng cho TabBar
+      setTabBarHeight: (height) => {
+        set({ tabBarHeight: height })
       },
-
-      getPlaylistDuration: () => {
-        const { playlist } = get();
-        // This would need actual song durations
-        return playlist.length * 180; // Assuming 3 minutes per song
+      addTrackToQueue: (tracks) => {
+        const { queue } = get();
+        set({ queue: [...queue, ...tracks] });
       },
-
-      findSongInPlaylist: (songId) => {
-        const { playlist } = get();
-        return playlist.find(song => song.id === songId);
+      removeTrackFromQueue: (tracks) => {
+        const { queue } = get();
+        const trackIdsToRemove = tracks.map(t => t.id);
+        const newQueue = queue.filter(t => !trackIdsToRemove.includes(t.id));
+        set({ queue: newQueue });
       },
+      clearQueue: () => {
+        set({ queue: [] });
+      },
+      setMiniPlayerVisible: (visible) => set({ isMiniPlayerVisible: visible }),
+      clear: () => set({
+        currentTrack: null,
+        isPlaying: false,
+        currentIndex: -1,
+        playbackPosition: 0,
+        // playlist: [],
+      }),
     }),
-    {
-      name: 'music-player-storage',
-      storage: createJSONStorage(() => localStorage),
 
-      // Only persist necessary data
+    {
+      name: 'player-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        // gọi khi load từ AsyncStorage xong
+        console.log("✅ Player store rehydrated");
+      },
       partialize: (state) => ({
-        currentSong: state.currentSong,
+        currentTrack: state.currentTrack,
         playlist: state.playlist,
         currentIndex: state.currentIndex,
-        volume: state.volume,
-        isShuffled: state.isShuffled,
-        repeatMode: state.repeatMode,
+        playbackPosition: state.playbackPosition,
+        myPlaylist: state.myPlaylists,
       }),
-
-      version: 1,
     }
   )
 );

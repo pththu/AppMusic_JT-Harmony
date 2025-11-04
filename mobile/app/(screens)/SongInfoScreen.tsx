@@ -43,8 +43,6 @@ export default function SongInfoScreen() {
   const params = useLocalSearchParams();
   const song = JSON.parse(params.song as string);
 
-  // Ép kiểu (type assertion) để đảm bảo song có đầy đủ thuộc tính
-
   const { theme } = useTheme();
   const primaryIconColor = theme === 'dark' ? 'white' : 'black';
 
@@ -64,7 +62,7 @@ export default function SongInfoScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Title */}
-        <InfoRow label="Title" value={song.name} />
+        <InfoRow label="Title" value={song?.name} />
 
         {/* General Info */}
         <InfoRow

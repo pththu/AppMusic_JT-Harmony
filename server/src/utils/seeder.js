@@ -285,6 +285,7 @@ const seedDataTrack = async() => {
 
             const tracksToInsert = trackData.map(track => ({
                 spotifyId: track.spotifyId,
+                videoId: track.videoId,
                 name: track.name,
                 lyrics: track.lyrics,
                 externalUrl: track.externalUrl,

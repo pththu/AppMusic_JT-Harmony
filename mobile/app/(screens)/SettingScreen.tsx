@@ -5,14 +5,14 @@ import Icon from "react-native-vector-icons/Ionicons";
 import SettingButton from "@/components/button/SettingButton";
 import CustomButton from "@/components/custom/CustomButton";
 import { useNavigate } from "@/hooks/useNavigate";
-import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { ENV } from "@/config/env";
 import { LoginManager, Profile, Settings } from "react-native-fbsdk-next";
-import { LinkSocialAccount, Logout, SelfLockAccount } from "@/routes/ApiRouter";
+import { LinkSocialAccount, Logout, MergeAccount, SelfLockAccount } from "@/routes/ApiRouter";
 import { useTheme } from "@/components/ThemeContext"; // Import useTheme
+import { useRouter } from "expo-router";
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
@@ -24,6 +24,7 @@ Settings.initializeSDK();
 export default function SettingScreen() {
 
   const { theme } = useTheme(); // Lấy theme hiện tại
+  const router = useRouter();
   const user = useAuthStore(state => state.user);
   const loginType = useAuthStore(state => state.loginType);
   const updateUser = useAuthStore(state => state.updateUser);
@@ -36,6 +37,20 @@ export default function SettingScreen() {
   const [showMessage, setShowMessage] = useState(false);
   const colorScheme = useColorScheme();
 
+  const handleMergeAccount = async (userId) => {
+    try {
+      const response = await MergeAccount({ userId });
+      if (!response.success) {
+        error("Gộp tài khoản thất bại", response.message);
+        return;
+      }
+      updateUser(response.user);
+      success("Gộp tài khoản thành công");
+    } catch (error) {
+      error("Gộp tài khoản thất bại", error.message);
+    }
+  };
+
   const handleLinkAccountFacebook = async () => {
     try {
       const result = await LoginManager.logInWithPermissions(['public_profile']);
@@ -47,14 +62,25 @@ export default function SettingScreen() {
           const profile = await Profile.getCurrentProfile();
           if (profile) {
             const response = await LinkSocialAccount({ userInfor: profile, provider: 'facebook' });
+            console.log('response link facebook', response);
             if (!response.success) {
-              error("Liên kết thất bại", response.message);
-              return;
+              if (!response.userId) {
+                error("Liên kết thất bại", response.message);
+                return;
+              } else {
+                confirm(
+                  "Xác nhận",
+                  response.message,
+                  () => handleMergeAccount(response.userId),
+                  () => { }
+                );
+                return;
+              }
             }
             updateUser(response.user);
+            success("Liên kết thành công tài khoản Facebook");
           }
-        }, 1000);
-        success("Liên kết thành công tài khoản Facebook");
+        }, 2000);
       }
     } catch (error) {
       console.log('Login fb fail with error: ' + error);
@@ -73,10 +99,20 @@ export default function SettingScreen() {
       const userInfor = await GoogleSignin.signIn();
       const response = await LinkSocialAccount({ userInfor: userInfor.data.user, provider: 'google' });
       if (!response.success) {
-        error("Liên kết thất bại", response.message);
-        return;
+        console.log(1)
+        if (!response.userId) {
+          error("Liên kết thất bại", response.message);
+          return;
+        } else {
+          confirm(
+            "Xác nhận",
+            response.message,
+            () => handleMergeAccount(response.userId),
+            () => { }
+          );
+          return;
+        }
       }
-
       updateUser(response.user);
       success("Liên kết thành công tài khoản Google");
     } catch (error) {

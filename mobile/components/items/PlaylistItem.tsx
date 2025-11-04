@@ -1,42 +1,34 @@
-import React from 'react';
+import { usePlayerStore } from '@/store/playerStore';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-interface PlaylistItemProps {
-  title: string;
-  type: string;
-  songs: number;
-  image: string;
-  onPress?: () => void;
-  onOptionsPress?: () => void;
-}
 
-export default function PlaylistItem({
-  title,
-  type,
-  songs,
-  image,
-  onPress,
-  onOptionsPress,
-}: PlaylistItemProps) {
+export default function PlaylistItem({ title, type, songs, image, onPress = () => { }, onOptionsPress = () => { } }) {
+
+  const formatTitle = (title: string) => {
+    const maxLength = 20;
+    if (title.length > maxLength) {
+      return title.substring(0, maxLength - 3) + '...';
+    }
+    return title;
+  };
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="flex-row items-center py-3 active:opacity-75"
+      className="items-start py-3 active:opacity-75 mr-4"
     >
       <Image
         source={{ uri: image }}
-        className="w-16 h-16 rounded-md shadow-md"
+        className="w-32 h-32 rounded-md shadow-md"
       />
-      <View className="ml-4 flex-1 justify-center">
-        <Text className="text-white text-base font-semibold">{title}</Text>
-        <Text className="text-gray-400 text-sm">
-          {type} • {songs} songs
-        </Text>
+      <View className="flex-1 justify-center">
+        <Text className="text-white text-base font-semibold">{formatTitle(title)}</Text>
+        {/* <Text className="text-gray-400 text-sm">
+          {songs} bài hát
+        </Text> */}
       </View>
-      <TouchableOpacity className="p-2" onPress={onOptionsPress}>
-        <Icon name="ellipsis-horizontal" size={24} color="#888" />
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 }

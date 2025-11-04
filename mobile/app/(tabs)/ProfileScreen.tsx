@@ -24,6 +24,7 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LoginManager } from "react-native-fbsdk-next";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import { usePlayerStore } from "@/store/playerStore";
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
@@ -279,8 +280,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        {/* <Pressable
-          className="p-5 border border-slate-300"
+        {/* <Pressable className="p-5 border border-slate-300"
           onPress={() => handlePickMultipleFile()}
         >
           <Text>Chọn nhiều file</Text>

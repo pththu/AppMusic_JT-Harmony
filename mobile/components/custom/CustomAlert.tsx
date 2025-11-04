@@ -116,8 +116,8 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     let baseClass = 'flex-1 py-4 justify-center items-center';
 
     // Background colors based on theme
-    const bgWhite = isDark ? 'bg-gray-500' : 'bg-gray-300';
-    const bgGray = isDark ? 'bg-gray-500' : 'bg-gray-300';
+    const bgWhite = isDark ? 'bg-gray-900' : 'bg-gray-300';
+    const bgGray = isDark ? 'bg-gray-500' : 'bg-gray-500';
     const bgRed = isDark ? 'bg-red-500' : 'bg-red-300';
     const bgGreen = isDark ? 'bg-green-500' : 'bg-green-300';
 

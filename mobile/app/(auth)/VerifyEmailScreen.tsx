@@ -109,7 +109,7 @@ export default function VerifyEmailScreen() {
             </Text>
           </TouchableOpacity>
           {next !== 'ResetPassword' && (
-            <TouchableOpacity onPress={() => navigate('ResetPassword')} disabled={loading}>
+            <TouchableOpacity onPress={() => navigate('Login')} disabled={loading}>
               <Text className="text-[#34D399] font-bold ml-1">
                 Xác thực sau
               </Text>

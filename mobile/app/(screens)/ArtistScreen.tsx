@@ -66,15 +66,18 @@ export default function ArtistScreen() {
   const artist = params.artist ? JSON.parse(params.artist as string) : sampleArtist;
   const popularReleases = artist.popularReleases || [];
 
+  console.log('artist', artist)
+
   const handlePressSeeMore = () => {
     navigate("AllSongsScreen", { artist: JSON.stringify(artist) });
   }
 
-  const renderItem = ({ item }: any) => (
+  const renderItem = ({ item, index }: any) => (
     <SongItem
-      title={item.title}
-      subtitle={item.album}
-      image={item.image}
+      item={item}
+      key={index}
+      image={item.imageUrl || ''}
+      onPress={() => { }}
       onOptionsPress={() => { }}
     />
   );
@@ -142,7 +145,7 @@ export default function ArtistScreen() {
         </View>
         <FlatList
           data={popularReleases.slice(0, 5)}
-          keyExtractor={item => item.id}
+          keyExtractor={(item, index) => index.toString()}
           renderItem={renderItem}
           scrollEnabled={false}
         />

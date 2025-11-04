@@ -5,9 +5,8 @@ import { useNavigate } from '@/hooks/useNavigate';
 import LibraryItemButton from '@/components/button/LibraryItemButton';
 import SongItem from '@/components/items/SongItem';
 import { usePlayerStore } from '@/store/playerStore';
-import { trackData, albumData } from '@/constants/data';
-
-import { useTheme } from '@/components/ThemeContext';
+import { trackData, albumData } from "@/constants/data";
+import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
 
 const libraryItems = [
   {
@@ -28,7 +27,7 @@ const libraryItems = [
     id: '3',
     title: 'Danh sách phát',
     icon: 'list',
-    screen: 'PlaylistsScreen',
+    screen: 'AllPlaylistScreen',
     color: '#82d8ff',
   },
   {
@@ -41,35 +40,51 @@ const libraryItems = [
 ];
 
 export default function YourLibraryScreen() {
-  const setCurrentSong = usePlayerStore((state) => state.setCurrentSong);
+  const playPlaylist = usePlayerStore((state) => state.playPlaylist);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
+
   const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
 
 
-  const handleSelectSong = (song) => {
-    setCurrentSong(song);
-    navigate('SongScreen');
-  }
+  const handleSelectSong = (song, index) => {
+    const playlistWithVideoId = trackData.map((item) => ({
+      ...item,
+      videoId: item.videoId || "5BdSZkY6F4M",
+      artists: item.artists,
+      imageUrl:
+        item.imageUrl ||
+        albumData.find((album) => album.name === item.album)?.imageUrl ||
+        "",
+    }));
 
-  const renderRecentlyPlayedItem = ({ item }: { item: (typeof trackData)[0]; }) => (
+    playPlaylist(playlistWithVideoId, index);
+  };
+
+  const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
-      title={item.name}
-      subtitle={item.artists.map(a => a).join(', ')} // Nối tên nghệ sĩ thành một chuỗi
-      image={item.imageUrl || albumData.find(album => album.name === item.album)?.imageUrl || ''}
-      onPress={() => handleSelectSong(item)} // Truyền cả mảng artists
+      item={item}
+      image={
+        item.imageUrl ||
+        albumData.find((album) => album.name === item.album)?.imageUrl ||
+        ""
+      }
+      onPress={() => handleSelectSong(item, index)}
       onOptionsPress={() => { }}
     />
   );
 
   return (
-    <SafeAreaView className={`flex-1 px-4 pt-4 ${colorScheme === 'dark' ? 'bg-black' : 'bg-white'}`}>
+    <SafeAreaView
+      className={`flex-1 px-4 pt-4 ${colorScheme === 'dark' ? 'bg-black' : 'bg-white'}`}
+    >
       <Text className="text-black dark:text-white text-2xl font-semibold mb-4">
         Thư viện của bạn
       </Text>
       <View className="mb-6  flex-row gap-2 flex-wrap justify-between p-1">
-        {libraryItems?.map(item => (
+        {libraryItems?.map((item, index) => (
           <LibraryItemButton
-            key={item.id}
+            key={index.toString()}
             title={item.title}
             icon={item.icon}
             onPress={() => navigate(item.screen)}
@@ -89,8 +104,7 @@ export default function YourLibraryScreen() {
       <FlatList
         data={trackData}
         renderItem={renderRecentlyPlayedItem}
-        keyExtractor={item => item.spotifyId}
-        className='mb-[20%]'
+        keyExtractor={(item, index) => index.toString()}
       />
     </SafeAreaView>
   );

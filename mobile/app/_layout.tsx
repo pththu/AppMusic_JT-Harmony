@@ -9,12 +9,14 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { View } from "react-native"; 
+import { View } from "react-native";
 import "react-native-reanimated";
 
 import { ThemeProvider, useTheme } from "@/components/ThemeContext";
 import { AlertProvider } from "@/context/AlertContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import MiniPlayer from "@/components/player/MiniPlayer";
+import GlobalPlayer from "@/components/player/GlobalPlayer";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -37,7 +39,7 @@ export default function RootLayout() {
   }, [loaded]);
 
   if (!loaded) {
-    return <View />; 
+    return <View />;
   }
 
   return (
@@ -49,7 +51,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { theme: colorScheme, isThemeLoaded } = useTheme();
-  
+
   if (!isThemeLoaded) {
     return <View />;
   }
@@ -58,15 +60,17 @@ function RootLayoutNav() {
     <NavigationThemeProvider
       value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
     >
-      <View className="flex-1 bg-white dark:bg-black"> 
+      <View className="flex-1 bg-white dark:bg-black">
         <SafeAreaProvider>
-          <AlertProvider>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(screens)" options={{ headerShown: false }} />
-            </Stack>
-          </AlertProvider>
+            <AlertProvider>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              </Stack>
+              <MiniPlayer />
+              <GlobalPlayer />
+            </AlertProvider>
         </SafeAreaProvider>
       </View>
     </NavigationThemeProvider>
