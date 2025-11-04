@@ -108,7 +108,7 @@ const AddToAnotherPlaylistModal = ({
           onPress={() => { }}
           className={`w-full h-[70%] ${modalBgColor} rounded-t-2xl p-5`}
         >
-          <View className="flex-col pb-4 border-b border-gray-700/50">
+          <View className={`flex-col pb-4 border-b ${colorScheme === "dark" ? "border-gray-700/50" : "border-gray-200"}`}>
 
             <View className="flex-row items-center justify-between mb-4">
               <Text className={`text-xl font-bold ${textColor}`}>
@@ -177,7 +177,7 @@ const AddToAnotherPlaylistModal = ({
           </View>
 
           {/* Các nút hành động */}
-          <View className="flex-row mt-4 pt-4 border-t border-gray-700/50">
+          <View className={`flex-row mt-4 pt-4 border-t ${colorScheme === "dark" ? "border-gray-700/50" : "border-gray-200"}`}>
             <TouchableOpacity
               onPress={() => setIsVisible(false)}
               className="flex-1 py-3 items-center rounded-full mr-2"

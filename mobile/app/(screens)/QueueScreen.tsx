@@ -6,48 +6,42 @@ import {
   Switch,
   TouchableOpacity,
   Image,
+  useColorScheme,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-// import { useNavigation } from '@react-navigation/native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useQueueStore } from '@/store/queueStore';
-import { useTheme } from '@/components/ThemeContext';
+import { usePlayerStore } from '@/store/playerStore';
+import { Pressable } from 'react-native';
 
 export default function QueueScreen() {
+  const queue = usePlayerStore((state) => state.queue);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const clearQueue = usePlayerStore((state) => state.clearQueue);
+  console.log('queue', queue);
+
   const [autoRecommendations, setAutoRecommendations] = useState(true);
-  const { theme } = useTheme();
-  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
-  const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
+  const colorScheme = useColorScheme();
+  const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
+  const secondaryIconColor = colorScheme === 'dark' ? '#888' : 'gray';
 
-  // Nhận dữ liệu bài hát đang phát và hàng đợi từ params
-  // const { nowPlaying, queue } = route.params;
-  const { nowPlaying, queue } = useQueueStore();
-
-  // Kết hợp bài hát đang phát và danh sách hàng đợi
-  const combinedQueue = nowPlaying
-    ? [{ ...nowPlaying, isPlaying: true }, ...queue]
-    : [...queue];
 
   const renderQueueItem = ({ item, index }) => {
-    const isPlaying = item.isPlaying;
-
-    const displayIndex = index > 0 ? index + 1 : null;
     return (
       <View
         key={`${item.id}-${index}`}
-        className={`flex-row items-center py-2 ${index > 0 ? 'border-b border-gray-300 dark:border-gray-700' : ''}`}
+        className={`flex-row items-center py-2 border-b ${colorScheme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}
       >
         <View className="mr-4">
         </View>
         <Image source={{ uri: item.imageUrl }} className="w-12 h-12 rounded-md" />
         <View className="ml-4 flex-1">
           <Text
-            className={`font-semibold ${isPlaying ? 'text-green-600 dark:text-green-400' : 'text-black dark:text-white'}`}
+            className={`font-semibold ${colorScheme === 'dark' ? ' text-white' : 'text-black'}`}
           >
             {item.name}
           </Text>
-          <Text className="text-gray-600 dark:text-gray-400">
+          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
             {item.artists?.map(a => a.name).join(', ')}
           </Text>
         </View>
@@ -59,7 +53,7 @@ export default function QueueScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white dark:bg-[#0E0C1F] p-4">
+    <View className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white '} p-4`}>
       <View className="flex-row items-center mb-4">
         {/* Nút quay lại */}
         <TouchableOpacity onPress={() => router.back()}>
@@ -67,20 +61,19 @@ export default function QueueScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Hiển thị Now Playing riêng biệt */}
-      {nowPlaying && (
+      {currentTrack && (
         <View className="flex-row items-center mb-4">
-          {nowPlaying.image && (
+          {currentTrack?.imageUrl && (
             <Image
-              source={{ uri: nowPlaying.image }}
+              source={{ uri: currentTrack?.imageUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1761533935/kltn/playlist_default.png' }}
               className="w-12 h-12 rounded-md mr-4"
             />
           )}
           <View>
-            <Text className="text-gray-600 dark:text-gray-400 text-sm">Đang phát</Text>
-            <Text className="text-black dark:text-white font-bold">{nowPlaying.name}</Text>
-            <Text className="text-gray-600 dark:text-gray-400 text-sm">
-              {nowPlaying.artists?.map(a => a).join(', ')}
+            <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>Đang phát</Text>
+            <Text className={`${colorScheme === 'dark' ? 'text-green-400' : 'text-green-700'} font-semibold`}>{currentTrack.name}</Text>
+            <Text className={`${colorScheme === 'dark' ? 'text-green-400' : 'text-green-700'} text-sm`}>
+              {currentTrack?.artists?.map(a => a.name).join(', ')}
             </Text>
           </View>
         </View>
@@ -88,19 +81,30 @@ export default function QueueScreen() {
 
       {/* FlatList chứa cả bài hát đang phát và hàng đợi */}
       <FlatList
-        data={combinedQueue}
+        data={queue}
         renderItem={renderQueueItem}
         keyExtractor={(item, index) => item.spotifyId}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
         ListHeaderComponent={() => (
-          <View className="flex-row justify-between items-center py-2 border-t border-gray-300 dark:border-gray-700">
-            <Text className="text-black dark:text-white text-lg font-semibold">Danh sách chờ</Text>
+          <View className={`flex-row justify-between items-center border-t ${colorScheme === 'dark' ? 'border-gray-700' : 'border-gray-300 '}`}>
+            <View className={`flex-row justify-between items-center py-2`}>
+              <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-lg font-semibold`}>Danh sách chờ</Text>
+            </View>
+            <Pressable className="p-2" onPress={() => {
+              clearQueue();
+            }}>
+              <Text className={`text-red-500 font-semibold`}>
+                Xoá hàng đợi
+              </Text>
+            </Pressable>
           </View>
-        )}
+
+        )
+        }
         ListFooterComponent={() => (
           <View className="flex-row justify-between items-center mt-4">
-            <Text className="text-black dark:text-white text-lg font-semibold">
+            <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-lg font-semibold`}>
               Gợi ý tự động
             </Text>
             <Switch
@@ -112,6 +116,6 @@ export default function QueueScreen() {
           </View>
         )}
       />
-    </View>
+    </View >
   );
 }

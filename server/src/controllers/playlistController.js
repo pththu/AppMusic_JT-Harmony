@@ -45,7 +45,7 @@ exports.createOne = async (req, res) => {
     }
 
     console.log(6)
-    const row = await Playlist.create({ name, description, imageUrl, isPublic, userId: req.user.id, totalTracks: 0 });
+    const row = await Playlist.create({ name, description, imageUrl, isPublic, userId: req.user.id, totalTracks: 0, sharedCount: 0 });
     console.log(7)
     res.status(201).json({
       message: 'Tạo danh sách phát thành công',
@@ -101,6 +101,27 @@ exports.updateOne = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.sharePlaylist = async (req, res) => {
+  try {
+    const { playlistId } = req.params;
+    const playlist = await Playlist.findByPk(playlistId);
+    if (!playlist) {
+      return res.status(404).json({ error: 'Danh sách phát không tìm thấy' });
+    }
+
+    playlist.shareCount += 1;
+    const row = await playlist.save();
+
+    if (!row) {
+      return res.status(500).json({ error: 'Không thể cập nhật số lần chia sẻ' });
+    }
+
+    res.status(200).json({ message: 'Đã chia sẻ danh sách phát', success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
 
 exports.deletePlaylist = async (req, res) => {
   try {

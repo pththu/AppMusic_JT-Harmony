@@ -184,7 +184,7 @@ const AlbumScreen = () => {
           </View>
         </View>
         <View className="px-4">
-          <Text className="text-black dark:text-white text-xl font-bold mb-4">
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-bold mb-4`}>
             Danh sách bài hát
           </Text>
           {isLoading ? (

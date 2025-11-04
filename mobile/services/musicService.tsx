@@ -193,6 +193,17 @@ export const UpdatePlaylist = async (payload) => {
   }
 }
 
+export const SharePlaylist = async (payload) => {
+  try {
+    const response = await axiosClient.put(`/playlists/${payload}/share`);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 // delete
 export const DeletePlaylist = async (playlistId) => {
   try {

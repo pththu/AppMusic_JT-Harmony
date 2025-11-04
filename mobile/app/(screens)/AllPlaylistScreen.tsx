@@ -27,7 +27,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { CreatePlaylist } from "@/services/musicService";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
-const PlaylistItem = ({ item, index, onPress, primaryIconColor }) => {
+const PlaylistItem = ({ item, index, onPress, primaryIconColor, colorScheme }) => {
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(15)).current;
 
@@ -66,10 +66,10 @@ const PlaylistItem = ({ item, index, onPress, primaryIconColor }) => {
           className="w-16 h-16 rounded-md shadow-md"
         />
         <View className="flex-1 mx-4">
-          <Text className="dark:text-white text-base" numberOfLines={1}>
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semibold`} numberOfLines={1}>
             {item?.name}
           </Text>
-          <Text className="dark:text-gray-400 text-sm">
+          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
             {item?.totalTracks || 0} bài hát
           </Text>
         </View>
@@ -204,28 +204,28 @@ export default function AllPlaylistScreen() {
   };
 
   return (
-    <SafeAreaView className={`flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4`}>
-      <View className="flex-row items-center mb-4">
+    <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4 pt-4`}>
+      <View className="flex-row items-start mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="arrow-back" size={24} color={primaryIconColor} />
         </TouchableOpacity>
         <View>
-          <Text className="text-black dark:text-white text-xl font-semibold mb-1">
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-semibold mb-1`}>
             Danh sách phát
           </Text>
-          <Text className="text-gray-500 dark:text-gray-400 text-sm">
+          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
             {user.fullName}
           </Text>
         </View>
       </View>
 
       <View className="flex-row items-center mb-4">
-        <View className="flex-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 flex-row items-center">
+        <View className={`flex-1 ${colorScheme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded-md p-2 flex-row items-center`}>
           <Icon name="search" size={20} color="#888" />
           <TextInput
             placeholder="Search"
             placeholderTextColor="#888"
-            className="ml-2 flex-1 text-black dark:text-white"
+            className={`ml-2 flex-1 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}
           />
         </View>
         <TouchableOpacity className="ml-4">
@@ -238,7 +238,7 @@ export default function AllPlaylistScreen() {
         <TabButton title="Đã lưu" tabName="saved" />
       </View>
 
-      <Text className="text-gray-600 dark:text-gray-400 mb-4">
+      <Text className={`mb-4 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
         {currentData.length} playlists
       </Text>
 
@@ -253,13 +253,14 @@ export default function AllPlaylistScreen() {
               index={index}
               onPress={() => handleSelectPlaylist(item)}
               primaryIconColor={primaryIconColor}
+              colorScheme={colorScheme}
             />
           )}
         />
       ) : (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#22c55e" />
-          <Text className="text-gray-600 dark:text-gray-400">Đang tải danh sách phát...</Text>
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>Đang tải danh sách phát...</Text>
         </View>
       )}
 

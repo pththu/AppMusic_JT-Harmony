@@ -723,7 +723,6 @@ const addTrackToPlaylist = async (req, res) => {
 const addTracksToPlaylists = async (req, res) => {
   try {
     const { playlistIds, trackIds } = req.body;
-    console.log(req.body)
     let dataFormated = [];
 
     if (!playlistIds || !trackIds || playlistIds.length === 0 || trackIds.length === 0) {
@@ -750,7 +749,6 @@ const addTracksToPlaylists = async (req, res) => {
           }
         ]
       });
-      console.log(playlist)
 
       if (!playlist) {
         return res.status(400).json({

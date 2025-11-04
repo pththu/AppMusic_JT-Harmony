@@ -21,35 +21,32 @@ import { useTheme } from "@/components/ThemeContext";
 import { albumData, trackData } from "@/constants/data";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SongItem from "@/components/items/SongItem";
+import TextTicker from "react-native-text-ticker";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function SongScreen() {
 
   const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const duration = usePlayerStore((state) => state.duration);
+  const queue = usePlayerStore((state) => state.queue);
+  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const playPrevious = usePlayerStore((state) => state.playPrevious);
-  const duration = usePlayerStore((state) => state.duration);
-
-  console.log('song', currentTrack);
-  console.log('duration', duration);
 
   const { navigate } = useNavigate();
-  const { theme } = useTheme();
   const colorScheme = useColorScheme();
   const setNowPlaying = useQueueStore((state) => state.setNowPlaying);
-  const setQueue = useQueueStore((state) => state.setQueue);
 
-  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
-  const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
+
+  const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
+  const secondaryIconColor = colorScheme === 'dark' ? '#888' : 'gray';
 
   const handleSelectQueue = () => {
     setNowPlaying(currentTrack);
     if (!currentTrack) return;
-    setQueue(trackData.filter((s) => s.spotifyId !== currentTrack.spotifyId));
     navigate("QueueScreen");
   };
 
@@ -60,6 +57,10 @@ export default function SongScreen() {
   const handleSelectTrack = (track) => {
     setCurrentTrack(track);
     navigate('SongScreen');
+  }
+
+  const handlePlayNext = () => {
+    playNext();
   }
 
   const renderUpNextItem = ({ item, index }) => (
@@ -80,7 +81,7 @@ export default function SongScreen() {
           <Ionicons name="chevron-down" size={28} color={primaryIconColor} />
         </TouchableOpacity>
         <View className="flex-1 items-center">
-          <Text className="text-black dark:text-white text-base font-semibold">
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-base font-semibold`}>
             {currentTrack.name}
           </Text>
         </View>
@@ -98,22 +99,27 @@ export default function SongScreen() {
               console.log("Image load error:", e.nativeEvent.error);
             }}
           />
-          <View className="absolute inset-0 justify-center pb-6 items-center bg-opacity-50 rounded-xl px-4">
-            <Text className="text-black dark:text-white text-3xl font-bold mb-2 text-center">
-              {currentTrack.name}
-            </Text>
-            <Text className="text-gray-500 dark:text-gray-300 text-lg mb-1 text-center">
-              {currentTrack.artists?.map((a) => a.name).join(", ")}
-            </Text>
-          </View>
         </View>
       </View>
 
       {/* Song Info and Action Buttons */}
-      <View className="flex-row justify-between items-center mb-4">
-        <View>
-          <Text className="text-black dark:text-white text-2xl font-bold">{currentTrack.name}</Text>
-          <Text className="text-gray-600 dark:text-gray-400 text-base">
+      <View className="flex-row justify-between items-start mb-4">
+        <View className="flex-1">
+          <TextTicker
+            style={{
+              color: colorScheme === 'dark' ? 'white' : 'black',
+              fontSize: 20,
+              fontWeight: 'bold'
+            }}
+            duration={10000}
+            loop
+            bounce={false}
+            repeatSpacer={50}
+            marqueeDelay={500}
+          >
+            {currentTrack.name}
+          </TextTicker>
+          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-base`}>
             {currentTrack.artists?.map((a) => a.name).join(", ")}
           </Text>
         </View>
@@ -124,18 +130,18 @@ export default function SongScreen() {
           >
             <Ionicons
               name="information-circle-outline"
-              size={24}
+              size={20}
               color={primaryIconColor}
             />
           </TouchableOpacity>
           <TouchableOpacity className="mr-4">
-            <Icon name="favorite-border" size={24} color={primaryIconColor} />
+            <Icon name="favorite-border" size={20} color={primaryIconColor} />
           </TouchableOpacity>
           <TouchableOpacity className="mr-4">
-            <Icon name="download" size={24} color={primaryIconColor} />
+            <Icon name="download" size={20} color={primaryIconColor} />
           </TouchableOpacity>
           <TouchableOpacity>
-            <Icon name="share" size={24} color={primaryIconColor} />
+            <Icon name="share" size={20} color={primaryIconColor} />
           </TouchableOpacity>
         </View>
       </View>
@@ -158,7 +164,7 @@ export default function SongScreen() {
             color={'black'}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={playNext}>
+        <TouchableOpacity onPress={handlePlayNext}>
           <Icon name="skip-next" size={30} color={primaryIconColor} />
         </TouchableOpacity>
         <TouchableOpacity>
@@ -168,18 +174,18 @@ export default function SongScreen() {
 
       {/* Progress Bar */}
       <View className="flex-row items-center px-3 mb-3">
-        <Text className="text-gray-600 dark:text-gray-400 text-xs w-8 text-center">0:25</Text>
-        <View className="flex-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-sm mx-2">
-          <View className="w-1/3 h-1 bg-black dark:bg-white rounded-sm" />
+        <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs w-8 text-center`}>0:25</Text>
+        <View className={`flex-1 h-1 ${colorScheme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} rounded-sm mx-2`}>
+          <View className={`w-1/3 h-1 ${colorScheme === 'dark' ? 'bg-green-700' : 'bg-green-500'} rounded-sm`} />
         </View>
-        <Text className="text-gray-600 dark:text-gray-400 text-xs w-8 text-center">{duration}</Text>
+        <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-800'} text-xs w-8 text-center`}>{duration}</Text>
       </View>
 
       {/* Up Next Header */}
-      <View className="flex-row justify-between items-center mb-2">
-        <Text className="text-black dark:text-white text-lg font-bold">Phát kế tiếp</Text>
+      <View className={`flex-row justify-between items-center mb-2`}>
+        <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-lg font-bold`}>Phát kế tiếp</Text>
         <TouchableOpacity onPress={() => handleSelectQueue()}>
-          <Text className="text-gray-600 dark:text-gray-400 text-base">Danh sách chờ</Text>
+          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-base`}>Danh sách chờ</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -193,20 +199,19 @@ export default function SongScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1">
-      <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
-        <ListHeader />
-        {
-          trackData.filter((s) => s.spotifyId !== currentTrack.spotifyId)
-            .slice(0, 5)
-            .map((item, index) => (
-              <View key={index.toString().concat(item.spotifyId)}>
-                {renderUpNextItem({ item, index })}
-              </View>
-            ))
-        }
-        <ListFooter />
-      </ScrollView>
-    </SafeAreaView>
+    // <SafeAreaView className="flex-1">
+    <ScrollView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4 pt-4`}>
+      <ListHeader />
+      {
+        queue.slice(0, 5)
+          .map((item, index) => (
+            <View key={index.toString().concat(item.spotifyId)}>
+              {renderUpNextItem({ item, index })}
+            </View>
+          ))
+      }
+      <ListFooter />
+    </ScrollView>
+    // </SafeAreaView>
   );
 }

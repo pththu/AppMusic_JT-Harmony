@@ -13,6 +13,7 @@ import React, { useState } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useLocalSearchParams } from "expo-router";
 
 const AddPlaylistModal = ({
   isModalVisible,
@@ -55,13 +56,13 @@ const AddPlaylistModal = ({
             } rounded-lg p-6 mx-4 shadow-lg`}
         >
           {/* Tiêu đề Modal */}
-          <Text className="text-black self-center dark:text-white text-2xl font-bold mb-6">
+          <Text className={`text-2xl font-bold mb-6 text-center ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
             Tạo danh sách phát mới
           </Text>
 
           {/* (MỚI) Chọn ảnh đại diện */}
           <View className="items-center mb-6">
-            <TouchableOpacity className="w-24 h-24 bg-gray-200 dark:bg-gray-800 rounded-lg items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-600"
+            <TouchableOpacity className={`w-24 h-24 ${colorScheme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-gray-200 border-gray-400'} rounded-lg items-center justify-center border-2 border-dashed`}
               onPress={() => {
                 onPickImage();
               }}
@@ -83,7 +84,7 @@ const AddPlaylistModal = ({
             onChangeText={setName}
             placeholder="Tên danh sách phát"
             placeholderTextColor="#888"
-            className="bg-gray-200 dark:bg-gray-800 rounded-md p-4 text-lg text-black dark:text-white mb-4" // <-- Sửa mb-8 thành mb-4
+            className={`rounded-md p-4 text-lg ${colorScheme === 'dark' ? 'text-white bg-gray-800 ' : 'text-black bg-gray-200'} mb-4`}
             autoFocus={true}
           />
 
@@ -93,7 +94,7 @@ const AddPlaylistModal = ({
             onChangeText={setDescription}
             placeholder="Thêm mô tả (không bắt buộc)"
             placeholderTextColor="#888"
-            className="bg-gray-200 dark:bg-gray-800 rounded-md p-4 text-base text-black dark:text-white mb-8"
+            className={`rounded-md p-4 text-base ${colorScheme === 'dark' ? 'text-white bg-gray-800 ' : 'text-black bg-gray-200'} mb-4`}
             multiline={true}
             numberOfLines={3}
             // Cần style inline cho chiều cao và text-align
@@ -126,7 +127,7 @@ const AddPlaylistModal = ({
               className="py-3 px-6 rounded-md"
               onPress={() => setIsModalVisible(false)}
             >
-              <Text className="text-gray-500 dark:text-gray-400 text-base font-semibold">
+              <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} text-base font-semibold`}>
                 Hủy
               </Text>
             </TouchableOpacity>

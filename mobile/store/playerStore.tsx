@@ -9,6 +9,7 @@ interface PlayerState {
   currentIndex: number;
   playbackPosition: number;
   playlistTracks: any[];
+  playlistTracksPlaying: any[];
   myPlaylists: any[];
   queue: any[];
 
@@ -24,9 +25,11 @@ interface PlayerState {
   isLoading: boolean;
   isMiniPlayerVisible: boolean;
 
+  // basic actions
   setCurrentTrack: (track: any) => void;
   setPlaylistTracks: (tracks: any[]) => void;
   setCurrentPlaylist: (playlist: any) => void;
+  setPlaylistTracksPlaying: (tracks: any[]) => void;
   setMyPlaylists: (playlists: any[]) => void;
   setIsPlaying: (playing: boolean) => void;
   setPlaybackPosition: (position: number) => void;
@@ -35,23 +38,28 @@ interface PlayerState {
   setMiniPlayerVisible: (visible: boolean) => void;
   setDuration: (duration: number) => void;
 
+  // playlst
   addToMyPlaylists: (playlist: any) => void;
   addTrackToPlaylist: (track: any) => void;
   updateCurrentPlaylist: (playlist: any) => void;
   updateTotalTracksInCurrentPlaylist: (total: number) => void;
   updateTotalTracksInMyPlaylists: (playlistId: string, total: number) => void;
+  updateSharedCountPlaylist: (playlistId: string) => void;
   updateMyPlaylists: (playlist: any) => void;
   removeFromMyPlaylists: (playlistId: string) => void;
 
+  // play actions
   playTrack: (track: any) => void;
   playPlaylist: (tracks: any[], startIndex?: number) => void;
   playNext: () => void;
   playPrevious: () => void;
   togglePlayPause: () => void;
 
+  // queue actions
   addTrackToQueue: (tracks: any[]) => void;
   removeTrackFromQueue: (tracks: any[]) => void;
   clearQueue: () => void;
+
   clear: () => void;
 }
 
@@ -62,6 +70,7 @@ export const usePlayerStore = create<PlayerState>()(
       currentTrack: null,
       playlistTracks: [],
       currentPlaylist: null,
+      playlistTracksPlaying: [],
       myPlaylists: [],
       currentIndex: -1,
       playbackPosition: 0,
@@ -89,6 +98,9 @@ export const usePlayerStore = create<PlayerState>()(
       },
       setCurrentPlaylist: (playlist) => {
         set({ currentPlaylist: playlist });
+      },
+      setPlaylistTracksPlaying: (tracks) => {
+        set({ playlistTracksPlaying: tracks });
       },
       setMyPlaylists: (playlists) => {
         set({ myPlaylists: playlists });
@@ -137,6 +149,19 @@ export const usePlayerStore = create<PlayerState>()(
         });
         set({ myPlaylists: updatedPlaylists });
       },
+      updateSharedCountPlaylist: (playlistId) => {
+        const { myPlaylists } = get();
+        const updatedPlaylists = myPlaylists.map(p => {
+          if (p.id === playlistId) {
+            return {
+              ...p,
+              sharedCount: (p.sharedCount || 0) + 1,
+            };
+          }
+          return p;
+        });
+        set({ myPlaylists: updatedPlaylists });
+      },
       updateMyPlaylists: (playlist) => {
         const { myPlaylists } = get();
         const updatedPlaylists = myPlaylists.map(p => p.id === playlist.id ? playlist : p);
@@ -149,7 +174,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
       playPlaylist: (tracks, startIndex = 0) =>
         set({
-          playlistTracks: tracks,
+          playlistTracksPlaying: tracks,
           currentIndex: startIndex,
           currentTrack: tracks[startIndex],
           isPlaying: true,
@@ -158,23 +183,35 @@ export const usePlayerStore = create<PlayerState>()(
 
       playTrack: (track) =>
         set({
-          playlistTracks: [track],
+          playlistTracksPlaying: [track],
           currentIndex: 0,
           currentTrack: track,
           isPlaying: true,
           playbackPosition: 0,
+          queue: [],
         }),
 
       playNext: () => {
-        const { playlistTracks, currentIndex } = get();
-        if (playlistTracks.length === 0) return;
-        const nextIndex = (currentIndex + 1) % playlistTracks.length;
-        set({
-          currentIndex: nextIndex,
-          currentTrack: playlistTracks[nextIndex],
-          isPlaying: true,
-          playbackPosition: 0,
-        });
+        const { queue, playlistTracksPlaying, currentIndex } = get();
+        if (playlistTracksPlaying.length === 0) return;
+        if (queue.length === 0) {
+          set({
+            currentTrack: playlistTracksPlaying[0],
+            currentIndex: 0,
+            isPlaying: true,
+            playbackPosition: 0,
+            queue: playlistTracksPlaying.filter(t => t.id !== playlistTracksPlaying[0].id),
+          });
+        } else {
+          const nextIndex = (currentIndex + 1) % playlistTracksPlaying.length;
+          set({
+            currentIndex: nextIndex,
+            currentTrack: playlistTracksPlaying[nextIndex],
+            isPlaying: true,
+            playbackPosition: 0,
+            queue: queue.filter(t => t.id !== playlistTracksPlaying[nextIndex].id),
+          });
+        }
       },
 
       playPrevious: () => {
