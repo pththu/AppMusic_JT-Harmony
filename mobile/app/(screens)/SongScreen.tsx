@@ -22,30 +22,36 @@ import { albumData, trackData } from "@/constants/data";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SongItem from "@/components/items/SongItem";
 import TextTicker from "react-native-text-ticker";
+import { is } from "date-fns/locale";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function SongScreen() {
+  const { navigate } = useNavigate();
+  const colorScheme = useColorScheme();
 
   const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const currentIndex = usePlayerStore((state) => state.currentIndex);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const duration = usePlayerStore((state) => state.duration);
   const queue = usePlayerStore((state) => state.queue);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
+  const setPlaybackPosition = usePlayerStore((state) => state.setPlaybackPosition);
+  const setRepeatMode = usePlayerStore((state) => state.setRepeatMode);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const playPrevious = usePlayerStore((state) => state.playPrevious);
-
-  const { navigate } = useNavigate();
-  const colorScheme = useColorScheme();
-  const setNowPlaying = useQueueStore((state) => state.setNowPlaying);
-
+  const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
+  const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
 
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = colorScheme === 'dark' ? '#888' : 'gray';
 
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
+  const [isRepeatOne, setIsRepeatOne] = useState(false);
+
   const handleSelectQueue = () => {
-    setNowPlaying(currentTrack);
     if (!currentTrack) return;
     navigate("QueueScreen");
   };
@@ -59,8 +65,43 @@ export default function SongScreen() {
     navigate('SongScreen');
   }
 
+  const handlePlayPrevious = () => {
+    if (!currentTrack) return;
+    if (currentIndex === 0) {
+      setPlaybackPosition(0);
+    }
+    playPrevious();
+  }
+
   const handlePlayNext = () => {
     playNext();
+  }
+
+  const handleShufflePlay = () => {
+    console.log('handleShufflePlay: ', isShuffle)
+
+    if (isShuffle) {
+      unShuffleQueue();
+    } else {
+      shuffleQueue();
+    }
+    setIsShuffle(!isShuffle);
+  };
+
+  const handleRepeat = () => {
+    if (isRepeat && isRepeatOne) {
+      setIsRepeat(false);
+      setIsRepeatOne(false);
+      setRepeatMode('none');
+    } else if (!isRepeat && !isRepeatOne) {
+      setIsRepeat(true);
+      setIsRepeatOne(false);
+      setRepeatMode('all');
+    } else if (isRepeat && !isRepeatOne) {
+      setIsRepeat(true);
+      setIsRepeatOne(true);
+      setRepeatMode('one');
+    }
   }
 
   const renderUpNextItem = ({ item, index }) => (
@@ -148,10 +189,10 @@ export default function SongScreen() {
 
       {/* Controls */}
       <View className="flex-row justify-between items-center mb-3 px-6">
-        <TouchableOpacity>
-          <Icon name="shuffle" size={24} color={secondaryIconColor} />
+        <TouchableOpacity onPress={handleShufflePlay}>
+          <Icon name="shuffle" size={24} color={isShuffle ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={playPrevious}>
+        <TouchableOpacity onPress={handlePlayPrevious}>
           <Icon name="skip-previous" size={30} color={primaryIconColor} />
         </TouchableOpacity>
         <TouchableOpacity
@@ -167,8 +208,8 @@ export default function SongScreen() {
         <TouchableOpacity onPress={handlePlayNext}>
           <Icon name="skip-next" size={30} color={primaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Icon name="repeat" size={24} color={secondaryIconColor} />
+        <TouchableOpacity onPress={handleRepeat}>
+          <Icon name={isRepeatOne ? 'repeat-one' : 'repeat'} size={24} color={isRepeat ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
       </View>
 

@@ -51,6 +51,8 @@ export default function PlaylistScreen() {
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
   const setQueue = usePlayerStore((state) => state.setQueue);
+  const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
+  const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
 
   const user = useAuthStore((state) => state.user);
 
@@ -59,26 +61,28 @@ export default function PlaylistScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const [playlist, setPlaylist] = useState(null);
-  // const [tracks, setTracks] = useState([]);
   const params = useLocalSearchParams();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
+
+  const [isShuffle, setIsShuffle] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isMine, setIsMine] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [newIsPublic, setNewIsPublic] = useState(true);
+  const [isPublic, setIsPublic] = useState(currentPlaylist?.isPublic || true);
   const [modalEditVisible, setModalEditVisible] = useState(false);
   const [modalAddToAnotherPlaylistVisible, setModalAddToAnotherPlaylistVisible] = useState(false);
   const [modalAddToQueueVisible, setModalAddToQueueVisible] = useState(false);
   const [modalAddPlaylistVisible, setModalAddPlaylistVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
   const [name, setName] = useState(currentPlaylist?.name || "");
   const [description, setDescription] = useState(currentPlaylist?.description || '');
   const [image, setImage] = useState(currentPlaylist?.imageUrl);
-  const [isPublic, setIsPublic] = useState(currentPlaylist?.isPublic || true);
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newImage, setNewImage] = useState(null);
-  const [newIsPublic, setNewIsPublic] = useState(true);
   const [trackIds, setTrackIds] = useState([]);
   const imageDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
 
@@ -222,8 +226,14 @@ export default function PlaylistScreen() {
   };
 
   const handleShufflePlay = () => {
-    console.log('handleShufflePlay')
-    info('Chức năng phát ngẫu nhiên sẽ được cập nhật sau!');
+    console.log('handleShufflePlay: ', isShuffle)
+
+    if (isShuffle) {
+      unShuffleQueue();
+    } else {
+      shuffleQueue();
+    }
+    setIsShuffle(!isShuffle);
   };
 
   const handlePlayPlaylist = () => {
@@ -246,7 +256,6 @@ export default function PlaylistScreen() {
       if (i > index)
         return item;
     });
-    console.log(queueData)
     setQueue(queueData);
   };
 
@@ -452,21 +461,21 @@ export default function PlaylistScreen() {
             zIndex: -1,
           }}
         />
-        <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}>
-          <View className="flex-row justify-between items-center h-14 px-5">
-            <TouchableOpacity onPress={() => router.back()} className="p-1">
-              <Icon name="arrow-back-outline" size={28} color={iconColor} />
-            </TouchableOpacity>
-            <Animated.Text
-              style={{ opacity: headerTitleOpacity }}
-              className={`flex-1 text-center font-bold text-lg ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}
-              numberOfLines={1}
-            >
-              {currentPlaylist?.name}
-            </Animated.Text>
-            <View className="w-8" />
-          </View>
-        </SafeAreaView>
+        {/* <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}> */}
+        <View className="flex-row justify-between items-center h-14 px-5">
+          <TouchableOpacity onPress={() => router.back()} className="p-1">
+            <Icon name="arrow-back-outline" size={28} color={iconColor} />
+          </TouchableOpacity>
+          <Animated.Text
+            style={{ opacity: headerTitleOpacity }}
+            className={`flex-1 text-center font-bold text-lg ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}
+            numberOfLines={1}
+          >
+            {currentPlaylist?.name}
+          </Animated.Text>
+          <View className="w-8" />
+        </View>
+        {/* </SafeAreaView> */}
       </View>
       <Animated.ScrollView
         className={`flex-1`}
@@ -527,7 +536,7 @@ export default function PlaylistScreen() {
             <View className="flex-row items-center justify-start gap-4">
               <Pressable onPress={() => handleShufflePlay()}>
                 <Ionicons
-                  name="shuffle"
+                  name={isShuffle ? "shuffle" : "repeat"}
                   color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
                   size={24} />
               </Pressable>

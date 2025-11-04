@@ -126,7 +126,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
 
                 updateTotalTracksInCurrentPlaylist(1);
                 updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
-                addTrackToPlaylist(response.data);
+                addTrackToPlaylist(confirmResponse.data);
               } else {
                 error('Lỗi', 'Không thể thêm bài hát vào danh sách phát.');
               }

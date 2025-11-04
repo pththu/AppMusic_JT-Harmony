@@ -14,6 +14,7 @@ interface PlayerState {
   queue: any[];
 
   // state không lưu
+  isLastIndex: boolean;
   isPlaying: boolean;
   tabBarHeight: number;
 
@@ -37,6 +38,7 @@ interface PlayerState {
   setQueue: (tracks: any[]) => void;
   setMiniPlayerVisible: (visible: boolean) => void;
   setDuration: (duration: number) => void;
+  setRepeatMode: (mode: 'none' | 'one' | 'all') => void;
 
   // playlst
   addToMyPlaylists: (playlist: any) => void;
@@ -57,6 +59,8 @@ interface PlayerState {
 
   // queue actions
   addTrackToQueue: (tracks: any[]) => void;
+  shuffleQueue: () => void;
+  unShuffleQueue: () => void;
   removeTrackFromQueue: (tracks: any[]) => void;
   clearQueue: () => void;
 
@@ -77,6 +81,7 @@ export const usePlayerStore = create<PlayerState>()(
       tabBarHeight: 0,
       queue: [],
 
+      isLastIndex: false,
       isPlaying: false,
       volume: 1,
       currentTime: 0,
@@ -94,6 +99,7 @@ export const usePlayerStore = create<PlayerState>()(
           currentTrack: track,
           currentIndex: index !== -1 ? index : -1,
           currentTime: 0,
+          isLastIndex: index === playlistTracks.length - 1,
         });
       },
       setCurrentPlaylist: (playlist) => {
@@ -179,6 +185,7 @@ export const usePlayerStore = create<PlayerState>()(
           currentTrack: tracks[startIndex],
           isPlaying: true,
           playbackPosition: 0,
+          isLastIndex: startIndex === tracks.length - 1,
         }),
 
       playTrack: (track) =>
@@ -201,6 +208,7 @@ export const usePlayerStore = create<PlayerState>()(
             isPlaying: true,
             playbackPosition: 0,
             queue: playlistTracksPlaying.filter(t => t.id !== playlistTracksPlaying[0].id),
+            isLastIndex: false,
           });
         } else {
           const nextIndex = (currentIndex + 1) % playlistTracksPlaying.length;
@@ -210,23 +218,31 @@ export const usePlayerStore = create<PlayerState>()(
             isPlaying: true,
             playbackPosition: 0,
             queue: queue.filter(t => t.id !== playlistTracksPlaying[nextIndex].id),
+            isLastIndex: nextIndex === playlistTracksPlaying.length - 1,
           });
         }
       },
 
       playPrevious: () => {
-        const { playlistTracks, currentIndex } = get();
-        if (playlistTracks.length === 0) return;
-        const prevIndex = (currentIndex - 1 + playlistTracks.length) % playlistTracks.length;
+        const { playlistTracksPlaying, currentIndex } = get();
+        if (playlistTracksPlaying.length === 0) return;
+        const prevIndex = (currentIndex - 1 + playlistTracksPlaying.length) % playlistTracksPlaying.length;
+        if (prevIndex < 0 || prevIndex >= playlistTracksPlaying.length) return;
+        if (currentIndex === 0) return;
         set({
           currentIndex: prevIndex,
-          currentTrack: playlistTracks[prevIndex],
+          currentTrack: playlistTracksPlaying[prevIndex],
           isPlaying: true,
           playbackPosition: 0,
+          queue: playlistTracksPlaying.filter((_, index) => index > prevIndex),
+          isLastIndex: false,
         });
       },
       setDuration: (duration) => {
         set({ duration });
+      },
+      setRepeatMode: (mode) => {
+        set({ repeatMode: mode });
       },
       // Dùng cho nút play/pause ở SongScreen, MiniPlayer
       togglePlayPause: () => {
@@ -246,6 +262,34 @@ export const usePlayerStore = create<PlayerState>()(
       addTrackToQueue: (tracks) => {
         const { queue } = get();
         set({ queue: [...queue, ...tracks] });
+      },
+      shuffleQueue: () => {
+        /* Trộn cả playlist bao gồm các bài đã phát */
+        const { playlistTracksPlaying, currentTrack, currentIndex } = get();
+        if (!currentTrack) return;
+        const originalCurrentIndex = playlistTracksPlaying.findIndex(t => t.id === currentTrack.id);
+        const pastAndCurrent = playlistTracksPlaying.slice(0, originalCurrentIndex + 1);
+        const upcoming = playlistTracksPlaying.slice(originalCurrentIndex + 1);
+
+        for (let i = upcoming.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [upcoming[i], upcoming[j]] = [upcoming[j], upcoming[i]];
+        }
+        set({
+          queue: [...pastAndCurrent, ...upcoming],
+          isShuffled: true,
+          currentIndex: originalCurrentIndex
+        });
+      },
+      unShuffleQueue: () => {
+        const { playlistTracksPlaying, currentTrack } = get();
+        if (!currentTrack) return;
+        const newCurrentIndex = playlistTracksPlaying.findIndex(t => t.id === currentTrack.id);
+        set({
+          queue: playlistTracksPlaying.filter((_, index) => index > newCurrentIndex),
+          isShuffled: false,
+          currentIndex: newCurrentIndex
+        });
       },
       removeTrackFromQueue: (tracks) => {
         const { queue } = get();

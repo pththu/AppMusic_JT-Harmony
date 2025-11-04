@@ -66,10 +66,10 @@ const PlaylistItem = ({ item, index, onPress, primaryIconColor, colorScheme }) =
           className="w-16 h-16 rounded-md shadow-md"
         />
         <View className="flex-1 mx-4">
-          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semibold`} numberOfLines={1}>
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semiboldF`} numberOfLines={1}>
             {item?.name}
           </Text>
-          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
+          <Text className="dark:text-gray-400 text-sm">
             {item?.totalTracks || 0} bài hát
           </Text>
         </View>
@@ -103,7 +103,6 @@ export default function AllPlaylistScreen() {
 
   const primaryIconColor = colorScheme === "dark" ? "white" : "black";
   const playerPadding = currentTrack ? MINI_PLAYER_HEIGHT : 0;
-  const totalPaddingBottom = (tabBarHeight || 0) + playerPadding;
 
   const handleSelectPlaylist = (playlist) => {
     setCurrentPlaylist(playlist);
@@ -188,7 +187,7 @@ export default function AllPlaylistScreen() {
     return (
       <TouchableOpacity
         onPress={() => setActiveTab(tabName)}
-        className={`flex-1 items-center py-3 "
+        className={`flex-1 items-center py-3"
           }`}
       >
         <Text
@@ -204,7 +203,7 @@ export default function AllPlaylistScreen() {
   };
 
   return (
-    <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4 pt-4`}>
+    <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4`}>
       <View className="flex-row items-start mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="arrow-back" size={24} color={primaryIconColor} />

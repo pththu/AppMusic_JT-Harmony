@@ -12,16 +12,18 @@ const MINI_PLAYER_HEIGHT = 60;
 export { MINI_PLAYER_HEIGHT };
 
 export default function MiniPlayer() {
+  const { navigate } = useNavigate();
   const segments = useSegments();
   const colorScheme = useColorScheme();
-  const { navigate } = useNavigate();
+  const currentIndex = usePlayerStore((state) => state.currentIndex);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const playPrevious = usePlayerStore((state) => state.playPrevious);
-  const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
   const setMiniPlayerVisible = usePlayerStore((state) => state.setMiniPlayerVisible);
+
   // không hiển thị ở auth và song screen
   const isAuthScreen = segments[0] === "(auth)";
   const isSongScreen = segments[1] === "SongScreen";
@@ -29,6 +31,16 @@ export default function MiniPlayer() {
   const isTabScreen = segments[0] === "(tabs)";
 
   const isVisible = !!currentTrack && !isAuthScreen && !isSongScreen && !isQueueScreen;
+
+  const handlePlayPrevious = () => {
+    if (!currentTrack || currentIndex === 0) return;
+    playPrevious();
+  }
+
+  const handlePlayNext = () => {
+    playNext();
+  }
+
 
   useEffect(() => {
     setMiniPlayerVisible(isVisible);
@@ -75,20 +87,21 @@ export default function MiniPlayer() {
             {currentTrack?.artists?.map(artist => artist.name).join(", ")}
           </Text>
         </View>
-
-        <TouchableOpacity onPress={playPrevious} className="p-2 ml-2">
-          <Icon name="play-skip-back" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={togglePlayPause} className="p-2">
-          <Icon
-            name={isPlaying ? "pause" : "play"}
-            size={28}
-            color={colorScheme === 'dark' ? 'white' : 'black'}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={playNext} className="p-2 ml-2">
-          <Icon name="play-skip-forward" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
-        </TouchableOpacity>
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity onPress={handlePlayPrevious} className="p-2 ml-2">
+            <Icon name="play-skip-back" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={togglePlayPause} className="p-2">
+            <Icon
+              name={isPlaying ? "pause" : "play"}
+              size={28}
+              color={colorScheme === 'dark' ? 'white' : 'black'}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlePlayNext} className="p-2">
+            <Icon name="play-skip-forward" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
+          </TouchableOpacity>
+        </View>
       </View>
     </Pressable>
   );

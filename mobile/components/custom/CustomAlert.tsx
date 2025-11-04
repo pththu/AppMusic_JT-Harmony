@@ -116,10 +116,10 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     let baseClass = 'flex-1 py-4 justify-center items-center';
 
     // Background colors based on theme
-    const bgWhite = isDark ? 'bg-gray-900/50' : 'bg-gray-300/50';
+    const bgWhite = isDark ? 'bg-gray-900/50' : 'bg-gray-200';
     const bgGray = isDark ? 'bg-gray-500' : 'bg-gray-500';
-    const bgRed = isDark ? 'bg-red-500' : 'bg-red-300/50';
-    const bgGreen = isDark ? 'bg-green-500/50' : 'bg-green-300/50';
+    const bgRed = isDark ? 'bg-red-500' : 'bg-red-500';
+    const bgGreen = isDark ? 'bg-green-500/50' : 'bg-green-500';
 
     baseClass += ` ${bgWhite}`;
 
@@ -129,7 +129,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     }
     // Multiple buttons
     else {
-      const borderColor = isDark ? 'border-gray-600/50' : 'border-gray-200/50';
+      const borderColor = isDark ? 'border-gray-600/50' : 'border-gray-200';
       if (index === 0) {
         baseClass += ` rounded-bl-xl border-r ${borderColor}`;
       } else if (index === totalButtons - 1) {
@@ -156,19 +156,19 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
 
     switch (button.style) {
       case 'cancel':
-        return textClass + (isDark ? ' text-gray-100' : ' text-gray-700');
+        return textClass + (isDark ? ' text-gray-100' : ' text-white');
       case 'destructive':
-        return textClass + (isDark ? ' text-white' : ' text-red-700');
+        return textClass + (isDark ? ' text-white' : ' text-white');
       default:
         return textClass + (isDark ? ' text-white' : ' text-green-700');
     }
   };
 
   const buttons = config.buttons || DEFAULT_ALERT_BUTTONS;
-  const containerBg = isDark ? 'bg-gray-800/50' : 'bg-gray-100/50';
+  const containerBg = isDark ? 'bg-gray-800/50' : 'bg-white';
   const titleColor = isDark ? 'text-white' : 'text-gray-900';
-  const messageColor = isDark ? 'text-gray-300' : 'text-gray-600';
-  const borderColor = isDark ? 'border-gray-600/50' : 'border-gray-200/50';
+  const messageColor = isDark ? 'text-gray-300' : 'text-gray-800';
+  const borderColor = isDark ? 'border-gray-600/50' : 'border-gray-100';
 
   return (
     <Modal
