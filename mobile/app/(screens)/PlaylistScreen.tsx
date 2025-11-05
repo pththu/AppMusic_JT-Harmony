@@ -20,7 +20,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
-import { AddTracksToPlaylists, CreatePlaylist, DeletePlaylist, GetTracksByPlaylistId, SharePlaylist, UpdatePlaylist } from "@/services/musicService";
+import { AddTracksToPlaylists, CreatePlaylist, DeletePlaylist, GetTracksByPlaylistId, RemoveTrackFromPlaylist, SharePlaylist, UpdatePlaylist, UpdatePlaylistPrivacy } from "@/services/musicService";
 import { is, pl } from "date-fns/locale";
 import useAuthStore from "@/store/authStore";
 import PlaylistOptionModal from "@/components/modals/PlaylistOptionModal";
@@ -31,12 +31,14 @@ import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistM
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { set } from "date-fns";
 import AddPlaylistModal from "@/components/modals/AddPlaylistModal";
+import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
 
 // Hằng số để xác định khi nào bắt đầu mờ/hiện header
 // 256px là chiều cao của ảnh (h-64). Bạn có thể điều chỉnh
 const HEADER_SCROLL_THRESHOLD = 256;
 
 export default function PlaylistScreen() {
+  const user = useAuthStore((state) => state.user);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
   const playlistTracks = usePlayerStore((state) => state.playlistTracks);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
@@ -46,15 +48,15 @@ export default function PlaylistScreen() {
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const updateSharedCountPlaylist = usePlayerStore((state) => state.updateSharedCountPlaylist);
+  const updatePrivacy = usePlayerStore((state) => state.updatePrivacy);
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
+  const removeTrackFromPlaylistStore = usePlayerStore((state) => state.removeTrackFromPlaylist);
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
-
-  const user = useAuthStore((state) => state.user);
 
   const { navigate } = useNavigate();
   const { info, error, success, confirm, warning } = useCustomAlert();
@@ -76,6 +78,8 @@ export default function PlaylistScreen() {
   const [modalAddToQueueVisible, setModalAddToQueueVisible] = useState(false);
   const [modalAddPlaylistVisible, setModalAddPlaylistVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [songModalVisible, setSongModalVisible] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState(null);
 
   const [name, setName] = useState(currentPlaylist?.name || "");
   const [description, setDescription] = useState(currentPlaylist?.description || '');
@@ -244,10 +248,11 @@ export default function PlaylistScreen() {
     }
 
     playPlaylist(playlistTracks, 0);
-    setQueue(playlistTracks.filter((index, item) => {
+    const queueData = playlistTracks.filter((item, index) => {
       if (index > 0)
         return item;
-    }));
+    });
+    setQueue(queueData);
   };
 
   const handlePlayTrack = (index) => {
@@ -321,6 +326,19 @@ export default function PlaylistScreen() {
     info('Chức năng tải playlist sẽ được cập nhật sau!');
   };
 
+  const handleChangePrivacy = async () => {
+    try {
+      const response = await UpdatePlaylistPrivacy({ playlistId: currentPlaylist?.id });
+      if (response.success) {
+        updatePrivacy(currentPlaylist?.id);
+        success('Đã cập nhật trạng thái playlist')
+      }
+    } catch (err) {
+      console.log(err);
+      error('Lỗi', 'Đã có lỗi xảy ra khi thay đổi trạng thái playlist. Vui lòng thử lại sau.');
+    }
+  }
+
   const handleAddToAnotherPlaylist = async (playlistIds) => {
     console.log('handleAddToAnotherPlaylist')
     console.log(playlistIds);
@@ -369,6 +387,73 @@ export default function PlaylistScreen() {
     addTrackToQueue(playlistTracks);
     success(`Đã thêm ${playlistTracks.length} bài hát vào hàng đợi!`);
     setModalVisible(false);
+  };
+
+  const handleSongOptionsPress = (track) => {
+    setSelectedTrack(track); // Lưu bài hát đã chọn
+    console.log('track', track);
+    setSongModalVisible(true); // Mở modal
+  };
+
+  const handleSongAddToQueue = (track) => {
+    addTrackToQueue([track]);
+    setSongModalVisible(false);
+  };
+
+  const handleSongAddToPlaylist = () => {
+    setSongModalVisible(false);
+    // TODO: Bạn cần tạo một modal mới (hoặc sửa AddToAnotherPlaylistModal)
+    // để xử lý việc thêm CHỈ MỘT BÀI HÁT (selectedTrack) vào playlist đã chọn.
+    // Tạm thời, chúng ta sẽ mở modal cũ, nhưng bạn cần cập nhật logic của nó.
+    // setModalAddToAnotherPlaylistVisible(true);
+    info('Chức năng này đang được phát triển!');
+  };
+
+  const handleRemoveTrackFromPlaylist = (track) => {
+    if (!isMine) {
+      error("Bạn không thể xóa bài hát khỏi playlist này.");
+      return;
+    }
+    confirm(
+      'Xác nhận xóa',
+      `Bạn có chắc muốn xóa "${track.name}" khỏi playlist này?`,
+      async () => {
+        const response = await RemoveTrackFromPlaylist({
+          playlistId: playlist.id,
+          playlistTrackId: selectedTrack.playlistTrack?.id
+        });
+
+        if (response.success) {
+          removeTrackFromPlaylistStore(selectedTrack.playlistTrack?.id);
+        }
+        success("Đã xóa bài hát khỏi playlist.");
+        setSongModalVisible(false);
+      },
+      () => { }
+    );
+  };
+
+  const handleSongViewArtist = (track) => {
+    if (track.artists && track.artists.length > 0) {
+      const artist = track.artists[0]; // Tạm thời chỉ xem nghệ sĩ đầu tiên
+      navigate("ArtistScreen", { artist: JSON.stringify(artist) });
+      setSongModalVisible(false);
+    } else {
+      warning("Không tìm thấy thông tin nghệ sĩ.");
+    }
+  };
+
+  const handleSongShare = async (track) => {
+    try {
+      const artistName = track.artists?.map(a => a.name).join(', ');
+      await Share.share({
+        message: `Nghe thử bài hát này: ${track.name} - ${artistName}`,
+        // url: track.externalUrl // (Nếu bạn có URL)
+      });
+    } catch (err) {
+      error('Lỗi khi chia sẻ bài hát.');
+    }
+    setSongModalVisible(false);
   };
 
   useEffect(() => {
@@ -426,19 +511,13 @@ export default function PlaylistScreen() {
     }
   }, [currentPlaylist]);
 
-
-  const handleSelectTrack = (track) => {
-    setCurrentTrack(track);
-    navigate('SongScreen');
-  }
-
   const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
       item={item}
       key={index}
       image={item?.imageUrl || ''}
       onPress={() => handlePlayTrack(index)}
-      onOptionsPress={() => { }}
+      onOptionsPress={() => handleSongOptionsPress(item)}
     />
   );
 
@@ -520,12 +599,14 @@ export default function PlaylistScreen() {
           </View>
           <View className="flex-row justify-between items-center w-full">
             <View className="flex-row items-center justify-start gap-4">
-              <Pressable onPress={() => handleSharePlaylist()}>
-                <Ionicons
-                  name="share-social"
-                  color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
-                  size={22} />
-              </Pressable>
+              {currentPlaylist?.isPublic && (
+                <Pressable onPress={() => handleSharePlaylist()}>
+                  <Ionicons
+                    name="share-social"
+                    color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
+                    size={22} />
+                </Pressable>
+              )}
               <Pressable onPress={() => handleMoreOptions()}>
                 <Ionicons
                   name="ellipsis-vertical"
@@ -580,6 +661,7 @@ export default function PlaylistScreen() {
             onDelete={handleDeletePlaylist}
             onEdit={() => setModalEditVisible(true)}
             onDownload={handleDownloadPlaylist}
+            onTogglePrivacy={handleChangePrivacy}
             onShare={handleSharePlaylist}
             onAddToPlaylist={() => {
               if (!playlistTracks || !playlistTracks.length) {
@@ -635,6 +717,20 @@ export default function PlaylistScreen() {
             onPickImage={() => handlePickerImage(newImage, setNewImage)}
             onCreatePlaylist={handleAddPlaylist}
           />}
+
+        {songModalVisible && selectedTrack && (
+          <SongItemOptionModal
+            isVisible={songModalVisible}
+            setIsVisible={setSongModalVisible}
+            track={selectedTrack}
+            isMine={isMine} // Để modal biết có hiển thị nút "Xóa" hay không
+            onAddToQueue={() => handleSongAddToQueue(selectedTrack)}
+            onAddToPlaylist={() => handleSongAddToPlaylist()}
+            onRemoveFromPlaylist={() => handleRemoveTrackFromPlaylist(selectedTrack)}
+            onViewArtist={() => handleSongViewArtist(selectedTrack)}
+            onShare={() => handleSongShare(selectedTrack)}
+          />
+        )}
       </Animated.ScrollView>
     </Animated.View>
   );

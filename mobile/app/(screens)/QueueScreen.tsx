@@ -83,7 +83,7 @@ export default function QueueScreen() {
       <FlatList
         data={queue}
         renderItem={renderQueueItem}
-        keyExtractor={(item, index) => item.spotifyId}
+        keyExtractor={(item, index) => index.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
         ListHeaderComponent={() => (

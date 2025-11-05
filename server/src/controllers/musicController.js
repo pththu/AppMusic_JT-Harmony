@@ -422,6 +422,8 @@ const getTracksFromPlaylist = async (req, res) => {
       if (playlist.PlaylistTracks.length > 0) {
         for (const item of playlist.PlaylistTracks) {
           const spotifyId = item.trackSpotifyId;
+          const uniquePlaylistTrackId = item.id;
+
           let album = null;
           let artist = [];
           if (spotifyId) {
@@ -444,13 +446,20 @@ const getTracksFromPlaylist = async (req, res) => {
               }
             }
             const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+            itemFormat.playlistTrack = {
+              id: uniquePlaylistTrackId
+            };
             dataFormated.push(itemFormat);
           }
         }
       }
     } else if (type === 'api') {
       data = await spotify.getPlaylistTracks(playlistId);
-      data.map(track => dataFormated.push(formatTrack(track, null, null, null)))
+      data.map((track) => {
+        const itemFormat = formatTrack(track, null, null, null);
+        itemFormat.playlistTrack = null;
+        dataFormated.push(itemFormat);
+      })
     }
 
     console.log('paylistId: ', playlistId)
@@ -826,6 +835,38 @@ const addTrackToPlaylistAfterConfirm = async (req, res) => {
   }
 };
 
+const removeTrackFromPlaylist = async (req, res) => {
+  try {
+    const { playlistId, playlistTrackId } = req.params;
+
+    if (!playlistId || !playlistTrackId) {
+      return res.status(400).json({ message: 'Playlist ID và Playlist Track ID là bắt buộc', success: false });
+    }
+
+    const playlist = await Playlist.findByPk(playlistId);
+    if (!playlist) {
+      return res.status(404).json({ message: 'Không tìm thấy playlist', success: false });
+    }
+
+    const row = await PlaylistTrack.destroy({
+      where: {
+        id: playlistTrackId
+      }
+    });
+
+    if (!row) {
+      return res.status(500).json({ message: 'Có lỗi xảy ra khi xóa track khỏi playlist', success: false });
+    }
+
+    playlist.totalTracks = Math.max(0, playlist.totalTracks - 1);
+    await playlist.save();
+
+    return res.status(200).json({ message: 'Đã xóa track khỏi playlist', success: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Có lỗi xảy ra khi xóa track khỏi playlist' });
+  }
+};
+
 module.exports = {
   findSpotifyPlaylist,
   findArtistTopTracks,
@@ -845,4 +886,5 @@ module.exports = {
   addTrackToPlaylist,
   addTrackToPlaylistAfterConfirm,
   addTracksToPlaylists,
+  removeTrackFromPlaylist,
 };

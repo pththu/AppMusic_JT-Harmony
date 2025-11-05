@@ -123,6 +123,31 @@ exports.sharePlaylist = async (req, res) => {
   }
 }
 
+exports.updatePrivacy = async (req, res) => {
+  try {
+    const { playlistId } = req.params;
+
+    const playlist = await Playlist.findByPk(playlistId);
+    if (!playlist) {
+      return res.status(404).json({ error: 'Danh sách phát không tìm thấy' });
+    }
+
+    playlist.isPublic = !playlist.isPublic;
+    const row = await playlist.save();
+    if (!row) {
+      return res.status(500).json({ error: 'Không thể cập nhật trạng thái danh sách phát' });
+    }
+
+    res.status(200).json({
+      message: 'Đã cập nhật trạng thái danh sách phát',
+      isPublic: playlist.isPublic,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
 exports.deletePlaylist = async (req, res) => {
   try {
     const deleted = await Playlist.destroy({ where: { id: req.params.id } });

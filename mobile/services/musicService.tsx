@@ -204,6 +204,17 @@ export const SharePlaylist = async (payload) => {
   }
 }
 
+export const UpdatePlaylistPrivacy = async (payload) => {
+  try {
+    const response = await axiosClient.put(`/playlists/${payload.playlistId}/update-privacy`);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 // delete
 export const DeletePlaylist = async (playlistId) => {
   try {
@@ -213,6 +224,17 @@ export const DeletePlaylist = async (playlistId) => {
     return response.data;
   } catch (error) {
     console.log(error.message);
+    throw error;
+  }
+}
+
+export const RemoveTrackFromPlaylist = async (payload) => {
+  try {
+    const response = await axiosClient.delete(`/music/playlist/${payload.playlistId}/remove-track/${payload.playlistTrackId}`);
+    console.log('response remove track', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }

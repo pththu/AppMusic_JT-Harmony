@@ -48,7 +48,9 @@ interface PlayerState {
   updateTotalTracksInMyPlaylists: (playlistId: string, total: number) => void;
   updateSharedCountPlaylist: (playlistId: string) => void;
   updateMyPlaylists: (playlist: any) => void;
+  updatePrivacy: (playlistId: boolean) => void;
   removeFromMyPlaylists: (playlistId: string) => void;
+  removeTrackFromPlaylist: (trackId: string) => void;
 
   // play actions
   playTrack: (track: any) => void;
@@ -173,10 +175,36 @@ export const usePlayerStore = create<PlayerState>()(
         const updatedPlaylists = myPlaylists.map(p => p.id === playlist.id ? playlist : p);
         set({ myPlaylists: updatedPlaylists });
       },
+      updatePrivacy: (playlistId) => {
+        const { currentPlaylist, myPlaylists } = get();
+        if (currentPlaylist && currentPlaylist.id === playlistId) {
+          set({
+            currentPlaylist: {
+              ...currentPlaylist,
+              isPublic: !currentPlaylist.isPublic,
+            }
+          });
+        }
+        const updatedPlaylists = myPlaylists.map(p => {
+          if (p.id === playlistId) {
+            return {
+              ...p,
+              isPublic: !p.isPublic,
+            };
+          }
+          return p;
+        });
+        set({ myPlaylists: updatedPlaylists });
+      },
       removeFromMyPlaylists: (playlistId) => {
         const { myPlaylists } = get();
         const newPlaylists = myPlaylists.filter(p => p.id !== playlistId);
         set({ myPlaylists: newPlaylists });
+      },
+      removeTrackFromPlaylist: (playlistTrackId) => {
+        const { playlistTracks } = get();
+        const newTracks = playlistTracks.filter(t => t.playlistTrack.id !== playlistTrackId);
+        set({ playlistTracks: newTracks });
       },
       playPlaylist: (tracks, startIndex = 0) =>
         set({
@@ -187,7 +215,6 @@ export const usePlayerStore = create<PlayerState>()(
           playbackPosition: 0,
           isLastIndex: startIndex === tracks.length - 1,
         }),
-
       playTrack: (track) =>
         set({
           playlistTracksPlaying: [track],

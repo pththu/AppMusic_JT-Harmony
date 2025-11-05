@@ -39,6 +39,7 @@ const PlaylistOptionModal = ({
   onAddToPlaylist = () => { },
   onShare = () => { },
   onDownload = () => { },
+  onTogglePrivacy = () => { },
   onEdit = () => { },
   onDelete = () => { },
   onAddTrack = () => { },
@@ -129,7 +130,8 @@ const PlaylistOptionModal = ({
                 <OptionItem text="Thêm vào hàng đợi" iconName="list" onPress={onAddToQueue} colorScheme={colorScheme} />
                 {data?.id && <OptionItem text="Thêm bài hát" iconName="plus" onPress={onAddTrack} colorScheme={colorScheme} />}
                 <OptionItem text="Tải xuống" iconName="download-cloud" onPress={onDownload} colorScheme={colorScheme} />
-                <OptionItem text="Chia sẻ" iconName="share-2" onPress={onShare} colorScheme={colorScheme} />
+                <OptionItem text={data?.isPublic ? "Đặt về trạng thái riêng tư" : "Đặt về trạng thái công khai"} iconName="lock" onPress={onTogglePrivacy} colorScheme={colorScheme} />
+                {data?.isPublic && <OptionItem text="Chia sẻ" iconName="share-2" onPress={onShare} colorScheme={colorScheme} />}
                 {data?.id && <OptionItem text="Xóa playlist" iconName="trash-2" onPress={onDelete} isDestructive={true} colorScheme={colorScheme} />}
               </View>
 

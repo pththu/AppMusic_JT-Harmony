@@ -4,8 +4,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function SongItem({ item, image, onPress, onOptionsPress }) {
   const colorScheme = useColorScheme();
-
+  
   const artistName = item?.artists?.map(a => a?.name).join(', ');
+
   return (
     <TouchableOpacity className="flex-row items-center py-2 mb-1" onPress={onPress}>
       <Image source={{ uri: image }} className="w-12 h-12 rounded-md mr-3" />
