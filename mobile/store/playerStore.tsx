@@ -43,6 +43,7 @@ interface PlayerState {
   // playlst
   addToMyPlaylists: (playlist: any) => void;
   addTrackToPlaylist: (track: any) => void;
+  updateCurrentTrack: (track: any) => void;
   updateCurrentPlaylist: (playlist: any) => void;
   updateTotalTracksInCurrentPlaylist: (total: number) => void;
   updateTotalTracksInMyPlaylists: (playlistId: string, total: number) => void;
@@ -129,8 +130,15 @@ export const usePlayerStore = create<PlayerState>()(
         const { playlistTracks } = get();
         set({ playlistTracks: [...playlistTracks, track] });
       },
+      updateCurrentTrack: (track) => {
+        set({ currentTrack: track });
+      },
       updateCurrentPlaylist: (playlist) => {
         set({ currentPlaylist: playlist });
+        // also update in myPlaylists
+        const { myPlaylists } = get();
+        const updatedPlaylists = myPlaylists.map(p => p.spotifyId === playlist.spotifyId ? playlist : p);
+        set({ myPlaylists: updatedPlaylists });
       },
       updateTotalTracksInCurrentPlaylist: (total) => {
         const { currentPlaylist } = get();

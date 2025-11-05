@@ -32,6 +32,8 @@ import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { set } from "date-fns";
 import AddPlaylistModal from "@/components/modals/AddPlaylistModal";
 import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
+import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
+import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
 
 // Hằng số để xác định khi nào bắt đầu mờ/hiện header
 // 256px là chiều cao của ảnh (h-64). Bạn có thể điều chỉnh
@@ -48,6 +50,7 @@ export default function PlaylistScreen() {
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const updateSharedCountPlaylist = usePlayerStore((state) => state.updateSharedCountPlaylist);
+  const updateCurrentTrack = usePlayerStore((state) => state.updateCurrentTrack);
   const updatePrivacy = usePlayerStore((state) => state.updatePrivacy);
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
   const removeTrackFromPlaylistStore = usePlayerStore((state) => state.removeTrackFromPlaylist);
@@ -80,6 +83,8 @@ export default function PlaylistScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [songModalVisible, setSongModalVisible] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState(null);
+  const [artistModalVisible, setArtistModalVisible] = useState(false);
+  const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
 
   const [name, setName] = useState(currentPlaylist?.name || "");
   const [description, setDescription] = useState(currentPlaylist?.description || '');
@@ -209,10 +214,15 @@ export default function PlaylistScreen() {
           console.log('Chia sẻ thành công!');
         }
         // Update share count after successful share
-        const response = await SharePlaylist(currentPlaylist.id);
+        const response = await SharePlaylist({
+          playlistId: currentPlaylist?.id,
+          playlistSpotifyId: currentPlaylist?.spotifyId
+        });
         if (response.success) {
           success('Đã chia sẻ');
-          updateSharedCountPlaylist(currentPlaylist.id);
+          currentPlaylist.id = response.data.playlistId;
+          updateCurrentPlaylist(currentPlaylist);
+          updateSharedCountPlaylist(currentPlaylist?.id);
         }
       } else if (result.action === Share.dismissedAction) {
         // Dismissed
@@ -402,11 +412,39 @@ export default function PlaylistScreen() {
 
   const handleSongAddToPlaylist = () => {
     setSongModalVisible(false);
-    // TODO: Bạn cần tạo một modal mới (hoặc sửa AddToAnotherPlaylistModal)
-    // để xử lý việc thêm CHỈ MỘT BÀI HÁT (selectedTrack) vào playlist đã chọn.
-    // Tạm thời, chúng ta sẽ mở modal cũ, nhưng bạn cần cập nhật logic của nó.
-    // setModalAddToAnotherPlaylistVisible(true);
-    info('Chức năng này đang được phát triển!');
+    setAddTrackToPlaylistModalVisible(true);
+  };
+
+  const handleConfirmAddTrackToPlaylists = async (playlistIds) => {
+    if (!playlistIds || playlistIds.length === 0) {
+      warning("Vui lòng chọn ít nhất một playlist.");
+      return;
+    }
+    if (!selectedTrack) {
+      error("Lỗi", "Không tìm thấy bài hát đã chọn.");
+      return;
+    }
+
+    try {
+      const trackSpotifyIds = [selectedTrack.spotifyId]; // Chỉ thêm 1 bài
+      const response = await AddTracksToPlaylists({
+        playlistIds: playlistIds,
+        trackSpotifyIds: trackSpotifyIds
+      });
+
+      if (response.success) {
+        playlistIds.forEach(id => {
+          // Cập nhật +1 bài hát cho mỗi playlist
+          updateTotalTracksInMyPlaylists(id, 1);
+        });
+        success('Đã thêm bài hát vào playlist thành công!');
+      }
+    } catch (err) {
+      console.log(err);
+      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát.');
+    } finally {
+      setAddTrackToPlaylistModalVisible(false);
+    }
   };
 
   const handleRemoveTrackFromPlaylist = (track) => {
@@ -433,14 +471,44 @@ export default function PlaylistScreen() {
     );
   };
 
-  const handleSongViewArtist = (track) => {
-    if (track.artists && track.artists.length > 0) {
-      const artist = track.artists[0]; // Tạm thời chỉ xem nghệ sĩ đầu tiên
-      navigate("ArtistScreen", { artist: JSON.stringify(artist) });
+  const handleSongViewAlbum = (track) => {
+    if (track.album && track.album.spotifyId) {
+      // Dữ liệu 'track.album' được tạo từ hàm formatTrack
+      // Nó chỉ chứa { spotifyId, name, imageUrl }.
+      // Màn hình AlbumScreen có thể cần 'artists' và 'totalTracks'.
+      // Chúng ta sẽ truyền 'track.artists' (của bài hát) 
+      // làm artists của album (thường là giống nhau).
+      const albumData = {
+        ...track.album,
+        artists: track.artists || [], // Cung cấp artists của bài hát
+        // totalTracks sẽ bị thiếu, AlbumScreen cần xử lý
+      };
+      navigate("AlbumScreen", { album: JSON.stringify(albumData) });
       setSongModalVisible(false);
     } else {
-      warning("Không tìm thấy thông tin nghệ sĩ.");
+      warning("Không tìm thấy thông tin album.");
     }
+  };
+
+  const handleSongViewArtist = (track) => {
+    if (!track.artists || track.artists.length === 0) {
+      warning("Không tìm thấy thông tin nghệ sĩ.");
+      return;
+    }
+    if (track.artists.length === 1) {
+      // Nếu chỉ có 1, đi thẳng
+      navigate("ArtistScreen", { artist: JSON.stringify(track.artists[0]) });
+      setSongModalVisible(false);
+    } else {
+      // Nếu có nhiều, mở modal chọn
+      setSongModalVisible(false); // Đóng modal cũ
+      setArtistModalVisible(true); // Mở modal mới
+    }
+  };
+
+  const handleSelectArtist = (artist) => {
+    navigate("ArtistScreen", { artist: JSON.stringify(artist) });
+    setArtistModalVisible(false);
   };
 
   const handleSongShare = async (track) => {
@@ -723,12 +791,37 @@ export default function PlaylistScreen() {
             isVisible={songModalVisible}
             setIsVisible={setSongModalVisible}
             track={selectedTrack}
-            isMine={isMine} // Để modal biết có hiển thị nút "Xóa" hay không
+            isMine={isMine}
             onAddToQueue={() => handleSongAddToQueue(selectedTrack)}
-            onAddToPlaylist={() => handleSongAddToPlaylist()}
+            onAddToPlaylist={handleSongAddToPlaylist} // (Cập nhật)
             onRemoveFromPlaylist={() => handleRemoveTrackFromPlaylist(selectedTrack)}
-            onViewArtist={() => handleSongViewArtist(selectedTrack)}
+            onViewAlbum={() => handleSongViewAlbum(selectedTrack)}
+            onViewArtist={() => handleSongViewArtist(selectedTrack)} // (Cập nhật)
             onShare={() => handleSongShare(selectedTrack)}
+          />
+        )}
+
+        {artistModalVisible && selectedTrack && (
+          <ArtistSelectionModal
+            isVisible={artistModalVisible}
+            setIsVisible={setArtistModalVisible}
+            artists={selectedTrack.artists}
+            onSelectArtist={handleSelectArtist}
+          />
+        )}
+
+        {addTrackToPlaylistModalVisible && selectedTrack && (
+          <AddTrackToPlaylistsModal
+            isVisible={addTrackToPlaylistModalVisible}
+            setIsVisible={setAddTrackToPlaylistModalVisible}
+            trackToAdd={selectedTrack}
+            currentPlaylistIdToExclude={playlist.id} // Lọc ra playlist hiện tại
+            onAddToPlaylist={handleConfirmAddTrackToPlaylists}
+            onCreateNewPlaylist={() => {
+              setAddTrackToPlaylistModalVisible(false);
+              // TODO: Cần có logic để tạo playlist MỚI và thêm bài hát này vào
+              info("Chức năng đang phát triển");
+            }}
           />
         )}
       </Animated.ScrollView>

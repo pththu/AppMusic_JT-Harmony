@@ -195,7 +195,11 @@ export const UpdatePlaylist = async (payload) => {
 
 export const SharePlaylist = async (payload) => {
   try {
-    const response = await axiosClient.put(`/playlists/${payload}/share`);
+    console.log(payload)
+    const response = await axiosClient.post(`/playlists/share`, {
+      playlistId: payload.playlistId,
+      playlistSpotifyId: payload.playlistSpotifyId
+    });
     console.log(response.data);
     return response.data;
   } catch (error) {

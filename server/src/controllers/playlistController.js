@@ -104,7 +104,29 @@ exports.updateOne = async (req, res) => {
 
 exports.sharePlaylist = async (req, res) => {
   try {
-    const { playlistId } = req.params;
+    const { playlistId, playlistSpotifyId } = req.body;
+
+    if (!playlistId && !playlistSpotifyId) {
+      return res.status(400).json({ error: 'ID danh sách phát và ID Spotify là bắt buộc' });
+    }
+
+    if (!playlistId) {
+      const response = await Playlist.create({
+        spotifyId: playlistSpotifyId,
+        shareCount: 1
+      })
+
+      if (!response) {
+        return res.status(500).json({ error: 'Không thể tạo danh sách phát để chia sẻ' });
+      }
+
+      return res.status(200).json({
+        message: 'Đã chia sẻ danh sách phát',
+        data: { playlistId: response.id },
+        success: true
+      });
+    }
+
     const playlist = await Playlist.findByPk(playlistId);
     if (!playlist) {
       return res.status(404).json({ error: 'Danh sách phát không tìm thấy' });
@@ -117,9 +139,13 @@ exports.sharePlaylist = async (req, res) => {
       return res.status(500).json({ error: 'Không thể cập nhật số lần chia sẻ' });
     }
 
-    res.status(200).json({ message: 'Đã chia sẻ danh sách phát', success: true });
+    return res.status(200).json({
+      message: 'Đã chia sẻ danh sách phát',
+      data: { playlistId: playlist.id },
+      success: true
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
 

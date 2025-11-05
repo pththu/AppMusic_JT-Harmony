@@ -23,8 +23,7 @@ const OptionItem = ({ iconName, text, onPress, isDestructive = false, colorSchem
       color={isDestructive ? "#ef4444" : `${colorScheme === "dark" ? "#a0a0a0" : "#4b5563"}`}
     />
     <Text
-      className={`text-base ml-5 font-medium 
-        ${isDestructive ? "text-red-500" : `${colorScheme === "dark" ? "text-white" : "text-black"}`}`}
+      className={`text-base ml-5 font-medium ${isDestructive ? "text-red-500" : `${colorScheme === "dark" ? "text-white" : "text-black"}`}`}
     >
       {text}
     </Text>
@@ -38,6 +37,7 @@ const SongItemOptionModal = ({
   track, // Dùng 'track' thay vì 'data'
   onAddToQueue,
   onAddToPlaylist,
+  onViewAlbum,
   onRemoveFromPlaylist,
   onViewArtist,
   onShare,
@@ -107,6 +107,7 @@ const SongItemOptionModal = ({
             <View className={`border-t ${colorScheme === 'dark' ? 'border-gray-600' : 'border-gray-200'} mb-4`}>
               <OptionItem text="Thêm vào hàng đợi" iconName="list" onPress={onAddToQueue} colorScheme={colorScheme} />
               <OptionItem text="Thêm vào playlist..." iconName="plus-circle" onPress={onAddToPlaylist} colorScheme={colorScheme} />
+              <OptionItem text="Xem album" iconName="disc" onPress={onViewAlbum} colorScheme={colorScheme} />
               <OptionItem text="Xem nghệ sĩ" iconName="user" onPress={onViewArtist} colorScheme={colorScheme} />
               <OptionItem text="Chia sẻ" iconName="share-2" onPress={onShare} colorScheme={colorScheme} />
               {isMine && (
