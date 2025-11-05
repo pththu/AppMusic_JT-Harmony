@@ -105,9 +105,9 @@ const protectedRoutes = [
     // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
     'conversations',
     'upload', // Upload hình ảnh, file
-    'music'
+    'music',
     // 'genres',    // Xem thể loại nhạc
-    // 'track',        // Xem bài hát (public), upload bài hát (private)
+    'tracks',        // Xem bài hát (public), upload bài hát (private)
     // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
 ];
 // const protectedRoutes = ['albums', 'songs', 'playlists', 'genres', 'follows', 'notifications', 'recommendations', 'history', 'downloads', 'conversations'];

@@ -7,8 +7,8 @@ import {
   Animated,
   Dimensions,
   TouchableWithoutFeedback,
+  useColorScheme,
 } from 'react-native';
-import { useColorScheme } from '@/components/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
 import { AlertConfig, AlertButton } from '@/types/alert';
 import { DEFAULT_ALERT_BUTTONS, ALERT_ANIMATIONS } from '@/constants/AlerConfig';
@@ -116,10 +116,10 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     let baseClass = 'flex-1 py-4 justify-center items-center';
 
     // Background colors based on theme
-    const bgWhite = isDark ? 'bg-gray-900/50' : 'bg-gray-200';
+    const bgWhite = isDark ? 'bg-gray-900' : 'bg-gray-200';
     const bgGray = isDark ? 'bg-gray-500' : 'bg-gray-500';
     const bgRed = isDark ? 'bg-red-500' : 'bg-red-500';
-    const bgGreen = isDark ? 'bg-green-500/50' : 'bg-green-500';
+    const bgGreen = isDark ? 'bg-green-500' : 'bg-green-500';
 
     baseClass += ` ${bgWhite}`;
 
@@ -129,7 +129,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     }
     // Multiple buttons
     else {
-      const borderColor = isDark ? 'border-gray-600/50' : 'border-gray-200';
+      const borderColor = isDark ? 'border-gray-600' : 'border-gray-200';
       if (index === 0) {
         baseClass += ` rounded-bl-xl border-r ${borderColor}`;
       } else if (index === totalButtons - 1) {
@@ -165,10 +165,10 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
   };
 
   const buttons = config.buttons || DEFAULT_ALERT_BUTTONS;
-  const containerBg = isDark ? 'bg-gray-800/50' : 'bg-white';
+  const containerBg = isDark ? 'bg-gray-800' : 'bg-white';
   const titleColor = isDark ? 'text-white' : 'text-gray-900';
   const messageColor = isDark ? 'text-gray-300' : 'text-gray-800';
-  const borderColor = isDark ? 'border-gray-600/50' : 'border-gray-100';
+  const borderColor = isDark ? 'border-gray-600' : 'border-gray-100';
 
   return (
     <Modal

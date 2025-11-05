@@ -29,7 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PlaylistItem from "@/components/items/PlaylistItem";
 import { GetAlbumsForYou, GetArtistsForYou, GetMyPlaylists, GetPlaylistsForYou } from "@/services/musicService";
 import { usePlayerStore } from "@/store/playerStore";
-import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 export default function HomeScreen() {
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
@@ -196,7 +196,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView
-      className={`flex-1 pt-4 ${colorScheme === "dark" ? "bg-black" : "bg-white"} ${isMiniPlayerVisible ? `mb-[${MINI_PLAYER_HEIGHT}px] pb-6` : ""}`}
+      className={`flex-1 pt-4 ${colorScheme === "dark" ? "bg-black" : "bg-white"} `}
+      style={{ marginBottom: MINI_PLAYER_HEIGHT }}
     >
       <View className={`fixed flex-row justify-between items-center mx-5 mb-4 `}>
         <Text className="text-black dark:text-white text-2xl font-bold">

@@ -15,6 +15,8 @@ export default function GlobalPlayer() {
   const playNext = usePlayerStore((state) => state.playNext);
   const setPlaybackPosition = usePlayerStore((state) => state.setPlaybackPosition);
   const setDuration = usePlayerStore((state) => state.setDuration);
+  const setIsPlaying = usePlayerStore((state) => state.setIsPlaying);
+  const seekTrigger = usePlayerStore((state) => state.seekTrigger);
 
   const onPlayerReady = () => {
     if (playerRef.current && playbackPosition > 0) {
@@ -22,26 +24,6 @@ export default function GlobalPlayer() {
     }
   };
 
-  useEffect(() => {
-    if (currentTrack && playerRef.current) {
-      playerRef.current.seekTo(0, true);
-
-      const timer = setTimeout(async () => {
-        try {
-          if (playerRef.current) {
-            const duration = await playerRef.current.getDuration();
-            if (typeof duration === "number") {
-              setDuration(duration);
-            }
-          }
-        } catch (error) {
-          console.error("Lỗi khi lấy độ dài video Youtube:", error);
-        }
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [currentTrack]);
 
   const onPlayerStateChange = async (state) => {
     const latestState = usePlayerStore.getState();
@@ -70,6 +52,115 @@ export default function GlobalPlayer() {
       }
     }
   };
+
+  useEffect(() => {
+    let intervalId = null;
+
+    if (isPlaying) {
+      // Bắt đầu một interval chạy mỗi giây khi nhạc đang phát
+      intervalId = setInterval(async () => {
+        if (playerRef.current) {
+          try {
+            // Lấy thời gian hiện tại từ YouTube player
+            const currentTime = await playerRef.current.getCurrentTime();
+            // Cập nhật vào store
+            setPlaybackPosition(currentTime);
+          } catch (error) {
+            // Bỏ qua lỗi nếu player chưa sẵn sàng
+          }
+        }
+      }, 1000); // 1000ms = 1 giây
+    } else {
+      // Nếu nhấn pause (isPlaying = false), xóa interval
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    }
+
+    // Hàm cleanup: Sẽ chạy khi [isPlaying] thay đổi hoặc component unmount
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isPlaying, setPlaybackPosition]);
+
+  useEffect(() => {
+    if (currentTrack && playerRef.current) {
+
+      playerRef.current.seekTo(0, true);
+      setDuration(0);
+
+      let intervalId = null;
+      let retries = 0;
+      const maxRetries = 10;
+      const pollInterval = 500;
+
+      const tryGetDuration = async () => {
+        if (!playerRef.current) {
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
+
+        try {
+          const duration = await playerRef.current.getDuration();
+          if (typeof duration === "number" && duration > 0) {
+            setDuration(duration);
+            if (intervalId) clearInterval(intervalId);
+          } else {
+            retries++;
+            if (retries >= maxRetries) {
+              console.error("Không thể lấy duration video sau", maxRetries, "lần thử.");
+              if (intervalId) clearInterval(intervalId);
+            }
+          }
+        } catch (error) {
+          console.error("Lỗi khi gọi getDuration():", error);
+          retries++;
+          if (retries >= maxRetries) {
+            if (intervalId) clearInterval(intervalId);
+          }
+        }
+      };
+
+      intervalId = setInterval(tryGetDuration, pollInterval);
+
+      return () => {
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+      };
+    }
+  }, [currentTrack]);
+
+  // useEffect(() => {
+  //   if (currentTrack && playerRef.current) {
+  //     playerRef.current.seekTo(0, true);
+
+  //     const timer = setTimeout(async () => {
+  //       try {
+  //         if (playerRef.current) {
+  //           const duration = await playerRef.current.getDuration();
+  //           if (typeof duration === "number") {
+  //             setDuration(duration);
+  //           }
+  //         }
+  //       } catch (error) {
+  //         console.error("Lỗi khi lấy độ dài video Youtube:", error);
+  //       }
+  //     }, 500);
+
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [currentTrack]);
+
+  useEffect(() => {
+    // Khi seekTrigger thay đổi (và không phải là null)
+    // có nghĩa là store yêu cầu tua lại
+    if (seekTrigger && playerRef.current) {
+      playerRef.current.seekTo(0, true);
+    }
+  }, [seekTrigger]);
 
   if (!currentTrack) {
     return null;

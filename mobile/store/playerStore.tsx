@@ -17,6 +17,7 @@ interface PlayerState {
   isLastIndex: boolean;
   isPlaying: boolean;
   tabBarHeight: number;
+  seekTrigger: number | null;
 
   volume: number;
   currentTime: number;
@@ -44,6 +45,7 @@ interface PlayerState {
   addToMyPlaylists: (playlist: any) => void;
   addTrackToPlaylist: (track: any) => void;
   updateCurrentTrack: (track: any) => void;
+  updateTrack: (track: any) => void;
   updateCurrentPlaylist: (playlist: any) => void;
   updateTotalTracksInCurrentPlaylist: (total: number) => void;
   updateTotalTracksInMyPlaylists: (playlistId: string, total: number) => void;
@@ -83,7 +85,7 @@ export const usePlayerStore = create<PlayerState>()(
       playbackPosition: 0,
       tabBarHeight: 0,
       queue: [],
-
+      seekTrigger: null,
       isLastIndex: false,
       isPlaying: false,
       volume: 1,
@@ -102,9 +104,36 @@ export const usePlayerStore = create<PlayerState>()(
           currentTrack: track,
           currentIndex: index !== -1 ? index : -1,
           currentTime: 0,
+          seekTrigger: Date.now(),
+          playbackPosition: 0,
           isLastIndex: index === playlistTracks.length - 1,
         });
       },
+      // setCurrentTrack: (track) => {
+      //   const { playlistTracks, currentTrack: oldTrack } = get(); // Lấy bài hát cũ
+      //   const index = playlistTracks.findIndex(s => s.id === track.id);
+
+      //   // Kiểm tra xem có phải là cùng một bài hát không
+      //   if (oldTrack && oldTrack.id === track.id) {
+      //     // *** LOGIC MỚI ***
+      //     // Cùng một bài hát: chỉ cần tua lại và phát
+      //     set({
+      //       playbackPosition: 0,
+      //       isPlaying: true,
+      //       seekTrigger: Date.now(),
+      //     });
+      //   } else {
+      //     // *** LOGIC CŨ (ĐÃ SỬA) ***
+      //     // Bài hát mới: tải bài hát mới
+      //     set({
+      //       currentTrack: track,
+      //       currentIndex: index !== -1 ? index : -1,
+      //       playbackPosition: 0, // <-- Đã sửa (trước đây là currentTime)
+      //       isPlaying: true, // <-- Thêm vào để tự động phát
+      //       isLastIndex: index === playlistTracks.length - 1,
+      //     });
+      //   }
+      // },
       setCurrentPlaylist: (playlist) => {
         set({ currentPlaylist: playlist });
       },
@@ -133,9 +162,13 @@ export const usePlayerStore = create<PlayerState>()(
       updateCurrentTrack: (track) => {
         set({ currentTrack: track });
       },
+      updateTrack: (track) => {
+        const { playlistTracks } = get();
+        const updatedTracks = playlistTracks.map(t => t.spotifyId === track.spotifyId ? track : t);
+        set({ playlistTracks: updatedTracks });
+      },
       updateCurrentPlaylist: (playlist) => {
         set({ currentPlaylist: playlist });
-        // also update in myPlaylists
         const { myPlaylists } = get();
         const updatedPlaylists = myPlaylists.map(p => p.spotifyId === playlist.spotifyId ? playlist : p);
         set({ myPlaylists: updatedPlaylists });
@@ -221,6 +254,7 @@ export const usePlayerStore = create<PlayerState>()(
           currentTrack: tracks[startIndex],
           isPlaying: true,
           playbackPosition: 0,
+          seekTrigger: Date.now(),
           isLastIndex: startIndex === tracks.length - 1,
         }),
       playTrack: (track) =>

@@ -13,11 +13,16 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { usePlayerStore } from '@/store/playerStore';
 import { Pressable } from 'react-native';
+import { SimpleLineIcons } from '@expo/vector-icons';
+import { useCustomAlert } from '@/hooks/useCustomAlert';
 
 export default function QueueScreen() {
+  const { info, error, success } = useCustomAlert();
+
   const queue = usePlayerStore((state) => state.queue);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const clearQueue = usePlayerStore((state) => state.clearQueue);
+  const removeTrackFromQueue = usePlayerStore((state) => state.removeTrackFromQueue);
   console.log('queue', queue);
 
   const [autoRecommendations, setAutoRecommendations] = useState(true);
@@ -25,6 +30,14 @@ export default function QueueScreen() {
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = colorScheme === 'dark' ? '#888' : 'gray';
 
+  const handleRemoveTrackFromQueue = (track) => {
+    try {
+      removeTrackFromQueue([track]);
+    } catch (err) {
+      console.log('Error removing track from queue: ', err);
+      error('Lỗi khi xóa bài hát khỏi danh sách chờ');
+    }
+  };
 
   const renderQueueItem = ({ item, index }) => {
     return (
@@ -45,8 +58,8 @@ export default function QueueScreen() {
             {item.artists?.map(a => a.name).join(', ')}
           </Text>
         </View>
-        <TouchableOpacity>
-          <Icon name="more-vert" size={24} color={secondaryIconColor} />
+        <TouchableOpacity onPress={() => handleRemoveTrackFromQueue(item)}>
+          <SimpleLineIcons name="close" color={colorScheme === 'dark' ? '#888' : 'black'} size={20} />
         </TouchableOpacity>
       </View>
     );

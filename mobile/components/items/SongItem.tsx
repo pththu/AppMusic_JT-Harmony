@@ -1,10 +1,11 @@
+import { AntDesign, SimpleLineIcons } from '@expo/vector-icons';
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-export default function SongItem({ item, image, onPress, onOptionsPress }) {
+export default function SongItem({ item, image, onPress, onOptionsPress, isQueueItem = false }) {
   const colorScheme = useColorScheme();
-  
+
   const artistName = item?.artists?.map(a => a?.name).join(', ');
 
   return (
@@ -16,7 +17,11 @@ export default function SongItem({ item, image, onPress, onOptionsPress }) {
       </View>
       <TouchableOpacity onPress={onOptionsPress}>
         <Text>
-          <Icon name="ellipsis-vertical" size={20} color={colorScheme === 'dark' ? '#888' : 'black'} />
+          {isQueueItem ? (
+            <SimpleLineIcons name="close" color={colorScheme === 'dark' ? '#888' : 'black'} size={20} />
+          ) : (
+            <Icon name="ellipsis-vertical" size={20} color={colorScheme === 'dark' ? '#888' : 'black'} />
+          )}
         </Text>
       </TouchableOpacity>
     </TouchableOpacity>

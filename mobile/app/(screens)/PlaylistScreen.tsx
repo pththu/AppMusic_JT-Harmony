@@ -20,8 +20,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
-import { AddTracksToPlaylists, CreatePlaylist, DeletePlaylist, GetTracksByPlaylistId, RemoveTrackFromPlaylist, SharePlaylist, UpdatePlaylist, UpdatePlaylistPrivacy } from "@/services/musicService";
-import { is, pl } from "date-fns/locale";
+import { AddTracksToPlaylists, CreatePlaylist, DeletePlaylist, GetTracksByPlaylistId, RemoveTrackFromPlaylist, SharePlaylist, ShareTrack, UpdatePlaylist, UpdatePlaylistPrivacy } from "@/services/musicService";
+import { is, pl, se } from "date-fns/locale";
 import useAuthStore from "@/store/authStore";
 import PlaylistOptionModal from "@/components/modals/PlaylistOptionModal";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
@@ -50,7 +50,7 @@ export default function PlaylistScreen() {
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const updateSharedCountPlaylist = usePlayerStore((state) => state.updateSharedCountPlaylist);
-  const updateCurrentTrack = usePlayerStore((state) => state.updateCurrentTrack);
+  const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updatePrivacy = usePlayerStore((state) => state.updatePrivacy);
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
   const removeTrackFromPlaylistStore = usePlayerStore((state) => state.removeTrackFromPlaylist);
@@ -66,7 +66,6 @@ export default function PlaylistScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const [playlist, setPlaylist] = useState(null);
-  const params = useLocalSearchParams();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
@@ -195,7 +194,7 @@ export default function PlaylistScreen() {
 
       // Thêm URL hình ảnh nếu có
       if (currentPlaylist?.imageUrl) {
-        shareMessage += `Hình ảnh: ${currentPlaylist?.imageUrl}\n\n`;
+        shareMessage += `${currentPlaylist?.imageUrl}\n\n`;
       }
 
       // Thêm liên kết đến bài viết
@@ -426,7 +425,7 @@ export default function PlaylistScreen() {
     }
 
     try {
-      const trackSpotifyIds = [selectedTrack.spotifyId]; // Chỉ thêm 1 bài
+      const trackSpotifyIds = [selectedTrack.spotifyId];
       const response = await AddTracksToPlaylists({
         playlistIds: playlistIds,
         trackSpotifyIds: trackSpotifyIds
@@ -434,7 +433,6 @@ export default function PlaylistScreen() {
 
       if (response.success) {
         playlistIds.forEach(id => {
-          // Cập nhật +1 bài hát cho mỗi playlist
           updateTotalTracksInMyPlaylists(id, 1);
         });
         success('Đã thêm bài hát vào playlist thành công!');
@@ -473,15 +471,9 @@ export default function PlaylistScreen() {
 
   const handleSongViewAlbum = (track) => {
     if (track.album && track.album.spotifyId) {
-      // Dữ liệu 'track.album' được tạo từ hàm formatTrack
-      // Nó chỉ chứa { spotifyId, name, imageUrl }.
-      // Màn hình AlbumScreen có thể cần 'artists' và 'totalTracks'.
-      // Chúng ta sẽ truyền 'track.artists' (của bài hát) 
-      // làm artists của album (thường là giống nhau).
       const albumData = {
         ...track.album,
-        artists: track.artists || [], // Cung cấp artists của bài hát
-        // totalTracks sẽ bị thiếu, AlbumScreen cần xử lý
+        artists: track.artists || [],
       };
       navigate("AlbumScreen", { album: JSON.stringify(albumData) });
       setSongModalVisible(false);
@@ -496,13 +488,11 @@ export default function PlaylistScreen() {
       return;
     }
     if (track.artists.length === 1) {
-      // Nếu chỉ có 1, đi thẳng
       navigate("ArtistScreen", { artist: JSON.stringify(track.artists[0]) });
       setSongModalVisible(false);
     } else {
-      // Nếu có nhiều, mở modal chọn
-      setSongModalVisible(false); // Đóng modal cũ
-      setArtistModalVisible(true); // Mở modal mới
+      setSongModalVisible(false);
+      setArtistModalVisible(true);
     }
   };
 
@@ -513,12 +503,51 @@ export default function PlaylistScreen() {
 
   const handleSongShare = async (track) => {
     try {
+      console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
-      await Share.share({
-        message: `Nghe thử bài hát này: ${track.name} - ${artistName}`,
-        // url: track.externalUrl // (Nếu bạn có URL)
+      let shareMessage = `${user?.fullName}: `;
+
+      if (track?.name) {
+        shareMessage += `Nghe thử bài hát này: ${track.name} - ${artistName}\n\n`;
+      } else {
+        shareMessage += `Bài đăng của ${user?.fullName}\n\n`;
+      }
+
+      // Thêm URL hình ảnh nếu có
+      if (track?.imageUrl) {
+        shareMessage += `${track?.imageUrl}\n\n`;
+      }
+
+      // Thêm liên kết đến bài viết
+      const postLink = `app://post/${track?.id}`; // Deep link giả định
+      shareMessage += `Xem bài hát: ${postLink}`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        // url: postLink,
       });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log(result.activityType)
+        } else {
+          console.log('Chia sẻ thành công!');
+        }
+        // Update share count after successful share
+        const response = await ShareTrack({
+          trackId: track?.id,
+          trackSpotifyId: track?.spotifyId
+        });
+        if (response.success) {
+          success('Đã chia sẻ');
+          selectedTrack.id = response.data.trackId;
+          updateTrack(selectedTrack);
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // Dismissed
+      }
     } catch (err) {
+      console.log(err);
       error('Lỗi khi chia sẻ bài hát.');
     }
     setSongModalVisible(false);
@@ -793,10 +822,10 @@ export default function PlaylistScreen() {
             track={selectedTrack}
             isMine={isMine}
             onAddToQueue={() => handleSongAddToQueue(selectedTrack)}
-            onAddToPlaylist={handleSongAddToPlaylist} // (Cập nhật)
+            onAddToPlaylist={handleSongAddToPlaylist}
             onRemoveFromPlaylist={() => handleRemoveTrackFromPlaylist(selectedTrack)}
             onViewAlbum={() => handleSongViewAlbum(selectedTrack)}
-            onViewArtist={() => handleSongViewArtist(selectedTrack)} // (Cập nhật)
+            onViewArtist={() => handleSongViewArtist(selectedTrack)}
             onShare={() => handleSongShare(selectedTrack)}
           />
         )}
@@ -815,11 +844,10 @@ export default function PlaylistScreen() {
             isVisible={addTrackToPlaylistModalVisible}
             setIsVisible={setAddTrackToPlaylistModalVisible}
             trackToAdd={selectedTrack}
-            currentPlaylistIdToExclude={playlist.id} // Lọc ra playlist hiện tại
+            currentPlaylistIdToExclude={playlist.id}
             onAddToPlaylist={handleConfirmAddTrackToPlaylists}
             onCreateNewPlaylist={() => {
               setAddTrackToPlaylistModalVisible(false);
-              // TODO: Cần có logic để tạo playlist MỚI và thêm bài hát này vào
               info("Chức năng đang phát triển");
             }}
           />

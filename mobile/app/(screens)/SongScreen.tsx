@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -23,13 +23,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SongItem from "@/components/items/SongItem";
 import TextTicker from "react-native-text-ticker";
 import { is } from "date-fns/locale";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function SongScreen() {
   const { navigate } = useNavigate();
+  const { info, error, success } = useCustomAlert();
   const colorScheme = useColorScheme();
 
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const currentIndex = usePlayerStore((state) => state.currentIndex);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
@@ -43,6 +46,7 @@ export default function SongScreen() {
   const playPrevious = usePlayerStore((state) => state.playPrevious);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
+  const removeTrackFromQueue = usePlayerStore((state) => state.removeTrackFromQueue);
 
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = colorScheme === 'dark' ? '#888' : 'gray';
@@ -51,13 +55,20 @@ export default function SongScreen() {
   const [isRepeat, setIsRepeat] = useState(false);
   const [isRepeatOne, setIsRepeatOne] = useState(false);
 
+  const [progress, setProgress] = useState(0);
+
+  const formatTime = (seconds) => {
+    if (isNaN(seconds) || seconds < 0) {
+      return "0:00";
+    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
   const handleSelectQueue = () => {
     if (!currentTrack) return;
     navigate("QueueScreen");
-  };
-
-  const handleSelectInfo = (track) => {
-    navigate("SongInfoScreen", { track: JSON.stringify(track) });
   };
 
   const handleSelectTrack = (track) => {
@@ -104,13 +115,33 @@ export default function SongScreen() {
     }
   }
 
+  const handleRemoveTrackFromQueue = (track) => {
+    try {
+      removeTrackFromQueue([track]);
+    } catch (err) {
+      console.log('Error removing track from queue: ', err);
+      error('Lỗi khi xóa bài hát khỏi danh sách chờ');
+    }
+  };
+
+  useEffect(() => {
+    if (duration > 0) {
+      // Tính toán tỷ lệ phần trăm (giá trị từ 0 đến 100)
+      const percentage = (playbackPosition / duration) * 100;
+      setProgress(percentage);
+    } else {
+      setProgress(0); // Reset nếu không có duration
+    }
+  }, [playbackPosition, duration]);
+
   const renderUpNextItem = ({ item, index }) => (
     <SongItem
       item={item}
       key={index}
+      isQueueItem={true}
       image={item.imageUrl || ''}
       onPress={() => handleSelectTrack(item)}
-      onOptionsPress={() => { }}
+      onOptionsPress={() => handleRemoveTrackFromQueue(item)}
     />
   );
 
@@ -165,16 +196,6 @@ export default function SongScreen() {
           </Text>
         </View>
         <View className="flex-row">
-          <TouchableOpacity
-            className="mr-4"
-            onPress={() => handleSelectInfo(currentTrack)}
-          >
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color={primaryIconColor}
-            />
-          </TouchableOpacity>
           <TouchableOpacity className="mr-4">
             <Icon name="favorite-border" size={20} color={primaryIconColor} />
           </TouchableOpacity>
@@ -215,11 +236,18 @@ export default function SongScreen() {
 
       {/* Progress Bar */}
       <View className="flex-row items-center px-3 mb-3">
-        <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs w-8 text-center`}>0:25</Text>
+        <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs w-8 text-center`}>
+          {formatTime(playbackPosition)}
+        </Text>
         <View className={`flex-1 h-1 ${colorScheme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} rounded-sm mx-2`}>
-          <View className={`w-1/3 h-1 ${colorScheme === 'dark' ? 'bg-green-700' : 'bg-green-500'} rounded-sm`} />
+          <View
+            className={`h-1 ${colorScheme === 'dark' ? 'bg-green-700' : 'bg-green-500'} rounded-sm`}
+            style={{ width: `${progress}%` }}
+          />
         </View>
-        <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-800'} text-xs w-8 text-center`}>{duration}</Text>
+        <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-800'} text-xs w-8 text-center`}>
+          {formatTime(duration)}
+        </Text>
       </View>
 
       {/* Up Next Header */}

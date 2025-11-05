@@ -7,7 +7,7 @@ const Op = require('sequelize').Op;
 
 const formatTrack = (track, artist, album, videoId) => {
   return {
-    id: track?.spotifyId && track.id ? track.id : null,
+    id: track?.tempId || (track?.spotifyId && track.id ? track.id : null),
     spotifyId: track?.spotifyId || (!track?.spotifyId ? track.id : null) || null,
     videoId: videoId || null,
     name: track?.name || null,
@@ -435,8 +435,13 @@ const getTracksFromPlaylist = async (req, res) => {
               ]
             });
 
-            if (!track) {
+            const idTemp = track?.id || null;
+
+            if (!track || !track.name) {
               track = await spotify.findTrackById(spotifyId);
+              if (idTemp) {
+                track.tempId = idTemp;
+              }
               console.log(track)
             } else {
               album = track.Album;

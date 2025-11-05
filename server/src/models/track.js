@@ -22,15 +22,12 @@ const Track = sequelize.define(
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false
     },
     lyrics: {
       type: DataTypes.TEXT,
-      allowNull: true
     },
     externalUrl: {
       type: DataTypes.STRING,
-      allowNull: true,
       field: 'external_url'
     },
     duration: {
