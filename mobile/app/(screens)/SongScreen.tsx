@@ -196,8 +196,9 @@ export default function SongScreen() {
     try {
       console.log('un')
       setIsLoading(true);
+      console.log(favoriteItems)
       const favoriteItem = favoriteItems.find(
-        (item) => item.itemType === 'track' && (item.itemId === track.id || item.itemSpotifyId === track.spotifyId)
+        (item) => item?.itemType === 'track' && (item?.itemId === track?.id || item?.itemSpotifyId === track?.spotifyId)
       );
 
       if (!favoriteItem) {
@@ -229,12 +230,8 @@ export default function SongScreen() {
       if (response.success) {
         setIsFavorite(true);
         setIsLoading(false);
-        addFavoriteItem({
-          id: response.data.id,
-          itemType: 'track',
-          itemId: track.id,
-          itemSpotifyId: track.spotifyId
-        });
+        console.log('response.data ui', response.data)
+        addFavoriteItem(response.data[0]);
       }
     } catch (err) {
       console.log(err)
@@ -244,11 +241,10 @@ export default function SongScreen() {
 
   useEffect(() => {
     if (duration > 0) {
-      // Tính toán tỷ lệ phần trăm (giá trị từ 0 đến 100)
       const percentage = (playbackPosition / duration) * 100;
       setProgress(percentage);
     } else {
-      setProgress(0); // Reset nếu không có duration
+      setProgress(0);
     }
   }, [playbackPosition, duration]);
 
@@ -266,11 +262,15 @@ export default function SongScreen() {
   }, [repeatMode])
 
   useEffect(() => {
-    const isFavorite = favoriteItems.some(
-      (item) => item.itemId === currentTrack.id && item.itemType === 'track'
-    );
-    setIsFavorite(isFavorite);
-  }, [currentTrack]);
+    console.log('current', currentTrack)
+    console.log('fav list', favoriteItems);
+    if (favoriteItems) {
+      const isFavorite = favoriteItems.some(
+        (item) => item?.itemType === 'track' && (item?.itemSpotifyId === currentTrack?.spotifyId || (currentTrack?.id !== null && item?.itemId === currentTrack?.id))
+      );
+      setIsFavorite(isFavorite);
+    }
+  }, []);
 
   const renderUpNextItem = ({ item, index }) => (
     <SongItem
@@ -354,10 +354,10 @@ export default function SongScreen() {
 
       {/* Controls */}
       <View className="flex-row justify-between items-center mb-3 px-6">
-        <TouchableOpacity onPress={handleShufflePlay}>
+        <TouchableOpacity onPress={handleShufflePlay} className="p-2">
           <Icon name="shuffle" size={24} color={isShuffle ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handlePlayPrevious}>
+        <TouchableOpacity onPress={handlePlayPrevious} className="p-2">
           <Icon name="skip-previous" size={30} color={primaryIconColor} />
         </TouchableOpacity>
         <TouchableOpacity
@@ -370,10 +370,10 @@ export default function SongScreen() {
             color={'black'}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handlePlayNext}>
+        <TouchableOpacity onPress={handlePlayNext} className="p-2">
           <Icon name="skip-next" size={30} color={primaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleRepeat}>
+        <TouchableOpacity onPress={handleRepeat} className="p-2">
           <Icon name={isRepeatOne ? 'repeat-one' : 'repeat'} size={24} color={isRepeat ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
       </View>

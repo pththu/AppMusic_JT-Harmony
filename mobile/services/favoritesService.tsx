@@ -10,8 +10,19 @@ export const GetFavoriteItemsGrouped = async () => {
   }
 };
 
+export const GetFavoritePlaylists = async () => {
+  try {
+    const response = await axiosClient.get(`/favorites/playlists`);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 export const AddFavoriteItem = async (payload) => {
   try {
+    console.log('api add')
     const response = await axiosClient.post(`/favorites`, {
       itemType: payload.itemType,
       itemId: payload.itemId,

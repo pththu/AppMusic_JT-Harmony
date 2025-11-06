@@ -25,6 +25,7 @@ import { LoginManager } from "react-native-fbsdk-next";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { usePlayerStore } from "@/store/playerStore";
+import { useFavoritesStore } from "@/store/favoritesStore";
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
@@ -32,6 +33,7 @@ export default function ProfileScreen() {
   const loginType = useAuthStore((state) => state.loginType);
   const updateUser = useAuthStore((state) => state.updateUser);
   const clearPlayerStore = usePlayerStore((state) => state.clear);
+  const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error, warning } = useCustomAlert();
@@ -135,6 +137,7 @@ export default function ProfileScreen() {
       }
       logout();
       clearPlayerStore();
+      clearFavorites();
     } catch (error) {
       console.log(error);
     }

@@ -56,7 +56,7 @@ const AddToAnotherPlaylistModal = ({
   isVisible,
   setIsVisible,
   data,
-  onAddToPlaylist, // Hàm này giờ nhận MẢNG ID
+  onAddToPlaylist, 
   onCreateNewPlaylist = () => console.log('Tạo playlist mới'),
 }) => {
   const colorScheme = useColorScheme();

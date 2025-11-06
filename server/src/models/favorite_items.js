@@ -13,7 +13,8 @@ const FavoriteItem = sequelize.define(
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      field: 'user_id'
     },
     itemId: {
       type: DataTypes.INTEGER,
@@ -34,7 +35,7 @@ const FavoriteItem = sequelize.define(
     indexes: [
       {
         unique: true,
-        fields: ['id', 'userId']
+        fields: ['id', 'user_id']
       }
     ]
   }

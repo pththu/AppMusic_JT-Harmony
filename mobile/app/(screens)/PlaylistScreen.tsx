@@ -11,17 +11,17 @@ import {
   useColorScheme,
   View,
   StyleSheet,
-  Share, // Thêm StyleSheet
+  Share,
+  Dimensions, // Thêm StyleSheet
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
 import { AddTracksToPlaylists, CreatePlaylist, DeletePlaylist, GetTracksByPlaylistId, RemoveTrackFromPlaylist, SharePlaylist, ShareTrack, UpdatePlaylist, UpdatePlaylistPrivacy } from "@/services/musicService";
-import { is, pl, se } from "date-fns/locale";
 import useAuthStore from "@/store/authStore";
 import PlaylistOptionModal from "@/components/modals/PlaylistOptionModal";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
@@ -29,21 +29,28 @@ import EditPlaylistModal from "@/components/modals/EditPlaylistModal";
 import * as ImagePicker from 'expo-image-picker';
 import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
-import { set } from "date-fns";
 import AddPlaylistModal from "@/components/modals/AddPlaylistModal";
 import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
 import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
 import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
+import { useFavoritesStore } from "@/store/favoritesStore";
+import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
 
-// Hằng số để xác định khi nào bắt đầu mờ/hiện header
-// 256px là chiều cao của ảnh (h-64). Bạn có thể điều chỉnh
 const HEADER_SCROLL_THRESHOLD = 256;
+const screenHeight = Dimensions.get("window").height;
 
 export default function PlaylistScreen() {
+
+  const { navigate } = useNavigate();
+  const { info, error, success, confirm, warning } = useCustomAlert();
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+
   const user = useAuthStore((state) => state.user);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
   const playlistTracks = usePlayerStore((state) => state.playlistTracks);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setPlaylistTracks = usePlayerStore((state) => state.setPlaylistTracks);
   const updateCurrentPlaylist = usePlayerStore((state) => state.updateCurrentPlaylist);
@@ -61,40 +68,42 @@ export default function PlaylistScreen() {
   const setQueue = usePlayerStore((state) => state.setQueue);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
+  const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem);
+  const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
 
-  const { navigate } = useNavigate();
-  const { info, error, success, confirm, warning } = useCustomAlert();
-  const router = useRouter();
-  const colorScheme = useColorScheme();
-  const [playlist, setPlaylist] = useState(null);
+
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
 
+  const [isFavorite, setIsFavorite] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [isMine, setIsMine] = useState(false);
-  const [newIsPublic, setNewIsPublic] = useState(true);
-  const [isPublic, setIsPublic] = useState(currentPlaylist?.isPublic || true);
   const [modalEditVisible, setModalEditVisible] = useState(false);
   const [modalAddToAnotherPlaylistVisible, setModalAddToAnotherPlaylistVisible] = useState(false);
-  const [modalAddToQueueVisible, setModalAddToQueueVisible] = useState(false);
   const [modalAddPlaylistVisible, setModalAddPlaylistVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [songModalVisible, setSongModalVisible] = useState(false);
-  const [selectedTrack, setSelectedTrack] = useState(null);
   const [artistModalVisible, setArtistModalVisible] = useState(false);
   const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
+
+  const [playlist, setPlaylist] = useState(null);
+  const [selectedTrack, setSelectedTrack] = useState(null);
 
   const [name, setName] = useState(currentPlaylist?.name || "");
   const [description, setDescription] = useState(currentPlaylist?.description || '');
   const [image, setImage] = useState(currentPlaylist?.imageUrl);
+  const [isPublic, setIsPublic] = useState(currentPlaylist?.isPublic || true);
+
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newImage, setNewImage] = useState(null);
+  const [newIsPublic, setNewIsPublic] = useState(true);
+
   const [trackIds, setTrackIds] = useState([]);
   const imageDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
-
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -152,7 +161,7 @@ export default function PlaylistScreen() {
         setNewImage(null);
         addToMyPlaylists(response.playlist);
         const playlistIds = [];
-        playlistIds.push(response.playlist.id);
+        playlistIds.push(response.playlist?.id);
 
         const trackIds = [];
         playlistTracks.forEach(track => {
@@ -558,6 +567,52 @@ export default function PlaylistScreen() {
     setSongModalVisible(false);
   };
 
+  const handleAddFavorite = async (playlist) => {
+    try {
+      setIsFavoriteLoading(true);
+      console.log('fav')
+      const response = await AddFavoriteItem({
+        itemType: 'playlist',
+        itemId: currentPlaylist.id,
+        itemSpotifyId: currentPlaylist.spotifyId
+      });
+      if (response.success) {
+        console.log('response.data', response.data)
+        setIsFavorite(true);
+        setIsFavoriteLoading(false);
+        addFavoriteItem(response.data);
+      }
+    } catch (err) {
+      console.log(err)
+      error('Lỗi khi thêm playlist vào mục yêu thích.');
+    }
+  }
+
+  const handleUnFavorite = async (playlist) => {
+    try {
+      console.log('un')
+      setIsFavoriteLoading(true);
+      const favoriteItem = favoriteItems.find(
+        (item) => item.itemType === 'playlist' && (item.itemId === playlist.id || item.itemSpotifyId === playlist.spotifyId)
+      );
+
+      if (!favoriteItem) {
+        error('Playlist không có trong mục yêu thích.');
+        return;
+      }
+
+      const response = await RemoveFavoriteItem(favoriteItem.id);
+      if (response.success) {
+        removeFavoriteItem(favoriteItem);
+        setIsFavorite(false);
+        setIsFavoriteLoading(false);
+      }
+    } catch (err) {
+      console.log(err);
+      error('Lỗi khi xóa playlist khỏi mục yêu thích.');
+    }
+  };
+
   useEffect(() => {
     setPlaylist(currentPlaylist);
     if (currentPlaylist?.owner?.id === user?.id || currentPlaylist?.userId === user?.id) {
@@ -594,7 +649,6 @@ export default function PlaylistScreen() {
 
     fetchTracks();
     console.log('currentPlaylist: ', currentPlaylist);
-    playlistTracks.map(a => console.log(a));
   }, []);
 
   useEffect(() => {
@@ -612,6 +666,12 @@ export default function PlaylistScreen() {
         }),
       ]).start();
     }
+  }, [currentPlaylist]);
+
+  useEffect(() => {
+    const isFavorite = favoriteItems.some(
+      (item) => item?.itemType === 'playlist' && (item?.itemId === currentPlaylist?.id || item?.itemSpotifyId === currentPlaylist?.spotifyId)
+    );
   }, [currentPlaylist]);
 
   const renderRecentlyPlayedItem = ({ item, index }) => (
@@ -643,6 +703,15 @@ export default function PlaylistScreen() {
             zIndex: -1,
           }}
         />
+        {isFavoriteLoading && (
+          <View className="absolute top-0 right-0 left-0 z-10 bg-black/50 justify-center items-center"
+            style={{
+              height: screenHeight
+            }}
+          >
+            <ActivityIndicator size="large" color="#22c55e" />
+          </View>
+        )}
         {/* <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}> */}
         <View className="flex-row justify-between items-center h-14 px-5">
           <TouchableOpacity onPress={() => router.back()} className="p-1">
@@ -703,14 +772,31 @@ export default function PlaylistScreen() {
           <View className="flex-row justify-between items-center w-full">
             <View className="flex-row items-center justify-start gap-4">
               {currentPlaylist?.isPublic && (
-                <Pressable onPress={() => handleSharePlaylist()}>
+                <Pressable className="p-2" onPress={() => handleSharePlaylist()}>
                   <Ionicons
                     name="share-social"
                     color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
                     size={22} />
                 </Pressable>
               )}
-              <Pressable onPress={() => handleMoreOptions()}>
+              {currentPlaylist?.owner?.id !== user?.id && (
+                <TouchableOpacity className="p-2"
+                  onPress={() => {
+                    if (isFavorite) {
+                      handleUnFavorite(currentPlaylist);
+                    } else {
+                      handleAddFavorite(currentPlaylist);
+                    }
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name={isFavorite ? "bookmark" : "bookmark-plus-outline"}
+                    color={isFavorite ? '#22c55e' : (colorScheme === 'dark' ? '#FFFFFF' : '#000000')}
+                    size={23}
+                  />
+                </TouchableOpacity>
+              )}
+              <Pressable className="p-2" onPress={() => handleMoreOptions()}>
                 <Ionicons
                   name="ellipsis-vertical"
                   color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
@@ -749,7 +835,7 @@ export default function PlaylistScreen() {
                   <Text className="text-gray-600 dark:text-gray-400">Không có bài hát nào trong playlist này.</Text>
                 </View>
               ) : (
-                playlistTracks?.sort((a, b) => a.playlistTrack.id - b.playlistTrack.id)?.map((item, index) => (
+                playlistTracks?.sort((a, b) => a?.playlistTrack?.id - b?.playlistTrack?.id)?.map((item, index) => (
                   renderRecentlyPlayedItem({ item, index })
                 ))
               )}
@@ -850,7 +936,7 @@ export default function PlaylistScreen() {
             isVisible={addTrackToPlaylistModalVisible}
             setIsVisible={setAddTrackToPlaylistModalVisible}
             trackToAdd={selectedTrack}
-            currentPlaylistIdToExclude={playlist.id}
+            currentPlaylistIdToExclude={playlist?.id}
             onAddToPlaylist={handleConfirmAddTrackToPlaylists}
             onCreateNewPlaylist={() => {
               setAddTrackToPlaylistModalVisible(false);

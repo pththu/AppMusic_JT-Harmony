@@ -1,4 +1,4 @@
-const { FavoriteItem, User, Track, Album, Artist } = require('../models');
+const { FavoriteItem, User, Track, Album, Artist, Playlist } = require('../models');
 const spotify = require('../configs/spotify');
 
 
@@ -139,7 +139,7 @@ const GetItemsGroupedByType = async (req, res) => {
       return res.status(200).json({ message: 'Danh sách yêu thích trống', data: [] });
     }
 
-    const itemIdsByType = { track: [], album: [], artist: [] };
+    const itemIdsByType = { track: [], album: [], playlist: [] };
 
     for (const favorite of favorites) {
       const itemType = favorite.itemType;
@@ -152,7 +152,7 @@ const GetItemsGroupedByType = async (req, res) => {
       }
     }
 
-    const dataFormated = { tracks: [], albums: [], artists: [] };
+    const dataFormated = { tracks: [], albums: [], playlists: [] };
 
     if (itemIdsByType.track) {
       for (const item of itemIdsByType.track) {
@@ -250,28 +250,28 @@ const GetItemsGroupedByType = async (req, res) => {
       }
     }
 
-    if (itemIdsByType.artist) {
-      for (const item of itemIdsByType.artist) {
+    if (itemIdsByType.playlist) {
+      for (const item of itemIdsByType.playlist) {
         const spotifyId = item?.itemSpotifyId;
         const itemId = item?.itemId;
         const uniqueFavoriteId = item?.id;
         if (spotifyId) {
-          const artist = await spotify.findArtistById(spotifyId);
-          if (artist) {
-            const itemFormat = formatArtist(artist, null);
+          const playlist = await spotify.findPlaylistById(spotifyId);
+          if (playlist) {
+            const itemFormat = formatPlaylist(playlist, null);
             itemFormat.favoriteItem = {
               id: uniqueFavoriteId
             };
-            dataFormated.artists.push(itemFormat);
+            dataFormated.playlists.push(itemFormat);
           }
         } else {
-          const artist = await Artist.findByPk(itemId);
-          if (artist) {
-            const itemFormat = formatArtist(artist, null);
+          const playlist = await Playlist.findByPk(itemId, { include: [{ model: User }] });
+          if (playlist) {
+            const itemFormat = formatPlaylist(playlist, playlist.User);
             itemFormat.favoriteItem = {
               id: uniqueFavoriteId
             };
-            dataFormated.artists.push(itemFormat);
+            dataFormated.playlists.push(itemFormat);
           }
         }
       }
@@ -279,7 +279,7 @@ const GetItemsGroupedByType = async (req, res) => {
 
     const trackMap = new Map(dataFormated.tracks.map(t => [t.favoriteItem.id, t]));
     const albumMap = new Map(dataFormated.albums.map(a => [a.favoriteItem.id, a]));
-    const artistMap = new Map(dataFormated.artists.map(a => [a.favoriteItem.id, a]));
+    const playlistMap = new Map(dataFormated.playlists.map(a => [a.favoriteItem.id, a]));
 
     const combinedHistory = favorites.map(favorites => {
       let itemDetail = null;
@@ -289,14 +289,14 @@ const GetItemsGroupedByType = async (req, res) => {
         itemDetail = trackMap.get(id);
       } else if (favorites.itemType === 'album') {
         itemDetail = albumMap.get(id);
-      } else if (favorites.itemType === 'artist') {
-        itemDetail = artistMap.get(id);
+      } else if (favorites.itemType === 'playlist') {
+        itemDetail = playlistMap.get(id);
       }
 
       if (itemDetail) {
         return {
-          ...favorites.toJSON(), // Lịch sử thô (durationListened, listenedAt, etc.)
-          item: itemDetail // Thông tin chi tiết của Track/Album/Artist
+          ...favorites.toJSON(),
+          item: itemDetail
         };
       }
       return null;
@@ -314,11 +314,57 @@ const GetItemsGroupedByType = async (req, res) => {
   }
 }
 
+const GetPlaylistFavorite = async (req, res) => {
+  console.log(1111)
+  try {
+    const dataFormated = [];
+
+    const favorites = await FavoriteItem.findAll({
+      where: { userId: req.user.id, itemType: 'playlist' }
+    });
+
+    if (!favorites || favorites.length === 0) {
+      return res.status(200).json({ message: 'Không tìm thấy mục yêu thích của người dùng này', success: true, data: [] });
+    }
+
+    for (const favorite of favorites) {
+      if (favorite?.itemSpotifyId) {
+        const playlist = await spotify.findPlaylistById(favorite.itemSpotifyId);
+        if (playlist) {
+          const playlistFormat = formatPlaylist(playlist, null);
+          dataFormated.push(playlistFormat);
+        }
+      } else if (favorite?.itemId) {
+        const playlist = await Playlist.findByPk(favorite.itemId, {
+          include: [{ model: User }]
+        });
+        if (playlist) {
+          const playlistFormat = formatPlaylist(playlist, playlist.User);
+          dataFormated.push(playlistFormat);
+        }
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Danh sách yêu thích retrieved successfully',
+      success: true,
+      data: dataFormated
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 const CreateOne = async (req, res) => {
   try {
     const { itemType, itemId, itemSpotifyId } = req.body;
-
+    const dataFormated = []
+    let album = null;
+    let track = null;
+    let playlist = null;
+    let artist = [];
     if (!itemType && (!itemId || !itemSpotifyId)) {
+      console.log('thieu')
       return res.status(400).json({ message: 'Thiếu thông tin yêu thích' });
     }
 
@@ -328,7 +374,112 @@ const CreateOne = async (req, res) => {
       itemId,
       itemSpotifyId
     });
-    res.status(201).json({ message: 'Favorite created successfully', data: favorite, success: true });
+
+    if (!favorite) {
+      console.log('error')
+      return res.status(500).json({ message: 'Thêm vào mục yêu thích thất bại' });
+    }
+
+    switch (itemType) {
+      case 'track':
+        console.log('track')
+        artist = [];
+        if (itemSpotifyId) {
+          console.log('first')
+          track = await Track.findOne({
+            where: { spotifyId: itemSpotifyId },
+            include: [
+              { model: Album },
+              { model: Artist, as: 'artists' }
+            ]
+          });
+
+          console.log('no')
+          const idTemp = track?.id || null;
+
+          if (!track || !track.name) {
+            console.log('ýe')
+            track = await spotify.findTrackById(itemSpotifyId);
+            if (idTemp) {
+              track.tempId = idTemp;
+            }
+          } else {
+            console.log('temp')
+            album = track.Album;
+            artist = [];
+            for (const a of track.artists) {
+              artist.push(a);
+            }
+          }
+          const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+          itemFormat.favoriteItem = {
+            id: favorite.id
+          };
+          console.log('tracks')
+          dataFormated.push({
+            ...favorite.toJSON(),
+            item: itemFormat
+          });
+        } else {
+          track = await Track.findByPk(itemId, {
+            include: [
+              { model: Album },
+              { model: Artist, as: 'artists' }
+            ]
+          });
+
+          album = track.Album;
+          artist = [];
+          for (const a of track.artists) {
+            artist.push(a);
+          }
+
+          const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+          itemFormat.favoriteItem = {
+            id: favorite.id
+          };
+          dataFormated.push({
+            ...favorite.toJSON(),
+            item: itemFormat
+          });
+        }
+        break;
+      case 'album':
+        album = await Album.findByPk(itemId, {
+          include: [
+            { model: Artist, as: 'artists' }
+          ]
+        });
+
+        if (album) {
+          const itemFormat = formatAlbum(album, null);
+          itemFormat.favoriteItem = {
+            id: favorite.id
+          };
+          dataFormated.push({
+            ...favorite.toJSON(),
+            item: itemFormat
+          });
+        }
+        break;
+      case 'playlist':
+        playlist = await spotify.findPlaylistById(itemSpotifyId);
+        if (playlist) {
+          const itemFormat = formatPlaylist(playlist, null);
+          itemFormat.favoriteItem = { id: favorite.id };
+          dataFormated.push({
+            ...favorite.toJSON(),
+            item: itemFormat
+          });
+        }
+        break;
+      default:
+        return res.status(400).json({ message: 'Loại mục yêu thích không hợp lệ' });
+    }
+
+    console.log('data format', dataFormated);
+
+    return res.status(201).json({ message: 'Favorite created successfully', data: dataFormated, success: true });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -350,6 +501,7 @@ module.exports = {
   GetByPk,
   GetByUserId,
   GetItemsGroupedByType,
+  GetPlaylistFavorite,
   CreateOne,
   DeleteOne,
 };

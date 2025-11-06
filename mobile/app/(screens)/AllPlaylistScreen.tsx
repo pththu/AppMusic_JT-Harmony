@@ -10,24 +10,29 @@ import {
   useColorScheme,
   Animated,
   ActivityIndicator,
+  Share,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { playlistData } from "@/constants/data";
 import { useNavigate } from "@/hooks/useNavigate";
 import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
-import { GetPlaylistsForYou } from "@/services/musicService";
-import { set } from "date-fns";
+import { AddTracksToPlaylists, DeletePlaylist, GetPlaylistsForYou, GetTracksByPlaylistId, SharePlaylist, UpdatePlaylist } from "@/services/musicService";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Modal } from "react-native";
 import AddPlaylistModal from "@/components/modals/AddPlaylistModal";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import * as ImagePicker from 'expo-image-picker';
 import { CreatePlaylist } from "@/services/musicService";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import EditPlaylistModal from "@/components/modals/EditPlaylistModal";
+import PlaylistItemOptionModal from "@/components/modals/PlaylistItemOptionModal";
+import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
+import { set } from "date-fns";
+import { GetFavoritePlaylists, RemoveFavoriteItem } from "@/services/favoritesService";
+import { useFavoritesStore } from "@/store/favoritesStore";
 
-const PlaylistItem = ({ item, index, onPress, primaryIconColor, colorScheme }) => {
+const PlaylistItem = ({ item, index, onPress, onPressOptions, primaryIconColor, colorScheme }) => {
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(15)).current;
 
@@ -73,7 +78,7 @@ const PlaylistItem = ({ item, index, onPress, primaryIconColor, colorScheme }) =
             {item?.totalTracks || 0} bài hát
           </Text>
         </View>
-        <Pressable className="">
+        <Pressable className="p-2" onPress={() => onPressOptions(item)}>
           <Icon name="ellipsis-vertical" size={20} color={primaryIconColor} />
         </Pressable>
       </Pressable>
@@ -82,24 +87,43 @@ const PlaylistItem = ({ item, index, onPress, primaryIconColor, colorScheme }) =
 };
 
 export default function AllPlaylistScreen() {
+  const colorScheme = useColorScheme();
+  const { success, error, warning, confirm } = useCustomAlert();
+  const { navigate } = useNavigate();
   const user = useAuthStore((state) => state.user);
   const myPlaylists = usePlayerStore((state) => state.myPlaylists);
-  const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
-  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const { success, error, warning } = useCustomAlert();
-  const { navigate } = useNavigate();
-  const colorScheme = useColorScheme();
+  const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
+  const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
+  const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
+  const updateSharedCountPlaylist = usePlayerStore((state) => state.updateSharedCountPlaylist);
+  const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
+  const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
+  const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
 
   const [activeTab, setActiveTab] = useState("myPlaylists");
   const [savedPlaylists, setSavedPlaylists] = useState([]);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [playlistTracks, setPlaylistTracks] = useState([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isOptionModalVisible, setIsOptionModalVisible] = useState(false);
+  const [isAddToOtherPlaylistVisible, setIsAddToOtherPlaylistVisible] = useState(false);
+  const [isAddPlaylistModalVisible, setIsAddPlaylistModalVisible] = useState(false);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const [isPublic, setIsPublic] = useState(true);
-  const [loading, setLoading] = useState(false);
+
+  const [newName, setNewName] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newImage, setNewImage] = useState(null);
+  const [newIsPublic, setNewIsPublic] = useState(true);
 
   const primaryIconColor = colorScheme === "dark" ? "white" : "black";
   const playerPadding = currentTrack ? MINI_PLAYER_HEIGHT : 0;
@@ -118,7 +142,7 @@ export default function AllPlaylistScreen() {
     return true;
   };
 
-  const handlePickerImage = async () => {
+  const handlePickerImage = async (image, setImage) => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
       error('Quyền truy cập bị từ chối!');
@@ -138,7 +162,7 @@ export default function AllPlaylistScreen() {
   };
 
   const handleAddPlaylist = async () => {
-    setLoading(true);
+    setIsLoading(true);
     try {
       const payload = {
         image: image || null,
@@ -153,32 +177,315 @@ export default function AllPlaylistScreen() {
         success('Tạo playlist thành công!');
         addToMyPlaylists(response.playlist);
       }
-    } catch (error) {
-      error('Không thể tạo playlist. Vui lòng thử lại!', error.message);
+    } catch (err) {
+      error('Không thể tạo playlist. Vui lòng thử lại!', err.message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
       setName("");
       setDescription("");
       setImage(null);
       setIsPublic(false);
-      setIsModalVisible(false);
+      setIsAddModalVisible(false);
     }
   }
 
-  useEffect(() => {
-    const fetchSavedPlaylists = async () => {
-      try {
-        const response = await GetPlaylistsForYou(["bts", "agustd", "jungkook"]);
-        if (response.success) {
-          setSavedPlaylists(response.data);
+  const handleCreateAndAddTracksToPlaylist = async () => {
+    try {
+      const payload = {
+        image: newImage || null,
+        name: newName,
+        description: newDescription,
+        isPublic: newIsPublic
+      };
+      const response = await CreatePlaylist(payload);
+
+      if (response.success) {
+        setNewImage(null);
+        addToMyPlaylists(response.playlist);
+        const playlistIds = [];
+        playlistIds.push(response.playlist.id);
+
+        const trackIds = [];
+        playlistTracks.forEach(track => {
+          trackIds.push(track.spotifyId);
+        });
+
+        console.log(playlistIds)
+        console.log(trackIds)
+        if (trackIds.length > 0) {
+          const addResponse = await AddTracksToPlaylists({
+            playlistIds: playlistIds,
+            trackSpotifyIds: trackIds
+          });
+          if (addResponse.success) {
+            updateTotalTracksInMyPlaylists(response.playlist.id, trackIds.length);
+            success('Đã tạo playlist và thêm bài hát thành công!');
+          }
         }
-      } catch (error) {
-        console.error("Lỗi khi lấy playlist đã lưu:", error);
+      }
+    } catch (error) {
+      error('Không thể tạo playlist. Vui lòng thử lại!', error.message);
+    } finally {
+      setNewName("");
+      setNewDescription("");
+      setNewImage(null);
+      setNewIsPublic(false);
+      setIsAddPlaylistModalVisible(false);
+      setIsOptionModalVisible(false);
+    }
+  }
+
+  const handleUpdatePlaylist = async () => {
+    console.log('handleUpdatePlaylist')
+    try {
+      const payload = {
+        id: selectedPlaylist.id,
+        image: image || null,
+        name: name || null,
+        description: description,
+        isPublic: isPublic
+      };
+      const response = await UpdatePlaylist(payload);
+
+      if (response.success) {
+        setImage(null);
+        success('Cập nhật playlist thành công!');
+        updateMyPlaylists(response.playlist);
+      }
+    } catch (error) {
+      error('Không thể cập nhật playlist. Vui lòng thử lại!', error.message);
+    } finally {
+      setImage(null);
+      setName("");
+      setDescription("");
+      setIsPublic(false);
+      setIsEditModalVisible(false);
+    }
+  }
+
+  const handleAddToAnotherPlaylist = async (playlistIds) => {
+    console.log('handleAddToAnotherPlaylist')
+    console.log(playlistIds);
+    if (!playlistTracks || !playlistTracks.length) {
+      warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
+      return;
+    }
+
+    if (!playlistIds || !playlistIds.length) {
+      warning('Vui lòng chọn ít nhất một playlist để thêm bài hát!');
+      return;
+    }
+
+    try {
+      const trackIds = [];
+      playlistTracks.forEach(track => {
+        trackIds.push(track.spotifyId);
+      });
+
+      const response = await AddTracksToPlaylists({
+        playlistIds: playlistIds,
+        trackSpotifyIds: trackIds
+      })
+
+      if (response.success) {
+        playlistIds.forEach(id => {
+          updateTotalTracksInMyPlaylists(id, playlistTracks.length);
+        });
+        success('Đã thêm bài hát vào playlist thành công!');
+      }
+
+    } catch (err) {
+      console.log(err);
+      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát vào playlist. Vui lòng thử lại sau.');
+    }
+  };
+
+  const handleOpenOptionsModal = (item) => {
+    setSelectedPlaylist(item);
+    setIsOptionModalVisible(true);
+  };
+
+  const handleCloseOptionsModal = () => {
+    setIsOptionModalVisible(false);
+  };
+
+  const handleEdit = () => {
+    if (!selectedPlaylist) return;
+    setName(selectedPlaylist.name);
+    setDescription(selectedPlaylist.description || "");
+    setImage(selectedPlaylist.imageUrl || null);
+    setIsPublic(selectedPlaylist.isPublic);
+
+    setIsOptionModalVisible(false);
+    setIsEditModalVisible(true);
+  };
+
+  const handleDelete = () => {
+    if (!selectedPlaylist) return;
+    console.log('handleDeletePlaylist')
+    try {
+      confirm(
+        'Xác nhận xóa',
+        'Bạn có chắc chắn muốn xóa playlist này?',
+        async () => {
+          const response = await DeletePlaylist(selectedPlaylist.id);
+          console.log('response úi', response);
+          if (response.success) {
+            removeFromMyPlaylists(selectedPlaylist.id);
+            success('Đã xóa playlist thành công!');
+          } else {
+            error('Không thể xóa playlist. Vui lòng thử lại sau.');
+          }
+        },
+        () => { }
+      );
+    } catch (error) {
+      console.log('Lỗi khi xóa playlist:', error);
+      error('Lỗi xóa playlist', 'Đã có lỗi xảy ra khi xóa playlist. Vui lòng thử lại sau.');
+    }
+    setIsOptionModalVisible(false);
+    setSelectedPlaylist(null);
+  };
+
+  const handleAddToQueue = () => {
+    console.log('handleAddToQueue')
+    if (!playlistTracks || playlistTracks.length === 0) {
+      warning('Playlist không có bài hát để thêm vào hàng đợi!');
+      return;
+    }
+
+    // Thêm toàn bộ bài hát trong playlist này vào Queue
+    addTrackToQueue(playlistTracks);
+    success(`Đã thêm ${playlistTracks.length} bài hát vào hàng đợi!`);
+    setIsOptionModalVisible(false);
+  };
+
+  const handleRemoveFromSaved = async () => {
+    if (!selectedPlaylist) return;
+    try {
+      console.log('un')
+      setIsLoading(true);
+      console.log(favoriteItems[5])
+      const favoriteItem = favoriteItems.find(
+        (item) => item.itemType === 'playlist' && ((selectedPlaylist?.id !== null && item?.itemId === selectedPlaylist?.id) || item.itemSpotifyId === selectedPlaylist?.spotifyId)
+      );
+
+      if (!favoriteItem) {
+        error('Playlist không có trong mục yêu thích.');
+        return;
+      }
+
+      console.log('id', favoriteItem);
+
+      const response = await RemoveFavoriteItem(favoriteItem.id);
+      if (response.success) {
+        removeFavoriteItem(favoriteItem);
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.log(err);
+      error('Lỗi khi xóa bài hát khỏi mục yêu thích.');
+    }
+
+    setIsOptionModalVisible(false);
+    setSelectedPlaylist(null);
+  };
+
+  const handleShare = async () => {
+    if (!selectedPlaylist) return;
+    try {
+      let shareMessage = `${user?.fullName}: `;
+
+      if (selectedPlaylist?.name) {
+        shareMessage += `${selectedPlaylist?.name}\n\n`;
+      } else {
+        shareMessage += `Bài đăng của ${user?.fullName}\n\n`;
+      }
+
+      // Thêm URL hình ảnh nếu có
+      if (selectedPlaylist?.imageUrl) {
+        shareMessage += `${selectedPlaylist?.imageUrl}\n\n`;
+      }
+
+      // Thêm liên kết đến bài viết
+      const postLink = `app://post/${selectedPlaylist?.id}`; // Deep link giả định
+      shareMessage += `Xem bài viết: ${postLink}`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        // url: postLink,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log(result.activityType)
+        } else {
+          console.log('Chia sẻ thành công!');
+        }
+        // Update share count after successful share
+        const response = await SharePlaylist({
+          playlistId: selectedPlaylist?.id,
+          playlistSpotifyId: selectedPlaylist?.spotifyId
+        });
+        if (response.success) {
+          success('Đã chia sẻ');
+          selectedPlaylist.id = response.data.playlistId;
+          updateSharedCountPlaylist(selectedPlaylist?.id);
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // Dismissed
+      }
+    } catch (err) {
+      console.error('Lỗi khi chia sẻ:', err);
+      error('Lỗi khi chia sẻ playlist. Vui lòng thử lại sau.');
+    }
+    setIsOptionModalVisible(false);
+    setSelectedPlaylist(null);
+  };
+
+  useEffect(() => {
+    console.log('favorite: ', favoriteItems);
+    const fetchFavoritePlaylists = async () => {
+      console.log('test')
+      const response = await GetFavoritePlaylists();
+      console.log(response.data[0])
+      if (response.success) {
+        setSavedPlaylists(response.data);
       }
     };
 
-    fetchSavedPlaylists();
+    fetchFavoritePlaylists();
   }, []);
+
+  useEffect(() => {
+    const fetchTracks = async () => {
+      if (selectedPlaylist?.spotifyId) {
+        const response = await GetTracksByPlaylistId({
+          playlistId: selectedPlaylist?.spotifyId,
+          type: 'api'
+        });
+        if (response.success) {
+          setPlaylistTracks(response.data);
+        } else {
+          setPlaylistTracks([]);
+        }
+      } else {
+        const response = await GetTracksByPlaylistId({
+          playlistId: selectedPlaylist?.id,
+          type: 'local'
+        });
+        if (response.success) {
+          setPlaylistTracks(response.data);
+        } else {
+          setPlaylistTracks([]);
+        }
+      }
+    }
+    if (selectedPlaylist) {
+      console.log('getTracks');
+      fetchTracks();
+    }
+  }, [selectedPlaylist]);
 
   const currentData = activeTab === "myPlaylists" ? myPlaylists : savedPlaylists;
 
@@ -187,8 +494,7 @@ export default function AllPlaylistScreen() {
     return (
       <TouchableOpacity
         onPress={() => setActiveTab(tabName)}
-        className={`flex-1 items-center py-3"
-          }`}
+        className={`flex-1 items-center py-3`}
       >
         <Text
           className={`font-semibold ${isActive
@@ -251,6 +557,7 @@ export default function AllPlaylistScreen() {
               item={item}
               index={index}
               onPress={() => handleSelectPlaylist(item)}
+              onPressOptions={() => handleOpenOptionsModal(item)}
               primaryIconColor={primaryIconColor}
               colorScheme={colorScheme}
             />
@@ -268,17 +575,17 @@ export default function AllPlaylistScreen() {
         >
           <TouchableOpacity
             className=" bg-green-500 p-4 rounded-full shadow-lg"
-            onPress={() => setIsModalVisible(true)}
+            onPress={() => setIsAddModalVisible(true)}
           >
             <Icon name="add" size={24} color="white" />
           </TouchableOpacity>
         </View>
       )}
 
-      {isModalVisible &&
+      {isAddModalVisible &&
         <AddPlaylistModal
-          isModalVisible={isModalVisible}
-          setIsModalVisible={setIsModalVisible}
+          isModalVisible={isAddModalVisible}
+          setIsModalVisible={setIsAddModalVisible}
           name={name}
           setName={setName}
           description={description}
@@ -289,6 +596,69 @@ export default function AllPlaylistScreen() {
           setIsPublic={setIsPublic}
           onPickImage={handlePickerImage}
           onCreatePlaylist={handleAddPlaylist}
+        />}
+
+      {isEditModalVisible &&
+        <EditPlaylistModal
+          isModalVisible={isEditModalVisible}
+          setIsModalVisible={setIsEditModalVisible}
+          name={name}
+          setName={setName}
+          description={description}
+          setDescription={setDescription}
+          image={image}
+          setImage={setImage}
+          isPublic={isPublic}
+          setIsPublic={setIsPublic}
+          onPickImage={() => handlePickerImage(newImage, setNewImage)}
+          onUpdatePlaylist={handleUpdatePlaylist}
+        />}
+
+      {isAddToOtherPlaylistVisible &&
+        <AddToAnotherPlaylistModal
+          isVisible={isAddToOtherPlaylistVisible}
+          setIsVisible={setIsAddToOtherPlaylistVisible}
+          data={selectedPlaylist}
+          onAddToPlaylist={handleAddToAnotherPlaylist}
+          onCreateNewPlaylist={() => setIsAddPlaylistModalVisible(true)}
+        />}
+
+      {isAddPlaylistModalVisible &&
+        <AddPlaylistModal
+          isModalVisible={isAddPlaylistModalVisible}
+          setIsModalVisible={setIsAddPlaylistModalVisible}
+          name={newName}
+          setName={setNewName}
+          description={newDescription}
+          setDescription={setNewDescription}
+          image={newImage}
+          setImage={setNewImage}
+          isPublic={newIsPublic}
+          setIsPublic={setNewIsPublic}
+          onPickImage={() => handlePickerImage(newImage, setNewImage)}
+          onCreatePlaylist={handleCreateAndAddTracksToPlaylist}
+        />}
+
+      {isOptionModalVisible &&
+        <PlaylistItemOptionModal
+          isVisible={isOptionModalVisible}
+          onClose={handleCloseOptionsModal}
+          isMyPlaylist={activeTab === "myPlaylists"}
+          playlistName={selectedPlaylist?.name}
+          imageUrl={selectedPlaylist?.imageUrl}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onRemoveFromSaved={handleRemoveFromSaved}
+          onShare={handleShare}
+          onAddToQueue={handleAddToQueue}
+          onAddToPlaylist={() => {
+            if (!playlistTracks || !playlistTracks.length) {
+              warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
+              return;
+            }
+            setIsAddToOtherPlaylistVisible(true);
+            setIsOptionModalVisible(false);
+          }}
         />}
     </SafeAreaView>
   );
