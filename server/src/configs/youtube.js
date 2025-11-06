@@ -31,7 +31,7 @@ const youtubeApiRequest = async (endpoint, params) => {
  */
 
 const searchVideo = async (songName, artistName) => {
-  const query = `${songName} ${artistName} lyric`;
+  const query = `${songName} ${artistName} Official Audio Lyrics`;
 
   try {
     const response = await youtubeApiRequest('/search', {
@@ -42,7 +42,35 @@ const searchVideo = async (songName, artistName) => {
       type: 'video',
     });
 
-    const video = formatVideo(response.items[0]);
+    if (!response.items || response.items.length === 0) {
+      console.log('Không tìm thấy video nào.');
+      return null;
+    }
+
+    const cacTuKhoaLoaiBo = [
+      'official music video',
+      'official video',
+      'mv',
+      'music video'
+    ];
+
+    const videoPhuHop = response.items.find(item => {
+      const tieuDe = item.snippet.title.toLowerCase();
+      const coChuaTuKhoaCam = cacTuKhoaLoaiBo.some(term => tieuDe.includes(term));
+      return !coChuaTuKhoaCam;
+    });
+
+    let videoChon;
+
+    if (videoPhuHop) {
+      console.log(`Đã lọc (loại bỏ MV) và chọn video: ${videoPhuHop.snippet.title}`);
+      videoChon = videoPhuHop;
+    } else {
+      console.log('Không tìm thấy video phù hợp (toàn MV?), lấy kết quả đầu tiên (dự phòng).');
+      videoChon = response.items[0];
+    }
+
+    const video = formatVideo(videoChon);
     return video;
   } catch (err) {
     console.error('Error searching YouTube video:', err.response ? err.response.data : err.message);

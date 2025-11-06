@@ -352,33 +352,33 @@ const seedDataArtistTracks = async () => {
 /**
  * --- 10. SEED DATA CHO PLAYLIST ---
  */
-const seedDataPlaylist = async () => {
-    try {
-        const playlistCount = await Playlist.count();
+// const seedDataPlaylist = async () => {
+//     try {
+//         const playlistCount = await Playlist.count();
 
-        if (playlistCount === 0) {
-            console.log('Start insert Playlists...');
+//         if (playlistCount === 0) {
+//             console.log('Start insert Playlists...');
 
-            const playlistsToInsert = playlistData.map(playlist => ({
-                spotifyId: playlist.spotifyId,
-                name: playlist.name,
-                description: playlist.description,
-                imageUrl: playlist.imageUrl,
-                totalTracks: playlist.totalTracks,
-                shareCount: playlist.shareCount,
-                isPublic: playlist.isPublic
-            }));
+//             const playlistsToInsert = playlistData.map(playlist => ({
+//                 spotifyId: playlist.spotifyId,
+//                 name: playlist.name,
+//                 description: playlist.description,
+//                 imageUrl: playlist.imageUrl,
+//                 totalTracks: playlist.totalTracks,
+//                 shareCount: playlist.shareCount,
+//                 isPublic: playlist.isPublic
+//             }));
 
-            await Playlist.bulkCreate(playlistsToInsert, { ignoreDuplicates: true });
-            console.log('✅ Finish insert Playlists.');
-        } else {
-            console.log('Pass insert Playlist.');
-        }
+//             await Playlist.bulkCreate(playlistsToInsert, { ignoreDuplicates: true });
+//             console.log('✅ Finish insert Playlists.');
+//         } else {
+//             console.log('Pass insert Playlist.');
+//         }
 
-    } catch (error) {
-        console.log('Error insert playlist', error);
-    }
-}
+//     } catch (error) {
+//         console.log('Error insert playlist', error);
+//     }
+// }
 
 /**
  * Phương thức để seeding dữ liệu vào database
@@ -399,7 +399,7 @@ async function seedDatabase() {
         await seedDataTrack();
         await seedDataArtistTracks(); /* Bảng trung gian */
 
-        await seedDataPlaylist();
+        // await seedDataPlaylist();
         console.log('✅ Finish seeding database.');
 
     } catch (error) {

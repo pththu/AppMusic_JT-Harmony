@@ -93,8 +93,8 @@ app.use(
 
 // Danh sách các route yêu cầu xác thực và không yêu cầu xác thực
 const protectedRoutes = [
-    // 'favorites', // Yêu thích
-    // 'history', // Lịch sử nghe nhạc
+    'favorites', // Yêu thích
+    'histories', // Lịch sử nghe nhạc
     'notifications', // Thông báo
     'playlists', // Playlist cá nhân
     'comments', // Comment (cần đăng nhập mới comment được)
@@ -105,9 +105,9 @@ const protectedRoutes = [
     // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
     'conversations',
     'upload', // Upload hình ảnh, file
-    'music'
+    'music',
     // 'genres',    // Xem thể loại nhạc
-    // 'track',        // Xem bài hát (public), upload bài hát (private)
+    'tracks',        // Xem bài hát (public), upload bài hát (private)
     // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
 ];
 // const protectedRoutes = ['albums', 'songs', 'playlists', 'genres', 'follows', 'notifications', 'recommendations', 'history', 'downloads', 'conversations'];
@@ -143,7 +143,7 @@ async function startServer() {
         // await sequelize.sync({ alter: true });
         // // await sequelize.sync();
         // console.log('✅ Database synchronized successfully')
-        await seedDatabase();
+        // await seedDatabase();
 
         server.listen(process.env.PORT || 3000, () => {
             console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);

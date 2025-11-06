@@ -53,3 +53,49 @@ exports.getTracksByName = async (req, res) => {
     res.status(500).json({ message: error.message || "Internal server error" });
   }
 };
+
+exports.shareTrack = async (req, res) => {
+  try {
+    const { trackId, trackSpotifyId } = req.body;
+    console.log(req.body)
+    if (!trackId && !trackSpotifyId) {
+      return res.status(400).json({ error: 'ID bài hát và ID Spotify là bắt buộc' });
+    }
+
+    if (!trackId) {
+      const response = await Track.create({
+        spotifyId: trackSpotifyId,
+        shareCount: 1
+      })
+
+      if (!response) {
+        return res.status(500).json({ error: 'Không thể tạo bài hát để chia sẻ' });
+      }
+
+      return res.status(200).json({
+        message: 'Đã chia sẻ bài hát',
+        data: { trackId: response.id },
+        success: true
+      });
+    }
+
+    const track = await Track.findByPk(trackId);
+    if (!track) {
+      return res.status(404).json({ error: 'Bài hát không tìm thấy' });
+    }
+
+    track.shareCount += 1;
+    const row = await track.save();
+    if (!row) {
+      return res.status(500).json({ error: 'Không thể cập nhật số lần chia sẻ' });
+    }
+
+    return res.status(200).json({
+      message: 'Đã chia sẻ bài hát',
+      data: { trackId: track.id },
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || "Internal server error" });
+  }
+}

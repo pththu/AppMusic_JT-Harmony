@@ -6,21 +6,14 @@ require('dotenv').config();
  * Middleware xác thực token (JWT) từ Cookie hoặc Header Authorization.
  */
 exports.authenticateToken = async (req, res, next) => {
-    // console.log("--- BẮT ĐẦU AUTHENTICATE ---");
-    // console.log("Raw Headers:", req.headers); // Có thể bật lại log này nếu cần debug sâu
-
     try {
         let token;
 
-        // 1. Lấy token từ Cookie ('accessToken')
         token = req.cookies['accessToken'];
 
-        // 2. Nếu không có trong cookie, lấy từ Header 'Authorization'
         if (!token) {
-            // Express thường chuyển header về lowercase (authorization)
             let authHeader = req.headers['authorization'];
 
-            // Nếu không có lowercase, thử check với tên header gốc (Authorization)
             if (!authHeader) {
                 authHeader = req.headers['Authorization'];
             }
@@ -30,10 +23,8 @@ exports.authenticateToken = async (req, res, next) => {
             }
         }
 
-        // console.log("Token được tìm thấy:", token ? "CÓ" : "KHÔNG");
 
         if (!token) {
-            console.log("LỖI: Access token required (Token KHÔNG được tìm thấy)");
             return res.status(401).json({ error: 'Access token required' });
         }
 
@@ -43,23 +34,19 @@ exports.authenticateToken = async (req, res, next) => {
         // Check if user exists
         const user = await User.findByPk(decoded.id);
         if (!user) {
-            console.log("LỖI: User not found (ID:", decoded.id, ")");
             return res.status(401).json({ error: 'User not found' });
         }
 
         // Thêm thông tin User vào request để các middleware/controller sau sử dụng
         req.user = decoded; // Thông tin từ token (id, role,...)
         req.currentUser = user; // Toàn bộ thông tin từ DB
-        // console.log("Xác thực thành công cho User ID:", decoded.id);
         next();
 
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
-            console.log("LỖI AUTH: Token expired");
             return res.status(401).json({ error: 'Token expired' });
         }
         if (err.name === 'JsonWebTokenError') {
-            console.log("LỖI AUTH: Invalid token");
             return res.status(401).json({ error: 'Invalid token' });
         }
         console.error('LỖI AUTH KHÔNG XÁC ĐỊNH:', err.message);
@@ -91,7 +78,6 @@ exports.optionalAuthenticateToken = async (req, res, next) => {
         req.user = null;
         req.currentUser = null;
         // Case A: Không có token
-        console.log("OPTIONAL AUTH: KHÔNG tìm thấy Token. Tiếp tục với numericUserId: null.");
         return next();
     }
 
@@ -114,7 +100,6 @@ exports.optionalAuthenticateToken = async (req, res, next) => {
             req.currentUser = user;
 
             // Case B: Thành công
-            console.log("OPTIONAL AUTH: Thành công, User ID được gán:", req.user.id);
         } else {
             // Case C: Token hợp lệ nhưng user không tồn tại trong DB
             console.warn("OPTIONAL AUTH: User từ token không tồn tại. Tiếp tục với null.");

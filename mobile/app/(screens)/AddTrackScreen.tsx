@@ -7,47 +7,18 @@ import {
   FlatList,
   Image,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { usePlayerStore } from '@/store/playerStore';
+import { albumData } from '@/constants/data';
+import { useCustomAlert } from '@/hooks/useCustomAlert';
+import { AddTrackToPlaylist, AddTrackToPlaylistAfterConfirm, GetTracks } from '@/services/musicService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const MOCK_TRACKS_GROUPS = [
-  {
-    title: "Mới phát gần đây",
-    data: [
-      { id: 'r1', title: 'Way Back Home', artist: 'SHAUN', imageUrl: 'https://via.placeholder.com/150/f00?text=R1' },
-      { id: 'r2', title: 'Đi Giữa Trời Rực Rỡ', artist: 'Ngô Lan Hương', imageUrl: 'https://via.placeholder.com/150/0f0?text=R2' },
-      { id: 'r3', title: 'Đại Lộ Mặt Trời', artist: 'Chillies', imageUrl: 'https://via.placeholder.com/150/00f?text=R3' },
-      { id: 'r4', title: 'Anh Nói Yêu Em Được Không', artist: 'MinZ Mặt Đất, LUNY', imageUrl: 'https://via.placeholder.com/150/ff0?text=R4' },
-    ],
-    subtitle: null,
-  },
-  {
-    title: "Bài hát bạn đã thích",
-    data: [
-      { id: 'l1', title: 'Chuột Yêu Gạo', artist: 'Khởi My, Kelvin Khánh', imageUrl: 'https://via.placeholder.com/150/0ff?text=L1' },
-      { id: 'l2', title: 'Thế Giới Và Em, Anh Chọn Em', artist: 'Tuấn Hưng', imageUrl: 'https://via.placeholder.com/150/f0f?text=L2' },
-      { id: 'l3', title: 'Ấm Êm', artist: 'Hưng Cao, Raise', imageUrl: 'https://via.placeholder.com/150/888?text=L3' },
-      { id: 'l4', title: 'Quên Đặt Tên', artist: 'Phạm Nguyên Ngọc, BMZ', imageUrl: 'https://via.placeholder.com/150/333?text=L4' },
-    ],
-    subtitle: null,
-  },
-  {
-    title: "Được đề xuất",
-    data: [
-      { id: 's1', title: 'Sinh Ra Đã Là Thứ Đối Lập Nhau', artist: 'Emcee L (Da LAB)', imageUrl: 'https://via.placeholder.com/150/0b0?text=S1' },
-      { id: 's2', title: 'Thắc Mắc?', artist: 'Thịnh Suy', imageUrl: 'https://via.placeholder.com/150/1c1?text=S2' },
-      { id: 's3', title: 'Mai Mình Xa', artist: 'Thịnh Suy', imageUrl: 'https://via.placeholder.com/150/2d2?text=S3' },
-      { id: 's4', title: 'bao tiền một mớ bình yên?', artist: '14 Casper, Bon Nghiêm', imageUrl: 'https://via.placeholder.com/150/3e3?text=S4' },
-    ],
-    subtitle: "Dựa trên các bài hát bạn vừa thêm vào.",
-  },
-];
 
 const TrackItem = React.memo(({ item, isDarkMode, onAdd }: { item: any; isDarkMode: boolean; onAdd: (track: any) => void; }) => {
   const textColor = isDarkMode ? "text-white" : "text-black";
@@ -58,16 +29,16 @@ const TrackItem = React.memo(({ item, isDarkMode, onAdd }: { item: any; isDarkMo
     <View className="flex-row items-center justify-between py-2">
       <View className="flex-row items-center flex-1 pr-4">
         <Image
-          source={{ uri: item.imageUrl }}
+          source={{ uri: item.imageUrl || albumData.filter(album => album.name === item.album)[0]?.imageUrl || 'https://via.placeholder.com/150' }}
           className="w-12 h-12 rounded-sm mr-3"
           resizeMode="cover"
         />
         <View className="flex-1">
           <Text className={`text-base ${textColor}`} numberOfLines={1}>
-            {item.title}
+            {item.name}
           </Text>
           <Text className={`text-sm ${subTextColor}`} numberOfLines={1}>
-            {item.artist}
+            {item.artists?.map(a => a.name).join(', ')}
           </Text>
         </View>
       </View>
@@ -86,20 +57,90 @@ const TrackItem = React.memo(({ item, isDarkMode, onAdd }: { item: any; isDarkMo
 const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
 
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
+  const updateTotalTracksInCurrentPlaylist = usePlayerStore((state) => state.updateTotalTracksInCurrentPlaylist);
+  const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
+  const addTrackToPlaylist = usePlayerStore((state) => state.addTrackToPlaylist);
   const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
-  const bgColor = isDarkMode ? '#121212' : 'white';
-  const textColor = isDarkMode ? 'white' : 'black';
-  const iconColor = isDarkMode ? 'white' : 'black';
-  const inputBgColor = isDarkMode ? '#333' : 'rgb(229, 231, 235)';
-
+  const { success, error, confirm, info } = useCustomAlert();
+  const bgColor = colorScheme === 'dark' ? '#121212' : 'white';
+  const textColor = colorScheme === 'dark' ? 'white' : 'black';
+  const iconColor = colorScheme === 'dark' ? 'white' : 'black';
+  const inputBgColor = colorScheme === 'dark' ? '#333' : 'rgb(229, 231, 235)';
+  const query = {
+    artist: ["bts", "jungkook", "agust d"],
+    trackName: ["save me", "we are"],
+    album: ["jack in the box", "golden"]
+  }
+  const [recentData, setRecentData] = useState();
+  const [favoriteData, setFavoriteData] = useState();
+  const [recommendData, setRecommendData] = useState();
+  const [pageData, setPageData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const flatListRef = useRef(null);
 
-  const handleAddTrack = (track) => {
-    console.log(`Đã thêm bài hát: ${track.title}`);
+  const handleAddTrack = async (track) => {
+    console.log(`Đã thêm bài hát: ${track.name}`);
+    console.log(track)
+    try {
+      const payload = {
+        playlistId: currentPlaylist?.id,
+        trackId: track?.id || null,
+        trackSpotifyId: track?.spotifyId,
+      }
+
+      const response = await AddTrackToPlaylist(payload);
+      console.log('response', response)
+      if (response.success) {
+        const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
+          setStateFunc(prevData => {
+            if (!prevData) return [];
+            return prevData.filter(t => t.spotifyId !== trackIdToRemove);
+          });
+        };
+        removeTrackFromState(setRecentData, track.spotifyId);
+        removeTrackFromState(setFavoriteData, track.spotifyId);
+        removeTrackFromState(setRecommendData, track.spotifyId);
+
+        updateTotalTracksInCurrentPlaylist(1);
+        updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
+        addTrackToPlaylist(response.data);
+      } else {
+        if (response.isExisting) {
+          confirm(
+            'Bài hát đã tồn tại',
+            response.message,
+            async () => {
+              const confirmResponse = await AddTrackToPlaylistAfterConfirm(payload);
+              console.log('confirmResponse', confirmResponse)
+              if (confirmResponse.success) {
+                const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
+                  setStateFunc(prevData => {
+                    if (!prevData) return [];
+                    return prevData.filter(t => t.spotifyId !== trackIdToRemove);
+                  });
+                };
+                removeTrackFromState(setRecentData, track.spotifyId);
+                removeTrackFromState(setFavoriteData, track.spotifyId);
+                removeTrackFromState(setRecommendData, track.spotifyId);
+
+                updateTotalTracksInCurrentPlaylist(1);
+                updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
+                addTrackToPlaylist(confirmResponse.data);
+              } else {
+                error('Lỗi', 'Không thể thêm bài hát vào danh sách phát.');
+              }
+            },
+            () => { }
+          )
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      error('Lỗi', 'Không thể thêm bài hát vào danh sách phát.');
+    }
   };
 
   const handleScroll = (event) => {
@@ -114,14 +155,69 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
     if (!isSearching) return [];
 
     const lowerCaseQuery = searchQuery.toLowerCase();
-    const allTracks = MOCK_TRACKS_GROUPS.flatMap(group => group.data);
+
+    const allTracks = pageData.flatMap(group => group.data);
 
     return allTracks.filter(track =>
-      track.title.toLowerCase().includes(lowerCaseQuery) ||
-      track.artist.toLowerCase().includes(lowerCaseQuery)
+      track.name.toLowerCase().includes(lowerCaseQuery) ||
+      (Array.isArray(track.artists) && track.artists.some(artist => String(artist).toLowerCase().includes(lowerCaseQuery)))
     );
-  }, [searchQuery]);
+  }, [searchQuery, pageData, isSearching]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(false);
+      try {
+        const promiseRecent = GetTracks({ artist: query.artist, limit: 10 });
+        const promiseFavorite = GetTracks({ trackName: query.trackName, limit: 10 });
+        const promiseRecommend = GetTracks({ album: query.album, limit: 10 });
+
+        const [responseRecent, responseFavorite, responseRecommend] = await Promise.all([
+          promiseRecent,
+          promiseFavorite,
+          promiseRecommend
+        ]);
+
+        if (responseRecent.success) {
+          setRecentData(responseRecent.data);
+        }
+        if (responseFavorite.success) {
+          setFavoriteData(responseFavorite.data);
+        }
+        if (responseRecommend.success) {
+          setRecommendData(responseRecommend.data);
+        }
+      } catch (err) {
+        console.log(err.message);
+        error('Lỗi', 'Có lỗi khi cập nhật dữ liệu');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const newPageData = [
+      {
+        title: "Mới phát gần đây",
+        data: Array.isArray(recentData) ? recentData : [],
+        subtitle: null,
+      },
+      {
+        title: "Bài hát bạn đã thích",
+        data: Array.isArray(favoriteData) ? favoriteData : [],
+        subtitle: null,
+      },
+      {
+        title: "Được đề xuất",
+        data: Array.isArray(recommendData) ? recommendData : [],
+        subtitle: "Dựa trên các bài hát bạn vừa thêm vào.",
+      },
+    ].filter(group => group.data.length > 0); // Chỉ hiển thị nhóm có dữ liệu
+
+    setPageData(newPageData);
+  }, [recentData, favoriteData, recommendData]);
 
   const renderSlide = ({ item, index }) => (
     <View style={{ width: SCREEN_WIDTH }} className="px-4">
@@ -134,15 +230,22 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
         </Text>
       )}
 
-      <FlatList
-        data={item.data}
-        keyExtractor={(track, index) => index.toString()}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item: trackItem }) => (
-          <TrackItem item={trackItem} isDarkMode={isDarkMode} onAdd={handleAddTrack} />
-        )}
-        ListFooterComponent={<View style={{ height: 100 }} />}
-      />
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#22c55e" />
+          <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải playlist...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={item.data}
+          keyExtractor={(track, index) => index.toString()}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item: trackItem }) => (
+            <TrackItem item={trackItem} isDarkMode={colorScheme === 'dark'} onAdd={handleAddTrack} />
+          )}
+          ListFooterComponent={<View style={{ height: 100 }} />}
+        />
+      )}
     </View>
   );
 
@@ -153,7 +256,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
       showsVerticalScrollIndicator={false}
       className="px-4"
       renderItem={({ item }) => (
-        <TrackItem item={item} isDarkMode={isDarkMode} onAdd={handleAddTrack} />
+        <TrackItem item={item} isDarkMode={colorScheme === 'dark'} onAdd={handleAddTrack} />
       )}
       ListEmptyComponent={() => (
         <View className="flex-1 justify-center items-center mt-10">
@@ -203,26 +306,29 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
         {/* --- Phần chính: Slider (Nếu không tìm kiếm) hoặc Kết quả tìm kiếm --- */}
         {isSearching ? (
           renderSearchMode()
+        ) : isLoading ? (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="large" color="#22c55e" />
+            <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải playlist...</Text>
+          </View>
         ) : (
           <>
             <FlatList
               ref={flatListRef}
-              data={MOCK_TRACKS_GROUPS}
-              keyExtractor={(item, index) => index.toString()}
+              data={pageData}
+              keyExtractor={(item, index) => item.title}
               horizontal
-              pagingEnabled // Quan trọng: Bật chế độ trượt theo trang
+              pagingEnabled
               showsHorizontalScrollIndicator={false}
               onScroll={handleScroll}
               scrollEventThrottle={16}
               renderItem={renderSlide}
-              // Tăng độ chính xác của việc snap (tùy chọn)
               decelerationRate="fast"
               snapToInterval={SCREEN_WIDTH}
             />
 
-            {/* Chấm chỉ báo (Pagination Dots) */}
-            <View className="flex-row justify-center py-3 absolute bottom-0 w-full">
-              {MOCK_TRACKS_GROUPS.map((_, index) => (
+            <View className="flex-row justify-center py-3 absolute bottom-20 w-full">
+              {pageData?.map((_, index) => (
                 <View
                   key={index}
                   className="w-2 h-2 rounded-full mx-1"
@@ -235,7 +341,6 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
             </View>
           </>
         )}
-
       </View>
     </SafeAreaView>
   );

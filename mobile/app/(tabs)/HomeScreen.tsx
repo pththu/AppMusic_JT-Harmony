@@ -27,24 +27,29 @@ import { set } from "date-fns";
 import { da, tr } from "date-fns/locale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlaylistItem from "@/components/items/PlaylistItem";
-import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
+import { GetAlbumsForYou, GetArtistsForYou, GetMyPlaylists, GetPlaylistsForYou } from "@/services/musicService";
 import { usePlayerStore } from "@/store/playerStore";
-import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import { GetFavoriteItemsGrouped } from "@/services/favoritesService";
+import { useFavoritesStore } from "@/store/favoritesStore";
 
 export default function HomeScreen() {
-  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const { navigate } = useNavigate();
   const { theme } = useTheme();
   const { success, error } = useCustomAlert();
   const user = useAuthStore((state) => state.user);
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
+  const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
+
   const colorScheme = useColorScheme();
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
-  const [hasNotification] = useState(true);
-  const iconColor = theme === 'light' ? '#000' : '#fff';
-  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
-
   const totalMarginBottom = isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0;
+  const iconColor = theme === 'light' ? '#000' : '#fff';
+
+  const [hasNotification] = useState(true);
 
   const [queryParam, setQueryParam] = useState({
     playlistForYou: ["Chill Hits", "kpop", "tình yêu", "thời thanh xuân"],
@@ -99,6 +104,17 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
+    const fetchMyPlaylists = async () => {
+      try {
+        const response = await GetMyPlaylists();
+        if (response.success) {
+          setMyPlaylists(response.data);
+        }
+      } catch (error) {
+        console.log("Lỗi khi lấy playlist của tôi:", error);
+      }
+    }
+
     const fetchPlaylistsForYou = async () => {
       try {
         const response = await GetPlaylistsForYou(queryParam.playlistForYou);
@@ -174,16 +190,30 @@ export default function HomeScreen() {
       }
     };
 
+    const fetchFavoritesItem = async () => {
+      try {
+        const response = await GetFavoriteItemsGrouped();
+        if (response.success) {
+          setFavoriteItems(response.data);
+        }
+      } catch (error) {
+        console.log('errorr fetch favorites: ', error);
+      }
+    }
+
     fetchPlaylistsForYou()
     fetchAlbumsForYou()
     fetchTrendingPlaylists()
     fetchTrendingAlbums()
     fetchArtistsForYou()
+    fetchMyPlaylists();
+    fetchFavoritesItem();
   }, []);
 
   return (
     <SafeAreaView
-      className={`flex-1 pt-4 ${colorScheme === "dark" ? "bg-black" : "bg-white"} ${isMiniPlayerVisible ? `mb-[${MINI_PLAYER_HEIGHT}px] pb-6` : ""}`}
+      className={`flex-1 pt-4 ${colorScheme === "dark" ? "bg-black" : "bg-white"} `}
+      style={{ marginBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
     >
       <View className={`fixed flex-row justify-between items-center mx-5 mb-4 `}>
         <Text className="text-black dark:text-white text-2xl font-bold">
@@ -250,10 +280,8 @@ export default function HomeScreen() {
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <PlaylistItem
-                  title={item.name}
-                  type="Playlist"
-                  songs={item.totalTracks || 0}
-                  image={item.imageUrl}
+                  item={item}
+                  totalTrack={item.totalTracks || 0}
                   onPress={() => handleSelectPlaylist(item)}
                 />
               )}
@@ -304,10 +332,8 @@ export default function HomeScreen() {
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <PlaylistItem
-                  title={item.name}
-                  type="Playlist"
-                  songs={item.totalTracks || 0}
-                  image={item.imageUrl}
+                  item={item}
+                  totalTrack={item.totalTracks || 0}
                   onPress={() => handleSelectPlaylist(item)}
                 />
               )}

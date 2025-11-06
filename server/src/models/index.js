@@ -25,9 +25,8 @@ const Track = require('./track');
 const Playlist = require('./playlist');
 const PlaylistTrack = require('./playlist_track');
 const ListeningHistory = require('./listening_history');
-
+const FavoriteItem = require('./favorite_items')
 // ================= Associations ================= //
-// // Album ↔ Track (N-N) thông qua AlbumTrack
 
 // User - Sync status
 User.hasMany(SyncStatus, { foreignKey: 'userId' });
@@ -64,7 +63,6 @@ User.hasMany(Recommendation, { foreignKey: 'userId' });
 Recommendation.belongsTo(User, { foreignKey: 'userId' });
 
 // Quan hệ Người dùng - Lượt thích Bình luận (User <-> CommentLike)
-// Điều này cho phép bạn biết một người dùng đã thích những comment nào
 User.hasMany(CommentLike, { foreignKey: 'userId', as: 'CommentLikes' });
 CommentLike.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 
@@ -83,6 +81,8 @@ CommentLike.belongsTo(Comment, { foreignKey: 'commentId', as: 'Comment' });
 Role.hasMany(User, { foreignKey: 'roleId' });
 User.belongsTo(Role, { foreignKey: 'roleId' });
 
+
+// TRACK - ARTIST - ALBUM - GENRES - PLAYLIST ASSOCIATIONS
 Genres.belongsToMany(Artist, {
     through: 'artist_genres',
     foreignKey: 'genre_id',
@@ -137,9 +137,6 @@ Artist.belongsToMany(Track, {
 Album.hasMany(Track, { foreignKey: 'albumId', onDelete: 'CASCADE', hooks: true });
 Track.belongsTo(Album, { foreignKey: 'albumId', onDelete: 'CASCADE', hooks: true });
 
-User.hasMany(ListeningHistory, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
-ListeningHistory.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
-
 User.hasMany(FollowArtist, { foreignKey: 'followerId', onDelete: 'CASCADE', hooks: true });
 FollowArtist.belongsTo(User, { foreignKey: 'followerId', onDelete: 'CASCADE', hooks: true });
 
@@ -161,6 +158,12 @@ PlaylistTrack.belongsTo(Track, { foreignKey: 'trackId', onDelete: 'CASCADE', hoo
 
 Playlist.hasMany(PlaylistTrack, { foreignKey: 'playlistId', onDelete: 'CASCADE', hooks: true });
 PlaylistTrack.belongsTo(Playlist, { foreignKey: 'playlistId', onDelete: 'CASCADE', hooks: true });
+
+User.hasMany(FavoriteItem, { foreignKey: 'userId', as: 'FavoriteItems', onDelete: 'CASCADE', hooks: true });
+FavoriteItem.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
+
+User.hasMany(ListeningHistory, { foreignKey: 'userId', as: 'ListeningHistories', onDelete: 'CASCADE', hooks: true });
+ListeningHistory.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
 
 // Like - User & Post
 Like.belongsTo(User, { foreignKey: 'userId', as: 'User' });
@@ -207,6 +210,8 @@ module.exports = {
     Track,
     Playlist,
     PlaylistTrack,
+    FavoriteItem,
+    ListeningHistory,
     Artist,
     Album,
     User,
