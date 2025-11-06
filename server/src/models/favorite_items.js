@@ -1,9 +1,8 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
-// const { sequelize } = require('../configs/database');
 
-const ListeningHistory = sequelize.define(
-  'ListeningHistory',
+const FavoriteItem = sequelize.define(
+  'FavoriteItem',
   {
     id: {
       type: DataTypes.INTEGER,
@@ -14,12 +13,11 @@ const ListeningHistory = sequelize.define(
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'user_id',
+      allowNull: false
     },
     itemId: {
       type: DataTypes.INTEGER,
-      field: 'item_id',
+      field: 'item_id'
     },
     itemSpotifyId: {
       type: DataTypes.STRING,
@@ -28,21 +26,18 @@ const ListeningHistory = sequelize.define(
     itemType: {
       type: DataTypes.STRING,
       field: 'item_type'
-    },
-    durationListened: {
-      type: DataTypes.INTEGER,
-      field: 'duration_listened'
     }
   },
   {
-    tableName: 'listening_histories',
+    tableName: 'favorite_items',
     timestamps: true,
     indexes: [
       {
-        fields: ['id', 'user_id']
+        unique: true,
+        fields: ['id', 'userId']
       }
     ]
   }
 )
 
-module.exports = ListeningHistory
+module.exports = FavoriteItem

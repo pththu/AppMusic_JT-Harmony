@@ -27,26 +27,20 @@ exports.createOne = async (req, res) => {
     let imageUrl = null;
 
     if (!req.file || !req.file.path) {
-      console.log(2)
       imageUrl = 'https://res.cloudinary.com/chaamz03/image/upload/v1761533935/kltn/playlist_default.png';
     } else {
-      console.log(3)
       imageUrl = req.file.path;
     }
 
     if (!name) {
-      console.log(4)
       return res.status(400).json({ error: 'Tên là bắt buộc' });
     }
 
     if (description && description.length > 500) {
-      console.log(5)
       return res.status(400).json({ error: 'Mô tả không được vượt quá 500 ký tự' });
     }
 
-    console.log(6)
     const row = await Playlist.create({ name, description, imageUrl, isPublic, userId: req.user.id, totalTracks: 0, sharedCount: 0 });
-    console.log(7)
     res.status(201).json({
       message: 'Tạo danh sách phát thành công',
       playlist: row,
@@ -75,7 +69,6 @@ exports.updateOne = async (req, res) => {
     }
 
     const playlist = await Playlist.findByPk(id);
-    console.log('playlist', playlist)
 
     if (!playlist) {
       return res.status(404).json({ error: 'Không tìm thấy playlist' });

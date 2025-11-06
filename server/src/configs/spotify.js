@@ -109,7 +109,7 @@ const searchPlaylists = async (searchParams, limit) => {
       }
     }
 
-    return shuffle(allPlaylists).slice(0, 20).map((playlist) => playlist);
+    return shuffle(allPlaylists).slice(0, 15).map((playlist) => playlist);
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm playlist trên Spotify:`, error.response ? error.response.data : error.message);
     throw error;
@@ -144,7 +144,7 @@ const searchAlbums = async (searchParams) => {
       }
     }
 
-    return shuffle(allAlbums).slice(0, 20).map((album) => album);
+    return shuffle(allAlbums).slice(0, 15).map((album) => album);
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm album trên Spotify:`, error.response ? error.response.data : error.message);
     throw error;

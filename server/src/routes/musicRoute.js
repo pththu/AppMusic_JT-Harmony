@@ -11,6 +11,8 @@ router.post('/playlist', musicController.findPlaylistById);
 
 router.get('/mine/playlists', musicController.getMyPlaylists);
 
+router.get('/track/:trackSpotifyId/video-id', musicController.findVideoIdForTrack);
+
 router.get('/album/:albumId/tracks', musicController.getTracksFromAlbum);
 
 router.post('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);

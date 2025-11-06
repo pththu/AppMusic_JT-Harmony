@@ -142,7 +142,6 @@ exports.linkSocialAccount = async (req, res) => {
   try {
     const { userInfor, provider } = req.body;
     const user = await User.findByPk(req.user.id);
-    console.log('user', user.dataValues)
     if (!user) {
       return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
     }
@@ -259,8 +258,6 @@ exports.mergeAccount = async (req, res) => {
     const user = await User.findByPk(req.user.id);
     const mergeUser = await User.findByPk(userId);
 
-    console.log('user', user.dataValues);
-    console.log('mergeUser', mergeUser.dataValues);
 
     if (!user || !mergeUser) {
       return res.status(200).json({ message: 'Người dùng không tồn tại', success: false });

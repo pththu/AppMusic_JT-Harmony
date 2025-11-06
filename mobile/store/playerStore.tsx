@@ -109,31 +109,6 @@ export const usePlayerStore = create<PlayerState>()(
           isLastIndex: index === playlistTracks.length - 1,
         });
       },
-      // setCurrentTrack: (track) => {
-      //   const { playlistTracks, currentTrack: oldTrack } = get(); // Lấy bài hát cũ
-      //   const index = playlistTracks.findIndex(s => s.id === track.id);
-
-      //   // Kiểm tra xem có phải là cùng một bài hát không
-      //   if (oldTrack && oldTrack.id === track.id) {
-      //     // *** LOGIC MỚI ***
-      //     // Cùng một bài hát: chỉ cần tua lại và phát
-      //     set({
-      //       playbackPosition: 0,
-      //       isPlaying: true,
-      //       seekTrigger: Date.now(),
-      //     });
-      //   } else {
-      //     // *** LOGIC CŨ (ĐÃ SỬA) ***
-      //     // Bài hát mới: tải bài hát mới
-      //     set({
-      //       currentTrack: track,
-      //       currentIndex: index !== -1 ? index : -1,
-      //       playbackPosition: 0, // <-- Đã sửa (trước đây là currentTime)
-      //       isPlaying: true, // <-- Thêm vào để tự động phát
-      //       isLastIndex: index === playlistTracks.length - 1,
-      //     });
-      //   }
-      // },
       setCurrentPlaylist: (playlist) => {
         set({ currentPlaylist: playlist });
       },
@@ -157,6 +132,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
       addTrackToPlaylist: (track) => {
         const { playlistTracks } = get();
+        console.log('store: ', track);
         set({ playlistTracks: [...playlistTracks, track] });
       },
       updateCurrentTrack: (track) => {

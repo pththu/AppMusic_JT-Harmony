@@ -93,8 +93,8 @@ app.use(
 
 // Danh sách các route yêu cầu xác thực và không yêu cầu xác thực
 const protectedRoutes = [
-    // 'favorites', // Yêu thích
-    // 'history', // Lịch sử nghe nhạc
+    'favorites', // Yêu thích
+    'histories', // Lịch sử nghe nhạc
     'notifications', // Thông báo
     'playlists', // Playlist cá nhân
     'comments', // Comment (cần đăng nhập mới comment được)

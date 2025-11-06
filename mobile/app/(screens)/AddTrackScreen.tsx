@@ -92,6 +92,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
       }
 
       const response = await AddTrackToPlaylist(payload);
+      console.log('response', response)
       if (response.success) {
         const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
           setStateFunc(prevData => {
@@ -113,6 +114,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
             response.message,
             async () => {
               const confirmResponse = await AddTrackToPlaylistAfterConfirm(payload);
+              console.log('confirmResponse', confirmResponse)
               if (confirmResponse.success) {
                 const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
                   setStateFunc(prevData => {

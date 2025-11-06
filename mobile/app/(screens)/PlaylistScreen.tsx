@@ -49,6 +49,7 @@ export default function PlaylistScreen() {
   const updateCurrentPlaylist = usePlayerStore((state) => state.updateCurrentPlaylist);
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
+  const updateTotalTracksInCurrentPlaylist = usePlayerStore((state) => state.updateTotalTracksInCurrentPlaylist);
   const updateSharedCountPlaylist = usePlayerStore((state) => state.updateSharedCountPlaylist);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updatePrivacy = usePlayerStore((state) => state.updatePrivacy);
@@ -262,14 +263,16 @@ export default function PlaylistScreen() {
         return item;
     });
     setQueue(queueData);
+    setCurrentTrack(playlistTracks[0])
   };
 
-  const handlePlayTrack = (index) => {
+  const handlePlayTrack = (track, index) => {
     playPlaylist(playlistTracks, index);
     const queueData = playlistTracks.filter((item, i) => {
       if (i > index)
         return item;
     });
+    setCurrentTrack(track);
     setQueue(queueData);
   };
 
@@ -461,6 +464,8 @@ export default function PlaylistScreen() {
 
         if (response.success) {
           removeTrackFromPlaylistStore(selectedTrack.playlistTrack?.id);
+          updateTotalTracksInCurrentPlaylist(-1);
+          updateTotalTracksInMyPlaylists(currentPlaylist.id, -1);
         }
         success("Đã xóa bài hát khỏi playlist.");
         setSongModalVisible(false);
@@ -589,6 +594,7 @@ export default function PlaylistScreen() {
 
     fetchTracks();
     console.log('currentPlaylist: ', currentPlaylist);
+    playlistTracks.map(a => console.log(a));
   }, []);
 
   useEffect(() => {
@@ -613,7 +619,7 @@ export default function PlaylistScreen() {
       item={item}
       key={index}
       image={item?.imageUrl || ''}
-      onPress={() => handlePlayTrack(index)}
+      onPress={() => handlePlayTrack(item, index)}
       onOptionsPress={() => handleSongOptionsPress(item)}
     />
   );
@@ -743,7 +749,7 @@ export default function PlaylistScreen() {
                   <Text className="text-gray-600 dark:text-gray-400">Không có bài hát nào trong playlist này.</Text>
                 </View>
               ) : (
-                playlistTracks?.map((item, index) => (
+                playlistTracks?.sort((a, b) => a.playlistTrack.id - b.playlistTrack.id)?.map((item, index) => (
                   renderRecentlyPlayedItem({ item, index })
                 ))
               )}

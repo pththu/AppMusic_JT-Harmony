@@ -3,6 +3,7 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  Share,
   Text,
   TouchableOpacity,
   useColorScheme,
@@ -24,6 +25,10 @@ import SongItem from "@/components/items/SongItem";
 import TextTicker from "react-native-text-ticker";
 import { is } from "date-fns/locale";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { ShareTrack } from "@/services/musicService";
+import useAuthStore from "@/store/authStore";
+import { AddFavoriteItem } from "@/services/favoritesService";
+import { useFavoritesStore } from "@/store/favoritesStore";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -32,12 +37,17 @@ export default function SongScreen() {
   const { info, error, success } = useCustomAlert();
   const colorScheme = useColorScheme();
 
+  const user = useAuthStore((state) => state.user);
   const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const currentIndex = usePlayerStore((state) => state.currentIndex);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const duration = usePlayerStore((state) => state.duration);
   const queue = usePlayerStore((state) => state.queue);
+  const repeatMode = usePlayerStore((state) => state.repeatMode);
+  const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
+  const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem);
+  const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setPlaybackPosition = usePlayerStore((state) => state.setPlaybackPosition);
   const setRepeatMode = usePlayerStore((state) => state.setRepeatMode);
@@ -47,6 +57,7 @@ export default function SongScreen() {
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
   const removeTrackFromQueue = usePlayerStore((state) => state.removeTrackFromQueue);
+  const updateTrack = usePlayerStore((state) => state.updateTrack);
 
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = colorScheme === 'dark' ? '#888' : 'gray';
@@ -54,6 +65,7 @@ export default function SongScreen() {
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [isRepeatOne, setIsRepeatOne] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const [progress, setProgress] = useState(0);
 
@@ -65,6 +77,7 @@ export default function SongScreen() {
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
+
 
   const handleSelectQueue = () => {
     if (!currentTrack) return;
@@ -124,6 +137,84 @@ export default function SongScreen() {
     }
   };
 
+  const handleShareTrack = async (track) => {
+    try {
+      const artistName = track.artists?.map(a => a.name).join(', ');
+      let shareMessage = `${user?.fullName}: `;
+
+      if (track?.name) {
+        shareMessage += `Nghe thử bài hát này: ${track.name} - ${artistName}\n\n`;
+      } else {
+        shareMessage += `Bài đăng của ${user?.fullName}\n\n`;
+      }
+
+      // Thêm URL hình ảnh nếu có
+      if (track?.imageUrl) {
+        shareMessage += `${track?.imageUrl}\n\n`;
+      }
+
+      // Thêm liên kết đến bài viết
+      const postLink = `app://post/${track?.id}`; // Deep link giả định
+      shareMessage += `Xem bài hát: ${postLink}`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        // url: postLink,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log(result.activityType)
+        } else {
+          console.log('Chia sẻ thành công!');
+        }
+        // Update share count after successful share
+        const response = await ShareTrack({
+          trackId: track?.id,
+          trackSpotifyId: track?.spotifyId
+        });
+        if (response.success) {
+          success('Đã chia sẻ');
+          currentTrack.id = response.data.trackId;
+          updateTrack(currentTrack);
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // Dismissed
+      }
+    } catch (err) {
+      console.log(err);
+      error('Lỗi khi chia sẻ bài hát.');
+    }
+  };
+
+  const handleUnFavorite = async (track) => {
+    info('Chức năng đang phát triển...');
+  };
+
+  const handleFavorite = async (track) => {
+    info('Chức năng đang phát triển...');
+    try {
+      const response = await AddFavoriteItem({
+        itemType: 'track',
+        itemId: track.id,
+        itemSpotifyId: track.spotifyId
+      });
+      if (response.success) {
+        success('Đã thêm bài hát vào mục yêu thích.');
+        console.log(response.data)
+        addFavoriteItem({
+          id: response.data.id,
+          itemType: 'track',
+          itemId: track.id,
+          itemSpotifyId: track.spotifyId
+        });
+      }
+    } catch (err) {
+      console.log(err)
+      error('Lỗi khi thêm bài hát vào mục yêu thích.');
+    }
+  };
+
   useEffect(() => {
     if (duration > 0) {
       // Tính toán tỷ lệ phần trăm (giá trị từ 0 đến 100)
@@ -133,6 +224,26 @@ export default function SongScreen() {
       setProgress(0); // Reset nếu không có duration
     }
   }, [playbackPosition, duration]);
+
+  useEffect(() => {
+    if (repeatMode === 'none') {
+      setIsRepeat(false);
+      setIsRepeatOne(false);
+    } else if (repeatMode === 'all') {
+      setIsRepeat(true);
+      setIsRepeatOne(false);
+    } else if (repeatMode === 'one') {
+      setIsRepeat(true);
+      setIsRepeatOne(true);
+    }
+  }, [repeatMode])
+
+  useEffect(() => {
+    const isFavorite = favoriteItems.some(
+      (item) => item.itemId === currentTrack.id && item.itemType === 'track'
+    );
+    setIsFavorite(isFavorite);
+  }, [favoriteItems]);
 
   const renderUpNextItem = ({ item, index }) => (
     <SongItem
@@ -196,13 +307,21 @@ export default function SongScreen() {
           </Text>
         </View>
         <View className="flex-row">
-          <TouchableOpacity className="mr-4">
+          <TouchableOpacity className="mr-4" onPress={() => {
+            if (isFavorite) {
+              handleUnFavorite(currentTrack);
+              setIsFavorite(false);
+            } else {
+              handleFavorite(currentTrack);
+              setIsFavorite(true);
+            }
+          }}>
             <Icon name="favorite-border" size={20} color={primaryIconColor} />
           </TouchableOpacity>
           <TouchableOpacity className="mr-4">
             <Icon name="download" size={20} color={primaryIconColor} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => handleShareTrack(currentTrack)}>
             <Icon name="share" size={20} color={primaryIconColor} />
           </TouchableOpacity>
         </View>

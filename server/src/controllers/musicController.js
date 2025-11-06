@@ -139,7 +139,6 @@ const findAlbumById = async (req, res) => {
 const findPlaylistById = async (req, res) => {
   try {
     const { market } = req.body;
-    console.log(market)
     if (!market || !TOP_50_PLAYLIST_ID[market]) {
       return res.status(400).json({ error: 'Invalid or missing market parameter' });
     }
@@ -254,7 +253,6 @@ const searchTracks = async (req, res) => {
       spotifyData.map(track => dataFormated.push(formatTrack(track, null, null, null)));
     }
 
-    console.log("toonrg", dataFormated.length)
     return res.status(200).json({
       message: 'Tìm bài hát thành công',
       data: dataFormated,
@@ -278,7 +276,6 @@ const searchPlaylists = async (req, res) => {
       { where: { name: { [Op.iLike]: '%' + name.toLowerCase() + '%' } } }
     );
 
-    console.log('data playlsist', data.length);
     if (data.length > 0) {
       for (const playlist of data) {
         let user = null;
@@ -289,7 +286,6 @@ const searchPlaylists = async (req, res) => {
         dataFormated.push(itemFormat);
       }
     }
-    console.log('dataFormated 1', dataFormated);
 
     if (dataFormated.length > 20) {
       return res.status(200).json({
@@ -300,7 +296,6 @@ const searchPlaylists = async (req, res) => {
     }
 
     data = await spotify.searchPlaylists({ name, artist });
-    console.log(data[0])
     data.map(item => dataFormated.push(formatPlaylist(item, null)));
 
     return res.status(200).json({
@@ -337,7 +332,6 @@ const searchAlbums = async (req, res) => {
       })
     }
 
-    console.log('local', dataFormated)
     if (data.length > 20) {
       return res.status(200).json({
         message: 'Album search successful',
@@ -382,7 +376,6 @@ const searchArtists = async (req, res) => {
         for (const genre of artist.genres) {
           genres.push(genre.name);
         }
-        console.log(genres)
         const itemFormat = formatArtist(artist, genres);
         dataFormated.push(itemFormat);
       }
@@ -442,7 +435,6 @@ const getTracksFromPlaylist = async (req, res) => {
               if (idTemp) {
                 track.tempId = idTemp;
               }
-              console.log(track)
             } else {
               album = track.Album;
               artist = [];
@@ -472,7 +464,6 @@ const getTracksFromPlaylist = async (req, res) => {
       return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong playlist này', success: false });
     }
 
-    console.log('Tổng: ', dataFormated.length)
 
     return res.status(200).json({
       message: 'Get tracks from playlist successful',
@@ -487,7 +478,6 @@ const getTracksFromPlaylist = async (req, res) => {
 const getTracksFromAlbum = async (req, res) => {
   try {
     const { albumId } = req.params;
-    console.log(albumId)
 
     let data = await Album.findOne(
       {
@@ -558,11 +548,9 @@ const getPlaylistsForYou = async (req, res) => {
     }
 
     for (const playlist of playlists) {
-      console.log(playlist)
       dataFormated.push(formatPlaylist(playlist, null));
     }
 
-    console.log('tổng số playlist nhận được: ', playlists.length);
 
     return res.status(200).json({
       message: 'Get personalized playlists successful',
@@ -619,7 +607,6 @@ const getArtistsForYou = async (req, res) => {
     }
 
     for (const artist of artists) {
-      console.log(artist)
       dataFormated.push(formatArtist(artist, null));
     }
 
@@ -640,7 +627,6 @@ const getMyPlaylists = async (req, res) => {
     })
     const dataFormated = [];
     if (!user) return res.status(404).json({ message: 'Người dùng không tìm thấy', success: false });
-    console.log(user);
     for (const playlist of user.Playlists) {
       dataFormated.push(formatPlaylist(playlist, user));
     }
@@ -662,8 +648,6 @@ const addTrackToPlaylist = async (req, res) => {
     const userId = req.user.id;
     const data = {};
 
-    console.log(req.params);
-    console.log(req.body);
 
     if (playlistId) data.playlistId = playlistId;
     if (trackId) data.trackId = trackId;
@@ -718,14 +702,21 @@ const addTrackToPlaylist = async (req, res) => {
       });
     }
 
+    console.log('row', row)
+
     playlist.totalTracks += 1;
     await playlist.save();
 
     const track = await spotify.findTrackById(trackSpotifyId)
 
+    const dataFormated = formatTrack(track, null, null, null);
+    dataFormated.playlistTrack = {
+      id: row.id
+    }
+
     return res.status(200).json({
       message: 'Thêm bài hát vào playlist thành công',
-      data: formatTrack(track, null, null, null),
+      data: dataFormated,
       success: true
     });
 
@@ -785,6 +776,8 @@ const addTracksToPlaylists = async (req, res) => {
           success: false
         });
       }
+
+      console.log('row 1', row);
 
       playlist.totalTracks += trackIds.length;
       await playlist.save();
@@ -872,12 +865,68 @@ const removeTrackFromPlaylist = async (req, res) => {
   }
 };
 
+
+const findVideoIdForTrack = async (req, res) => {
+  try {
+    const { trackSpotifyId } = req.params;
+    console.log(trackSpotifyId)
+    let videoData = null;
+    let videoId = null;
+    let row = null;
+    if (!trackSpotifyId) {
+      return res.status(400).json({ message: 'Track Spotify ID is required', success: false });
+    }
+
+    let track = await Track.findOne({
+      where: { spotifyId: trackSpotifyId },
+      include: [
+        { model: Artist, as: 'artists' }
+      ]
+    });
+    console.log('track', track)
+
+    if (track) {
+      if (track.videoId) {
+        videoId = track.videoId;
+      } else if (!track.videoId) {
+        videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
+        videoId = videoData.videoId;
+        track.videoId = videoId;
+        await track.save();
+      }
+    } else {
+      track = await spotify.findTrackById(trackSpotifyId);
+      videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
+      videoId = videoData.videoId;
+      const row = await Track.create({
+        spotifyId: trackSpotifyId,
+        videoId: videoId,
+        shareCount: 0,
+        playCount: 0
+      })
+
+      if (!row) {
+        console.log('Không cập nhật được video Id');
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Đã tìm thấy video id',
+      data: videoId,
+      success: true
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to find video ID for track' });
+  }
+}
+
 module.exports = {
   findSpotifyPlaylist,
   findArtistTopTracks,
   findYoutubeVideo,
   findPlaylistById,
   findAlbumById,
+  findVideoIdForTrack,
   getTracksFromPlaylist,
   getTracksFromAlbum,
   getPlaylistsForYou,

@@ -79,6 +79,17 @@ export const GetTracks = async (payload) => {
   }
 }
 
+export const GetVideoId = async (payload) => {
+  try {
+    const response = await axiosClient.get(`/music/track/${payload}/video-id`);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 // add
 export const AddTrackToPlaylist = async (payload) => {
   try {
