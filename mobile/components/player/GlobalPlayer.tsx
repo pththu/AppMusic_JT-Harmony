@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { usePlayerStore } from "@/store/playerStore";
 import { GetVideoId } from "@/services/musicService";
+import { AppState } from "react-native";
 
 export default function GlobalPlayer() {
   const playerRef = useRef(null);
@@ -20,6 +21,7 @@ export default function GlobalPlayer() {
   const setIsPlaying = usePlayerStore((state) => state.setIsPlaying);
   const updateCurrentTrack = usePlayerStore((state) => state.updateCurrentTrack);
 
+  const appState = useRef(AppState.currentState);
   const [videoIdTemp, setVideoIdTemp] = useState('');
 
   const onPlayerReady = () => {
@@ -84,13 +86,37 @@ export default function GlobalPlayer() {
   }, [isPlaying, setPlaybackPosition]);
 
   useEffect(() => {
+    const subscription = AppState.addEventListener("change", async (nextAppState) => {
+      if (
+        appState.current.match(/active/) && // Nếu app đang active
+        nextAppState.match(/inactive|background/) // Và sắp bị inactive/background
+      ) {
+        if (playerRef.current && isPlaying) {
+          try {
+            const currentTime = await playerRef.current.getCurrentTime();
+            setPlaybackPosition(currentTime); // Lưu vị trí lại
+            setIsPlaying(!isPlaying);
+          } catch (e) {
+            console.error("Lỗi khi lưu playback position:", e);
+          }
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove(); // Cleanup listener
+    };
+  }, [isPlaying, setPlaybackPosition]);
+
+  useEffect(() => {
     console.log('currentTrack global: ', currentTrack);
 
     const updateVideoId = async () => {
-      if (!currentTrack.videoId) {
+      if (!currentTrack?.videoId) {
         console.log('Đang tìm video id')
         try {
-          const response = await GetVideoId(currentTrack.spotifyId);
+          const response = await GetVideoId(currentTrack?.spotifyId);
           console.log('response ui: ', response)
           if (response.success) {
             currentTrack.videoId = response.data;
@@ -103,13 +129,15 @@ export default function GlobalPlayer() {
           console.log(err)
           return false;
         }
+      } else {
+        setVideoIdTemp(currentTrack?.videoId);
       }
       return false;
     }
-    const isVideoIdUpdated = updateVideoId();
+    updateVideoId();
     console.log(currentTrack)
 
-    if (currentTrack && isVideoIdUpdated && playerRef.current) {
+    if (currentTrack && videoIdTemp && playerRef.current) {
       playerRef.current.seekTo(0, true);
       setDuration(0);
       let intervalId = null;
@@ -132,7 +160,6 @@ export default function GlobalPlayer() {
             setDuration(duration);
             if (intervalId) clearInterval(intervalId);
           } else {
-            console.log(retries, "đang lấy duration")
             retries++;
             if (retries >= maxRetries) {
               console.log("Không thể lấy duration video sau", maxRetries, "lần thử.");

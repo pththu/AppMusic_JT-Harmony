@@ -9,5 +9,6 @@ router.get('/grouped/items', favoriteController.GetItemsGroupedByType);
 
 router.post('/', favoriteController.CreateOne);
 
+router.delete('/remove/:id', favoriteController.DeleteOne);
 
 module.exports = router;

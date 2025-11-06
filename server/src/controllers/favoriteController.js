@@ -124,26 +124,6 @@ const GetByUserId = async (req, res) => {
   }
 };
 
-const CreateOne = async (req, res) => {
-  try {
-    const { itemType, itemId, itemSpotifyId } = req.body;
-
-    if (!itemType && (!itemId || !itemSpotifyId)) {
-      return res.status(400).json({ message: 'Thiếu thông tin yêu thích' });
-    }
-
-    const favorite = await FavoriteItem.create({
-      userId: req.user.id,
-      itemType,
-      itemId,
-      itemSpotifyId
-    });
-    res.status(201).json({ message: 'Favorite created successfully', data: favorite });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
 const GetItemsGroupedByType = async (req, res) => {
   const userId = req.user.id;
 
@@ -333,10 +313,43 @@ const GetItemsGroupedByType = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 }
+
+const CreateOne = async (req, res) => {
+  try {
+    const { itemType, itemId, itemSpotifyId } = req.body;
+
+    if (!itemType && (!itemId || !itemSpotifyId)) {
+      return res.status(400).json({ message: 'Thiếu thông tin yêu thích' });
+    }
+
+    const favorite = await FavoriteItem.create({
+      userId: req.user.id,
+      itemType,
+      itemId,
+      itemSpotifyId
+    });
+    res.status(201).json({ message: 'Favorite created successfully', data: favorite, success: true });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const DeleteOne = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const row = await FavoriteItem.destroy({ where: { id } });
+    console.log(row);
+    return res.status(201).json({ message: 'Đã xóa khỏi mục yêu thích', success: true });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   GetAll,
   GetByPk,
   GetByUserId,
   GetItemsGroupedByType,
   CreateOne,
+  DeleteOne,
 };

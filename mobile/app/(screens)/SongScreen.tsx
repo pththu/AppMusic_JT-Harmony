@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Image,
   ScrollView,
@@ -27,10 +28,12 @@ import { is } from "date-fns/locale";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { ShareTrack } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
-import { AddFavoriteItem } from "@/services/favoritesService";
+import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
+import { opacity } from "react-native-reanimated/lib/typescript/Colors";
 
 const screenWidth = Dimensions.get("window").width;
+const screenHeight = Dimensions.get("window").height;
 
 export default function SongScreen() {
   const { navigate } = useNavigate();
@@ -66,8 +69,10 @@ export default function SongScreen() {
   const [isRepeat, setIsRepeat] = useState(false);
   const [isRepeatOne, setIsRepeatOne] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  //get height window
 
   const formatTime = (seconds) => {
     if (isNaN(seconds) || seconds < 0) {
@@ -188,20 +193,42 @@ export default function SongScreen() {
   };
 
   const handleUnFavorite = async (track) => {
-    info('Chức năng đang phát triển...');
+    try {
+      console.log('un')
+      setIsLoading(true);
+      const favoriteItem = favoriteItems.find(
+        (item) => item.itemType === 'track' && (item.itemId === track.id || item.itemSpotifyId === track.spotifyId)
+      );
+
+      if (!favoriteItem) {
+        error('Bài hát không có trong mục yêu thích.');
+        return;
+      }
+
+      const response = await RemoveFavoriteItem(favoriteItem.id);
+      if (response.success) {
+        removeFavoriteItem(favoriteItem);
+        setIsFavorite(false);
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.log(err);
+      error('Lỗi khi xóa bài hát khỏi mục yêu thích.');
+    }
   };
 
   const handleFavorite = async (track) => {
-    info('Chức năng đang phát triển...');
     try {
+      setIsLoading(true);
+      console.log('fav')
       const response = await AddFavoriteItem({
         itemType: 'track',
         itemId: track.id,
         itemSpotifyId: track.spotifyId
       });
       if (response.success) {
-        success('Đã thêm bài hát vào mục yêu thích.');
-        console.log(response.data)
+        setIsFavorite(true);
+        setIsLoading(false);
         addFavoriteItem({
           id: response.data.id,
           itemType: 'track',
@@ -243,7 +270,7 @@ export default function SongScreen() {
       (item) => item.itemId === currentTrack.id && item.itemType === 'track'
     );
     setIsFavorite(isFavorite);
-  }, [favoriteItems]);
+  }, [currentTrack]);
 
   const renderUpNextItem = ({ item, index }) => (
     <SongItem
@@ -307,21 +334,19 @@ export default function SongScreen() {
           </Text>
         </View>
         <View className="flex-row">
-          <TouchableOpacity className="mr-4" onPress={() => {
+          <TouchableOpacity className="mr-4 p-2" onPress={() => {
             if (isFavorite) {
               handleUnFavorite(currentTrack);
-              setIsFavorite(false);
             } else {
               handleFavorite(currentTrack);
-              setIsFavorite(true);
             }
           }}>
-            <Icon name="favorite-border" size={20} color={primaryIconColor} />
+            <Icon name={isFavorite ? "favorite" : "favorite-border"} size={20} color={isFavorite ? '#BF0413' : primaryIconColor} />
           </TouchableOpacity>
-          <TouchableOpacity className="mr-4">
+          <TouchableOpacity className="mr-4 p-2">
             <Icon name="download" size={20} color={primaryIconColor} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleShareTrack(currentTrack)}>
+          <TouchableOpacity className="p-2" onPress={() => handleShareTrack(currentTrack)}>
             <Icon name="share" size={20} color={primaryIconColor} />
           </TouchableOpacity>
         </View>
@@ -389,6 +414,15 @@ export default function SongScreen() {
   return (
     // <SafeAreaView className="flex-1">
     <ScrollView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4 pt-4`}>
+      {isLoading && (
+        <View className="absolute top-0 right-0 left-0 z-10 bg-black/50 justify-center items-center"
+          style={{
+            height: screenHeight
+          }}
+        >
+          <ActivityIndicator size="large" color="#22c55e" />
+        </View>
+      )}
       <ListHeader />
       {
         queue.slice(0, 5)

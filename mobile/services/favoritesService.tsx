@@ -24,3 +24,14 @@ export const AddFavoriteItem = async (payload) => {
     throw error;
   }
 }
+
+export const RemoveFavoriteItem = async (payload) => {
+  try {
+    const response = await axiosClient.delete(`/favorites/remove/${payload}`);
+    console.log('api: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
