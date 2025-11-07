@@ -1,5 +1,3 @@
-// components/modals/SongItemOptionModal.js
-import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -12,9 +10,9 @@ import {
   Easing,
   StyleSheet,
 } from "react-native";
+import React, { useEffect, useRef } from "react";
 import { Feather } from "@expo/vector-icons";
 
-// Component OptionItem (Giữ nguyên từ code của bạn)
 const OptionItem = ({ iconName, text, onPress, isDestructive = false, colorScheme }) => (
   <TouchableOpacity onPress={onPress} className="flex-row items-center py-4">
     <Feather
@@ -23,25 +21,22 @@ const OptionItem = ({ iconName, text, onPress, isDestructive = false, colorSchem
       color={isDestructive ? "#ef4444" : `${colorScheme === "dark" ? "#a0a0a0" : "#4b5563"}`}
     />
     <Text
-      className={`text-base ml-5 font-medium ${isDestructive ? "text-red-500" : `${colorScheme === "dark" ? "text-white" : "text-black"}`}`}
+      className={`text-base ml-5 font-medium 
+        ${isDestructive ? "text-red-500" : `${colorScheme === "dark" ? "text-white" : "text-black"}`}`}
     >
       {text}
     </Text>
   </TouchableOpacity>
 );
 
-// Modal cho SongItem
-const SongItemOptionModal = ({
+const AlbumOptionModal = ({
   isVisible,
   setIsVisible,
-  track, // Dùng 'track' thay vì 'data'
-  onAddToQueue,
-  onAddToPlaylist,
-  onViewAlbum = () => { },
-  onRemoveFromPlaylist = () => { },
-  onViewArtist,
-  onShare,
-  isMine, // Cần biết playlist này có phải của tôi không
+  album, // Dùng 'album' thay vì 'data'
+  onAddToPlaylist = () => { },
+  onShare = () => { },
+  onDownload = () => { },
+  onAddToQueue = () => { },
 }) => {
   const colorScheme = useColorScheme();
   const slideAnim = useRef(new Animated.Value(500)).current;
@@ -66,53 +61,49 @@ const SongItemOptionModal = ({
   const handleClose = () => setIsVisible(false);
 
   // Tối ưu: Không render gì cả nếu không visible
-  if (!isVisible) {
-    return null;
-  }
 
-  const artistName = track?.artists?.map(a => a?.name).join(', ');
+  const artistName = album?.artists?.map(a => a.name).join(', ') || 'Nhiều nghệ sĩ';
+  const defaultImage = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
 
   return (
     <Modal
       animationType="none"
       transparent={true}
-      visible={isVisible}
+      visible={isVisible} // Luôn visible khi state là true
       onRequestClose={handleClose}
     >
       <Pressable onPress={handleClose} className="flex-1 justify-end">
+        {/* Backdrop */}
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0, 0, 0, 0.5)", opacity: backdropOpacity }]} />
+
+        {/* Modal Content */}
         <Animated.View style={[{ transform: [{ translateY: slideAnim }] }]}>
-          {/* Ngăn modal đóng khi nhấn vào nội dung */}
           <Pressable onPress={() => { }} className={`${colorScheme === "dark" ? "bg-[#0B1215]" : "bg-white"} w-full rounded-t-2xl p-4 pb-6`}>
             <View className="w-12 h-0.5 bg-gray-500 rounded-full self-center mb-4" />
 
-            {/* Thông tin bài hát */}
+            {/* Thông tin Album */}
             <View className="flex-row items-center mb-4 px-2">
               <Image
-                source={{ uri: track?.imageUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
+                source={{ uri: album?.imageUrl || defaultImage }}
                 className="w-16 h-16 rounded-lg mr-4"
                 resizeMode="cover"
               />
               <View className="flex-1">
                 <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`} numberOfLines={1}>
-                  {track?.name}
+                  {album?.name}
                 </Text>
-                <Text className={`text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-gray-500"}`} numberOfLines={1}>
-                  {artistName}
+                <Text className={`text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                  Album • {artistName}
                 </Text>
               </View>
             </View>
 
             {/* Các tùy chọn */}
             <View className={`border-t ${colorScheme === 'dark' ? 'border-gray-600' : 'border-gray-200'} mb-4`}>
+              <OptionItem text="Thêm vào playlist" iconName="plus-circle" onPress={onAddToPlaylist} colorScheme={colorScheme} />
               <OptionItem text="Thêm vào hàng đợi" iconName="list" onPress={onAddToQueue} colorScheme={colorScheme} />
-              <OptionItem text="Thêm vào playlist..." iconName="plus-circle" onPress={onAddToPlaylist} colorScheme={colorScheme} />
-              <OptionItem text="Xem album" iconName="disc" onPress={onViewAlbum} colorScheme={colorScheme} />
-              <OptionItem text="Xem nghệ sĩ" iconName="user" onPress={onViewArtist} colorScheme={colorScheme} />
+              <OptionItem text="Tải xuống" iconName="download-cloud" onPress={onDownload} colorScheme={colorScheme} />
               <OptionItem text="Chia sẻ" iconName="share-2" onPress={onShare} colorScheme={colorScheme} />
-              {isMine && (
-                <OptionItem text="Xóa khỏi playlist này" iconName="trash-2" onPress={onRemoveFromPlaylist} isDestructive={true} colorScheme={colorScheme} />
-              )}
             </View>
 
             <TouchableOpacity
@@ -126,6 +117,6 @@ const SongItemOptionModal = ({
       </Pressable>
     </Modal>
   );
-}
+};
 
-export default SongItemOptionModal;
+export default AlbumOptionModal;

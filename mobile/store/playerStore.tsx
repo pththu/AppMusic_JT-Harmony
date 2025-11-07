@@ -7,8 +7,9 @@ interface PlayerState {
   currentTrack: any | null;
   currentPlaylist: any | null;
   currentIndex: number;
+  currentAlbum: any | null;
   playbackPosition: number;
-  playlistTracks: any[];
+  listTrack: any[];
   playlistTracksPlaying: any[];
   myPlaylists: any[];
   queue: any[];
@@ -29,8 +30,9 @@ interface PlayerState {
 
   // basic actions
   setCurrentTrack: (track: any) => void;
-  setPlaylistTracks: (tracks: any[]) => void;
+  setListTrack: (tracks: any[]) => void;
   setCurrentPlaylist: (playlist: any) => void;
+  setCurrentAlbum: (album: any) => void;
   setPlaylistTracksPlaying: (tracks: any[]) => void;
   setMyPlaylists: (playlists: any[]) => void;
   setIsPlaying: (playing: boolean) => void;
@@ -77,8 +79,9 @@ export const usePlayerStore = create<PlayerState>()(
     (set, get) => ({
       // === STATE ===
       currentTrack: null,
-      playlistTracks: [],
       currentPlaylist: null,
+      currentAlbum: null,
+      listTrack: [],
       playlistTracksPlaying: [],
       myPlaylists: [],
       currentIndex: -1,
@@ -98,19 +101,22 @@ export const usePlayerStore = create<PlayerState>()(
 
       // === BASIC ACTIONS ===
       setCurrentTrack: (track) => {
-        const { playlistTracks } = get();
-        const index = playlistTracks.findIndex(s => s.id === track.id);
+        const { listTrack } = get();
+        const index = listTrack.findIndex(s => s.id === track.id);
         set({
           currentTrack: track,
           currentIndex: index !== -1 ? index : -1,
           currentTime: 0,
           seekTrigger: Date.now(),
           playbackPosition: 0,
-          isLastIndex: index === playlistTracks.length - 1,
+          isLastIndex: index === listTrack.length - 1,
         });
       },
       setCurrentPlaylist: (playlist) => {
         set({ currentPlaylist: playlist });
+      },
+      setCurrentAlbum: (album) => {
+        set({ currentAlbum: album });
       },
       setPlaylistTracksPlaying: (tracks) => {
         set({ playlistTracksPlaying: tracks });
@@ -118,8 +124,8 @@ export const usePlayerStore = create<PlayerState>()(
       setMyPlaylists: (playlists) => {
         set({ myPlaylists: playlists });
       },
-      setPlaylistTracks: (tracks) => {
-        set({ playlistTracks: tracks });
+      setListTrack: (tracks) => {
+        set({ listTrack: tracks });
       },
       setQueue: (tracks) => {
         set({ queue: tracks });
@@ -131,17 +137,17 @@ export const usePlayerStore = create<PlayerState>()(
         set({ myPlaylists: [...myPlaylists, playlist] });
       },
       addTrackToPlaylist: (track) => {
-        const { playlistTracks } = get();
+        const { listTrack } = get();
         console.log('store: ', track);
-        set({ playlistTracks: [...playlistTracks, track] });
+        set({ listTrack: [...listTrack, track] });
       },
       updateCurrentTrack: (track) => {
         set({ currentTrack: track });
       },
       updateTrack: (track) => {
-        const { playlistTracks } = get();
-        const updatedTracks = playlistTracks.map(t => t.spotifyId === track.spotifyId ? track : t);
-        set({ playlistTracks: updatedTracks });
+        const { listTrack } = get();
+        const updatedTracks = listTrack.map(t => t.spotifyId === track.spotifyId ? track : t);
+        set({ listTrack: updatedTracks });
       },
       updateCurrentPlaylist: (playlist) => {
         set({ currentPlaylist: playlist });
@@ -219,9 +225,9 @@ export const usePlayerStore = create<PlayerState>()(
         set({ myPlaylists: newPlaylists });
       },
       removeTrackFromPlaylist: (playlistTrackId) => {
-        const { playlistTracks } = get();
-        const newTracks = playlistTracks.filter(t => t.playlistTrack.id !== playlistTrackId);
-        set({ playlistTracks: newTracks });
+        const { listTrack } = get();
+        const newTracks = listTrack.filter(t => t.playlistTrack.id !== playlistTrackId);
+        set({ listTrack: newTracks });
       },
       playPlaylist: (tracks, startIndex = 0) =>
         set({
@@ -351,7 +357,7 @@ export const usePlayerStore = create<PlayerState>()(
         isPlaying: false,
         currentIndex: -1,
         playbackPosition: 0,
-        playlistTracks: [],
+        listTrack: [],
         currentPlaylist: null,
         myPlaylists: [],
         tabBarHeight: 0,
@@ -375,7 +381,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
       partialize: (state) => ({
         currentTrack: state.currentTrack,
-        playlistTracks: state.playlistTracks,
+        listTrack: state.listTrack,
         currentIndex: state.currentIndex,
         playbackPosition: state.playbackPosition,
         myPlaylists: state.myPlaylists,

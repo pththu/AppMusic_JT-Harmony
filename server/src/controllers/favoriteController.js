@@ -445,12 +445,7 @@ const CreateOne = async (req, res) => {
         }
         break;
       case 'album':
-        album = await Album.findByPk(itemId, {
-          include: [
-            { model: Artist, as: 'artists' }
-          ]
-        });
-
+        const album = await spotify.findAlbumById(itemSpotifyId);
         if (album) {
           const itemFormat = formatAlbum(album, null);
           itemFormat.favoriteItem = {
@@ -479,7 +474,11 @@ const CreateOne = async (req, res) => {
 
     console.log('data format', dataFormated);
 
-    return res.status(201).json({ message: 'Favorite created successfully', data: dataFormated, success: true });
+    return res.status(201).json({
+      message: 'Favorite created successfully',
+      data: dataFormated,
+      success: true
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

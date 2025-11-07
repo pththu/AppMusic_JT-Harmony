@@ -45,13 +45,6 @@ const PlaylistItemOptionModal = ({
   const modalBg = colorScheme === "dark" ? "bg-gray-900" : "bg-white";
   const textColor = colorScheme === "dark" ? "text-white" : "text-black";
 
-  // const formatPlaylistName = (name) => {
-  //   if (name.length > 100) {
-  //     return name.substring(0, 97) + "...";
-  //   }
-  //   return name;
-  // };
-
   return (
     <Modal
       animationType="slide"

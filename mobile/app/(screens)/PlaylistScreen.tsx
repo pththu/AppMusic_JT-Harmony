@@ -48,11 +48,12 @@ export default function PlaylistScreen() {
 
   const user = useAuthStore((state) => state.user);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
-  const playlistTracks = usePlayerStore((state) => state.playlistTracks);
+  const listTrack = usePlayerStore((state) => state.listTrack);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
-  const setPlaylistTracks = usePlayerStore((state) => state.setPlaylistTracks);
+  const setListTrack = usePlayerStore((state) => state.setListTrack);
+  const setQueue = usePlayerStore((state) => state.setQueue);
   const updateCurrentPlaylist = usePlayerStore((state) => state.updateCurrentPlaylist);
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
@@ -65,12 +66,10 @@ export default function PlaylistScreen() {
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
-  const setQueue = usePlayerStore((state) => state.setQueue);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
   const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem);
   const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
-
 
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
@@ -164,7 +163,7 @@ export default function PlaylistScreen() {
         playlistIds.push(response.playlist?.id);
 
         const trackIds = [];
-        playlistTracks.forEach(track => {
+        listTrack.forEach(track => {
           trackIds.push(track.spotifyId);
         });
 
@@ -261,23 +260,23 @@ export default function PlaylistScreen() {
 
   const handlePlayPlaylist = () => {
     console.log('handlePlay')
-    if (!playlistTracks || playlistTracks.length === 0) {
+    if (!listTrack || listTrack.length === 0) {
       warning('Playlist không có bài hát để phát!');
       return;
     }
 
-    playPlaylist(playlistTracks, 0);
-    const queueData = playlistTracks.filter((item, index) => {
+    playPlaylist(listTrack, 0);
+    const queueData = listTrack.filter((item, index) => {
       if (index > 0)
         return item;
     });
     setQueue(queueData);
-    setCurrentTrack(playlistTracks[0])
+    setCurrentTrack(listTrack[0])
   };
 
   const handlePlayTrack = (track, index) => {
-    playPlaylist(playlistTracks, index);
-    const queueData = playlistTracks.filter((item, i) => {
+    playPlaylist(listTrack, index);
+    const queueData = listTrack.filter((item, i) => {
       if (i > index)
         return item;
     });
@@ -363,7 +362,7 @@ export default function PlaylistScreen() {
   const handleAddToAnotherPlaylist = async (playlistIds) => {
     console.log('handleAddToAnotherPlaylist')
     console.log(playlistIds);
-    if (!playlistTracks || !playlistTracks.length) {
+    if (!listTrack || !listTrack.length) {
       warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
       return;
     }
@@ -375,7 +374,7 @@ export default function PlaylistScreen() {
 
     try {
       const trackIds = [];
-      playlistTracks.forEach(track => {
+      listTrack.forEach(track => {
         trackIds.push(track.spotifyId);
       });
 
@@ -386,7 +385,7 @@ export default function PlaylistScreen() {
 
       if (response.success) {
         playlistIds.forEach(id => {
-          updateTotalTracksInMyPlaylists(id, playlistTracks.length);
+          updateTotalTracksInMyPlaylists(id, listTrack.length);
         });
         success('Đã thêm bài hát vào playlist thành công!');
       }
@@ -399,14 +398,14 @@ export default function PlaylistScreen() {
 
   const handleAddToQueue = () => {
     console.log('handleAddToQueue')
-    if (!playlistTracks || playlistTracks.length === 0) {
+    if (!listTrack || listTrack.length === 0) {
       warning('Playlist không có bài hát để thêm vào hàng đợi!');
       return;
     }
 
     // Thêm toàn bộ bài hát trong playlist này vào Queue
-    addTrackToQueue(playlistTracks);
-    success(`Đã thêm ${playlistTracks.length} bài hát vào hàng đợi!`);
+    addTrackToQueue(listTrack);
+    success(`Đã thêm ${listTrack.length} bài hát vào hàng đợi!`);
     setModalVisible(false);
   };
 
@@ -577,10 +576,10 @@ export default function PlaylistScreen() {
         itemSpotifyId: currentPlaylist.spotifyId
       });
       if (response.success) {
-        console.log('response.data', response.data)
+        console.log('response.data playlist:', response.data)
         setIsFavorite(true);
         setIsFavoriteLoading(false);
-        addFavoriteItem(response.data);
+        addFavoriteItem(response.data[0]);
       }
     } catch (err) {
       console.log(err)
@@ -592,9 +591,15 @@ export default function PlaylistScreen() {
     try {
       console.log('un')
       setIsFavoriteLoading(true);
-      const favoriteItem = favoriteItems.find(
-        (item) => item.itemType === 'playlist' && (item.itemId === playlist.id || item.itemSpotifyId === playlist.spotifyId)
-      );
+      const favoriteItem = favoriteItems.find((item) => {
+        if (item?.itemType === 'playlist') {
+          if ((playlist?.id && (item?.itemId === playlist?.id))
+            || (playlist?.spotifyId && (item?.itemSpotifyId === playlist?.spotifyId))) {
+            return true;
+          }
+        }
+        return false;
+      });
 
       if (!favoriteItem) {
         error('Playlist không có trong mục yêu thích.');
@@ -629,9 +634,9 @@ export default function PlaylistScreen() {
           type: 'api'
         });
         if (response.success) {
-          setPlaylistTracks(response.data);
+          setListTrack(response.data);
         } else {
-          setPlaylistTracks([]);
+          setListTrack([]);
         }
       } else {
         const response = await GetTracksByPlaylistId({
@@ -639,16 +644,15 @@ export default function PlaylistScreen() {
           type: 'local'
         });
         if (response.success) {
-          setPlaylistTracks(response.data);
+          setListTrack(response.data);
         } else {
-          setPlaylistTracks([]);
+          setListTrack([]);
         }
       }
       setIsLoading(false);
     };
 
     fetchTracks();
-    console.log('currentPlaylist: ', currentPlaylist);
   }, []);
 
   useEffect(() => {
@@ -668,11 +672,26 @@ export default function PlaylistScreen() {
     }
   }, [currentPlaylist]);
 
+  const checkIsFavorite = () => {
+    setIsFavorite(false);
+    favoriteItems.forEach(
+      (item) => {
+        if (item?.itemType === 'playlist') {
+          if ((currentPlaylist?.id && (item?.itemId === currentPlaylist?.id))
+            || (currentPlaylist?.spotifyId && (item?.itemSpotifyId === currentPlaylist?.spotifyId))) {
+            console.log(12)
+            setIsFavorite(true);
+            return;
+          }
+        }
+      }
+    )
+    return;
+  }
+
   useEffect(() => {
-    const isFavorite = favoriteItems.some(
-      (item) => item?.itemType === 'playlist' && (item?.itemId === currentPlaylist?.id || item?.itemSpotifyId === currentPlaylist?.spotifyId)
-    );
-  }, [currentPlaylist]);
+    checkIsFavorite();
+  }, []);
 
   const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
@@ -779,7 +798,7 @@ export default function PlaylistScreen() {
                     size={22} />
                 </Pressable>
               )}
-              {currentPlaylist?.owner?.id !== user?.id && (
+              {(currentPlaylist?.owner?.id !== user?.id && currentPlaylist?.userId !== user.id) && (
                 <TouchableOpacity className="p-2"
                   onPress={() => {
                     if (isFavorite) {
@@ -830,12 +849,12 @@ export default function PlaylistScreen() {
             </View>
           ) : (
             <>
-              {playlistTracks?.length === 0 || playlistTracks === undefined || !playlistTracks.length ? (
+              {listTrack?.length === 0 || listTrack === undefined || !listTrack.length ? (
                 <View className="flex-1 justify-center items-center">
                   <Text className="text-gray-600 dark:text-gray-400">Không có bài hát nào trong playlist này.</Text>
                 </View>
               ) : (
-                playlistTracks?.sort((a, b) => a?.playlistTrack?.id - b?.playlistTrack?.id)?.map((item, index) => (
+                listTrack?.sort((a, b) => a?.playlistTrack?.id - b?.playlistTrack?.id)?.map((item, index) => (
                   renderRecentlyPlayedItem({ item, index })
                 ))
               )}
@@ -853,7 +872,7 @@ export default function PlaylistScreen() {
             onTogglePrivacy={handleChangePrivacy}
             onShare={handleSharePlaylist}
             onAddToPlaylist={() => {
-              if (!playlistTracks || !playlistTracks.length) {
+              if (!listTrack || !listTrack.length) {
                 warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
                 return;
               }

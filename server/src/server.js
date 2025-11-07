@@ -100,13 +100,12 @@ const protectedRoutes = [
     'comments', // Comment (cần đăng nhập mới comment được)
     // 'genres', // Xem thể loại nhạc
     // 'artists', // Xem thông tin nghệ sĩ
-    // 'albums', // Xem album
+    'albums', // Xem album
     // 'search', // Tìm kiếm công khai
     // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
     'conversations',
     'upload', // Upload hình ảnh, file
     'music',
-    // 'genres',    // Xem thể loại nhạc
     'tracks',        // Xem bài hát (public), upload bài hát (private)
     // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
 ];
