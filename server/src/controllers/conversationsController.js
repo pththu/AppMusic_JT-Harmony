@@ -152,7 +152,35 @@ exports.createOrGetPrivateConversation = async(req, res) => {
             });
 
             if (existingConversation) {
-                conversationId = existingConversation.id;
+                // Kiểm tra status của user hiện tại trong conversation này
+                const currentUserMember = await ConversationMember.findOne({
+                    where: {
+                        conversationId: existingId,
+                        userId: currentUserId,
+                    },
+                    attributes: ['status']
+                });
+
+                // Nếu user hiện tại đã left conversation, reactivate lại thay vì tạo mới
+                if (!currentUserMember || currentUserMember.status === 'left') {
+                    // Reactivate user hiện tại trong conversation cũ
+                    await ConversationMember.update({ status: 'active' }, {
+                        where: {
+                            conversationId: existingId,
+                            userId: currentUserId,
+                        }
+                    });
+
+                    conversationId = existingConversation.id;
+
+                    return res.status(200).json({
+                        message: 'Existing private conversation reactivated successfully.',
+                        conversationId: conversationId
+                    });
+                } else {
+                    // User vẫn active, dùng conversation cũ
+                    conversationId = existingConversation.id;
+                }
             }
         }
 
@@ -214,9 +242,19 @@ exports.getConversationMessages = async(req, res) => {
             return res.status(403).json({ error: 'Forbidden: Not a member of this conversation.' });
         }
 
-        // 2. Lấy danh sách tin nhắn
+        // 2. Lấy danh sách tin nhắn, loại bỏ tin nhắn đã bị user ẩn
         const messages = await Message.findAll({
-            where: { conversationId: conversationId },
+            where: {
+                conversationId: conversationId,
+                // Loại bỏ tin nhắn đã bị user ẩn
+                [Op.not]: {
+                    id: {
+                        [Op.in]: sequelize.literal(`(
+                            SELECT message_id FROM message_hides WHERE user_id = ${currentUserId}
+                        )`)
+                    }
+                }
+            },
             include: [{
                 model: User,
                 as: 'Sender',
@@ -344,34 +382,35 @@ exports.deleteConversation = async(req, res) => {
             return res.status(403).json({ error: 'Forbidden: Not a member of this conversation.' });
         }
 
-        // 2. Cập nhật trạng thái thành viên của người dùng hiện tại thành 'left'
+        // 2. Xóa tất cả tin nhắn của cuộc trò chuyện cho user hiện tại (ẩn tất cả tin nhắn)
+        const messages = await Message.findAll({
+            where: { conversationId: conversationId },
+            attributes: ['id']
+        });
+
+        // Tạo bản ghi ẩn cho tất cả tin nhắn nếu chưa có
+        const hidePromises = messages.map(message =>
+            MessageHide.findOrCreate({
+                where: {
+                    messageId: message.id,
+                    userId: currentUserId
+                },
+                defaults: {
+                    messageId: message.id,
+                    userId: currentUserId
+                }
+            })
+        );
+
+        await Promise.all(hidePromises);
+
+        // 3. Cập nhật trạng thái thành viên của người dùng hiện tại thành 'left'
         await ConversationMember.update({ status: 'left' }, {
             where: {
                 conversationId: conversationId,
                 userId: currentUserId,
             }
         });
-
-        // 3. Kiểm tra xem còn thành viên active nào khác không
-        const remainingActiveMembers = await ConversationMember.count({
-            where: {
-                conversationId: conversationId,
-                status: 'active'
-            }
-        });
-
-        // Nếu không còn thành viên active nào, xóa luôn cuộc trò chuyện và tất cả tin nhắn liên quan
-        if (remainingActiveMembers === 0) {
-            // Xóa tất cả tin nhắn của cuộc trò chuyện
-            await Message.destroy({
-                where: { conversationId: conversationId }
-            });
-
-            // Xóa cuộc trò chuyện
-            await Conversation.destroy({
-                where: { id: conversationId }
-            });
-        }
 
         res.status(200).json({ message: 'Conversation deleted successfully from your side.' });
 

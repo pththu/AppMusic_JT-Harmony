@@ -23,12 +23,15 @@ import {
   createNewComment,
   toggleCommentLike,
   updatePost,
+  deletePost,
   ProfileSocial,
   Post as PostType,
   Comment,
 } from "../../services/socialApi";
+import { fetchCoversByUserId, Cover } from "../../services/coverApi";
 import useAuthStore from "@/store/authStore";
 import PostItem from "../../components/items/PostItem";
+import CoverItem from "../../components/items/CoverItem";
 import { useNavigate } from "@/hooks/useNavigate";
 import CommentModal from "../../components/modals/CommentModal";
 import FollowListModal from "../../components/modals/FollowListModal";
@@ -46,7 +49,7 @@ export default function ProfileSocialScreen() {
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
   const route = useRoute<ProfileSocialRouteProp>();
-  const { userId } = route.params; 
+  const { userId } = route.params;
 
   const currentUser = useAuthStore((state) => state.user);
   // console.log("Current User in ProfileSocialScreen:", currentUser);
@@ -56,9 +59,11 @@ export default function ProfileSocialScreen() {
   // STATE CHÍNH
   const [profile, setProfile] = useState<ProfileSocial | null>(null); // Thông tin profile
   const [posts, setPosts] = useState<PostType[]>([]); // Danh sách bài đăng
+  const [covers, setCovers] = useState<Cover[]>([]); // Danh sách covers
   const [loading, setLoading] = useState(true); // Loading chính
+  const [activeTab, setActiveTab] = useState<"posts" | "covers">("posts"); // Tab active
 
-    // STATES CHO COMMENT MODAL
+  // STATES CHO COMMENT MODAL
   const [commentModalVisible, setCommentModalVisible] = useState(false); // Modal bình luận
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null); // Post ID đang xem bình luận
   const [comments, setComments] = useState<Comment[]>([]); // Danh sách bình luận
@@ -90,7 +95,7 @@ export default function ProfileSocialScreen() {
   // Kiểm tra xem đây có phải là profile của người dùng hiện tại không
   const isCurrentUserProfile = currentUser && currentUser.id === userId;
 
-    // Hàm tải dữ liệu profile và bài đăng
+  // Hàm tải dữ liệu profile và bài đăng
   const loadData = useCallback(async () => {
     if (!userId) {
       Alert.alert("Lỗi", "Không tìm thấy ID người dùng.");
@@ -112,7 +117,13 @@ export default function ProfileSocialScreen() {
       if ("message" in postResponse) {
         throw new Error(String(postResponse.message));
       }
-      setPosts(postResponse);
+      const allPosts = postResponse;
+      const postsOnly = allPosts.filter((post) => !post.isCover);
+      setPosts(postsOnly);
+
+      // 3. Tải Covers riêng biệt
+      const coversResponse = await fetchCoversByUserId(userId);
+      setCovers(coversResponse);
     } catch (error) {
       console.error("Lỗi tải Profile Social:", error);
       Alert.alert("Lỗi", "Không thể tải thông tin profile. Vui lòng thử lại.");
@@ -131,8 +142,8 @@ export default function ProfileSocialScreen() {
     try {
       // 1. Gọi API để tạo/lấy Conversation ID
       const result = await createOrGetPrivateConversation(userId);
-      if ('status' in result && result.status === 'error') {
-        Alert.alert('Lỗi', result.message);
+      if ("status" in result && result.status === "error") {
+        Alert.alert("Lỗi", result.message);
         return;
       }
       const { conversationId } = result as { conversationId: number };
@@ -152,7 +163,7 @@ export default function ProfileSocialScreen() {
     }
   }, [userId, profile, navigation]);
 
-    // HÀM XỬ LÝ KHI NHẤN VÀO USER
+  // HÀM XỬ LÝ KHI NHẤN VÀO USER
   const handleUserPress = useCallback(
     (targetUserId: number) => {
       // // Nếu nhấn vào ảnh của chính mình, nó sẽ reload màn hình.
@@ -228,7 +239,7 @@ export default function ProfileSocialScreen() {
         editingPost.id,
         editContent,
         null, // newFileUrls
-        null  // newSongId
+        null // newSongId
       );
       if ("message" in updatedPost) {
         throw new Error(updatedPost.message);
@@ -252,9 +263,11 @@ export default function ProfileSocialScreen() {
         style: "destructive",
         onPress: async () => {
           try {
-            // Giả sử có API deletePost
-            // await deletePost(postId);
-            // Tạm thời xóa local
+            const result = await deletePost(postId);
+            if ("message" in result) {
+              throw new Error(result.message);
+            }
+            // Xóa khỏi state local
             setPosts((prev) => prev.filter((p) => p.id !== postId));
             Alert.alert("Thành công", "Bài viết đã được xóa.");
           } catch (error) {
@@ -547,6 +560,16 @@ export default function ProfileSocialScreen() {
             </Text>
             <Text className={`text-sm ${textMuted}`}>Bài đăng</Text>
           </TouchableOpacity>
+          {/* Covers */}
+          <TouchableOpacity
+            onPress={() => {}}
+            className="items-center p-1 active:opacity-70"
+          >
+            <Text className={`text-xl font-bold text-indigo-500 text-center`}>
+              {covers.length}
+            </Text>
+            <Text className={`text-sm ${textMuted}`}>Cover</Text>
+          </TouchableOpacity>
           {/* Followers */}
           <TouchableOpacity
             onPress={() => handleOpenFollowModal("followers")}
@@ -569,13 +592,51 @@ export default function ProfileSocialScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Tiêu đề Bài đăng */}
+        {/* Tiêu đề Bài đăng với Tabs */}
         <View
           className={`pt-4 px-4 border-b border-gray-200 dark:border-gray-700`}
         >
           <Text className={`text-lg font-bold ${textPrimary} pb-2`}>
-            Bài đăng
+            {activeTab === "posts" ? "Bài đăng" : "Cover"}
           </Text>
+          <View className="flex-row mb-4">
+            <TouchableOpacity
+              onPress={() => setActiveTab("posts")}
+              className={`px-4 py-2 rounded-full mr-2 ${
+                activeTab === "posts"
+                  ? "bg-indigo-500"
+                  : "bg-gray-200 dark:bg-gray-700"
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium ${
+                  activeTab === "posts"
+                    ? "text-white"
+                    : "text-gray-600 dark:text-gray-400"
+                }`}
+              >
+                Bài đăng ({posts.length})
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setActiveTab("covers")}
+              className={`px-4 py-2 rounded-full ${
+                activeTab === "covers"
+                  ? "bg-indigo-500"
+                  : "bg-gray-200 dark:bg-gray-700"
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium ${
+                  activeTab === "covers"
+                    ? "text-white"
+                    : "text-gray-600 dark:text-gray-400"
+                }`}
+              >
+                Cover ({covers.length})
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
@@ -611,39 +672,71 @@ export default function ProfileSocialScreen() {
       {/* Danh sách bài đăng với Header */}
       <FlatList
         ListHeaderComponent={renderProfileHeader}
-        data={posts}
+        data={activeTab === "posts" ? posts : (covers as any)}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingTop: 80 }}
         renderItem={({ item }) => {
-          const isPostUser = item.userId === currentUserId;
-          return (
-            <PostItem
-              {...item}
-              id={Number(item.id)}
-              // Gán các hàm xử lý
-              onPostUpdate={(type, value) => updatePostState(item.id, type, value)}
-              onCommentPress={() => openCommentModal(item.id)}
-              onSharePress={() =>
-                Alert.alert("Chia sẻ", "Tính năng chưa phát triển")
-              }
-              onUserPress={
-                item.User?.id === userId ? undefined : handleUserPress
-              }
-              onLikeCountPress={handleLikeCountPress}
-              onEdit={isPostUser ? () => handleEditPress(item) : undefined}
-              onDelete={
-                isPostUser ? () => handleDeletePress(item.id) : undefined
-              }
-              onHidePost={() => {}}
-              isUserPost={isPostUser}
-              // Truyền images từ fileUrl
-              images={
-                Array.isArray(item.fileUrl) ? item.fileUrl : [item.fileUrl]
-              }
-              // Truyền musicLink
-              musicLink={item.musicLink}
-            />
-          );
+          if (activeTab === "covers") {
+            const cover = item as Cover;
+            return (
+              <CoverItem
+                id={cover.id}
+                userId={cover.userId}
+                User={cover.User}
+                uploadedAt={cover.uploadedAt}
+                content={cover.content}
+                fileUrl={cover.fileUrl}
+                heartCount={cover.heartCount}
+                isLiked={cover.isLiked}
+                originalSongId={cover.originalSongId}
+                OriginalSong={cover.OriginalSong}
+                onUserPress={
+                  cover.User?.id === userId ? undefined : handleUserPress
+                }
+                onRefresh={handleRefresh}
+                onCommentPress={() => openCommentModal(cover.id)}
+                onSharePress={() =>
+                  Alert.alert("Chia sẻ", "Tính năng chưa phát triển")
+                }
+                likeCount={cover.heartCount}
+                commentCount={0} // Covers don't have commentCount
+                isLikedPost={cover.isLiked}
+              />
+            );
+          } else {
+            const post = item as PostType;
+            const isPostUser = post.userId === currentUserId;
+            return (
+              <PostItem
+                {...post}
+                id={Number(post.id)}
+                // Gán các hàm xử lý
+                onPostUpdate={(type, value) =>
+                  updatePostState(post.id, type, value)
+                }
+                onCommentPress={() => openCommentModal(post.id)}
+                onSharePress={() =>
+                  Alert.alert("Chia sẻ", "Tính năng chưa phát triển")
+                }
+                onUserPress={
+                  post.User?.id === userId ? undefined : handleUserPress
+                }
+                onLikeCountPress={handleLikeCountPress}
+                onEdit={isPostUser ? () => handleEditPress(post) : undefined}
+                onDelete={
+                  isPostUser ? () => handleDeletePress(post.id) : undefined
+                }
+                onHidePost={() => {}}
+                isUserPost={isPostUser}
+                // Truyền images từ fileUrl
+                images={
+                  Array.isArray(post.fileUrl) ? post.fileUrl : [post.fileUrl]
+                }
+                // Truyền musicLink
+                musicLink={post.musicLink}
+              />
+            );
+          }
         }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -657,7 +750,9 @@ export default function ProfileSocialScreen() {
         ListEmptyComponent={() => (
           <View className="p-8 items-center">
             <Text className="text-gray-500 dark:text-gray-400">
-              Người dùng này chưa có bài đăng nào.
+              {activeTab === "posts"
+                ? "Người dùng này chưa có bài đăng nào."
+                : "Người dùng này chưa có cover nào."}
             </Text>
           </View>
         )}
@@ -730,4 +825,4 @@ export default function ProfileSocialScreen() {
       )}
     </View>
   );
-} 
+}

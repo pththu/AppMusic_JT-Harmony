@@ -50,6 +50,17 @@ const Post = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: true,
             field: 'song_id'
+        },
+        isCover: { // Đánh dấu đây là bài cover hay không
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+            field: 'is_cover'
+        },
+        originalSongId: { // ID của bài hát gốc nếu là cover
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'original_song_id'
         }
     }, {
         tableName: 'posts',

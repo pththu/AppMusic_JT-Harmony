@@ -41,7 +41,7 @@ const Message = sequelize.define(
     }, {
         tableName: 'messages',
         timestamps: true,
-        paranoid: true, // Cho phép soft-delete
+        paranoid: false, // Cho phép soft-delete
         indexes: [
             { fields: ['conversation_id'] },
             { fields: ['sender_id'] },

@@ -329,6 +329,9 @@ export default function ConversationsScreen() {
                 colorScheme === 'dark' ? 'bg-gray-900' : 'bg-white'
             }`}>
                 <ActivityIndicator size="large" color="#4F46E5" />
+                    <Text className="mt-2 text-gray-600 dark:text-gray-400">
+                        Đang tải danh sách cuộc trò chuyện...
+                    </Text>
             </SafeAreaView>
         );
     }

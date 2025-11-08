@@ -21,6 +21,8 @@ import { useTheme } from "@/components/ThemeContext";
 import { albumData, trackData } from "@/constants/data";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SongItem from "@/components/items/SongItem";
+import { fetchCoversBySongId } from "@/services/coverApi";
+import CoverItem from "@/components/items/CoverItem";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -43,8 +45,30 @@ export default function SongScreen() {
   const setNowPlaying = useQueueStore((state) => state.setNowPlaying);
   const setQueue = useQueueStore((state) => state.setQueue);
 
+  // State cho covers
+  const [covers, setCovers] = useState<any[]>([]);
+  const [loadingCovers, setLoadingCovers] = useState(false);
+
   const primaryIconColor = theme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
+
+  // Load covers khi component mount
+  React.useEffect(() => {
+    const loadCovers = async () => {
+      if (currentTrack?.id) {
+        setLoadingCovers(true);
+        try {
+          const coversData = await fetchCoversBySongId(currentTrack.id);
+          setCovers(coversData.slice(0, 3)); // Chỉ lấy top 3 covers
+        } catch (error) {
+          console.error('Error loading covers:', error);
+        } finally {
+          setLoadingCovers(false);
+        }
+      }
+    };
+    loadCovers();
+  }, [currentTrack?.id]);
 
   const handleSelectQueue = () => {
     setNowPlaying(currentTrack);
@@ -61,6 +85,11 @@ export default function SongScreen() {
     setCurrentTrack(track);
     navigate('SongScreen');
   }
+
+  const handleViewAllCovers = () => {
+    // Navigate to SocialScreen with covers filter
+    navigate("SocialScreen", { filter: "covers", songId: currentTrack.id });
+  };
 
   const renderUpNextItem = ({ item, index }) => (
     <SongItem
@@ -187,6 +216,33 @@ export default function SongScreen() {
 
   const ListFooter = () => (
     <View>
+      {/* Community Covers Section */}
+      {covers.length > 0 && (
+        <View className="mb-6">
+          <View className="flex-row justify-between items-center mb-2">
+            <Text className="text-black dark:text-white text-lg font-bold">Community Covers</Text>
+            <TouchableOpacity onPress={handleViewAllCovers}>
+              <Text className="text-gray-600 dark:text-gray-400 text-base">Xem tất cả</Text>
+            </TouchableOpacity>
+          </View>
+          {covers.map((cover, index) => (
+            <CoverItem
+              key={cover.id || index}
+              item={cover}
+              onPress={() => {
+                // Handle cover press - maybe play the cover
+                console.log('Play cover:', cover);
+              }}
+              onUserPress={(userId) => navigate("ProfileSocialScreen", { userId })}
+              onVotePress={() => {
+                // Handle vote
+                console.log('Vote for cover:', cover.id);
+              }}
+            />
+          ))}
+        </View>
+      )}
+
       <LyricsSection />
       <ArtistsSection artists={currentTrack.artists} />
     </View>

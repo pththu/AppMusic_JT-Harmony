@@ -41,6 +41,14 @@ export interface Post {
   User: UserInfo;
   commentCount: number;
   isLiked: boolean;
+  isCover?: boolean;
+  originalSongId?: number;
+  OriginalSong?: {
+    id: number;
+    name: string;
+    spotifyId: string;
+    artists?: { id: number; name: string }[];
+  };
 }
 
 export interface ProfileSocial {
@@ -436,4 +444,4 @@ export const hidePost = async (
     console.error("Lỗi khi ẩn bài đăng:", error);
     return { message: "Không thể ẩn bài đăng.", status: "error" };
   }
-}; 
+};

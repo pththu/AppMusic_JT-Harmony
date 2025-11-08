@@ -21,7 +21,7 @@ const Track = sequelize.define(
         },
         name: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
         },
         lyrics: {
             type: DataTypes.TEXT,

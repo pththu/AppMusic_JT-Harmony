@@ -664,6 +664,9 @@ const ChatScreen: React.FC = () => {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white dark:bg-gray-900">
         <ActivityIndicator size="large" color="#4F46E5" />
+          <Text className="mt-2 text-gray-600 dark:text-gray-400">
+            Đang tải danh sách tin nhắn...
+          </Text>
       </SafeAreaView>
     );
   }

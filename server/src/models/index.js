@@ -211,6 +211,10 @@ ConversationMember.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 Conversation.hasMany(ConversationMember, { foreignKey: 'conversationId', as: 'Members' });
 User.hasMany(ConversationMember, { foreignKey: 'userId', as: 'Memberships' });
 
+// Post - Track (for covers)
+Post.belongsTo(Track, { foreignKey: 'originalSongId', as: 'OriginalSong' }); // Bài cover liên kết đến bài hát gốc
+Track.hasMany(Post, { foreignKey: 'originalSongId', as: 'Covers' }); // Bài hát gốc có nhiều bài cover
+
 // ================= Export ================= //
 module.exports = {
     sequelize,

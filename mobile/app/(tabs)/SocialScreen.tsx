@@ -28,9 +28,12 @@ import * as ImagePicker from "expo-image-picker";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
 import { useNavigate } from "@/hooks/useNavigate";
 import PostItem from "../../components/items/PostItem";
+import CoverItem from "../../components/items/CoverItem";
 import CommentModal from "../../components/modals/CommentModal";
 import LikeModal from "../../components/modals/LikeModal";
+import UploadCoverModal from "../../components/modals/UploadCoverModal";
 import NewPostCreator from "../../components/items/NewPostItem";
+import { createNewCover } from "../../services/coverApi";
 
 const SocialScreen = () => {
   const colorScheme = useColorScheme();
@@ -64,6 +67,12 @@ const SocialScreen = () => {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
+
+  // State cho tabs
+  const [activeTab, setActiveTab] = useState<"posts" | "covers">("posts");
+
+  // State cho Upload Cover Modal
+  const [uploadCoverModalVisible, setUploadCoverModalVisible] = useState(false);
 
   // Helper function để format thời gian
   const formatTime = (dateString) => {
@@ -109,6 +118,9 @@ const SocialScreen = () => {
     musicLink: apiPost.songId ? `Song ID: ${apiPost.songId}` : "",
     isOnline: false,
     comments: [],
+    isCover: apiPost.isCover || false,
+    originalSongId: apiPost.originalSongId,
+    OriginalSong: apiPost.OriginalSong,
   });
 
   // Hàm xử lý khi nhấn vào user avatar
@@ -126,14 +138,22 @@ const SocialScreen = () => {
   // logic tải bài đăng vào hàm useCallback
   const loadPosts = useCallback(async () => {
     try {
-      const apiPosts = await fetchPosts();
+      let apiPosts;
+      if (activeTab === "covers") {
+        // Fetch only covers when covers tab is active
+        const { fetchTopCovers } = await import("../../services/coverApi");
+        apiPosts = await fetchTopCovers();
+      } else {
+        // Fetch all posts when posts tab is active
+        apiPosts = await fetchPosts();
+      }
       const mappedPosts = apiPosts.map(mapApiPostToLocal);
       setPosts(mappedPosts);
     } catch (error) {
       console.error("Error fetching posts:", error);
       Alert.alert("Lỗi", "Không thể tải bài đăng");
     }
-  }, []);
+  }, [activeTab]);
 
   // Hàm xử lý khi vuốt xuống làm mới
   const onRefresh = useCallback(async () => {
@@ -148,20 +168,22 @@ const SocialScreen = () => {
     loadPosts().finally(() => setLoading(false));
   }, [loadPosts]);
 
-  // useEffect để lọc bài đăng khi searchQuery thay đổi
+  // useEffect để lọc bài đăng khi searchQuery thay đổi (không cần lọc covers nữa vì đã fetch riêng)
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredPosts(posts);
-    } else {
-      const filtered = posts.filter(
+    let filtered = posts;
+
+    // Lọc theo search query
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter(
         (post) =>
           post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
           post.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (post.fullName &&
             post.fullName.toLowerCase().includes(searchQuery.toLowerCase()))
       );
-      setFilteredPosts(filtered);
     }
+
+    setFilteredPosts(filtered);
   }, [searchQuery, posts]);
 
   const handleSelectMedia = async () => {
@@ -191,7 +213,7 @@ const SocialScreen = () => {
       console.error("Lỗi khi chọn media:", e);
       Alert.alert("Lỗi", "Không thể chọn media.");
     }
-  }; 
+  };
 
   // Hàm thêm bài đăng mới
   const addPost = async () => {
@@ -672,19 +694,31 @@ const SocialScreen = () => {
             <Text className="text-2xl font-extrabold text-black dark:text-white">
               Social Feed
             </Text>
-            <TouchableOpacity onPress={() => setIsSearchVisible(true)}>
-              <Icon
-                name="search"
-                size={24}
-                color={colorScheme === "dark" ? "#fff" : "#000"}
-              />
-            </TouchableOpacity>
+            <View className="flex-row items-center">
+              <TouchableOpacity
+                onPress={() => setUploadCoverModalVisible(true)}
+                className="mr-3"
+              >
+                <Icon
+                  name="plus"
+                  size={24}
+                  color={colorScheme === "dark" ? "#fff" : "#000"}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setIsSearchVisible(true)}>
+                <Icon
+                  name="search"
+                  size={24}
+                  color={colorScheme === "dark" ? "#fff" : "#000"}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </View>
 
       <FlatList
-        data={searchQuery.trim() !== "" ? filteredPosts : posts}
+        data={filteredPosts}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         // Thao tác vuốt xuống để làm mới (Pull-to-Refresh)
@@ -713,36 +747,94 @@ const SocialScreen = () => {
               handleSelectMedia={handleSelectMedia}
               addPost={addPost}
             />
+            <View className="flex-row items-center justify-between">
+              <TouchableOpacity
+                onPress={() => setActiveTab("posts")}
+                className={`px-3 py-1 rounded-l-lg ${
+                  activeTab === "posts"
+                    ? "bg-indigo-500"
+                    : "bg-gray-200 dark:bg-gray-700"
+                }`}
+              >
+                <Text
+                  className={`text-sm font-medium ${
+                    activeTab === "posts"
+                      ? "text-white"
+                      : "text-black dark:text-white"
+                  }`}
+                >
+                  Posts
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setActiveTab("covers")}
+                className={`px-3 py-1 rounded-r-lg ${
+                  activeTab === "covers"
+                    ? "bg-indigo-500"
+                    : "bg-gray-200 dark:bg-gray-700"
+                }`}
+              >
+                <Text
+                  className={`text-sm font-medium ${
+                    activeTab === "covers"
+                      ? "text-white"
+                      : "text-black dark:text-white"
+                  }`}
+                >
+                  Covers
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         }
         renderItem={({ item }) => {
-          // if (!item.userId && !item.User?.id) {
-          //   console.log("LỖI DỮ LIỆU POST THIẾU USER ID:", item);
-          // }
-
           return (
             <View className="mb-4 px-3">
-              <PostItem
-                {...item}
-                postId={item.id}
-                onPostUpdate={(type, value) =>
-                  updatePostState(item.id, type, value)
-                }
-                onCommentPress={() => openCommentModal(item.id)}
-                onSharePress={handleShare}
-                userId={item.userId || item.User?.id}
-                onUserPress={handleUserPress}
-                onLikeCountPress={openLikeModal}
-                onHidePost={(postId) => {
-                  setPosts((prevPosts) =>
-                    prevPosts.filter((post) => post.id !== postId)
-                  );
-                }}
-                onRefresh={onRefresh}
-                onEdit={undefined}
-                onDelete={() => handleDeletePost(item.id)}
-                isUserPost={item.userId === user?.id}
-              />
+              {item.isCover ? (
+                <CoverItem
+                  id={item.id}
+                  userId={item.userId}
+                  User={item.User}
+                  uploadedAt={item.uploadedAt}
+                  content={item.content}
+                  fileUrl={item.fileUrl}
+                  heartCount={item.heartCount}
+                  isLiked={item.isLiked}
+                  originalSongId={item.originalSongId}
+                  OriginalSong={item.OriginalSong}
+                  onUserPress={handleUserPress}
+                  onRefresh={onRefresh}
+                  onCommentPress={() => openCommentModal(item.id)}
+                  onSharePress={handleShare}
+                  onVoteCountPress={openLikeModal}
+                  likeCount={item.heartCount}
+                  commentCount={item.commentCount}
+                  shareCount={item.shareCount}
+                  isLikedPost={item.isLiked}
+                />
+              ) : (
+                <PostItem
+                  {...item}
+                  postId={item.id}
+                  onPostUpdate={(type, value) =>
+                    updatePostState(item.id, type, value)
+                  }
+                  onCommentPress={() => openCommentModal(item.id)}
+                  onSharePress={handleShare}
+                  userId={item.userId || item.User?.id}
+                  onUserPress={handleUserPress}
+                  onLikeCountPress={openLikeModal}
+                  onHidePost={(postId) => {
+                    setPosts((prevPosts) =>
+                      prevPosts.filter((post) => post.id !== postId)
+                    );
+                  }}
+                  onRefresh={onRefresh}
+                  onEdit={undefined}
+                  onDelete={() => handleDeletePost(item.id)}
+                  isUserPost={item.userId === user?.id}
+                />
+              )}
             </View>
           );
         }}
@@ -790,6 +882,13 @@ const SocialScreen = () => {
         visible={likeModalVisible}
         onClose={closeLikeModal}
         postId={selectedPostIdForLikes}
+      />
+
+      {/* Upload Cover Modal */}
+      <UploadCoverModal
+        visible={uploadCoverModalVisible}
+        onClose={() => setUploadCoverModalVisible(false)}
+        onCoverPosted={onRefresh}
       />
     </SafeAreaView>
   );

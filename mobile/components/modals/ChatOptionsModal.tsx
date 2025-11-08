@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Modal,
   View,
@@ -7,14 +7,15 @@ import {
   Image,
   useColorScheme,
   Alert,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+  TouchableWithoutFeedback,
+} from "react-native";
+import Icon from "react-native-vector-icons/Feather";
 
 interface ChatOptionsModalProps {
   visible: boolean;
   onClose: () => void;
   user: {
-      id: number;
+    id: number;
     username: string;
     fullName: string;
     avatarUrl: string | null;
@@ -31,21 +32,21 @@ const ChatOptionsModal: React.FC<ChatOptionsModalProps> = ({
   onDeleteConversation,
 }) => {
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = colorScheme === "dark";
 
-  const baseTextColor = isDark ? 'text-white' : 'text-black';
-  const baseIconColor = isDark ? '#ffffff' : '#000000';
-  const separatorColor = isDark ? 'border-gray-700' : 'border-gray-200';
+  const baseTextColor = isDark ? "text-white" : "text-black";
+  const baseIconColor = isDark ? "#ffffff" : "#000000";
+  const separatorColor = isDark ? "border-gray-700" : "border-gray-200";
 
   const handleDeleteConversation = () => {
     Alert.alert(
-      'Xác nhận xóa',
+      "Xác nhận xóa",
       `Bạn có chắc chắn muốn xóa cuộc trò chuyện với ${user.fullName}?`,
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: "Hủy", style: "cancel" },
         {
-          text: 'Xóa',
-          style: 'destructive',
+          text: "Xóa",
+          style: "destructive",
           onPress: () => {
             onDeleteConversation();
             onClose();
@@ -62,60 +63,59 @@ const ChatOptionsModal: React.FC<ChatOptionsModalProps> = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      {/* Vùng overlay làm mờ */}
-      <TouchableOpacity
-        className="flex-1 justify-end bg-black/50"
-        activeOpacity={1}
-        onPress={onClose}
-      >
-        {/* Modal Container */}
-        <View className="w-full bg-white dark:bg-[#0E0C1F] rounded-t-2xl shadow-2xl p-4">
-          {/* Thanh kéo (Handle) */}
-          <View className="items-center mb-4">
-            <View className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
-          </View>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View className="flex-1 justify-end bg-black/50">
+          <TouchableWithoutFeedback>
+            {/* Modal Container */}
+            <View className="w-full bg-white dark:bg-[#0E0C1F] rounded-t-2xl shadow-2xl p-4">
+              {/* Thanh kéo (Handle) */}
+              <View className="items-center mb-4">
+                <View className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+              </View>
 
-          {/* Thông tin người dùng */}
-          <View className="items-center mb-6">
-            <Image
-              source={{
-                uri: user.avatarUrl || 'https://via.placeholder.com/80',
-              }}
-              className="w-20 h-20 rounded-full mb-3"
-            />
-            <Text className={`text-xl font-bold ${baseTextColor}`}>
-              @{user.username}
-            </Text>
-            <Text className={`text-xl font-bold ${baseTextColor}`}>
-              {user.fullName}
-            </Text>
-          </View>
+              {/* Thông tin người dùng */}
+              <View className="items-center mb-6">
+                <Image
+                  source={{
+                    uri: user.avatarUrl || "https://via.placeholder.com/80",
+                  }}
+                  className="w-20 h-20 rounded-full mb-3"
+                />
+                <Text className={`text-xl font-bold ${baseTextColor}`}>
+                  @{user.username}
+                </Text>
+                <Text className={`text-xl font-bold ${baseTextColor}`}>
+                  {user.fullName}
+                </Text>
+              </View>
 
-          {/* Tùy chọn */}
-          <TouchableOpacity
-            className={`flex-row items-center p-3 border-b ${separatorColor}`}
-            onPress={() => {
-              onViewProfile();
-              onClose();
-            }}
-          >
-            <Icon name="user" size={20} color="#3b82f6" />
-            <Text className={`ml-3 text-base ${baseTextColor}`}>
-              Xem trang cá nhân
-            </Text>
-          </TouchableOpacity>
+              {/* Tùy chọn */}
+              <TouchableOpacity
+                className={`flex-row items-center p-3 border-b ${separatorColor}`}
+                onPress={() => {
+                  onViewProfile();
+                  onClose();
+                }}
+              >
+                <Icon name="user" size={20} color="#3b82f6" />
+                <Text className={`ml-3 text-base ${baseTextColor}`}>
+                  Xem trang cá nhân
+                </Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            className={`flex-row items-center p-3`}
-            onPress={handleDeleteConversation}
-          >
-            <Icon name="trash-2" size={20} color="#ef4444" />
-            <Text className={`ml-3 text-base text-red-500 font-medium`}>
-              Xóa cuộc trò chuyện
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-row items-center p-3`}
+                onPress={handleDeleteConversation}
+              >
+                <Icon name="trash-2" size={20} color="#ef4444" />
+                <Text className={`ml-3 text-base text-red-500 font-medium`}>
+                  Xóa cuộc trò chuyện
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </TouchableOpacity>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
