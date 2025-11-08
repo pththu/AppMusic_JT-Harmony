@@ -12,12 +12,12 @@ const formatTrack = (track, artist, album, videoId) => {
     spotifyId: track?.spotifyId || (!track?.spotifyId ? track.id : null) || null,
     videoId: videoId || null,
     name: track?.name || null,
-    artists: [
+    artists: artist || [
       ...track?.artists?.map(artist => ({
         spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
         name: artist?.name || null,
         imageUrl: artist?.images?.[0]?.uri || artist?.imageUrl || null
-      })) || artist || [],
+      })) || [],
     ],
     album: {
       spotifyId: track.album?.id || album?.spotifyId || null,
@@ -489,7 +489,6 @@ const getTracksFromPlaylist = async (req, res) => {
       return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong playlist này', success: false });
     }
 
-
     return res.status(200).json({
       message: 'Get tracks from playlist successful',
       data: dataFormated,
@@ -504,56 +503,34 @@ const getTracksFromPlaylist = async (req, res) => {
 
 const getTracksFromAlbum = async (req, res) => {
   try {
-    const { albumId } = req.params;
+    const { spotifyId } = req.params;
+    const dataFormated = [];
 
-    let data = await Album.findOne(
-      {
-        where: { spotifyId: albumId },
-        include: {
-          model: Track,
-          include: [
-            {
-              model: Artist,
-              as: 'artists',
-              attributes: ['id', 'name', 'spotifyId', 'imageUrl'],
-              through: { attributes: [] }
-            }
-          ]
-        }
-      });
-
-    if (data) {
-      console.log('local')
-
-      const dataFormated = []
-      for (const track of data.Tracks) {
-        const artists = [];
-        for (const artist of track.artists) {
-          artists.push(artist);
-        }
-        const itemFormat = formatTrack(track, artists, data, null);
-        dataFormated.push(itemFormat);
-      }
-
-      return res.status(200).json({
-        message: 'Lấy nhạc thành công',
-        data: dataFormated,
-        success: true
-      });
-    } else {
-      console.log('api')
-      let albumData = null;
-      Promise.all([
-        albumData = formatAlbum(await spotify.findAlbumById(albumId), null),
-        data = await spotify.getAlbumTracks(albumId)
-      ]);
-      const dataFormated = data.map(item => formatTrack(item, null, albumData, null));
-      return res.status(200).json({
-        message: 'Lấy nhạc thành công',
-        data: dataFormated,
-        success: true
-      });
+    if (!spotifyId) {
+      return res.status(400).json({ error: 'spotifyId parameter is required' });
     }
+
+    const data = await spotify.getAlbumTracks(spotifyId);
+
+    if (!data || data.length === 0) {
+      return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong album này', success: false });
+    }
+
+    for (const track of data) {
+      const artists = [];
+      for (const a of track.artists) {
+        const artist = await spotify.findArtistById(a.id);
+        artists.push(formatArtist(artist, null));
+      }
+      const itemFormat = formatTrack(track, artists, null, null);
+      dataFormated.push(itemFormat);
+    }
+
+    return res.status(200).json({
+      message: 'Lấy nhạc thành công',
+      data: dataFormated,
+      success: true
+    });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Lỗi không xác định' });
   }
@@ -911,7 +888,7 @@ const removeTrackFromPlaylist = async (req, res) => {
 const findVideoIdForTrack = async (req, res) => {
   try {
     const { trackSpotifyId } = req.params;
-    console.log(trackSpotifyId)
+    console.log('trackSpotifyId', trackSpotifyId);
     let videoData = null;
     let videoId = null;
     let row = null;
@@ -938,8 +915,11 @@ const findVideoIdForTrack = async (req, res) => {
       }
     } else {
       track = await spotify.findTrackById(trackSpotifyId);
+      console.log(track.name);
+      console.log(track.artists[0]?.name)
       videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
       videoId = videoData.videoId;
+      console.log(videoId);
       const row = await Track.create({
         spotifyId: trackSpotifyId,
         videoId: videoId,
@@ -947,8 +927,9 @@ const findVideoIdForTrack = async (req, res) => {
         playCount: 0
       })
 
+      console.log(1)
       if (!row) {
-        console.log('Không cập nhật được video Id');
+        res.status(500).json({ message: 'Failed to create track with video ID', success: false });
       }
     }
 

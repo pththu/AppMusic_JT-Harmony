@@ -40,6 +40,7 @@ export default function HomeScreen() {
   const user = useAuthStore((state) => state.user);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
   const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
 
@@ -78,7 +79,10 @@ export default function HomeScreen() {
     navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) });
   };
 
-  const handleSelectAlbum = (album) => navigate("AlbumScreen", { album: JSON.stringify(album) });
+  const handleSelectAlbum = (album) => {
+    setCurrentAlbum(album);
+    navigate("AlbumScreen", { album: JSON.stringify(album) });
+  };
 
   useEffect(() => {
     Animated.parallel([

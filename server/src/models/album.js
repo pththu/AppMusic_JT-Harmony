@@ -19,20 +19,22 @@ const Album = sequelize.define(
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false
     },
     imageUrl: {
       type: DataTypes.STRING,
-      allowNull: false,
       field: 'image_url'
     },
     totalTracks: {
       type: DataTypes.INTEGER,
       field: 'total_tracks'
     },
+    shareCount: {
+      type: DataTypes.INTEGER,
+      field: 'share_count',
+      defaultValue: 0
+    },
     releaseDate: {
       type: DataTypes.DATE,
-      allowNull: true,
       field: 'release_date'
     }
   },
@@ -41,7 +43,7 @@ const Album = sequelize.define(
     timestamps: true,
     indexes: [
       {
-        fields: ['id', 'name', 'spotify_id', 'release_date']
+        fields: ['id', 'name', 'spotify_id']
       }
     ]
   }

@@ -26,8 +26,7 @@ export const useFavoritesStore = create<FavoritesState>()(
       removeFavoriteItem: (item) => {
         const { favoriteItems } = get();
         const favoritesItemsUpdated = favoriteItems.filter(
-          (favItem) =>
-            !(favItem.itemType === item.itemType && (favItem.itemId === item.itemId || favItem.itemSpotifyId === item.itemSpotifyId))
+          (favItem) => favItem.id !== item.id
         );
         set({ favoriteItems: favoritesItemsUpdated });
       },
