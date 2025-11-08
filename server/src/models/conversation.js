@@ -16,11 +16,11 @@ const Conversation = sequelize.define(
             allowNull: false,
             defaultValue: 'private',
         },
-        name: {
+        name: { // Tên cuộc trò chuyện, chỉ cần cho nhóm
             type: DataTypes.STRING,
             allowNull: true, // Chỉ cần cho nhóm
         },
-        lastMessageId: {
+        lastMessageId: { // Tin nhắn cuối cùng trong cuộc trò chuyện
             type: DataTypes.INTEGER,
             allowNull: true,
             field: 'last_message_id',
@@ -28,7 +28,7 @@ const Conversation = sequelize.define(
     }, {
         tableName: 'conversations',
         timestamps: true,
-        indexes: [{ fields: ['type'] }],
+        indexes: [{ fields: ['type'] }], // Tạo index để tăng tốc truy vấn theo loại cuộc trò chuyện
     }
 );
 

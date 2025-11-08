@@ -28,6 +28,10 @@ router.post('/search-track', musicController.searchTracks);
 router.post('/search-playlist', musicController.searchPlaylists);
 router.post('/search-album', musicController.searchAlbums);
 router.post('/search-artist', musicController.searchArtists);
+
+// === TRACKS ROUTE ===
+router.get('/tracks', musicController.getTracks);
+
 // === YOUTUBE ROUTE ===
 
 // Ví dụ: GET /api/music/youtube/search?song=Shape%20of%20You&artist=Ed%20Sheeran

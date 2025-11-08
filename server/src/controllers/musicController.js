@@ -4,6 +4,7 @@ const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
 const { Playlist, Track, Album, Artist, PlaylistTrack, User, Genres } = require('../models');
 const Op = require('sequelize').Op;
+const { get } = require("../routes/musicRoute");
 
 const formatTrack = (track, artist, album, videoId) => {
   return {
@@ -88,12 +89,14 @@ const findSpotifyPlaylist = async (req, res) => {
   try {
     const { query } = req.query; // Lấy query từ URL, ví dụ: /spotify/playlists?query=lofi
     if (!query) {
-      return res.status(400).json({ error: 'Query parameter is required' });
+      return res.status(400).json({ error: "Query parameter is required" });
     }
     const data = await spotify.searchPlaylists(query);
     res.json(data);
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to search playlists' });
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to search playlists" });
   }
 };
 
@@ -104,7 +107,9 @@ const findArtistTopTracks = async (req, res) => {
     const data = await spotify.getArtistTopTracks(artistId);
     res.json(data.tracks);
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to get artist top tracks' });
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to get artist top tracks" });
   }
 };
 
@@ -113,12 +118,16 @@ const findYoutubeVideo = async (req, res) => {
   try {
     const { song, artist } = req.body;
     if (!song || !artist) {
-      return res.status(400).json({ error: 'Song and artist parameters are required' });
+      return res
+        .status(400)
+        .json({ error: "Song and artist parameters are required" });
     }
     const data = await youtube.searchVideo(song, artist);
     res.json(data);
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to search on YouTube' });
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to search on YouTube" });
   }
 };
 
@@ -127,31 +136,39 @@ const findAlbumById = async (req, res) => {
     const { albumId } = req.params;
     const data = await spotify.findAlbumById(albumId);
     return res.status(200).json({
-      message: 'Album retrieval successful',
+      message: "Album retrieval successful",
       data,
-      success: true
+      success: true,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to find album by ID on Spotify' });
+    res.status(500).json({
+      message: error.message || "Failed to find album by ID on Spotify",
+    });
   }
-}
+};
 
 const findPlaylistById = async (req, res) => {
   try {
     const { market } = req.body;
+    console.log(market);
     if (!market || !TOP_50_PLAYLIST_ID[market]) {
-      return res.status(400).json({ error: 'Invalid or missing market parameter' });
+      return res
+        .status(400)
+        .json({ error: "Invalid or missing market parameter" });
     }
 
-    const playlistData = await spotify.findPlaylistById(TOP_50_PLAYLIST_ID[market]);
+    const playlistData = await spotify.findPlaylistById(
+      TOP_50_PLAYLIST_ID[market]
+    );
     return res.status(200).json({
-      message: 'Playlist retrieval successful',
+      message: "Playlist retrieval successful",
       data: playlistData,
-      success: true
+      success: true,
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to find playlist by ID on Spotify' });
+    res.status(500).json({
+      message: error.message || "Failed to find playlist by ID on Spotify",
+    });
   }
 };
 
@@ -258,9 +275,10 @@ const searchTracks = async (req, res) => {
       data: dataFormated,
       success: true
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to search tracks on Spotify' });
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to search tracks on Spotify" });
   }
 };
 
@@ -304,7 +322,9 @@ const searchPlaylists = async (req, res) => {
       success: true
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to search playlists on Spotify' });
+    res.status(500).json({
+      message: error.message || "Failed to search playlists on Spotify",
+    });
   }
 };
 
@@ -352,7 +372,10 @@ const searchAlbums = async (req, res) => {
       success: true
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to search albums on Spotify: controller' });
+    res.status(500).json({
+      message:
+        error.message || "Failed to search albums on Spotify: controller",
+    });
   }
 };
 
@@ -361,7 +384,7 @@ const searchArtists = async (req, res) => {
   try {
     const { name } = req.body;
     if (!name) {
-      return res.status(400).json({ error: 'Name parameter is required' });
+      return res.status(400).json({ error: "Name parameter is required" });
     }
 
     const dataFormated = [];
@@ -396,9 +419,11 @@ const searchArtists = async (req, res) => {
       success: true
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to search artists on Spotify' });
+    res.status(500).json({
+      message: error.message || "Failed to search artists on Spotify",
+    });
   }
-}
+};
 
 const getTracksFromPlaylist = async (req, res) => {
   try {
@@ -471,7 +496,9 @@ const getTracksFromPlaylist = async (req, res) => {
       success: true
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to get tracks from playlist on Spotify' });
+    res.status(500).json({
+      message: error.message || "Failed to get tracks from playlist on Spotify",
+    });
   }
 };
 
@@ -539,7 +566,10 @@ const getPlaylistsForYou = async (req, res) => {
     const dataFormated = [];
 
     if (playlistName?.length === 0) {
-      return res.status(200).json({ message: 'Playlist name parameter is required', success: false });
+      return res.status(200).json({
+        message: "Playlist name parameter is required",
+        success: false,
+      });
     }
 
     for (const name of playlistName) {
@@ -551,16 +581,18 @@ const getPlaylistsForYou = async (req, res) => {
       dataFormated.push(formatPlaylist(playlist, null));
     }
 
-
     return res.status(200).json({
       message: 'Get personalized playlists successful',
       data: dataFormated,
       success: true
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to get personalized playlists on Spotify' });
+    res.status(500).json({
+      message:
+        error.message || "Failed to get personalized playlists on Spotify",
+    });
   }
-}
+};
 
 const getAlbumsForYou = async (req, res) => {
   try {
@@ -569,7 +601,9 @@ const getAlbumsForYou = async (req, res) => {
     const dataFormated = [];
 
     if (albumName.length === 0) {
-      return res.status(200).json({ message: 'Album name parameter is required', success: false });
+      return res
+        .status(200)
+        .json({ message: "Album name parameter is required", success: false });
     }
 
     for (const name of albumName) {
@@ -587,7 +621,9 @@ const getAlbumsForYou = async (req, res) => {
       success: true
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to get personalized albums on Spotify' });
+    res.status(500).json({
+      message: error.message || "Failed to get personalized albums on Spotify",
+    });
   }
 };
 
@@ -598,7 +634,9 @@ const getArtistsForYou = async (req, res) => {
     const dataFormated = [];
 
     if (artistName.length === 0) {
-      return res.status(200).json({ message: 'Artist name parameter is required', success: false });
+      return res
+        .status(200)
+        .json({ message: "Artist name parameter is required", success: false });
     }
 
     for (const name of artistName) {
@@ -616,7 +654,9 @@ const getArtistsForYou = async (req, res) => {
       success: true
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to get artist for you on Spotify' });
+    res.status(500).json({
+      message: error.message || "Failed to get artist for you on Spotify",
+    });
   }
 };
 
@@ -637,7 +677,9 @@ const getMyPlaylists = async (req, res) => {
       success: true
     });
   } catch (error) {
-    res.status(500).json({ message: error.message || 'Failed to get my playlists on Spotify' });
+    res.status(500).json({
+      message: error.message || "Failed to get my playlists on Spotify",
+    });
   }
 };
 
@@ -919,6 +961,49 @@ const findVideoIdForTrack = async (req, res) => {
     res.status(500).json({ message: error.message || 'Failed to find video ID for track' });
   }
 }
+// đang test
+const getTracks = async (req, res) => {
+  try {
+    const tracks = await Track.findAll({
+      include: [
+        {
+          model: Artist,
+          as: "artists",
+          attributes: ["id", "name", "spotifyId", "imageUrl"],
+          through: { attributes: [] },
+        },
+        {
+          model: Album,
+          attributes: ["id", "name", "imageUrl", "spotifyId"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    // Transform data to match mobile app expectations
+    const transformedTracks = tracks.map((track) => ({
+      id: track.id,
+      title: track.name,
+      artist:
+        track.artists && track.artists.length > 0
+          ? track.artists[0].name
+          : "Unknown Artist",
+      album: track.Album ? track.Album.name : null,
+      duration: track.duration,
+      spotifyId: track.spotifyId,
+      videoId: track.videoId,
+      imageUrl: track.Album ? track.Album.imageUrl : null,
+    }));
+
+    return res.status(200).json({
+      message: "Get tracks successful",
+      data: transformedTracks,
+      success: true,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || "Failed to get tracks" });
+  }
+};
 
 module.exports = {
   findSpotifyPlaylist,
@@ -933,6 +1018,7 @@ module.exports = {
   getAlbumsForYou,
   getArtistsForYou,
   getMyPlaylists,
+  getTracks,
   searchTracks,
   searchPlaylists,
   searchAlbums,

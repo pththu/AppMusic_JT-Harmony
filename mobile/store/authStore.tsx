@@ -38,7 +38,7 @@ const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
         // gọi khi load từ AsyncStorage xong
-        console.log("✅ Auth store rehydrated");
+        console.log(" Auth store rehydrated");
       }
     }
   )

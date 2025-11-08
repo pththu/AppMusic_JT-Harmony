@@ -10,10 +10,12 @@ import {
     View,
     useColorScheme
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
+import { useNavigate } from "@/hooks/useNavigate";
 
 interface NewPostItemProps {
-    user: { avatarUrl?: string };
+    user: { id: number; avatarUrl?: string };
     newPostText: string;
     setNewPostText: (text: string) => void;
     selectedMediaAssets: any[];
@@ -39,8 +41,14 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
 }) => {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const navigation = useNavigation();
+    const { navigate } = useNavigate();
 
     const canPost = (newPostText.trim() || selectedMediaAssets.length > 0) && !isUploading;
+
+    const handleAvatarPress = () => {
+        navigate("ProfileSocialScreen", { userId: user.id });
+    };
 
     return (
         // THẺ ĐĂNG BÀI MỚI
@@ -51,10 +59,13 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
         >
             <View className="flex-row items-start mb-2">
                 {/* Ảnh đại diện User */}
-                <Image
-                    source={{ uri: user?.avatarUrl }}
-                    className="w-12 h-12 rounded-full mr-3 border-2 border-indigo-500" 
-                />
+                <TouchableOpacity onPress={handleAvatarPress}>
+                    <Image
+                        source={{ uri: user?.avatarUrl }}
+                        className="w-12 h-12 rounded-full mr-3 border-2 border-indigo-500"
+                    />
+                </TouchableOpacity>
+                
 
                 <View className="flex-1">
                     {/* 1. INPUT NỘI DUNG */}
@@ -127,7 +138,7 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                         style={{ backgroundColor: isUploading ? '#374151' : '#4F46E5' }} 
                     >
                         {isUploading ? (
-                            <ActivityIndicator size="small" color="#fff" />
+                            <ActivityIndicator size="small" color="#4F46E5" />
                         ) : (
                             <Icon name="image" size={20} color="white" />
                         )}

@@ -68,16 +68,6 @@ const Track = sequelize.define(
       allowNull: true,
       field: 'release_date'
     }
-  },
-  {
-    tableName: 'tracks',
-    timestamps: true,
-    indexes: [
-      {
-        fields: ['id', 'name', 'spotify_id', 'album_id', 'release_date']
-      }
-    ]
-  }
 )
 
 module.exports = Track;

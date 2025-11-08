@@ -21,19 +21,17 @@ const ConversationMember = sequelize.define(
             allowNull: false,
             field: 'user_id',
         },
-        isAdmin: {
+        isAdmin: { // Xác định thành viên có phải quản trị viên nhóm không
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false,
             field: 'is_admin',
         },
-        // Dùng để đánh dấu đã đọc đến tin nhắn nào
-        lastReadMessageId: {
+        lastReadMessageId: { // Dùng để đánh dấu đã đọc đến tin nhắn nào
             type: DataTypes.INTEGER,
             allowNull: true,
             field: 'last_read_message_id',
         },
-        // Status: 'active', 'left', 'removed'
         status: {
             type: DataTypes.ENUM('active', 'left', 'removed'),
             allowNull: false,
@@ -45,7 +43,7 @@ const ConversationMember = sequelize.define(
         indexes: [
             { unique: true, fields: ['conversation_id', 'user_id'] },
             { fields: ['user_id'] },
-        ],
+        ], // Tạo index để tăng tốc truy vấn theo user_id
     }
 );
 

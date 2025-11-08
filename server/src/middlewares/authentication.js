@@ -54,7 +54,7 @@ exports.authenticateToken = async (req, res, next) => {
     }
 };
 
-exports.optionalAuthenticateToken = async (req, res, next) => {
+exports.optionalAuthenticateToken = async(req, res, next) => {
     let token;
 
     // 1. Lấy token từ Cookie ('accessToken')
@@ -73,7 +73,7 @@ exports.optionalAuthenticateToken = async (req, res, next) => {
         }
     }
 
-    // 🎯 LOG MỚI: Báo hiệu kết quả tìm kiếm Token
+    //  LOG MỚI: Báo hiệu kết quả tìm kiếm Token
     if (!token) {
         req.user = null;
         req.currentUser = null;
@@ -90,7 +90,7 @@ exports.optionalAuthenticateToken = async (req, res, next) => {
         });
 
         if (user) {
-            // 🎯 Gán THÀNH CÔNG: Đảm bảo ID là kiểu Number
+            //  Gán THÀNH CÔNG: Đảm bảo ID là kiểu Number
             req.user = {
                 id: Number(user.id), // Ép kiểu an toàn
                 username: user.username,
