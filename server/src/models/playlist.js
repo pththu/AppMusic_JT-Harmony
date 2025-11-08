@@ -17,7 +17,6 @@ const Playlist = sequelize.define(
     },
     name: {
       type: DataTypes.TEXT,
-      allowNull: false
     },
     userId: {
       type: DataTypes.INTEGER,
@@ -28,7 +27,6 @@ const Playlist = sequelize.define(
     },
     imageUrl: {
       type: DataTypes.STRING,
-      allowNull: true,
       field: 'image_url'
     },
     isPublic: {

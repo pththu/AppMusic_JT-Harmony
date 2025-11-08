@@ -25,12 +25,15 @@ import { LoginManager } from "react-native-fbsdk-next";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { usePlayerStore } from "@/store/playerStore";
+import { useFavoritesStore } from "@/store/favoritesStore";
 
 export default function ProfileScreen() {
   const settings = useContext(SettingsContext);
   const user = useAuthStore((state) => state.user);
   const loginType = useAuthStore((state) => state.loginType);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const clearPlayerStore = usePlayerStore((state) => state.clear);
+  const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error, warning } = useCustomAlert();
@@ -133,6 +136,8 @@ export default function ProfileScreen() {
         success("Đăng xuất thành công", "");
       }
       logout();
+      clearPlayerStore();
+      clearFavorites();
     } catch (error) {
       console.log(error);
     }
@@ -319,7 +324,7 @@ export default function ProfileScreen() {
                 <ThemeToggle />
               </View>
             }
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <SettingItem
             title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}

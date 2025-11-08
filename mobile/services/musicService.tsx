@@ -39,16 +39,9 @@ export const GetArtistsForYou = async (payload) => {
 
 export const GetTracksByPlaylistId = async (payload) => {
   try {
-    let response = null;
-    if (payload.type === "local") {
-      response = await axiosClient.get(
-        `/playlists/${payload.playlistId}/tracks`
-      );
-    } else if (payload.type === "spotify") {
-      response = await axiosClient.get(
-        `/music/playlist/${payload.playlistId}/tracks`
-      );
-    }
+    const response = await axiosClient.post(`music/playlist/${payload.playlistId}/tracks`, {
+      type: payload.type
+    })
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -74,6 +67,74 @@ export const GetMyPlaylists = async () => {
     throw error;
   }
 };
+
+export const GetTracks = async (payload) => {
+  try {
+    console.log('payload: ', payload);
+    const response = await axiosClient.post(`/music//search-track`, payload);
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+}
+
+export const GetVideoId = async (payload) => {
+  try {
+    const response = await axiosClient.get(`/music/track/${payload}/video-id`);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+// add
+export const AddTrackToPlaylist = async (payload) => {
+  try {
+    console.log('payload 1 api: ', payload);
+    const response = await axiosClient.post(`/music/playlist/${payload.playlistId}/add-track`, {
+      trackId: payload.trackId,
+      trackSpotifyId: payload.trackSpotifyId
+    });
+    console.log('response add 1 api: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error.message)
+    throw error;
+  }
+};
+
+export const AddTrackToPlaylistAfterConfirm = async (payload) => {
+  try {
+    console.log('payload 2 api: ', payload);
+    const response = await axiosClient.post(`/music/playlist/${payload.playlistId}/add-track-confirm`, {
+      trackId: payload.trackId,
+      trackSpotifyId: payload.trackSpotifyId
+    });
+    console.log('response add 2 api: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error.data);
+    throw error;
+  }
+}
+
+export const AddTracksToPlaylists = async (payload) => {
+  try {
+    console.log(payload);
+    const response = await axiosClient.post(`/music/playlist/add-tracks`, {
+      playlistIds: payload.playlistIds,
+      trackIds: payload.trackSpotifyIds,
+    })
+    console.log('response add multiple api: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+}
 
 // create
 export const CreatePlaylist = async (payload) => {
@@ -142,6 +203,42 @@ export const UpdatePlaylist = async (payload) => {
   }
 };
 
+export const SharePlaylist = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/playlists/share`, {
+      playlistId: payload.playlistId,
+      playlistSpotifyId: payload.playlistSpotifyId
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const ShareTrack = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/tracks/share`, {
+      trackId: payload.trackId,
+      trackSpotifyId: payload.trackSpotifyId
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const UpdatePlaylistPrivacy = async (payload) => {
+  try {
+    const response = await axiosClient.put(`/playlists/${payload.playlistId}/update-privacy`);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 // delete
 export const DeletePlaylist = async (playlistId) => {
   try {
@@ -153,6 +250,18 @@ export const DeletePlaylist = async (playlistId) => {
     console.log(error.message);
     throw error;
   }
+}
+
+export const RemoveTrackFromPlaylist = async (payload) => {
+  try {
+    const response = await axiosClient.delete(`/music/playlist/${payload.playlistId}/remove-track/${payload.playlistTrackId}`);
+    console.log('response remove track', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
 };
 
 // đang test

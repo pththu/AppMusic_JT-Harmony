@@ -138,14 +138,13 @@ exports.deleteUser = async(req, res) => {
     }
 };
 
-exports.linkSocialAccount = async(req, res) => {
-    try {
-        const { userInfor, provider } = req.body;
-        const user = await User.findByPk(req.user.id);
-        console.log('user', user.dataValues)
-        if (!user) {
-            return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
-        }
+exports.linkSocialAccount = async (req, res) => {
+  try {
+    const { userInfor, provider } = req.body;
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
+    }
 
         if (provider !== 'google' && provider !== 'facebook') {
             return res.status(200).json({ message: 'Provider không hợp lệ', success: false });

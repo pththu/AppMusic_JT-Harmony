@@ -81,7 +81,7 @@ export default function AuthScreen() {
 
       if (response.success) {
         login(response.user, loginType, response.user.accessToken);
-        showAlertSuccess('Đăng nhập thành công', `${response.message}`);
+        showAlertSuccess('Đăng nhập thành công');
         navigate('Main');
       }
 
@@ -129,7 +129,7 @@ export default function AuthScreen() {
               LoginManager.logOut();
               return;
             }
-            success('Đăng nhập thành công', `${response.message}`);
+            success('Đăng nhập thành công');
             login(response.user, loginType, response.user.accessToken);
             navigate('Main');
           }
@@ -170,7 +170,7 @@ export default function AuthScreen() {
           activeOpacity={0.7}
         >
           <AntDesign name="google" size={20} color={colorScheme === "dark" ? "white" : "black"} />
-          <Text className={`text-base font-semibold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+          <Text className={`text-base font-semibold ml-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Đăng nhập với Google
           </Text>
         </TouchableOpacity>
@@ -180,7 +180,7 @@ export default function AuthScreen() {
           activeOpacity={0.7}
         >
           <Icon name="facebook" size={20} color={colorScheme === "dark" ? "white" : "black"} />
-          <Text className={`text-base font-semibold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+          <Text className={`text-base font-semibold ml-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Đăng nhập với Facebook
           </Text>
         </TouchableOpacity>
@@ -193,7 +193,7 @@ export default function AuthScreen() {
           activeOpacity={0.7}
         >
           <Icon name="person-add" size={20} color="black" />
-          <Text className="text-black font-semibold text-lg">Đăng ký</Text>
+          <Text className="text-black font-semibold text-lg ml-2">Đăng ký</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

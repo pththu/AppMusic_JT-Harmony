@@ -33,7 +33,7 @@ const AlbumScreen = () => {
       if (albumData) {
         const response = await GetTracksByAlbumId(albumData.spotifyId);
         if (response.success) {
-          response.data.map(track => {
+          response.data?.map(track => {
             track.imageUrl = albumData.imageUrl;
           })
           setTracks(response.data);
@@ -104,21 +104,21 @@ const AlbumScreen = () => {
             zIndex: -1,
           }}
         />
-        <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}>
-          <View className="flex-row justify-between items-center h-14 px-5">
-            <TouchableOpacity onPress={() => router.back()} className="p-1">
-              <Icon name="arrow-back-outline" size={28} color={iconColor} />
-            </TouchableOpacity>
-            <Animated.Text
-              style={{ opacity: headerTitleOpacity }}
-              className={`flex-1 text-center font-bold text-lg ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}
-              numberOfLines={1}
-            >
-              {album?.name}
-            </Animated.Text>
-            <View className="w-8" />
-          </View>
-        </SafeAreaView>
+        {/* <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}> */}
+        <View className="flex-row justify-between items-center h-14 px-5">
+          <TouchableOpacity onPress={() => router.back()} className="p-1">
+            <Icon name="arrow-back-outline" size={28} color={iconColor} />
+          </TouchableOpacity>
+          <Animated.Text
+            style={{ opacity: headerTitleOpacity }}
+            className={`flex-1 text-center font-bold text-lg ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}
+            numberOfLines={1}
+          >
+            {album?.name}
+          </Animated.Text>
+          <View className="w-8" />
+        </View>
+        {/* </SafeAreaView> */}
       </View>
       <Animated.ScrollView
         className="flex-1"
@@ -184,7 +184,7 @@ const AlbumScreen = () => {
           </View>
         </View>
         <View className="px-4">
-          <Text className="text-black dark:text-white text-xl font-bold mb-4">
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-bold mb-4`}>
             Danh sách bài hát
           </Text>
           {isLoading ? (

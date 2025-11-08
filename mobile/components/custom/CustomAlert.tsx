@@ -7,8 +7,8 @@ import {
   Animated,
   Dimensions,
   TouchableWithoutFeedback,
+  useColorScheme,
 } from 'react-native';
-import { useColorScheme } from '@/components/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
 import { AlertConfig, AlertButton } from '@/types/alert';
 import { DEFAULT_ALERT_BUTTONS, ALERT_ANIMATIONS } from '@/constants/AlerConfig';
@@ -116,10 +116,10 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     let baseClass = 'flex-1 py-4 justify-center items-center';
 
     // Background colors based on theme
-    const bgWhite = isDark ? 'bg-gray-900' : 'bg-gray-300';
+    const bgWhite = isDark ? 'bg-gray-900' : 'bg-gray-200';
     const bgGray = isDark ? 'bg-gray-500' : 'bg-gray-500';
-    const bgRed = isDark ? 'bg-red-500' : 'bg-red-300';
-    const bgGreen = isDark ? 'bg-green-500' : 'bg-green-300';
+    const bgRed = isDark ? 'bg-red-500' : 'bg-red-500';
+    const bgGreen = isDark ? 'bg-green-500' : 'bg-green-500';
 
     baseClass += ` ${bgWhite}`;
 
@@ -152,23 +152,23 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
   };
 
   const getButtonTextStyle = (button: AlertButton) => {
-    let textClass = 'text-base font-semibold';
+    let textClass = 'text-md font-semibold';
 
     switch (button.style) {
       case 'cancel':
-        return textClass + (isDark ? ' text-gray-100' : ' text-gray-700');
+        return textClass + (isDark ? ' text-gray-100' : ' text-white');
       case 'destructive':
-        return textClass + (isDark ? ' text-white' : ' text-red-700');
+        return textClass + (isDark ? ' text-white' : ' text-white');
       default:
         return textClass + (isDark ? ' text-white' : ' text-green-700');
     }
   };
 
   const buttons = config.buttons || DEFAULT_ALERT_BUTTONS;
-  const containerBg = isDark ? 'bg-gray-800' : 'bg-gray-100';
+  const containerBg = isDark ? 'bg-gray-800' : 'bg-white';
   const titleColor = isDark ? 'text-white' : 'text-gray-900';
-  const messageColor = isDark ? 'text-gray-300' : 'text-gray-600';
-  const borderColor = isDark ? 'border-gray-600' : 'border-gray-200';
+  const messageColor = isDark ? 'text-gray-300' : 'text-gray-800';
+  const borderColor = isDark ? 'border-gray-600' : 'border-gray-100';
 
   return (
     <Modal
@@ -179,7 +179,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
     >
       <TouchableWithoutFeedback onPress={handleBackdropPress}>
         <Animated.View
-          className="flex-1 justify-center items-center px-6"
+          className="flex-1 justify-center items-center px-4"
           style={[
             { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)' },
             { opacity: opacityAnim }
@@ -205,12 +205,12 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ config, onHide }) => {
               )}
 
               {/* Content */}
-              <View className="px-6 pb-6 items-center">
-                <Text className={`text-xl font-bold ${titleColor} text-center mb-3`}>
+              <View className="px-4 pb-2 items-center">
+                <Text className={`text-md font-semibold ${titleColor} text-center mb-3`}>
                   {config.title}
                 </Text>
                 {config.message && (
-                  <Text className={`text-base ${messageColor} text-center leading-6`}>
+                  <Text className={`text-md ${messageColor} text-center leading-6`}>
                     {config.message}
                   </Text>
                 )}

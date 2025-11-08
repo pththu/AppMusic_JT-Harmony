@@ -13,6 +13,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { da } from "date-fns/locale";
+import useAuthStore from "@/store/authStore";
 
 
 
@@ -39,17 +40,21 @@ const PlaylistOptionModal = ({
   onAddToPlaylist = () => { },
   onShare = () => { },
   onDownload = () => { },
+  onTogglePrivacy = () => { },
   onEdit = () => { },
   onDelete = () => { },
   onAddTrack = () => { },
   onAddToQueue = () => { },
 }) => {
 
+  const user = useAuthStore((state) => state.user);
   const colorScheme = useColorScheme();
   const animationDuration = 350;
   const slideAnim = useRef(new Animated.Value(500)).current; // slideAnim: 0 = hiện, 500 = ẩn
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const [actuallyVisible, setActuallyVisible] = useState(isVisible);
+
+  console.log('data', data)
 
   useEffect(() => {
     setActuallyVisible(true);
@@ -109,28 +114,29 @@ const PlaylistOptionModal = ({
               <View className="w-12 h-0.5 bg-gray-500 rounded-full self-center mb-4" />
               <View className="flex-row items-center mb-4 px-2">
                 <Image
-                  source={{ uri: data.imageUrl }}
+                  source={{ uri: data?.imageUrl }}
                   className="w-16 h-16 rounded-lg mr-4"
                   resizeMode="cover"
                 />
                 <View className="flex-1">
                   <Text className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`} >
-                    {data.name}
+                    {data?.name}
                   </Text>
                   <Text className={`text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                    {data?.totalTracks || 0} bài hát • tạo bởi {data?.owner || 'không xác định'}
+                    {data?.totalTracks || 0} bài hát • tạo bởi {data?.owner?.name || 'không xác định'}
                   </Text>
                 </View>
               </View>
 
               <View className={`border-t ${colorScheme === 'dark' ? 'border-gray-600' : 'border-gray-200'} mb-4`}>
-                <OptionItem text="Chỉnh sửa playlist" iconName="edit-3" onPress={onEdit} colorScheme={colorScheme} />
+                {data?.id && <OptionItem text="Chỉnh sửa playlist" iconName="edit-3" onPress={onEdit} colorScheme={colorScheme} />}
                 <OptionItem text="Thêm vào playlist khác" iconName="plus-circle" onPress={onAddToPlaylist} colorScheme={colorScheme} />
                 <OptionItem text="Thêm vào hàng đợi" iconName="list" onPress={onAddToQueue} colorScheme={colorScheme} />
-                <OptionItem text="Thêm bài hát" iconName="plus" onPress={onAddTrack} colorScheme={colorScheme} />
+                {data?.id && <OptionItem text="Thêm bài hát" iconName="plus" onPress={onAddTrack} colorScheme={colorScheme} />}
                 <OptionItem text="Tải xuống" iconName="download-cloud" onPress={onDownload} colorScheme={colorScheme} />
-                <OptionItem text="Chia sẻ" iconName="share-2" onPress={onShare} colorScheme={colorScheme} />
-                <OptionItem text="Xóa playlist" iconName="trash-2" onPress={onDelete} isDestructive={true} colorScheme={colorScheme} />
+                {data?.owner === user.id && <OptionItem text={data?.isPublic ? "Đặt về trạng thái riêng tư" : "Đặt về trạng thái công khai"} iconName="lock" onPress={onTogglePrivacy} colorScheme={colorScheme} />}
+                {data?.isPublic && <OptionItem text="Chia sẻ" iconName="share-2" onPress={onShare} colorScheme={colorScheme} />}
+                {data?.id && <OptionItem text="Xóa playlist" iconName="trash-2" onPress={onDelete} isDestructive={true} colorScheme={colorScheme} />}
               </View>
 
               <TouchableOpacity

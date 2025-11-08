@@ -16,7 +16,7 @@ export default function CategoryItem({ name, icon, color, onPress }: CategoryIte
       style={{ backgroundColor: color }}
       onPress={onPress}
     >
-      <Icon name={icon} size={24} color="#fff" className="mb-1" />
+      <Icon name={icon} size={24} color="#fff"/>
       <Text className="text-white font-bold text-xs">{name}</Text>
     </TouchableOpacity>
   );

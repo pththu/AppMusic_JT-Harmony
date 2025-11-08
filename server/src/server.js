@@ -99,22 +99,22 @@ app.use(
 
 // Danh sách các route yêu cầu xác thực và không yêu cầu xác thực
 const protectedRoutes = [
-  // 'favorites', // Yêu thích
-  // 'history', // Lịch sử nghe nhạc
-  "notifications", // Thông báo
-  "playlists", // Playlist cá nhân
-  "comments", // Comment (cần đăng nhập mới comment được)
-  // 'genres', // Xem thể loại nhạc
-  // 'artists', // Xem thông tin nghệ sĩ
-  // 'albums', // Xem album
-  // 'search', // Tìm kiếm công khai
-  // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
-  "conversations",
-  "upload", // Upload hình ảnh, file
-  "music",
-  // 'genres',    // Xem thể loại nhạc
-  // 'track',        // Xem bài hát (public), upload bài hát (private)
-  // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
+    'favorites', // Yêu thích
+    'histories', // Lịch sử nghe nhạc
+    'notifications', // Thông báo
+    'playlists', // Playlist cá nhân
+    'comments', // Comment (cần đăng nhập mới comment được)
+    // 'genres', // Xem thể loại nhạc
+    // 'artists', // Xem thông tin nghệ sĩ
+    // 'albums', // Xem album
+    // 'search', // Tìm kiếm công khai
+    // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
+    'conversations',
+    'upload', // Upload hình ảnh, file
+    'music',
+    // 'genres',    // Xem thể loại nhạc
+    'tracks',        // Xem bài hát (public), upload bài hát (private)
+    // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
 ];
 // const protectedRoutes = ['albums', 'songs', 'playlists', 'genres', 'follows', 'notifications', 'recommendations', 'history', 'downloads', 'conversations'];
 const publicRoutes = ["auth", "users", "posts"]; // posts được xử lý riêng
@@ -148,20 +148,20 @@ publicRoutes.forEach((route) => {
 
 // Start server
 async function startServer() {
-  try {
-    // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
-    //await sequelize.sync({ alter: true });
-    // await sequelize.sync();
-    // console.log("✅ Database synchronized successfully");
-    // await seedDatabase();
+    try {
+        // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
+        // await sequelize.sync({ alter: true });
+        // // await sequelize.sync();
+        // console.log('✅ Database synchronized successfully')
+        // await seedDatabase();
 
-    server.listen(process.env.PORT || 3000, () => {
-      console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);
-    });
-  } catch (e) {
-    console.error("❌ Server startup error:", e.message);
-    process.exit(1);
-  }
+        server.listen(process.env.PORT || 3000, () => {
+            console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);
+        });
+    } catch (e) {
+        console.error('❌ Server startup error:', e.message);
+        process.exit(1);
+    }
 }
 
 // Gọi hàm khởi động server

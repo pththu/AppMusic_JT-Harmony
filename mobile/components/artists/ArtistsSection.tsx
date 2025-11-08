@@ -22,7 +22,7 @@ const ArtistsSection = ({ artists }) => {
         className="rounded-xl relative"
       >
         <Image
-          source={{ uri: item.image }}
+          source={{ uri: item?.imageUrl }}
           style={{ width: screenWidth - 32, height: screenWidth - 32 }}
           className="absolute"
         />
@@ -34,10 +34,10 @@ const ArtistsSection = ({ artists }) => {
           </View>
           <View className="flex-row justify-between items-end">
             <View>
-              <Text className="text-white text-xl font-bold">{item.name}</Text>
+              <Text className="text-white text-xl font-bold">{item?.name}</Text>
             </View>
             <TouchableOpacity className="bg-white py-2 px-6 rounded-full">
-              <Text className="text-black font-bold">Follow</Text>
+              <Text className="text-black font-bold">Xem</Text>
             </TouchableOpacity>
           </View>
         </View>

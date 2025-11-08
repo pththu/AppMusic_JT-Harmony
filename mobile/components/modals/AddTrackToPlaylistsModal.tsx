@@ -1,3 +1,5 @@
+// components/modals/AddTrackToPlaylistsModal.js
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,14 +12,14 @@ import {
   StyleSheet,
   Image,
 } from "react-native";
-import React, { useState, useMemo } from "react"; // Thêm useMemo
 import Icon from "react-native-vector-icons/Ionicons";
 import { usePlayerStore } from "@/store/playerStore";
 
+// Component PlaylistItem (Sao chép từ AddToAnotherPlaylistModal)
 const PlaylistItem = ({ playlist, isSelected, onToggle, colorScheme }) => {
   const textColor = colorScheme === "dark" ? "text-white" : "text-black";
   const subTextColor = colorScheme === "dark" ? "text-gray-400" : "text-gray-600";
-  const primaryColor = "#22c55e"; // Đặt màu xanh lá
+  const primaryColor = "#22c55e";
 
   return (
     <Pressable
@@ -38,8 +40,6 @@ const PlaylistItem = ({ playlist, isSelected, onToggle, colorScheme }) => {
           </Text>
         </View>
       </View>
-
-      {/* Thay đổi Checkbox */}
       <View
         className={`w-6 h-6 rounded border-2 justify-center items-center`}
         style={{ borderColor: isSelected ? primaryColor : (colorScheme === "dark" ? "#555" : "#bbb") }}
@@ -52,11 +52,13 @@ const PlaylistItem = ({ playlist, isSelected, onToggle, colorScheme }) => {
   );
 };
 
-const AddToAnotherPlaylistModal = ({
+
+const AddTrackToPlaylistsModal = ({
   isVisible,
   setIsVisible,
-  data,
-  onAddToPlaylist, 
+  trackToAdd, // Bài hát đang được chọn
+  currentPlaylistIdToExclude, // ID của playlist hiện tại để lọc ra
+  onAddToPlaylist, // Hàm này nhận MẢNG ID
   onCreateNewPlaylist = () => console.log('Tạo playlist mới'),
 }) => {
   const colorScheme = useColorScheme();
@@ -80,7 +82,7 @@ const AddToAnotherPlaylistModal = ({
 
   const handleAdd = () => {
     if (selectedPlaylistIds.length > 0) {
-      onAddToPlaylist(selectedPlaylistIds);
+      onAddToPlaylist(selectedPlaylistIds); // Gửi mảng ID về
       setIsVisible(false);
       setSelectedPlaylistIds([]);
     }
@@ -88,10 +90,11 @@ const AddToAnotherPlaylistModal = ({
 
   const filteredPlaylists = useMemo(() => {
     return myPlaylists
-      .filter(p => p.id !== data.id)
+      .filter(p => p.id !== currentPlaylistIdToExclude) // Lọc playlist hiện tại
       .filter(p => p.name.toLowerCase().includes(searchText.toLowerCase()));
-  }, [myPlaylists, data.id, searchText]);
+  }, [myPlaylists, currentPlaylistIdToExclude, searchText]);
 
+  const artistName = trackToAdd?.artists?.map(a => a?.name).join(', ');
 
   return (
     <Modal
@@ -108,8 +111,8 @@ const AddToAnotherPlaylistModal = ({
           onPress={() => { }}
           className={`w-full h-[70%] ${modalBgColor} rounded-t-2xl p-5`}
         >
+          {/* Header */}
           <View className={`flex-col pb-4 border-b ${colorScheme === "dark" ? "border-gray-700/50" : "border-gray-200"}`}>
-
             <View className="flex-row items-center justify-between mb-4">
               <Text className={`text-xl font-bold ${textColor}`}>
                 Thêm vào Playlist
@@ -120,7 +123,6 @@ const AddToAnotherPlaylistModal = ({
                 </Text>
               </TouchableOpacity>
             </View>
-
             <View className={`flex-row items-center rounded-lg p-2`} style={{ backgroundColor: inputBgColor }}>
               <Icon name="search" size={20} color="#888" />
               <TextInput
@@ -133,34 +135,33 @@ const AddToAnotherPlaylistModal = ({
             </View>
           </View>
 
-          {/* thông tin danh sách phát hiện tại */}
+          {/* Thông tin bài hát đang thêm */}
           <View className="flex-row items-end gap-2 mt-4 mb-2">
-            <Image source={{ uri: data?.imageUrl }} className="w-16 h-16 rounded-lg" />
-            <View>
-              <Text className={`text-lg font-semibold mt-2 ${textColor}`} numberOfLines={1}>
-                {data?.name}
+            <Image source={{ uri: trackToAdd?.imageUrl }} className="w-16 h-16 rounded-lg" />
+            <View className="flex-1">
+              <Text className={`text-lg font-semibold ${textColor}`} numberOfLines={1}>
+                {trackToAdd?.name}
               </Text>
-              <Text className={`text-sm mb-1 ${colorScheme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                ({data?.totalTracks || 0} bài hát)
+              <Text className={`text-sm mb-1 ${colorScheme === "dark" ? "text-gray-400" : "text-gray-600"}`} numberOfLines={1}>
+                {artistName}
               </Text>
             </View>
           </View>
 
-          <View>
-            <Text className={`text-md font-semibold mt-4 mb-2 ${textColor}`}>
-              Chọn danh sách phát
-            </Text>
-          </View>
+          <Text className={`text-md font-semibold mt-4 mb-2 ${textColor}`}>
+            Chọn danh sách phát
+          </Text>
+
+          {/* Danh sách playlist */}
           <View className="flex-1">
             <FlatList
-              data={filteredPlaylists} // Dùng danh sách đã lọc
-              keyExtractor={(item, index) => item.id.toString()} // Sửa keyExtractor
+              data={filteredPlaylists}
+              keyExtractor={(item) => item.id.toString()}
               showsVerticalScrollIndicator={false}
               className="mt-2 flex-1"
               renderItem={({ item }) => (
                 <PlaylistItem
                   playlist={item}
-                  // SỬA: Kiểm tra xem ID có nằm trong mảng đã chọn không
                   isSelected={selectedPlaylistIds.includes(item.id)}
                   onToggle={handleToggleSelection}
                   colorScheme={colorScheme}
@@ -176,7 +177,7 @@ const AddToAnotherPlaylistModal = ({
             />
           </View>
 
-          {/* Các nút hành động */}
+          {/* Nút hành động */}
           <View className={`flex-row mt-4 pt-4 border-t ${colorScheme === "dark" ? "border-gray-700/50" : "border-gray-200"}`}>
             <TouchableOpacity
               onPress={() => setIsVisible(false)}
@@ -187,14 +188,11 @@ const AddToAnotherPlaylistModal = ({
                 Hủy
               </Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               onPress={handleAdd}
-              // SỬA: Vô hiệu hóa nếu không có ID nào được chọn
               disabled={selectedPlaylistIds.length === 0}
               className="flex-1 py-3 items-center rounded-full ml-2"
               style={{
-                // SỬA: Cập nhật màu dựa trên độ dài mảng
                 backgroundColor: selectedPlaylistIds.length > 0 ? primaryColor : (isDarkMode ? '#0f4021' : '#a7f3d0')
               }}
             >
@@ -209,4 +207,4 @@ const AddToAnotherPlaylistModal = ({
   );
 };
 
-export default AddToAnotherPlaylistModal;
+export default AddTrackToPlaylistsModal;
