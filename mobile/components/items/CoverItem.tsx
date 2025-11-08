@@ -320,11 +320,6 @@ const CoverItem: React.FC<CoverItemProps> = ({
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* Có thể thêm hiển thị số lượng bình luận nếu có prop commentCount */}
-      {/* <Text className="text-gray-500 dark:text-gray-400 text-xs mt-2 ml-4">
-        {commentCount || 0} bình luận
-      </Text> */}
     </View>
   );
 };

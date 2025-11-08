@@ -12,7 +12,7 @@ const screenWidth = Dimensions.get('window').width;
 
 const ArtistsSection = ({ artists }) => {
   const renderArtistCard = ({ item }) => (
-    <View className="mb-6">
+    <View className="mb-6 mr-2">
       <View
         style={{
           width: screenWidth - 32,

@@ -89,9 +89,6 @@ export default function SongScreen() {
   const [covers, setCovers] = useState<any[]>([]);
   const [loadingCovers, setLoadingCovers] = useState(false);
 
-  const primaryIconColor = theme === 'dark' ? 'white' : 'black';
-  const secondaryIconColor = theme === 'dark' ? '#888' : 'gray';
-
   // Load covers khi component mount
   React.useEffect(() => {
     const loadCovers = async () => {
@@ -298,7 +295,7 @@ export default function SongScreen() {
     }
   }, []);
 
-<!--     ???? -->
+  // ???
   const handleViewAllCovers = () => {
     // Navigate to SocialScreen with covers filter
     navigate("SocialScreen", { filter: "covers", songId: currentTrack.id });
@@ -447,7 +444,7 @@ export default function SongScreen() {
               <Text className="text-gray-600 dark:text-gray-400 text-base">Xem tất cả</Text>
             </TouchableOpacity>
           </View>
-          {covers.map((cover, index) => (
+          {/* {covers.map((cover, index) => (
             <CoverItem
               key={cover.id || index}
               item={cover}
@@ -461,7 +458,7 @@ export default function SongScreen() {
                 console.log('Vote for cover:', cover.id);
               }}
             />
-          ))}
+          ))} */}
         </View>
       )}
 

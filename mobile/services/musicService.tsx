@@ -262,7 +262,6 @@ export const RemoveTrackFromPlaylist = async (payload) => {
     throw error;
   }
 }
-};
 
 // đang test
 export const fetchTracks = async () => {
