@@ -431,6 +431,7 @@ const getTracksFromPlaylist = async (req, res) => {
     const { type } = req.body;
     let playlist = null;
     let data = [];
+    let track = null;
     const dataFormated = [];
     if (type === 'local') {
       playlist = await Playlist.findByPk(playlistId, {
@@ -445,7 +446,7 @@ const getTracksFromPlaylist = async (req, res) => {
           let album = null;
           let artist = [];
           if (spotifyId) {
-            let track = await Track.findOne({
+            track = await Track.findOne({
               where: { spotifyId },
               include: [
                 { model: Album },
@@ -454,19 +455,20 @@ const getTracksFromPlaylist = async (req, res) => {
             });
 
             const idTemp = track?.id || null;
-
-            if (!track || !track.name) {
+            if (!track || !track?.name) {
               track = await spotify.findTrackById(spotifyId);
               if (idTemp) {
                 track.tempId = idTemp;
               }
+
             } else {
               album = track.Album;
-              artist = [];
-              for (const a of track.artists) {
-                artist.push(a);
-              }
             }
+            artist = [];
+            for (const a of track?.artists) {
+              artist.push(formatArtist(a, null));
+            }
+
             const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
             itemFormat.playlistTrack = {
               id: uniquePlaylistTrackId

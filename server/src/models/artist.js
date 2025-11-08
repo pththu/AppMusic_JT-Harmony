@@ -18,7 +18,6 @@ const Artist = sequelize.define(
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false
     },
     imageUrl: {
       type: DataTypes.STRING,

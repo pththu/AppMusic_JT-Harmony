@@ -201,9 +201,11 @@ export default function SongScreen() {
           trackId: track?.id,
           trackSpotifyId: track?.spotifyId
         });
+        console.log(response.data)
         if (response.success) {
           success('Đã chia sẻ');
           currentTrack.id = response.data.trackId;
+          setCurrentTrack(currentTrack);
           updateTrack(currentTrack);
         }
       } else if (result.action === Share.dismissedAction) {
@@ -286,7 +288,7 @@ export default function SongScreen() {
 
   useEffect(() => {
     console.log('current', currentTrack)
-    console.log('fav list', favoriteItems);
+    // console.log('fav list', favoriteItems);
     if (favoriteItems) {
       const isFavorite = favoriteItems.some(
         (item) => item?.itemType === 'track' && (item?.itemSpotifyId === currentTrack?.spotifyId || (currentTrack?.id !== null && item?.itemId === currentTrack?.id))
@@ -363,19 +365,23 @@ export default function SongScreen() {
           </Text>
         </View>
         <View className="flex-row">
-          <TouchableOpacity className="mr-4 p-2" onPress={() => {
-            if (isFavorite) {
-              handleUnFavorite(currentTrack);
-            } else {
-              handleFavorite(currentTrack);
-            }
-          }}>
+          <TouchableOpacity
+            className="mr-4 p-4"
+            onPress={() => {
+              if (isFavorite) {
+                handleUnFavorite(currentTrack);
+              } else {
+                handleFavorite(currentTrack);
+              }
+            }}
+            activeOpacity={0.5}
+          >
             <Icon name={isFavorite ? "favorite" : "favorite-border"} size={20} color={isFavorite ? '#BF0413' : primaryIconColor} />
           </TouchableOpacity>
-          <TouchableOpacity className="mr-4 p-2">
+          <TouchableOpacity className="mr-4 p-4" activeOpacity={0.5}>
             <Icon name="download" size={20} color={primaryIconColor} />
           </TouchableOpacity>
-          <TouchableOpacity className="p-2" onPress={() => handleShareTrack(currentTrack)}>
+          <TouchableOpacity className="p-4" onPress={() => handleShareTrack(currentTrack)} activeOpacity={0.5}>
             <Icon name="share" size={20} color={primaryIconColor} />
           </TouchableOpacity>
         </View>
@@ -462,16 +468,16 @@ export default function SongScreen() {
         </View>
       )}
 
-      <LyricsSection />
-      <ArtistsSection artists={currentTrack.artists} />
+
     </View>
   );
 
   return (
     // <SafeAreaView className="flex-1">
-    <ScrollView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4 pt-4`}>
+    <ScrollView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'}`}
+    >
       {isLoading && (
-        <View className="absolute top-0 right-0 left-0 z-10 bg-black/50 justify-center items-center"
+        <View className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/50 justify-center items-center"
           style={{
             height: screenHeight
           }}
@@ -479,16 +485,19 @@ export default function SongScreen() {
           <ActivityIndicator size="large" color="#22c55e" />
         </View>
       )}
-      <ListHeader />
-      {
-        queue.slice(0, 5)
-          .map((item, index) => (
-            <View key={index.toString().concat(item.spotifyId)}>
-              {renderUpNextItem({ item, index })}
-            </View>
-          ))
-      }
-      <ListFooter />
+      <View className="px-4 pt-4">
+        <ListHeader />
+        {
+          queue.slice(0, 5)
+            .map((item, index) => (
+              <View key={index.toString().concat(item.spotifyId)}>
+                {renderUpNextItem({ item, index })}
+              </View>
+            ))
+        }
+        <LyricsSection />
+      </View>
+      <ArtistsSection artists={currentTrack.artists} onPress={() => { }} />
     </ScrollView>
     // </SafeAreaView>
   );

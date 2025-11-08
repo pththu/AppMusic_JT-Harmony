@@ -63,11 +63,25 @@ exports.shareTrack = async (req, res) => {
     }
 
     if (!trackId) {
+      if (trackSpotifyId) {
+        const existingTrack = await Track.findOne({ where: { spotifyId: trackSpotifyId } });
+        if (existingTrack) {
+          existingTrack.shareCount += 1;
+          const row = await existingTrack.save();
+          if (!row) {
+            return res.status(500).json({ error: 'Không thể cập nhật số lần chia sẻ' });
+          }
+          return res.status(200).json({
+            message: 'Đã chia sẻ bài hát',
+            data: { trackId: existingTrack.id },
+            success: true
+          });
+        }
+      }
       const response = await Track.create({
         spotifyId: trackSpotifyId,
         shareCount: 1
       })
-
       if (!response) {
         return res.status(500).json({ error: 'Không thể tạo bài hát để chia sẻ' });
       }

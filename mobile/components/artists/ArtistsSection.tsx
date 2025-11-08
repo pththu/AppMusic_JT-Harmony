@@ -3,44 +3,37 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   Dimensions,
   FlatList,
+  ImageBackground,
 } from 'react-native';
 
 const screenWidth = Dimensions.get('window').width;
 
-const ArtistsSection = ({ artists }) => {
+const ArtistsSection = ({ artists, onPress = () => { } }) => {
   const renderArtistCard = ({ item }) => (
-    <View className="mb-6 mr-2">
+    <View className="mb-6 mx-4 rounded-xl overflow-hidden">
       <View
         style={{
           width: screenWidth - 32,
           height: screenWidth - 32,
           overflow: 'hidden',
         }}
-        className="rounded-xl relative"
       >
-        <Image
-          source={{ uri: item?.imageUrl }}
-          style={{ width: screenWidth - 32, height: screenWidth - 32 }}
-          className="absolute"
-        />
-        <View className="absolute inset-0 bg-black opacity-30"></View>
-
-        <View className="flex-1 justify-end p-4">
-          <View className="absolute top-4 left-4">
-            <Text className="text-white text-xl font-bold">Artists</Text>
-          </View>
+        <ImageBackground
+          source={{ uri: item?.imageUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png' }}
+          className="w-full h-full justify-end rounded-lg"
+          resizeMode="cover"
+        >
           <View className="flex-row justify-between items-end">
             <View>
-              <Text className="text-white text-xl font-bold">{item?.name}</Text>
+              <Text className="text-white text-xl font-bold m-4">{item?.name}</Text>
             </View>
-            <TouchableOpacity className="bg-white py-2 px-6 rounded-full">
+            <TouchableOpacity className="bg-white py-2 px-6 rounded-full m-4" onPress={onPress}>
               <Text className="text-black font-bold">Xem</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ImageBackground>
       </View>
     </View>
   );

@@ -28,9 +28,11 @@ export default function MiniPlayer() {
   const isAuthScreen = segments[0] === "(auth)";
   const isSongScreen = segments[1] === "SongScreen";
   const isQueueScreen = segments[1] === "QueueScreen";
+  const isProfileSocial = segments[1] === "ProfileSocialScreen";
+  const isChatScreen = segments[1] === "ChatScreen";
   const isTabScreen = segments[0] === "(tabs)";
 
-  const isVisible = !!currentTrack && !isAuthScreen && !isSongScreen && !isQueueScreen;
+  const isVisible = !!currentTrack && !isAuthScreen && !isSongScreen && !isQueueScreen && !isProfileSocial && !isChatScreen;
 
   const handlePlayPrevious = () => {
     if (!currentTrack || currentIndex === 0) return;

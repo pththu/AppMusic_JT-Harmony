@@ -317,11 +317,11 @@ const SocialScreen = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                content: newContent,
-                fileUrl: newFileUrls,
-                songId: newSongId,
-              }
+              ...post,
+              content: newContent,
+              fileUrl: newFileUrls,
+              songId: newSongId,
+            }
             : post
         )
       );
@@ -750,36 +750,32 @@ const SocialScreen = () => {
             <View className="flex-row items-center justify-between">
               <TouchableOpacity
                 onPress={() => setActiveTab("posts")}
-                className={`px-3 py-1 rounded-l-lg ${
-                  activeTab === "posts"
+                className={`px-3 py-1 rounded-l-lg ${activeTab === "posts"
                     ? "bg-indigo-500"
                     : "bg-gray-200 dark:bg-gray-700"
-                }`}
+                  }`}
               >
                 <Text
-                  className={`text-sm font-medium ${
-                    activeTab === "posts"
+                  className={`text-sm font-medium ${activeTab === "posts"
                       ? "text-white"
                       : "text-black dark:text-white"
-                  }`}
+                    }`}
                 >
                   Posts
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setActiveTab("covers")}
-                className={`px-3 py-1 rounded-r-lg ${
-                  activeTab === "covers"
+                className={`px-3 py-1 rounded-r-lg ${activeTab === "covers"
                     ? "bg-indigo-500"
                     : "bg-gray-200 dark:bg-gray-700"
-                }`}
+                  }`}
               >
                 <Text
-                  className={`text-sm font-medium ${
-                    activeTab === "covers"
+                  className={`text-sm font-medium ${activeTab === "covers"
                       ? "text-white"
                       : "text-black dark:text-white"
-                  }`}
+                    }`}
                 >
                   Covers
                 </Text>

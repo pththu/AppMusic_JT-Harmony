@@ -394,7 +394,6 @@ const CreateOne = async (req, res) => {
             ]
           });
 
-          console.log('no')
           const idTemp = track?.id || null;
 
           if (!track || !track.name) {
@@ -405,17 +404,37 @@ const CreateOne = async (req, res) => {
             }
           } else {
             console.log('temp')
-            album = track.Album;
-            artist = [];
-            for (const a of track.artists) {
-              artist.push(a);
+            if (!track.Album) {
+              console.log('teadsga')
+              album = null;
+              const albumSpotify = await spotify.findAlbumById(track.spotifyAlbumId);
+              if (albumSpotify) {
+                album = formatAlbum(albumSpotify, null);
+              }
+            } else {
+              console.log('chae')
+              album = track.Album ? track.Album.toJSON() : null;
+            }
+            if (!track.artists || track.artists.length === 0) {
+              artist = [];
+              for (const artistSpotifyId of track.spotifyArtistIds || []) {
+                const artistSpotify = await spotify.findArtistById(artistSpotifyId);
+                if (artistSpotify) {
+                  artist.push(formatArtist(artistSpotify, null));
+                  console.log(artistSpotify.name)
+                }
+              }
+            } else {
+              artist = [];
+              for (const a of track.artists) {
+                artist.push(a);
+              }
             }
           }
           const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
           itemFormat.favoriteItem = {
             id: favorite.id
           };
-          console.log('tracks')
           dataFormated.push({
             ...favorite.toJSON(),
             item: itemFormat
@@ -445,7 +464,7 @@ const CreateOne = async (req, res) => {
         }
         break;
       case 'album':
-        const album = await spotify.findAlbumById(itemSpotifyId);
+        album = await spotify.findAlbumById(itemSpotifyId);
         if (album) {
           const itemFormat = formatAlbum(album, null);
           itemFormat.favoriteItem = {

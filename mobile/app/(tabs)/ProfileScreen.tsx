@@ -292,7 +292,7 @@ export default function ProfileScreen() {
         </Pressable> */}
 
         {/* Các nút Thư viện (Library) */}
-        <View className="flex-row justify-between mb-4">
+        <View className="flex-row justify-between mb-4 flex-wrap">
           <LibraryItemButton
             title="... Bài hát"
             icon="favorite"
@@ -329,14 +329,6 @@ export default function ProfileScreen() {
           <SettingItem
             title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
             onPress={() => navigate("MusicLanguage")}
-          />
-          <SettingItem
-            title={`Chất lượng phát trực tuyến: ${settings?.streamingQuality}`}
-            onPress={() => navigate("StreamingQuality")}
-          />
-          <SettingItem
-            title={`Chất lượng tải xuống: ${settings?.downloadQuality}`}
-            onPress={() => navigate("DownloadQuality")}
           />
           <TouchableOpacity
             className={`py-4`}

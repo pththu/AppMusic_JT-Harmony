@@ -267,8 +267,7 @@ export default function PlaylistScreen() {
 
     playPlaylist(listTrack, 0);
     const queueData = listTrack.filter((item, index) => {
-      if (index > 0)
-        return item;
+      if (index > 0) return item;
     });
     setQueue(queueData);
     setCurrentTrack(listTrack[0])
