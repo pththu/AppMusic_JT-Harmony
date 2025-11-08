@@ -615,7 +615,7 @@ const AlbumScreen = () => {
         <AlbumOptionModal
           isVisible={modalVisible}
           setIsVisible={setModalVisible}
-          album={album}
+          album={currentAlbum}
           onShare={handleShareAlbum}
           onAddToQueue={handleAddToQueue}
           onDownload={handleDownloadAlbum}
@@ -627,7 +627,7 @@ const AlbumScreen = () => {
         <AddToAnotherPlaylistModal
           isVisible={modalAddToPlaylistVisible}
           setIsVisible={setModalAddToPlaylistVisible}
-          data={album} // Truyền 'album' để hiển thị thông tin nếu cần (modal này có thể không dùng)
+          data={currentAlbum} // Truyền 'album' để hiển thị thông tin nếu cần (modal này có thể không dùng)
           onAddToPlaylist={handleConfirmAddToPlaylist}
           onCreateNewPlaylist={() => {
             setModalAddToPlaylistVisible(false);

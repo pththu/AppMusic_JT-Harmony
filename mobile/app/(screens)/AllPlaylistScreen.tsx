@@ -493,7 +493,7 @@ export default function AllPlaylistScreen() {
     }
   }, [selectedPlaylist]);
 
-  const currentData = activeTab === "myPlaylists" ? myPlaylists : savedPlaylists;
+  const currentData = activeTab === "myPlaylists" ? myPlaylists : (activeTab === "playlists" ? savedPlaylists : []);
 
   const TabButton = ({ title, tabName }) => {
     const isActive = activeTab === tabName;
@@ -522,7 +522,7 @@ export default function AllPlaylistScreen() {
         </TouchableOpacity>
         <View>
           <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-semibold mb-1`}>
-            Danh sách phát
+            Mục yêu thích của tôi
           </Text>
           <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
             {user.fullName}
@@ -546,11 +546,12 @@ export default function AllPlaylistScreen() {
 
       <View className="flex-row mb-4">
         <TabButton title="Của tôi" tabName="myPlaylists" />
-        <TabButton title="Đã lưu" tabName="saved" />
+        <TabButton title="Playlist" tabName="playlists" />
+        <TabButton title="Album" tabName="albums" />
       </View>
 
       <Text className={`mb-4 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
-        {currentData.length} playlists
+        {currentData.length} {activeTab === 'myPlaylists' ? 'danh sách phát' : activeTab === 'playlists' ? 'danh sách phát đã lưu' : 'album'}
       </Text>
 
       {isFavoriteLoading && (
