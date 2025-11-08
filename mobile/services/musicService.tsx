@@ -82,7 +82,7 @@ export const GetTracks = async (payload) => {
 export const GetVideoId = async (payload) => {
   try {
     const response = await axiosClient.get(`/music/track/${payload}/video-id`);
-    console.log(response.data);
+    console.log('tim video id', response.data);
     return response.data;
   } catch (error) {
     console.log(error);
@@ -228,6 +228,21 @@ export const ShareTrack = async (payload) => {
     throw error;
   }
 };
+
+export const ShareAlbum = async (payload) => {
+  try {
+    console.log('payload', payload)
+    const response = await axiosClient.post(`/albums/share`, {
+      albumId: payload.albumId,
+      albumSpotifyId: payload.albumSpotifyId
+    });
+    console.log('res: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
 
 export const UpdatePlaylistPrivacy = async (payload) => {
   try {

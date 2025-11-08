@@ -52,8 +52,8 @@ export default function GlobalPlayer() {
         if (currentTime) {
           latestState.setPlaybackPosition(currentTime);
         }
-      } catch (error) {
-        console.error("Lỗi khi lấy thời gian Youtube:", error);
+      } catch (err) {
+        console.log("Lỗi khi lấy thời gian Youtube:", err);
       }
     }
   };
@@ -122,9 +122,10 @@ export default function GlobalPlayer() {
             currentTrack.videoId = response.data;
             console.log(response.data)
             updateCurrentTrack(currentTrack)
-            setVideoIdTemp(videoIdTemp);
+            setVideoIdTemp(response.data);
             return true;
           }
+          console.log('aaaaaaaaa')
         } catch (err) {
           console.log(err)
           return false;
@@ -135,7 +136,7 @@ export default function GlobalPlayer() {
       return false;
     }
     updateVideoId();
-    console.log(currentTrack)
+    console.log('videoIdTemp')
 
     if (currentTrack && videoIdTemp && playerRef.current) {
       playerRef.current.seekTo(0, true);

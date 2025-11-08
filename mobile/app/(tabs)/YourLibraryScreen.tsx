@@ -25,7 +25,7 @@ const libraryItems = [
   },
   {
     id: '3',
-    title: 'Danh sách phát',
+    title: 'Mục yêu thích',
     icon: 'list',
     screen: 'AllPlaylistScreen',
     color: '#82d8ff',

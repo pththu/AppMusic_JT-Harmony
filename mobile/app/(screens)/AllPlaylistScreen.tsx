@@ -11,6 +11,7 @@ import {
   Animated,
   ActivityIndicator,
   Share,
+  Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { playlistData } from "@/constants/data";
@@ -31,6 +32,8 @@ import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistM
 import { set } from "date-fns";
 import { GetFavoritePlaylists, RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
+
+const screenHeight = Dimensions.get("window").height;
 
 const PlaylistItem = ({ item, index, onPress, onPressOptions, primaryIconColor, colorScheme }) => {
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -112,6 +115,7 @@ export default function AllPlaylistScreen() {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isOptionModalVisible, setIsOptionModalVisible] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [isAddToOtherPlaylistVisible, setIsAddToOtherPlaylistVisible] = useState(false);
   const [isAddPlaylistModalVisible, setIsAddPlaylistModalVisible] = useState(false);
 
@@ -223,8 +227,8 @@ export default function AllPlaylistScreen() {
           }
         }
       }
-    } catch (error) {
-      error('Không thể tạo playlist. Vui lòng thử lại!', error.message);
+    } catch (err) {
+      error('Không thể tạo playlist. Vui lòng thử lại!', err.message);
     } finally {
       setNewName("");
       setNewDescription("");
@@ -252,8 +256,8 @@ export default function AllPlaylistScreen() {
         success('Cập nhật playlist thành công!');
         updateMyPlaylists(response.playlist);
       }
-    } catch (error) {
-      error('Không thể cập nhật playlist. Vui lòng thử lại!', error.message);
+    } catch (err) {
+      error('Không thể cập nhật playlist. Vui lòng thử lại!', err.message);
     } finally {
       setImage(null);
       setName("");
@@ -339,8 +343,8 @@ export default function AllPlaylistScreen() {
         },
         () => { }
       );
-    } catch (error) {
-      console.log('Lỗi khi xóa playlist:', error);
+    } catch (err) {
+      console.log('Lỗi khi xóa playlist:', err);
       error('Lỗi xóa playlist', 'Đã có lỗi xảy ra khi xóa playlist. Vui lòng thử lại sau.');
     }
     setIsOptionModalVisible(false);
@@ -363,28 +367,33 @@ export default function AllPlaylistScreen() {
   const handleRemoveFromSaved = async () => {
     if (!selectedPlaylist) return;
     try {
-      console.log('un')
-      setIsLoading(true);
-      console.log(favoriteItems[5])
-      const favoriteItem = favoriteItems.find(
-        (item) => item.itemType === 'playlist' && ((selectedPlaylist?.id !== null && item?.itemId === selectedPlaylist?.id) || item.itemSpotifyId === selectedPlaylist?.spotifyId)
-      );
+      const favoriteItem = favoriteItems.find((item) => {
+        if (item?.itemType === 'playlist') {
+          if ((selectedPlaylist?.id && (item?.itemId === selectedPlaylist?.id))
+            || (selectedPlaylist?.spotifyId && (item?.itemSpotifyId === selectedPlaylist?.spotifyId))) {
+            return true;
+          }
+        }
+        return false;
+      });
 
       if (!favoriteItem) {
         error('Playlist không có trong mục yêu thích.');
         return;
       }
 
-      console.log('id', favoriteItem);
-
       const response = await RemoveFavoriteItem(favoriteItem.id);
       if (response.success) {
         removeFavoriteItem(favoriteItem);
-        setIsLoading(false);
+        setSavedPlaylists((prev) => prev.filter((pl) => (
+          (pl.id && pl.id !== selectedPlaylist.id) || (pl.spotifyId && pl.spotifyId !== selectedPlaylist.spotifyId)
+        )));
       }
     } catch (err) {
       console.log(err);
-      error('Lỗi khi xóa bài hát khỏi mục yêu thích.');
+      error('Lỗi khi xóa playlist khỏi mục yêu thích.');
+    } finally {
+      setIsFavoriteLoading(false);
     }
 
     setIsOptionModalVisible(false);
@@ -436,7 +445,7 @@ export default function AllPlaylistScreen() {
         // Dismissed
       }
     } catch (err) {
-      console.error('Lỗi khi chia sẻ:', err);
+      console.log('Lỗi khi chia sẻ:', err);
       error('Lỗi khi chia sẻ playlist. Vui lòng thử lại sau.');
     }
     setIsOptionModalVisible(false);
@@ -444,11 +453,8 @@ export default function AllPlaylistScreen() {
   };
 
   useEffect(() => {
-    console.log('favorite: ', favoriteItems);
     const fetchFavoritePlaylists = async () => {
-      console.log('test')
       const response = await GetFavoritePlaylists();
-      console.log(response.data[0])
       if (response.success) {
         setSavedPlaylists(response.data);
       }
@@ -487,7 +493,7 @@ export default function AllPlaylistScreen() {
     }
   }, [selectedPlaylist]);
 
-  const currentData = activeTab === "myPlaylists" ? myPlaylists : savedPlaylists;
+  const currentData = activeTab === "myPlaylists" ? myPlaylists : (activeTab === "playlists" ? savedPlaylists : []);
 
   const TabButton = ({ title, tabName }) => {
     const isActive = activeTab === tabName;
@@ -516,7 +522,7 @@ export default function AllPlaylistScreen() {
         </TouchableOpacity>
         <View>
           <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-semibold mb-1`}>
-            Danh sách phát
+            Mục yêu thích của tôi
           </Text>
           <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
             {user.fullName}
@@ -540,13 +546,23 @@ export default function AllPlaylistScreen() {
 
       <View className="flex-row mb-4">
         <TabButton title="Của tôi" tabName="myPlaylists" />
-        <TabButton title="Đã lưu" tabName="saved" />
+        <TabButton title="Playlist" tabName="playlists" />
+        <TabButton title="Album" tabName="albums" />
       </View>
 
       <Text className={`mb-4 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
-        {currentData.length} playlists
+        {currentData.length} {activeTab === 'myPlaylists' ? 'danh sách phát' : activeTab === 'playlists' ? 'danh sách phát đã lưu' : 'album'}
       </Text>
 
+      {isFavoriteLoading && (
+        <View className="absolute top-0 right-0 left-0 z-10 bg-black/50 justify-center items-center"
+          style={{
+            height: screenHeight
+          }}
+        >
+          <ActivityIndicator size="large" color="#22c55e" />
+        </View>
+      )}
       {currentData ? (
         <FlatList
           data={currentData}
@@ -594,7 +610,7 @@ export default function AllPlaylistScreen() {
           setImage={setImage}
           isPublic={isPublic}
           setIsPublic={setIsPublic}
-          onPickImage={handlePickerImage}
+          onPickImage={() => handlePickerImage(image, setImage)}
           onCreatePlaylist={handleAddPlaylist}
         />}
 
@@ -610,7 +626,7 @@ export default function AllPlaylistScreen() {
           setImage={setImage}
           isPublic={isPublic}
           setIsPublic={setIsPublic}
-          onPickImage={() => handlePickerImage(newImage, setNewImage)}
+          onPickImage={() => () => handlePickerImage(image, setImage)}
           onUpdatePlaylist={handleUpdatePlaylist}
         />}
 

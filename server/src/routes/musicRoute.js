@@ -13,7 +13,7 @@ router.get('/mine/playlists', musicController.getMyPlaylists);
 
 router.get('/track/:trackSpotifyId/video-id', musicController.findVideoIdForTrack);
 
-router.get('/album/:albumId/tracks', musicController.getTracksFromAlbum);
+router.get('/album/:spotifyId/tracks', musicController.getTracksFromAlbum);
 
 router.post('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
 router.post('/playlist-for-you', musicController.getPlaylistsForYou);
