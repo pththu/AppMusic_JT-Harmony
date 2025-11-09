@@ -599,7 +599,6 @@ const getAlbumsForYou = async (req, res) => {
   }
 };
 
-
 const getArtistsForYou = async (req, res) => {
   try {
     const { artistNames = [], genres = [] } = req.body;

@@ -8,7 +8,10 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Share, // Thêm StyleSheet để tạo bóng
+  Share,
+  Pressable,
+  useColorScheme,
+  Dimensions, // Thêm StyleSheet để tạo bóng
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import HeaderBackButton from '@/components/button/HeaderBackButton';
@@ -25,28 +28,41 @@ import { useFavoritesStore } from '@/store/favoritesStore';
 import AddTrackToPlaylistsModal from '@/components/modals/AddTrackToPlaylistsModal';
 import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
 import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
+import ArtistOptionModal from '@/components/modals/ArtistOptionModal';
+import { FollowArtist, GetFollowersOfArtist, UnfollowArtist } from '@/services/followService';
+import { set } from 'date-fns';
+
+const screenHeight = Dimensions.get("window").height;
 
 export default function ArtistScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { info, error, success, confirm, warning } = useCustomAlert();
 
   const user = useAuthStore((state) => state.user);
   const currentArtist = useArtistStore((state) => state.currentArtist);
   const isFollowing = useArtistStore((state) => state.isFollowing);
-  const totalFollowers = useArtistStore((state) => state.totalFollowers);
+  const followers = useArtistStore((state) => state.followers);
   const popularTracks = useArtistStore((state) => state.popularTracks);
   const albums = useArtistStore((state) => state.albums);
   const listTrack = usePlayerStore((state) => state.listTrack);
+  const artistFollowed = useArtistStore((state) => state.artistFollowed);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
+  const isShuffled = usePlayerStore((state) => state.isShuffled);
   const setPopularTracks = useArtistStore((state) => state.setPopularTracks);
   const setAlbums = useArtistStore((state) => state.setAlbums);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
+  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
   const setIsFollowing = useArtistStore((state) => state.setIsFollowing);
+  const setFollowers = useArtistStore((state) => state.setFollowers);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setQueue = usePlayerStore((state) => state.setQueue);
+  const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
+  const addArtistFollowed = useArtistStore((state) => state.addArtistFollowed);
+  const removeArtistFollowed = useArtistStore((state) => state.removeArtistFollowed);
   const addFollower = useArtistStore((state) => state.addFollower);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
@@ -58,12 +74,17 @@ export default function ArtistScreen() {
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [artistModalVisible, setArtistModalVisible] = useState(false);
   const [songModalVisible, setSongModalVisible] = useState(false);
+  const [artistOptionModalVisible, setArtistOptionModalVisible] = useState(false);
   const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
   const [isShowingAllTracks, setIsShowingAllTracks] = useState(false);
+
+  const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
 
   const [isLoading, setIsLoading] = useState({
     topTracks: true,
     albums: true,
+    following: false,
+    screen: true,
   });
 
   const handleSongAddToPlaylist = () => {
@@ -211,16 +232,104 @@ export default function ArtistScreen() {
     setQueue(queueData);
   };
 
+  const handlePlayTopTracks = () => {
+    if (popularTracks.length === 0) {
+      warning("Không có bài hát để phát.");
+      return;
+    }
 
+    playPlaylist(popularTracks, 0);
+    const queueData = popularTracks.slice(1);
+    setCurrentTrack(popularTracks[0]);
+    setQueue(queueData);
+  }
+
+  const handleToggleShuffle = () => {
+    if (isShuffled) {
+      unShuffleQueue();
+    } else {
+      shuffleQueue();
+    }
+    setIsShuffled(!isShuffled);
+  };
+
+  const handleToggleFollow = async () => {
+    if (isFollowing) {
+      handleUnfollow();
+    } else {
+      handleFollow();
+    }
+  };
+
+  const handleFollow = async () => {
+    try {
+      setIsLoading((prev) => ({ ...prev, following: true }));
+      const response = await FollowArtist({
+        artistId: currentArtist?.id || null,
+        artistSpotifyId: currentArtist?.spotifyId
+      });
+
+      if (response.success) {
+        if (!currentArtist?.id) {
+          currentArtist.id = response.data.artistId;
+          setCurrentArtist(currentArtist);
+        }
+        addArtistFollowed(response.data);
+        currentArtist.totalFollower += 1;
+        setCurrentArtist(currentArtist);
+        setIsFollowing(true);
+      }
+    } catch (err) {
+      console.log(err.message);
+      error('Lỗi khi theo dõi nghệ sĩ. Vui lòng thử lại sau.');
+    } finally {
+      setIsLoading((prev) => ({ ...prev, following: false }));
+    }
+  };
+
+  const handleUnfollow = async () => {
+    try {
+      setIsLoading((prev) => ({ ...prev, following: true }));
+      const followId = followers.find(f => f.followerId === user.id)?.id;
+      if (!followId) {
+        error('Bạn chưa theo dõi nghệ sĩ này.');
+        return;
+      }
+      const response = await UnfollowArtist({
+        followId: followId
+      });
+      if (response.success) {
+        setIsFollowing(false);
+        currentArtist.totalFollower -= 1;
+        setCurrentArtist(currentArtist);
+        removeArtistFollowed(followId);
+      }
+    } catch (err) {
+      console.log(err.message)
+      error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau.');
+    } finally {
+      setIsLoading((prev) => ({ ...prev, following: false }));
+    }
+  }
+
+  const handleShare = async () => {
+
+  };
+
+  const handleBlock = async () => {
+
+  };
 
   useEffect(() => {
+    setIsFollowing(false);
+    setIsLoading((prev) => ({ ...prev, screen: true }));
     const fetchTopTracks = async () => {
       try {
         const response = await GetTopTracksOfArtist(currentArtist.spotifyId);
         if (response.success === true) {
           setPopularTracks(response.data);
           setIsLoading((prev) => ({ ...prev, topTracks: false }));
-
+          setListTrack(response.data);
         }
       } catch (err) {
         console.log('Error fetching top tracks:', err);
@@ -243,17 +352,19 @@ export default function ArtistScreen() {
     if (currentArtist) {
       fetchTopTracks();
       fetchAlbums();
+      setIsLoading((prev) => ({ ...prev, screen: false }));
     }
   }, [currentArtist]);
 
-  const displayedTracks = useMemo(() => {
-    if (isShowingAllTracks) {
-      return popularTracks; // Hiển thị tất cả
+  useEffect(() => {
+    setIsFollowing(false);
+    const artist = artistFollowed.find(a => a.artistSpotifyId === currentArtist.spotifyId);
+    if (artist) {
+      setIsFollowing(true);
     }
-    return popularTracks.slice(0, 5); // Chỉ hiển thị 5
-  }, [popularTracks, isShowingAllTracks]);
+  }, [artistFollowed]);
 
-  const renderSongItem = ({ item }: { item: any }) => (
+  const renderSongItem = ({ item, index }) => (
     <SongItem
       item={item}
       image={item.imageUrl || ''}
@@ -288,6 +399,15 @@ export default function ArtistScreen() {
 
   return (
     <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F]">
+      {isLoading.following && (
+        <View className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/50 justify-center items-center"
+          style={{
+            height: screenHeight
+          }}
+        >
+          <ActivityIndicator size="large" color="#22c55e" />
+        </View>
+      )}
       <View className="relative w-full h-80">
         <Image
           source={{ uri: currentArtist?.imageUrl }}
@@ -311,18 +431,24 @@ export default function ArtistScreen() {
         <View className="flex-row items-center mb-6 gap-2">
           <CustomButton
             title={isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
-            onPress={() => { }}
+            onPress={() => handleToggleFollow()}
             iconName={isFollowing ? 'checkmark' : 'add'}
           />
           <CustomButton
             title=""
-            onPress={() => { }}
+            onPress={() => setArtistOptionModalVisible(true)}
             iconName="ellipsis-vertical"
           />
           <View className="flex-1" />
+          <Pressable onPress={handleToggleShuffle}>
+            <Icon
+              name="shuffle"
+              color={isShuffled ? '#22c55e' : primaryIconColor}
+              size={28} />
+          </Pressable>
           <CustomButton
             title=""
-            onPress={() => { }}
+            onPress={handlePlayTopTracks}
             iconName="play"
           />
         </View>
@@ -345,7 +471,6 @@ export default function ArtistScreen() {
           </View>
         ) : (
           <FlatList
-            // +++ 3. CẬP NHẬT DATA ĐỂ HIỂN THỊ +++
             data={isShowingAllTracks ? popularTracks : popularTracks.slice(0, 5)}
             keyExtractor={(item) => item.spotifyId || item.id.toString()}
             renderItem={renderSongItem}
@@ -412,6 +537,18 @@ export default function ArtistScreen() {
           setIsVisible={setArtistModalVisible}
           artists={selectedTrack.artists}
           onSelectArtist={handleSelectArtist}
+        />
+      )}
+
+      {artistOptionModalVisible && (
+        <ArtistOptionModal
+          isVisible={artistOptionModalVisible}
+          setIsVisible={setArtistOptionModalVisible}
+          data={currentArtist}
+          isFollowing={isFollowing}
+          onFollow={handleFollow}
+          onShare={handleShare}
+          onBlock={handleBlock}
         />
       )}
     </ScrollView>

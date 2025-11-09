@@ -34,10 +34,12 @@ export default function LikedSongsScreen() {
 
   const user = useAuthStore((state) => state.user);
   const listTrack = usePlayerStore((state) => state.listTrack);
+  const isShuffled = usePlayerStore((state) => state.isShuffled);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setQueue = usePlayerStore((state) => state.setQueue);
+  const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
@@ -53,7 +55,6 @@ export default function LikedSongsScreen() {
 
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [favoriteTracks, setFavoriteTracks] = useState([]);
-  const [isShuffle, setIsShuffle] = useState(false);
   const [songModalVisible, setSongModalVisible] = useState(false);
   const [artistModalVisible, setArtistModalVisible] = useState(false);
   const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
@@ -96,12 +97,12 @@ export default function LikedSongsScreen() {
   };
 
   const handleToggleShuffle = () => {
-    if (isShuffle) {
+    if (isShuffled) {
       unShuffleQueue();
     } else {
       shuffleQueue();
     }
-    setIsShuffle(!isShuffle);
+    setIsShuffled(!isShuffled);
   };
 
   const handleSongOptionsPress = (track) => {
@@ -332,7 +333,7 @@ export default function LikedSongsScreen() {
         <Pressable onPress={handleToggleShuffle}>
           <Icon
             name="shuffle"
-            color={isShuffle ? '#22c55e' : primaryIconColor}
+            color={isShuffled ? '#22c55e' : primaryIconColor}
             size={28} />
         </Pressable>
         <Pressable onPress={handlePlayLikedSongs}>

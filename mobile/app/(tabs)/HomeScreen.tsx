@@ -28,6 +28,7 @@ import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { GetFavoriteItemsGrouped } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { useArtistStore } from "@/store/artistStore";
+import { GetArtistFollowed } from "@/services/followService";
 
 export default function HomeScreen() {
   const { navigate } = useNavigate();
@@ -40,7 +41,7 @@ export default function HomeScreen() {
   const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
   const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
   const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
-
+  const setArtistFollowed = useArtistStore((state) => state.setArtistFollowed);
   const colorScheme = useColorScheme();
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
@@ -211,6 +212,17 @@ export default function HomeScreen() {
       }
     }
 
+    const fetchArtistFollowed = async () => {
+      try {
+        const response = await GetArtistFollowed();
+        if (response.success) {
+          setArtistFollowed(response.data);
+        }
+      } catch (error) {
+        console.log('error fetch follow artist', error);
+      }
+    }
+
     fetchPlaylistsForYou()
     fetchAlbumsForYou()
     fetchTrendingPlaylists()
@@ -218,6 +230,7 @@ export default function HomeScreen() {
     fetchArtistsForYou()
     fetchMyPlaylists();
     fetchFavoritesItem();
+    fetchArtistFollowed();
   }, []);
 
   return (

@@ -15,4 +15,10 @@ router.get('/', controller.getAllFollows)
 // router.put('/update/:id', controller.updateFollow)
 // router.delete('/remove/:id', controller.deleteFollow)
 
+router.get('/mine/followed-artists', controller.getArtistFollowedByUser);
+
+router.post('/artist/follower', controller.getFollowerOfArtist);
+router.post('/follow-artist', controller.createFollowArtist)
+router.delete('/unfollow-artist/:id', controller.deleteFollowArtist)
+
 module.exports = router

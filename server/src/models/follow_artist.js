@@ -20,21 +20,25 @@ const FollowArtist = sequelize.define(
     },
     artistId: { // artist duoc theo doi
       type: DataTypes.INTEGER,
-      allowNull: false,
       field: 'artist_id'
     },
-    followedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      field: 'followed_at',
+    artistSpotifyId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: 'artist_spotify_id',
     }
   },
   {
     tableName: 'follow_artists',
     timestamps: true,
+    uniqueKeys: {
+      unique_follow: {
+        fields: ['follower_id', 'artist_id']
+      }
+    },
     indexes: [
       {
-        fields: ['follower_id', 'artist_id']
+        fields: ['id', 'follower_id', 'artist_id']
       }
     ]
   }

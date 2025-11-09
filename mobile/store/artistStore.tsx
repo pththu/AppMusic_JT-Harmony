@@ -5,17 +5,22 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 interface ArtistState {
   currentArtist: any | null;
   isFollowing: boolean;
-  totalFollowers: number;
   popularTracks: any[];
   albums: any[];
+  followers: any[];
+  artistFollowed: any[];
 
+  setArtistFollowed: (artists: any[]) => void;
   setIsFollowing: (following: boolean) => void;
   setCurrentArtist: (artist: any) => void;
-  setTotalFollowers: (count: number) => void;
   setPopularTracks: (tracks: any[]) => void;
+  setFollowers: (followers: any[]) => void;
   setAlbums: (albums: any[]) => void;
-  addFollower: () => void;
-  removeFollower: () => void;
+  addArtistFollowed: (artist: any) => void;
+  removeArtistFollowed: (followId: number) => void;
+  toggleFollow: (boolean) => void;
+  addFollower: (follower: any) => void;
+  removeFollower: (followId: any) => void;
   clearArtistStore: () => void;
 }
 
@@ -24,23 +29,37 @@ export const useArtistStore = create<ArtistState>()(
     (set, get) => ({
       currentArtist: null,
       isFollowing: false,
-      totalFollowers: 0,
       popularTracks: [],
       albums: [],
+      artistFollowed: [],
+      followers: [],
 
+      setArtistFollowed: (artists) => set({ artistFollowed: artists }),
+      addArtistFollowed: (artist) => {
+        set((state) => ({
+          artistFollowed: [...state.artistFollowed, artist],
+        }))
+      },
+      removeArtistFollowed: (followId) => set((state) => ({
+        artistFollowed: state.artistFollowed.filter(a => a.id !== followId),
+      })),
       setCurrentArtist: (artist) => set({ currentArtist: artist }),
       setIsFollowing: (following) => set({ isFollowing: following }),
-      setTotalFollowers: (count) => set({ totalFollowers: count }),
+      setFollowers: (followers) => set({ followers: followers }),
       setPopularTracks: (tracks) => set({ popularTracks: tracks }),
       setAlbums: (albums) => set({ albums: albums }),
-      addFollower: () => set((state) => ({ totalFollowers: state.totalFollowers + 1 })),
-      removeFollower: () => set((state) => ({
-        totalFollowers: state.totalFollowers > 0 ? state.totalFollowers - 1 : 0
+      toggleFollow: (following) => set({ isFollowing: following }),
+      addFollower: (follower) => {
+        set((state) => ({
+          followers: [...state.followers, follower],
+        }))
+      },
+      removeFollower: (followId) => set((state) => ({
+        followers: state.followers.filter(f => f.id !== followId),
       })),
       clearArtistStore: () => set({
         currentArtist: null,
         isFollowing: false,
-        totalFollowers: 0,
         popularTracks: [],
         albums: [],
       }),

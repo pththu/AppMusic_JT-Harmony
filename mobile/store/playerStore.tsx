@@ -42,6 +42,7 @@ interface PlayerState {
   setMiniPlayerVisible: (visible: boolean) => void;
   setDuration: (duration: number) => void;
   setRepeatMode: (mode: 'none' | 'one' | 'all') => void;
+  setIsShuffled: (shuffled: boolean) => void;
 
   // playlst
   addToMyPlaylists: (playlist: any) => void;
@@ -294,6 +295,9 @@ export const usePlayerStore = create<PlayerState>()(
       setRepeatMode: (mode) => {
         set({ repeatMode: mode });
       },
+      setIsShuffled: (shuffled) => {
+        set({ isShuffled: shuffled });
+      },
       // Dùng cho nút play/pause ở SongScreen, MiniPlayer
       togglePlayPause: () => {
         set((state) => ({ isPlaying: !state.isPlaying }))
@@ -336,7 +340,7 @@ export const usePlayerStore = create<PlayerState>()(
         set({
           queue: otherTracks,
           isShuffled: true,
-          currentIndex: 0 
+          currentIndex: 0
         });
       },
       unShuffleQueue: () => {

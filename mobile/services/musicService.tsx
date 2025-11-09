@@ -62,7 +62,6 @@ export const GetTracksByAlbumId = async (payload) => {
 export const GetTopTracksOfArtist = async (payload) => {
   try {
     const response = await axiosClient.get(`/music/artist/${payload}/top-tracks`);
-    console.log('api: response top tracks', response.data);
     return response.data;
   } catch (error) {
     console.log(error.message);
@@ -73,7 +72,6 @@ export const GetTopTracksOfArtist = async (payload) => {
 export const GetAlbumsOfArtist = async (payload) => {
   try {
     const response = await axiosClient.get(`/music/artist/${payload}/albums`);
-    console.log('api: response albums', response.data);
     return response.data;
   } catch (error) {
     console.log(error.message);
