@@ -279,7 +279,7 @@ export default function ArtistScreen() {
         setCurrentArtist(currentArtist);
         setIsFollowing(true);
       }
-    } catch (err) {
+    } catch (err) { 
       console.log(err.message);
       error('Lỗi khi theo dõi nghệ sĩ. Vui lòng thử lại sau.');
     } finally {
