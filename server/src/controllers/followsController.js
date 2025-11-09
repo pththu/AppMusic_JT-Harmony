@@ -392,17 +392,15 @@ exports.createFollowArtist = async (req, res) => {
         let artist = await Artist.findByPk(artistId);
         if (artist) {
             artist.totalFollowers += 1;
-            await artist.save();
         }
         if (!artist || !artist.name) {
-            artist = await spotify.findArtistById(artistSpotifyId);
-            if (artist) {
-                artist = await Artist.update(
-                    { name: artist.name, imageUrl: artist.images?.[0]?.url || null },
-                    { where: { id: artistId } }
-                );
+            responseArtist = await spotify.findArtistById(artistSpotifyId);
+            if (responseArtist) {
+                artist.name = responseArtist.name;
+                artist.imageUrl = responseArtist.images?.[0]?.url || null;
             }
         }
+        await artist.save();
 
         console.log(10)
         return res.status(201).json({
