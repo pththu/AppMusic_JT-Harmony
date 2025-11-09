@@ -64,11 +64,11 @@ export default function PlaylistScreen() {
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
   const removeTrackFromPlaylistStore = usePlayerStore((state) => state.removeTrackFromPlaylist);
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
-  const playPlaylist = usePlayerStore((state) => state.playPlaylist);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
+  const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem);
+  const playPlaylist = usePlayerStore((state) => state.playPlaylist);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
-  const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem);
   const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
 
   const opacity = useRef(new Animated.Value(0)).current;

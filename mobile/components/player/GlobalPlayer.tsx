@@ -32,7 +32,6 @@ export default function GlobalPlayer() {
 
   const onPlayerStateChange = async (state) => {
     const latestState = usePlayerStore.getState();
-
     if (state === "ended") {
       if (repeatMode === "one") {
         playerRef.current?.seekTo(0, true);
@@ -111,7 +110,6 @@ export default function GlobalPlayer() {
 
   useEffect(() => {
     console.log('currentTrack global: ', currentTrack);
-
     const updateVideoId = async () => {
       if (!currentTrack?.videoId) {
         console.log('Đang tìm video id')
@@ -135,8 +133,9 @@ export default function GlobalPlayer() {
       }
       return false;
     }
-    updateVideoId();
-    console.log('videoIdTemp')
+    if (currentTrack) {
+      updateVideoId();
+    }
 
     if (currentTrack && videoIdTemp && playerRef.current) {
       playerRef.current.seekTo(0, true);

@@ -147,7 +147,8 @@ const GetItemsGroupedByType = async (req, res) => {
         itemIdsByType[itemType].push({
           id: favorite.id,
           itemId: favorite.itemId,
-          itemSpotifyId: favorite.itemSpotifyId
+          itemSpotifyId: favorite.itemSpotifyId,
+          createdAt: favorite.createdAt
         });
       }
     }
@@ -159,6 +160,7 @@ const GetItemsGroupedByType = async (req, res) => {
         const spotifyId = item?.itemSpotifyId;
         const itemId = item?.itemId;
         const uniqueFavoriteId = item?.id;
+        const createdAt = item?.createdAt;
 
         let album = null;
         let artist = [];
@@ -188,7 +190,8 @@ const GetItemsGroupedByType = async (req, res) => {
           }
           const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
           itemFormat.favoriteItem = {
-            id: uniqueFavoriteId
+            id: uniqueFavoriteId,
+            createdAt: createdAt
           };
           dataFormated.tracks.push(itemFormat);
         } else {
@@ -207,7 +210,8 @@ const GetItemsGroupedByType = async (req, res) => {
 
           const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
           itemFormat.favoriteItem = {
-            id: uniqueFavoriteId
+            id: uniqueFavoriteId,
+            createdAt: createdAt
           };
           dataFormated.tracks.push(itemFormat);
         }
@@ -223,12 +227,14 @@ const GetItemsGroupedByType = async (req, res) => {
         if (spotifyId) {
           const spotifyId = item.itemSpotifyId;
           const uniqueFavoriteId = item.id;
+          const createdAt = item?.createdAt;
 
           const album = await spotify.findAlbumById(spotifyId);
           if (album) {
             const itemFormat = formatAlbum(album, null);
             itemFormat.favoriteItem = {
-              id: uniqueFavoriteId
+              id: uniqueFavoriteId,
+              createdAt: createdAt
             };
             dataFormated.albums.push(itemFormat);
           }
@@ -242,7 +248,8 @@ const GetItemsGroupedByType = async (req, res) => {
           if (album) {
             const itemFormat = formatAlbum(album, null);
             itemFormat.favoriteItem = {
-              id: uniqueFavoriteId
+              id: uniqueFavoriteId,
+              createdAt: createdAt
             };
             dataFormated.albums.push(itemFormat);
           }
@@ -255,12 +262,14 @@ const GetItemsGroupedByType = async (req, res) => {
         const spotifyId = item?.itemSpotifyId;
         const itemId = item?.itemId;
         const uniqueFavoriteId = item?.id;
+        const createdAt = item?.createdAt;
         if (spotifyId) {
           const playlist = await spotify.findPlaylistById(spotifyId);
           if (playlist) {
             const itemFormat = formatPlaylist(playlist, null);
             itemFormat.favoriteItem = {
-              id: uniqueFavoriteId
+              id: uniqueFavoriteId,
+              createdAt: createdAt
             };
             dataFormated.playlists.push(itemFormat);
           }
@@ -269,7 +278,8 @@ const GetItemsGroupedByType = async (req, res) => {
           if (playlist) {
             const itemFormat = formatPlaylist(playlist, playlist.User);
             itemFormat.favoriteItem = {
-              id: uniqueFavoriteId
+              id: uniqueFavoriteId,
+              createdAt: createdAt
             };
             dataFormated.playlists.push(itemFormat);
           }
@@ -315,7 +325,6 @@ const GetItemsGroupedByType = async (req, res) => {
 }
 
 const GetPlaylistFavorite = async (req, res) => {
-  console.log(1111)
   try {
     const dataFormated = [];
 

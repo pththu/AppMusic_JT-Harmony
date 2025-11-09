@@ -74,11 +74,10 @@ export default function CustomButton({
         <Icon
           name={iconName}
           size={iconSize}
-          className={`${iconClassName} ${iconMargin}`}
-          color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
+          color={colorScheme === 'dark' ? '#000' : '#fff'}
         />
       )}
-      <Text className={textStyles}>{title}</Text>
+      <Text className={`${textStyles} ${colorScheme === 'dark' ? 'text-black' : 'text-white'} ${title && 'mx-2'}`}>{title}</Text>
     </TouchableOpacity>
   );
 }

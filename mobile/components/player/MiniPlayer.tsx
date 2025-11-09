@@ -43,7 +43,6 @@ export default function MiniPlayer() {
     playNext();
   }
 
-
   useEffect(() => {
     setMiniPlayerVisible(isVisible);
     return () => {
@@ -51,9 +50,9 @@ export default function MiniPlayer() {
         setMiniPlayerVisible(false);
       }
     }
-  }, [isVisible, setMiniPlayerVisible]); // <-- THÊM HOOK NÀY
+  }, [isVisible, setMiniPlayerVisible]);
 
-  if (!isVisible) { // <-- SỬA DÒNG NÀY
+  if (!isVisible) {
     return null;
   }
 

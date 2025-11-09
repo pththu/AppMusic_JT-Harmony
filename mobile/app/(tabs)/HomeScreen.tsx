@@ -1,10 +1,9 @@
 import CustomButton from "@/components/custom/CustomButton";
 import AlbumItem from "@/components/items/AlbumItem";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Button,
   FlatList,
   Image,
   ImageBackground,
@@ -17,14 +16,10 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from "@/store/authStore";
-import { artistData } from "@/constants/data";
 import ArtistItem from "@/components/artists/ArtistItem";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
-import YoutubePlayer from "react-native-youtube-iframe";
 
 import { useTheme } from "@/components/ThemeContext";
-import { set } from "date-fns";
-import { da, tr } from "date-fns/locale";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlaylistItem from "@/components/items/PlaylistItem";
 import { GetAlbumsForYou, GetArtistsForYou, GetMyPlaylists, GetPlaylistsForYou } from "@/services/musicService";
@@ -32,6 +27,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { GetFavoriteItemsGrouped } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
+import { useArtistStore } from "@/store/artistStore";
 
 export default function HomeScreen() {
   const { navigate } = useNavigate();
@@ -41,6 +37,7 @@ export default function HomeScreen() {
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
+  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
   const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
   const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
 
@@ -57,7 +54,8 @@ export default function HomeScreen() {
     albumForYou: ["BTS", "Love Yourself", "buitruonglinh"],
     playlistTrending: ["Vietnam đang hot", "Thịnh Hành", "Viral 2025"],
     albumTrending: ["Adele", "Ed Sheeran", "mtp"],
-    artistName: ["bts", "buitruonglinh", "Hoàng Dũng"],
+    artistNames: ["BTS", "buitruonglinh", "Hoàng Dũng", "Taylor Swift"],
+    genres: ["k-pop", "rock", "hip hop"],
   });
   const [dataForYou, setDataForYou] = useState({
     playlistsForYou: [],
@@ -76,13 +74,18 @@ export default function HomeScreen() {
 
   const handleSelectPlaylist = (playlist) => {
     setCurrentPlaylist(playlist);
-    navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) });
+    navigate("PlaylistScreen");
   };
 
   const handleSelectAlbum = (album) => {
     setCurrentAlbum(album);
-    navigate("AlbumScreen", { album: JSON.stringify(album) });
+    navigate("AlbumScreen");
   };
+
+  const handleSelectArtist = (artist) => {
+    setCurrentArtist(artist);
+    navigate("ArtistScreen");
+  }
 
   useEffect(() => {
     Animated.parallel([
@@ -181,7 +184,10 @@ export default function HomeScreen() {
 
     const fetchArtistsForYou = async () => {
       try {
-        const response = await GetArtistsForYou(queryParam.artistName);
+        const response = await GetArtistsForYou({
+          artistNames: queryParam.artistNames,
+          genres: queryParam.genres
+        });
         if (response.success) {
           setDataForYou((prev) => ({
             ...prev,
@@ -365,9 +371,7 @@ export default function HomeScreen() {
                 <ArtistItem
                   name={item.name}
                   image={item?.imageUrl || item?.imgUrl}
-                  onPress={() =>
-                    navigate("ArtistScreen", { artist: JSON.stringify(item) })
-                  }
+                  onPress={() => handleSelectArtist(item)}
                 />
               )}
             />

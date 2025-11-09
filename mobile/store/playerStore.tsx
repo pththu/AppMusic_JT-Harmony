@@ -30,9 +30,9 @@ interface PlayerState {
 
   // basic actions
   setCurrentTrack: (track: any) => void;
-  setListTrack: (tracks: any[]) => void;
   setCurrentPlaylist: (playlist: any) => void;
   setCurrentAlbum: (album: any) => void;
+  setListTrack: (tracks: any[]) => void;
   setPlaylistTracksPlaying: (tracks: any[]) => void;
   setMyPlaylists: (playlists: any[]) => void;
   setIsPlaying: (playing: boolean) => void;
@@ -70,8 +70,7 @@ interface PlayerState {
   unShuffleQueue: () => void;
   removeTrackFromQueue: (tracks: any[]) => void;
   clearQueue: () => void;
-
-  clear: () => void;
+  clearPlayerStore: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -315,21 +314,29 @@ export const usePlayerStore = create<PlayerState>()(
         set({ queue: [...queue, ...tracks] });
       },
       shuffleQueue: () => {
-        /* Trộn cả playlist bao gồm các bài đã phát */
-        const { playlistTracksPlaying, currentTrack, currentIndex } = get();
-        if (!currentTrack) return;
-        const originalCurrentIndex = playlistTracksPlaying.findIndex(t => t.id === currentTrack.id);
-        const pastAndCurrent = playlistTracksPlaying.slice(0, originalCurrentIndex + 1);
-        const upcoming = playlistTracksPlaying.slice(originalCurrentIndex + 1);
+        const { playlistTracksPlaying, currentTrack } = get();
 
-        for (let i = upcoming.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [upcoming[i], upcoming[j]] = [upcoming[j], upcoming[i]];
+        if (!currentTrack) {
+          console.log('Shuffle failed: No current track');
+          return;
         }
+
+        const otherTracks = playlistTracksPlaying.filter(t => {
+          if (currentTrack.spotifyId) {
+            return t.spotifyId !== currentTrack.spotifyId;
+          }
+          return t.id !== currentTrack.id;
+        });
+
+        for (let i = otherTracks.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [otherTracks[i], otherTracks[j]] = [otherTracks[j], otherTracks[i]];
+        }
+
         set({
-          queue: [...pastAndCurrent, ...upcoming],
+          queue: otherTracks,
           isShuffled: true,
-          currentIndex: originalCurrentIndex
+          currentIndex: 0 
         });
       },
       unShuffleQueue: () => {
@@ -352,16 +359,20 @@ export const usePlayerStore = create<PlayerState>()(
         set({ queue: [] });
       },
       setMiniPlayerVisible: (visible) => set({ isMiniPlayerVisible: visible }),
-      clear: () => set({
+      clearPlayerStore: () => set({
         currentTrack: null,
-        isPlaying: false,
+        currentPlaylist: null,
+        currentAlbum: null,
+        listTrack: [],
+        playlistTracksPlaying: [],
+        myPlaylists: [],
         currentIndex: -1,
         playbackPosition: 0,
-        listTrack: [],
-        currentPlaylist: null,
-        myPlaylists: [],
         tabBarHeight: 0,
         queue: [],
+        seekTrigger: null,
+        isLastIndex: false,
+        isPlaying: false,
         volume: 1,
         currentTime: 0,
         duration: 0,
