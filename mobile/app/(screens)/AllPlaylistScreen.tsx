@@ -29,8 +29,7 @@ import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import EditPlaylistModal from "@/components/modals/EditPlaylistModal";
 import PlaylistItemOptionModal from "@/components/modals/PlaylistItemOptionModal";
 import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
-import { set } from "date-fns";
-import { GetFavoritePlaylists, RemoveFavoriteItem } from "@/services/favoritesService";
+import { RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
 
 const screenHeight = Dimensions.get("window").height;
@@ -56,7 +55,7 @@ const PlaylistItem = ({ item, index, onPress, onPressOptions, primaryIconColor, 
         useNativeDriver: true,
       }),
     ]).start();
-  }, [opacityAnim, translateYAnim, index]);
+  }, []);
 
   return (
     <Animated.View
@@ -89,6 +88,112 @@ const PlaylistItem = ({ item, index, onPress, onPressOptions, primaryIconColor, 
   );
 };
 
+const AlbumItem = ({ item, index, onPress, onPressOptions, primaryIconColor, colorScheme }) => {
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(15)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      // Làm mờ
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 400,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+      // Trượt lên
+      Animated.timing(translateYAnim, {
+        toValue: 0,
+        duration: 400,
+        delay: index * 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        opacity: opacityAnim,
+        transform: [{ translateY: translateYAnim }],
+      }}
+    >
+      <Pressable
+        className="flex-row w-full items-center justify-between mb-4"
+        onPress={() => onPress(item)}
+      >
+        <Image
+          source={{ uri: item?.imageUrl }}
+          className="w-16 h-16 rounded-md shadow-md"
+        />
+        <View className="flex-1 mx-4">
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semiboldF`} numberOfLines={1}>
+            {item?.name}
+          </Text>
+          <Text className="dark:text-gray-400 text-sm">
+            {item?.totalTracks || 0} bài hát
+          </Text>
+        </View>
+        <Pressable className="p-2" onPress={() => onPressOptions(item)}>
+          <Icon name="ellipsis-vertical" size={20} color={primaryIconColor} />
+        </Pressable>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+const SearchResultItem = ({ item, index, onPress, onPressOptions, primaryIconColor, colorScheme }) => {
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(15)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacityAnim, { toValue: 1, duration: 400, delay: index * 50, useNativeDriver: true }),
+      Animated.timing(translateYAnim, { toValue: 0, duration: 400, delay: index * 50, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const getSubtitle = () => {
+    if (item.resultType === 'favAlbum') {
+      const artists = item.artists?.map(a => a.name).join(', ') || 'Nghệ sĩ không rõ';
+      return `Album • ${artists}`;
+    }
+    // Cả myPlaylist và favPlaylist đều là playlist
+    const ownerName = item.owner?.name || 'Của bạn';
+    return `Playlist • ${ownerName}`;
+  };
+
+  return (
+    <Animated.View
+      style={{
+        opacity: opacityAnim,
+        transform: [{ translateY: translateYAnim }],
+      }}
+    >
+      <Pressable
+        className="flex-row w-full items-center justify-between mb-4"
+        onPress={() => onPress(item)}
+      >
+        <Image
+          source={{ uri: item?.imageUrl }}
+          className="w-16 h-16 rounded-md shadow-md"
+        />
+        <View className="flex-1 mx-4">
+          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semiboldF`} numberOfLines={1}>
+            {item?.name}
+          </Text>
+          <Text className="dark:text-gray-400 text-sm" numberOfLines={1}>
+            {getSubtitle()}
+          </Text>
+        </View>
+        <Pressable className="p-2" onPress={() => onPressOptions(item)}>
+          <Icon name="ellipsis-vertical" size={20} color={primaryIconColor} />
+        </Pressable>
+      </Pressable>
+    </Animated.View>
+  );
+};
+
 export default function AllPlaylistScreen() {
   const colorScheme = useColorScheme();
   const { success, error, warning, confirm } = useCustomAlert();
@@ -98,9 +203,11 @@ export default function AllPlaylistScreen() {
   const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
-  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
   const updateSharedCountPlaylist = usePlayerStore((state) => state.updateSharedCountPlaylist);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
@@ -108,7 +215,8 @@ export default function AllPlaylistScreen() {
   const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
 
   const [activeTab, setActiveTab] = useState("myPlaylists");
-  const [savedPlaylists, setSavedPlaylists] = useState([]);
+  const [favoritePlaylists, setFavoritePlaylists] = useState([]);
+  const [favoriteAlbums, setFavoriteAlbums] = useState([]);
   const [playlistTracks, setPlaylistTracks] = useState([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -118,6 +226,11 @@ export default function AllPlaylistScreen() {
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [isAddToOtherPlaylistVisible, setIsAddToOtherPlaylistVisible] = useState(false);
   const [isAddPlaylistModalVisible, setIsAddPlaylistModalVisible] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchFilter, setSearchFilter] = useState("all");
+  const isSearching = searchQuery.length > 0;
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -136,6 +249,11 @@ export default function AllPlaylistScreen() {
     setCurrentPlaylist(playlist);
     navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) })
   };
+
+  const handleSelectAlbum = (album) => {
+    setCurrentAlbum(album);
+    navigate("AlbumScreen", { album: JSON.stringify(album) })
+  }
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -305,7 +423,7 @@ export default function AllPlaylistScreen() {
   };
 
   const handleOpenOptionsModal = (item) => {
-    setSelectedPlaylist(item);
+    setSelectedPlaylist(item); // Lưu item được chọn
     setIsOptionModalVisible(true);
   };
 
@@ -358,7 +476,6 @@ export default function AllPlaylistScreen() {
       return;
     }
 
-    // Thêm toàn bộ bài hát trong playlist này vào Queue
     addTrackToQueue(playlistTracks);
     success(`Đã thêm ${playlistTracks.length} bài hát vào hàng đợi!`);
     setIsOptionModalVisible(false);
@@ -367,27 +484,15 @@ export default function AllPlaylistScreen() {
   const handleRemoveFromSaved = async () => {
     if (!selectedPlaylist) return;
     try {
-      const favoriteItem = favoriteItems.find((item) => {
-        if (item?.itemType === 'playlist') {
-          if ((selectedPlaylist?.id && (item?.itemId === selectedPlaylist?.id))
-            || (selectedPlaylist?.spotifyId && (item?.itemSpotifyId === selectedPlaylist?.spotifyId))) {
-            return true;
-          }
-        }
-        return false;
-      });
-
-      if (!favoriteItem) {
+      if (!selectedPlaylist?.favoriteItem || selectedPlaylist?.favoriteItem === null) {
         error('Playlist không có trong mục yêu thích.');
         return;
       }
 
-      const response = await RemoveFavoriteItem(favoriteItem.id);
+      const response = await RemoveFavoriteItem(selectedPlaylist.favoriteItem.id);
       if (response.success) {
-        removeFavoriteItem(favoriteItem);
-        setSavedPlaylists((prev) => prev.filter((pl) => (
-          (pl.id && pl.id !== selectedPlaylist.id) || (pl.spotifyId && pl.spotifyId !== selectedPlaylist.spotifyId)
-        )));
+        removeFavoriteItem(selectedPlaylist);
+        setFavoritePlaylists((prev) => prev.filter((pl) => pl.favoriteItem.id !== selectedPlaylist.favoriteItem.id));
       }
     } catch (err) {
       console.log(err);
@@ -452,15 +557,27 @@ export default function AllPlaylistScreen() {
     setSelectedPlaylist(null);
   };
 
-  useEffect(() => {
-    const fetchFavoritePlaylists = async () => {
-      const response = await GetFavoritePlaylists();
-      if (response.success) {
-        setSavedPlaylists(response.data);
-      }
-    };
+  const handleSelectSearchResult = (item) => {
+    if (item.resultType === 'favAlbum') {
+      handleSelectAlbum(item);
+    } else {
+      // 'myPlaylist' or 'favPlaylist'
+      handleSelectPlaylist(item);
+    }
+  };
 
-    fetchFavoritePlaylists();
+  useEffect(() => {
+    setFavoritePlaylists([]);
+    setFavoriteAlbums([]);
+    for (const favItem of favoriteItems) {
+      if (favItem.itemType === 'playlist') {
+        setFavoritePlaylists((prev) => [...prev, favItem.item]);
+      }
+
+      if (favItem.itemType === 'album') {
+        setFavoriteAlbums((prev) => [...prev, favItem.item]);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -493,13 +610,71 @@ export default function AllPlaylistScreen() {
     }
   }, [selectedPlaylist]);
 
-  const currentData = activeTab === "myPlaylists" ? myPlaylists : (activeTab === "playlists" ? savedPlaylists : []);
+  useEffect(() => {
+    if (searchQuery === "") {
+      setSearchResults([]);
+      return;
+    }
 
-  const TabButton = ({ title, tabName }) => {
-    const isActive = activeTab === tabName;
+    const normalizedQuery = searchQuery.toLowerCase().trim();
+    const results = [];
+
+    myPlaylists.forEach(item => {
+      const nameMatch = item.name?.toLowerCase().includes(normalizedQuery);
+      const ownerMatch = user.fullName?.toLowerCase().includes(normalizedQuery);
+
+      if (nameMatch || ownerMatch) {
+        results.push({ ...item, resultType: 'myPlaylist' });
+      }
+    });
+
+    favoritePlaylists.forEach(item => {
+      const nameMatch = item.name?.toLowerCase().includes(normalizedQuery);
+      const ownerMatch = item.owner?.name?.toLowerCase().includes(normalizedQuery);
+
+      if (nameMatch || ownerMatch) {
+        // Chống trùng lặp nếu 1 playlist vừa là "myPlaylist" vừa là "favorite"
+        if (!results.some(r => r.spotifyId === item.spotifyId && (r.resultType === 'myPlaylist'))) {
+          results.push({ ...item, resultType: 'favPlaylist' });
+        }
+      }
+    });
+
+    favoriteAlbums.forEach(item => {
+      const nameMatch = item.name?.toLowerCase().includes(normalizedQuery);
+      const artistMatch = item.artists?.some(artist =>
+        artist.name?.toLowerCase().includes(normalizedQuery)
+      );
+
+      if (nameMatch || artistMatch) {
+        results.push({ ...item, resultType: 'favAlbum' });
+      }
+    });
+
+    setSearchResults(results);
+  }, [searchQuery, myPlaylists, favoritePlaylists, favoriteAlbums, user.fullName]);
+
+  const filteredSearchResults = useMemo(() => {
+    if (searchFilter === 'all') {
+      return searchResults;
+    }
+    if (searchFilter === 'playlist') {
+      return searchResults.filter(
+        item => item.resultType === 'myPlaylist' || item.resultType === 'favPlaylist'
+      );
+    }
+    if (searchFilter === 'album') {
+      return searchResults.filter(item => item.resultType === 'favAlbum');
+    }
+    return searchResults;
+  }, [searchResults, searchFilter]);
+
+  const currentData = activeTab === "myPlaylists" ? myPlaylists : (activeTab === "playlists" ? favoritePlaylists : favoriteAlbums);
+
+  const TabButton = ({ title, tabName, onPress, isActive }) => {
     return (
       <TouchableOpacity
-        onPress={() => setActiveTab(tabName)}
+        onPress={onPress}
         className={`flex-1 items-center py-3`}
       >
         <Text
@@ -514,8 +689,64 @@ export default function AllPlaylistScreen() {
     );
   };
 
+  const SearchResultsView = () => (
+    <>
+      <View className="flex-row mb-4">
+        <TabButton
+          title="Tất cả"
+          tabName="all"
+          onPress={() => setSearchFilter('all')}
+          isActive={searchFilter === 'all'}
+        />
+        <TabButton
+          title="Playlist"
+          tabName="playlist"
+          onPress={() => setSearchFilter('playlist')}
+          isActive={searchFilter === 'playlist'}
+        />
+        <TabButton
+          title="Album"
+          tabName="album"
+          onPress={() => setSearchFilter('album')}
+          isActive={searchFilter === 'album'}
+        />
+      </View>
+
+      <Text className={`mb-4 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
+        Tìm thấy {filteredSearchResults.length} kết quả
+      </Text>
+
+      {/* Danh sách kết quả tìm kiếm */}
+      {filteredSearchResults.length > 0 ? (
+        <FlatList
+          data={filteredSearchResults}
+          keyExtractor={(item, index) => `${item.resultType}-${item.id || item.spotifyId}-${index}`}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => (
+            <SearchResultItem
+              item={item}
+              index={index}
+              onPress={() => handleSelectSearchResult(item)}
+              onPressOptions={() => handleOpenOptionsModal(item)}
+              primaryIconColor={primaryIconColor}
+              colorScheme={colorScheme}
+            />
+          )}
+        />
+      ) : (
+        <View className="flex-1 justify-center items-center">
+          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            Không tìm thấy kết quả cho "{searchQuery}"
+          </Text>
+        </View>
+      )}
+    </>
+  );
+
   return (
-    <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4`}>
+    <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4`}
+      style={{ marginBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : tabBarHeight }}
+    >
       <View className="flex-row items-start mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="arrow-back" size={24} color={primaryIconColor} />
@@ -530,13 +761,17 @@ export default function AllPlaylistScreen() {
         </View>
       </View>
 
+      {/* Thanh Search (CẬP NHẬT) */}
       <View className="flex-row items-center mb-4">
         <View className={`flex-1 ${colorScheme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded-md p-2 flex-row items-center`}>
           <Icon name="search" size={20} color="#888" />
           <TextInput
-            placeholder="Search"
+            placeholder="Tìm kiếm playlist, album, nghệ sĩ..."
             placeholderTextColor="#888"
             className={`ml-2 flex-1 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}
+            value={searchQuery}
+            onChangeText={setSearchQuery} // <-- Gắn state
+            clearButtonMode="while-editing" // <-- Thêm nút clear
           />
         </View>
         <TouchableOpacity className="ml-4">
@@ -544,15 +779,55 @@ export default function AllPlaylistScreen() {
         </TouchableOpacity>
       </View>
 
-      <View className="flex-row mb-4">
-        <TabButton title="Của tôi" tabName="myPlaylists" />
-        <TabButton title="Playlist" tabName="playlists" />
-        <TabButton title="Album" tabName="albums" />
-      </View>
+      {isSearching ? (
+        <SearchResultsView />
+      ) : (
+        <>
+          <View className="flex-row mb-4">
+            <TabButton title="Của tôi" tabName="myPlaylists" onPress={() => setActiveTab('myPlaylists')} isActive={activeTab === 'myPlaylists'} />
+            <TabButton title="Playlist" tabName="playlists" onPress={() => setActiveTab('playlists')} isActive={activeTab === 'playlists'} />
+            <TabButton title="Album" tabName="albums" onPress={() => setActiveTab('albums')} isActive={activeTab === 'albums'} />
+          </View>
 
-      <Text className={`mb-4 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
-        {currentData.length} {activeTab === 'myPlaylists' ? 'danh sách phát' : activeTab === 'playlists' ? 'danh sách phát đã lưu' : 'album'}
-      </Text>
+          <Text className={`mb-4 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
+            {currentData.length} {activeTab === 'myPlaylists' ? 'danh sách phát' : activeTab === 'playlists' ? 'danh sách phát đã lưu' : 'album'}
+          </Text>
+
+          {currentData ? (
+            <FlatList
+              data={currentData}
+              keyExtractor={(item, index) => `${activeTab}-${item.id || item.spotifyId}-${index}`}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item, index }) => (
+                activeTab === "albums" ? (
+                  <AlbumItem
+                    item={item}
+                    index={index}
+                    onPress={() => handleSelectAlbum(item)}
+                    onPressOptions={() => handleOpenOptionsModal(item)}
+                    primaryIconColor={primaryIconColor}
+                    colorScheme={colorScheme}
+                  />
+                ) : (
+                  <PlaylistItem
+                    item={item}
+                    index={index}
+                    onPress={() => handleSelectPlaylist(item)}
+                    onPressOptions={() => handleOpenOptionsModal(item)}
+                    primaryIconColor={primaryIconColor}
+                    colorScheme={colorScheme}
+                  />
+                )
+              )}
+            />
+          ) : (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22c55e" />
+              <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>Đang tải...</Text>
+            </View>
+          )}
+        </>
+      )}
 
       {isFavoriteLoading && (
         <View className="absolute top-0 right-0 left-0 z-10 bg-black/50 justify-center items-center"
@@ -563,30 +838,8 @@ export default function AllPlaylistScreen() {
           <ActivityIndicator size="large" color="#22c55e" />
         </View>
       )}
-      {currentData ? (
-        <FlatList
-          data={currentData}
-          keyExtractor={(item, index) => index.toString()}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <PlaylistItem
-              item={item}
-              index={index}
-              onPress={() => handleSelectPlaylist(item)}
-              onPressOptions={() => handleOpenOptionsModal(item)}
-              primaryIconColor={primaryIconColor}
-              colorScheme={colorScheme}
-            />
-          )}
-        />
-      ) : (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#22c55e" />
-          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>Đang tải danh sách phát...</Text>
-        </View>
-      )}
 
-      {activeTab === "myPlaylists" && (
+      {activeTab === "myPlaylists" && !isSearching && (
         <View className="absolute bottom-14 right-6 z-10 justify-end items-end p-6"
         >
           <TouchableOpacity
@@ -655,11 +908,11 @@ export default function AllPlaylistScreen() {
           onCreatePlaylist={handleCreateAndAddTracksToPlaylist}
         />}
 
-      {isOptionModalVisible &&
+      {isOptionModalVisible && selectedPlaylist &&
         <PlaylistItemOptionModal
           isVisible={isOptionModalVisible}
           onClose={handleCloseOptionsModal}
-          isMyPlaylist={activeTab === "myPlaylists"}
+          isMyPlaylist={selectedPlaylist.resultType === 'myPlaylist'}
           playlistName={selectedPlaylist?.name}
           imageUrl={selectedPlaylist?.imageUrl}
           onEdit={handleEdit}
@@ -669,7 +922,7 @@ export default function AllPlaylistScreen() {
           onAddToQueue={handleAddToQueue}
           onAddToPlaylist={() => {
             if (!playlistTracks || !playlistTracks.length) {
-              warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
+              warning('Không có bài hát để thêm vào danh sách phát khác!');
               return;
             }
             setIsAddToOtherPlaylistVisible(true);

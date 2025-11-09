@@ -1,6 +1,19 @@
-const { Follow, User, sequelize } = require('../models');
+const e = require('express');
+const { Follow, User, sequelize, FollowArtist, Artist } = require('../models');
 const Sequelize = require('sequelize'); // Import module gốc
+const spotify = require('../configs/spotify');
 const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
+
+const formatArtist = (artist, genres) => {
+    return {
+        id: artist?.spotifyId && artist.id ? artist.id : null,
+        spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
+        name: artist.name,
+        genres: genres || artist?.genres,
+        imageUrl: artist?.images?.[0]?.url || artist?.imageUrl,
+        type: artist?.type,
+    }
+}
 
 // //  HÀM TIỆN ÍCH MỚI: Kiểm tra trạng thái follow của người dùng hiện tại đối với 1 người
 // async function checkIsFollowing(currentUserId, targetUserId) {
@@ -168,7 +181,7 @@ const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
 //     }
 // };
 
-exports.getAllFollows = async(req, res) => {
+exports.getAllFollows = async (req, res) => {
     try {
         const rows = await Follow.findAll();
         res.json(rows);
@@ -249,3 +262,180 @@ exports.getAllFollows = async(req, res) => {
 //         res.status(500).json({ error: err.message });
 //     }
 // };
+
+exports.getFollowerOfArtist = async (req, res) => {
+    try {
+        const { artistSpotifyId } = req.body;
+        console.log(artistSpotifyId)
+
+        if (!artistSpotifyId) {
+            return res.status(400).json({ error: 'Either artistId or artistSpotifyId is required' });
+        }
+
+        const followers = await FollowArtist.findAll({
+            where: { artistSpotifyId: artistSpotifyId }
+        });
+
+        if (!followers) {
+            return res.status(404).json({ error: 'No followers found for this artist' });
+        }
+
+        return res.status(200).json({
+            message: 'Followers retrieved successfully',
+            data: followers,
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getArtistFollowedByUser = async (req, res) => {
+    try {
+        const followArtists = await FollowArtist.findAll({
+            where: { followerId: req.user.id }
+        })
+
+        const dataFormated = [];
+
+        if (!followArtists) {
+            return res.status(404).json({ error: 'No followed artist found for this user' });
+        }
+
+        for (const follow of followArtists) {
+            const artist = await Artist.findByPk(follow.artistId);
+            if (artist) {
+                dataFormated.push({
+                    ...follow.t,
+                    artist: formatArtist(artist)
+                });
+            }
+        }
+        return res.status(200).json({
+            message: 'Followed artists retrieved successfully',
+            data: dataFormated,
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+exports.createFollowArtist = async (req, res) => {
+    try {
+        let { artistId, artistSpotifyId } = req.body;
+        const userId = req.user.id;
+
+        console.log(req.body)
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        if (!artistId && !artistSpotifyId) {
+            return res.status(400).json({ error: 'Either artistId or artistSpotifyId is required' });
+        }
+
+        if (!artistId) {
+            console.log('first')
+
+            const existingArtist = await Artist.findOne({
+                where: { spotifyId: artistSpotifyId },
+            });
+
+            console.log(12)
+            if (!existingArtist) {
+                console.log(14)
+                const artistRow = await Artist.create({
+                    spotifyId: artistSpotifyId,
+                });
+                console.log('artist row: ', artistRow);
+                if (!artistRow) {
+                    return res.status(500).json({ error: 'Cannot create artist to follow' });
+                }
+
+                console.log(2)
+                artistId = artistRow.id;
+            } else {
+                console.log(13)
+                artistId = existingArtist.id;
+            }
+        }
+
+        console.log(3)
+        const existingFollow = await FollowArtist.findOne({
+            where: {
+                followerId: userId,
+                artistId: artistId,
+            },
+        });
+
+        console.log(4)
+        if (existingFollow) {
+            console.log(5)
+            return res.status(400).json({ error: 'You are already following this artist' });
+        }
+
+        console.log(6)
+        console.log(6)
+        const row = await FollowArtist.create({
+            followerId: userId,
+            artistId,
+            artistSpotifyId,
+        });
+
+        console.log(7)
+        if (!row) {
+            console.log(8)
+            return res.status(500).json({ error: 'Cannot create follow artist' });
+        }
+
+        console.log(9)
+        let artist = await Artist.findByPk(artistId);
+        if (artist) {
+            artist.totalFollowers += 1;
+            await artist.save();
+        }
+        if (!artist || !artist.name) {
+            artist = await spotify.findArtistById(artistSpotifyId);
+            if (artist) {
+                artist = await Artist.update(
+                    { name: artist.name, imageUrl: artist.images?.[0]?.url || null },
+                    { where: { id: artistId } }
+                );
+            }
+        }
+
+        console.log(10)
+        return res.status(201).json({
+            message: 'FollowArtist created successfully',
+            data: { ...row, artist: formatArtist(artist, null) },
+            success: true
+        });
+    } catch (error) {
+        console.log(11)
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.deleteFollowArtist = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ error: 'FollowArtist ID is required' });
+        }
+
+        const followArtist = await FollowArtist.findByPk(id);
+        if (!followArtist) {
+            return res.status(404).json({ error: 'FollowArtist not found' });
+        }
+        const artist = await Artist.findByPk(followArtist.artistId);
+        if (artist && artist.totalFollowers > 0) {
+            artist.totalFollowers -= 1;
+            await artist.save();
+        }
+        const deleted = await FollowArtist.destroy({ where: { id } });
+        if (!deleted) return res.status(404).json({ error: 'FollowArtist not found' });
+        res.json({ message: 'FollowArtist deleted', success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}

@@ -108,13 +108,13 @@ export default function PlaylistsPage() {
       playlists.map((playlist) =>
         playlist.id === editingPlaylist.id
           ? {
-              ...playlist,
-              name: formData.name,
-              description: formData.description || undefined,
-              imageUrl: formData.imageUrl || undefined,
-              isPublic: formData.isPublic,
-              type: formData.type,
-            }
+            ...playlist,
+            name: formData.name,
+            description: formData.description || undefined,
+            imageUrl: formData.imageUrl || undefined,
+            isPublic: formData.isPublic,
+            type: formData.type,
+          }
           : playlist
       )
     );
@@ -130,7 +130,7 @@ export default function PlaylistsPage() {
     setEditingPlaylist(null);
   };
 
-  const openEditDialog = (playlist: Playlist) => {
+  const openEditDialog = (playlist: any) => {
     setEditingPlaylist(playlist);
     setFormData({
       name: playlist.name,
@@ -290,7 +290,7 @@ export default function PlaylistsPage() {
           </TableHeader>
           <TableBody>
             {playlists.map((playlist) => {
-              const creator = getUserById(playlist.userId);
+              const creator = getUserById(Number(playlist.userId));
               return (
                 <TableRow key={playlist.id}>
                   <TableCell>
@@ -419,7 +419,7 @@ export default function PlaylistsPage() {
                       {selectedPlaylist.name}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      bởi {getUserById(selectedPlaylist.userId)?.username}
+                      bởi {getUserById(Number(selectedPlaylist.userId))?.username}
                     </p>
                   </div>
                   <Badge

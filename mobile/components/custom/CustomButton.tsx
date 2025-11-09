@@ -28,17 +28,17 @@ export default function CustomButton({
     switch (variant) {
       case 'primary':
         baseStyles += ' bg-green-600';
-        textStyles += ' text-black dark:text-white';
+        textStyles += `${colorScheme === 'dark' ? ' text-black' : ' text-white'}`;
         iconClassName = 'text-black dark:text-white';
         break;
       case 'secondary':
         baseStyles += ' bg-gray-100 dark:bg-gray-800';
-        textStyles += ' text-black dark:text-white';
+        textStyles += `${colorScheme === 'dark' ? ' text-black' : ' text-white'}`;
         iconClassName = 'text-black dark:text-white';
         break;
       case 'outline':
         baseStyles += ' border border-gray-300 dark:border-gray-600';
-        textStyles += ' text-gray-600 dark:text-gray-400';
+        textStyles += `${colorScheme === 'dark' ? ' text-gray-600' : ' text-gray-400'}`;
         iconClassName = 'text-gray-600 dark:text-gray-400';
         break;
     }
@@ -74,11 +74,10 @@ export default function CustomButton({
         <Icon
           name={iconName}
           size={iconSize}
-          className={`${iconClassName} ${iconMargin}`}
-          color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
+          color={colorScheme === 'dark' ? '#000' : '#fff'}
         />
       )}
-      <Text className={textStyles}>{title}</Text>
+      <Text className={`${textStyles} ${title && 'mx-2'}`}>{title}</Text>
     </TouchableOpacity>
   );
 }

@@ -6,6 +6,14 @@ const { Playlist, Track, Album, Artist, PlaylistTrack, User, Genres } = require(
 const Op = require('sequelize').Op;
 const { get } = require("../routes/musicRoute");
 
+const shuffle = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
 const formatTrack = (track, artist, album, videoId) => {
   return {
     id: track?.tempId || (track?.spotifyId && track.id ? track.id : null),
@@ -83,8 +91,6 @@ const formatArtist = (artist, genres) => {
   }
 }
 
-
-// Tìm kiếm playlist trên Spotify
 const findSpotifyPlaylist = async (req, res) => {
   try {
     const { query } = req.query; // Lấy query từ URL, ví dụ: /spotify/playlists?query=lofi
@@ -97,19 +103,6 @@ const findSpotifyPlaylist = async (req, res) => {
     res
       .status(500)
       .json({ message: error.message || "Failed to search playlists" });
-  }
-};
-
-// Lấy các bài hát hàng đầu của nghệ sĩ trên Spotify
-const findArtistTopTracks = async (req, res) => {
-  try {
-    const { artistId } = req.params; // Lấy ID nghệ sĩ từ URL, ví dụ: /spotify/artists/06HL4z0CvFAxyc27GXpf02/top-tracks
-    const data = await spotify.getArtistTopTracks(artistId);
-    res.json(data.tracks);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: error.message || "Failed to get artist top tracks" });
   }
 };
 
@@ -608,28 +601,41 @@ const getAlbumsForYou = async (req, res) => {
 
 const getArtistsForYou = async (req, res) => {
   try {
-    const { artistName } = req.body;
-    const artists = [];
+    const { artistNames = [], genres = [] } = req.body;
+    const allResults = [];
     const dataFormated = [];
 
-    if (artistName.length === 0) {
+    if (artistNames.length === 0 && genres.length === 0) {
       return res
-        .status(200)
-        .json({ message: "Artist name parameter is required", success: false });
+        .status(400)
+        .json({ message: "Cần có artistNames hoặc genres", success: false });
     }
 
-    for (const name of artistName) {
-      const responseArtist = await spotify.searchArtists({ name });
-      artists.push(...responseArtist);
+    for (const name of artistNames) {
+      const query = `artist: ${name}`;
+      console.log("Đang tìm theo:", query);
+      const responseArtist = await spotify.searchArtists(query);
+      allResults.push(...responseArtist);
     }
 
-    for (const artist of artists) {
-      dataFormated.push(formatArtist(artist, null));
+    for (const genre of genres) {
+      const query = `genre:${genre}`;
+      console.log("Đang tìm theo:", query);
+      const responseGenre = await spotify.searchArtists(query);
+      allResults.push(...responseGenre);
     }
+
+    for (const artist of allResults) {
+      if (dataFormated.findIndex(a => a.spotifyId === artist.id) === -1) {
+        dataFormated.push(formatArtist(artist, null));
+      }
+    }
+
+    const finalData = shuffle(dataFormated).slice(0, 12);
 
     return res.status(200).json({
       message: 'Get artist for you successful',
-      data: dataFormated,
+      data: finalData,
       success: true
     });
   } catch (error) {
@@ -668,7 +674,6 @@ const addTrackToPlaylist = async (req, res) => {
     const { trackId, trackSpotifyId } = req.body;
     const userId = req.user.id;
     const data = {};
-
 
     if (playlistId) data.playlistId = playlistId;
     if (trackId) data.trackId = trackId;
@@ -723,13 +728,10 @@ const addTrackToPlaylist = async (req, res) => {
       });
     }
 
-    console.log('row', row)
-
     playlist.totalTracks += 1;
     await playlist.save();
 
     const track = await spotify.findTrackById(trackSpotifyId)
-
     const dataFormated = formatTrack(track, null, null, null);
     dataFormated.playlistTrack = {
       id: row.id
@@ -763,9 +765,7 @@ const addTracksToPlaylists = async (req, res) => {
 
     for (const playlistId of playlistIds) {
       let data = [];
-
       if (!playlistId) continue;
-
       const playlist = await Playlist.findByPk(playlistId, {
         include: [
           {
@@ -797,8 +797,6 @@ const addTracksToPlaylists = async (req, res) => {
           success: false
         });
       }
-
-      console.log('row 1', row);
 
       playlist.totalTracks += trackIds.length;
       await playlist.save();
@@ -988,9 +986,117 @@ const getTracks = async (req, res) => {
   }
 };
 
+const getTopTrackFromArtist = async (req, res) => {
+  try {
+    const { artistId } = req.params;
+    console.log('top: ', artistId)
+    if (!artistId) {
+      return res.status(400).json({ message: "Artist ID is required", success: false });
+    }
+
+    const tracks = await spotify.getArtistTopTracks(artistId);
+
+    if (!tracks || tracks.length === 0) {
+      return res.status(200).json({
+        message: 'No top tracks found for this artist',
+        data: [],
+        success: true
+      });
+    }
+
+    const dataFormated = tracks.map(track => {
+      console.log('name: ', track.name)
+      return formatTrack(track, null, null, null);
+    });
+
+    return res.status(200).json({
+      message: 'Get artist top tracks successful',
+      data: dataFormated,
+      success: true
+    });
+
+  } catch (error) {
+    res.status(error.status || 500).json({
+      message: error.message || "Failed to get artist top tracks",
+    });
+  }
+};
+
+const getAlbumsFromArtist = async (req, res) => {
+  try {
+    const { artistId } = req.params;
+    console.log('album: ', artistId)
+    if (!artistId) {
+      return res.status(400).json({ message: "Artist ID is required", success: false });
+    }
+
+    const albums = await spotify.getArtistAlbums(artistId);
+    if (!albums || albums.length === 0) {
+      return res.status(200).json({
+        message: 'No albums found for this artist',
+        data: [],
+        success: true
+      });
+    }
+
+    const dataFormated = albums.map(album => {
+      return formatAlbum(album, null);
+    });
+
+    return res.status(200).json({
+      message: 'Get artist albums successful',
+      data: dataFormated,
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to get artist albums",
+    });
+  }
+};
+
+const getTracksFromArtist = async (req, res) => {
+  try {
+    const { artistName } = req.body;
+    if (!artistName) {
+      return res.status(400).json({ message: "artistName is required in body", success: false });
+    }
+
+    const spotifyQueryString = `artist:"${artistName}"`;
+
+    // 2. Gọi service spotify.searchTracks (lấy tối đa 50 bài)
+    const spotifyData = await spotify.searchTracks(spotifyQueryString, 'track', 50);
+
+    if (!spotifyData || spotifyData.length === 0) {
+      return res.status(200).json({
+        message: 'No tracks found for this artist name',
+        data: [],
+        success: true
+      });
+    }
+
+    // 3. Dùng formatTrack để chuẩn hóa dữ liệu
+    const dataFormated = spotifyData.map(track => {
+      return formatTrack(track, null, null, null);
+    });
+
+    // 4. Trả về kết quả
+    return res.status(200).json({
+      message: 'Get tracks from artist successful',
+      data: dataFormated,
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to get tracks from artist",
+    });
+  }
+};
+
 module.exports = {
   findSpotifyPlaylist,
-  findArtistTopTracks,
   findYoutubeVideo,
   findPlaylistById,
   findAlbumById,
@@ -1002,6 +1108,9 @@ module.exports = {
   getArtistsForYou,
   getMyPlaylists,
   getTracks,
+  getTopTrackFromArtist,
+  getAlbumsFromArtist,
+  getTracksFromArtist,
   searchTracks,
   searchPlaylists,
   searchAlbums,

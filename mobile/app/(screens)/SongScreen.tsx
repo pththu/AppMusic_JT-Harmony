@@ -17,7 +17,6 @@ import LyricsSection from "@/components/LyricsSection";
 import ArtistsSection from "@/components/artists/ArtistsSection";
 import { useNavigate } from "@/hooks/useNavigate";
 import { usePlayerStore } from "@/store/playerStore";
-import { useQueueStore } from "@/store/queueStore";
 import { router } from "expo-router";
 import { useTheme } from "@/components/ThemeContext";
 import { albumData, trackData } from "@/constants/data";
@@ -48,6 +47,7 @@ export default function SongScreen() {
   const currentIndex = usePlayerStore((state) => state.currentIndex);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const duration = usePlayerStore((state) => state.duration);
+  const isShuffled = usePlayerStore((state) => state.isShuffled);
   const queue = usePlayerStore((state) => state.queue);
   const repeatMode = usePlayerStore((state) => state.repeatMode);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
@@ -288,7 +288,6 @@ export default function SongScreen() {
 
   useEffect(() => {
     console.log('current', currentTrack)
-    // console.log('fav list', favoriteItems);
     if (favoriteItems) {
       const isFavorite = favoriteItems.some(
         (item) => item?.itemType === 'track' && (item?.itemSpotifyId === currentTrack?.spotifyId || (currentTrack?.id !== null && item?.itemId === currentTrack?.id))
@@ -376,7 +375,7 @@ export default function SongScreen() {
             }}
             activeOpacity={0.5}
           >
-            <Icon name={isFavorite ? "favorite" : "favorite-border"} size={20} color={isFavorite ? '#BF0413' : primaryIconColor} />
+            <Icon name={isFavorite ? "favorite" : "favorite-border"} size={20} color={isFavorite ? '#ef4444' : primaryIconColor} />
           </TouchableOpacity>
           <TouchableOpacity className="mr-4 p-4" activeOpacity={0.5}>
             <Icon name="download" size={20} color={primaryIconColor} />
@@ -390,7 +389,7 @@ export default function SongScreen() {
       {/* Controls */}
       <View className="flex-row justify-between items-center mb-3 px-6">
         <TouchableOpacity onPress={handleShufflePlay} className="p-2">
-          <Icon name="shuffle" size={24} color={isShuffle ? '#22c55e' : secondaryIconColor} />
+          <Icon name="shuffle" size={24} color={isShuffled ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
         <TouchableOpacity onPress={handlePlayPrevious} className="p-2">
           <Icon name="skip-previous" size={30} color={primaryIconColor} />
@@ -467,7 +466,6 @@ export default function SongScreen() {
           ))} */}
         </View>
       )}
-
 
     </View>
   );

@@ -12,9 +12,8 @@ import {
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { Feather } from "@expo/vector-icons";
-import { da } from "date-fns/locale";
-import useAuthStore from "@/store/authStore";
 
+// --- Bắt đầu Component OptionItem (Giữ nguyên) ---
 const OptionItem = ({ iconName, text, onPress, isDestructive = false, colorScheme }) => (
   <TouchableOpacity onPress={onPress} className="flex-row items-center py-4">
     <Feather
@@ -30,52 +29,75 @@ const OptionItem = ({ iconName, text, onPress, isDestructive = false, colorSchem
     </Text>
   </TouchableOpacity>
 );
+// --- Kết thúc Component OptionItem ---
 
-const PlaylistOptionModal = ({
+
+// --- Bắt đầu ArtistOptionModal ---
+const ArtistOptionModal = ({
   isVisible,
   setIsVisible,
-  data,
-  onAddToPlaylist = () => { },
+  data, // Đây là object 'artist'
+  isFollowing = false,
+  onFollow = () => { },
   onShare = () => { },
-  onDownload = () => { },
-  onTogglePrivacy = () => { },
-  onEdit = () => { },
-  onDelete = () => { },
-  onAddTrack = () => { },
-  onAddToQueue = () => { },
+  onBlock = () => { },
 }) => {
 
-  const user = useAuthStore((state) => state.user);
   const colorScheme = useColorScheme();
   const animationDuration = 350;
-  const slideAnim = useRef(new Animated.Value(500)).current; // slideAnim: 0 = hiện, 500 = ẩn
+  // slideAnim: 0 = hiện, 500 = ẩn
+  const slideAnim = useRef(new Animated.Value(500)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
+  // State này dùng để render modal trước khi animation chạy
   const [actuallyVisible, setActuallyVisible] = useState(isVisible);
 
-  console.log('data', data)
-
   useEffect(() => {
-    setActuallyVisible(true);
-    Animated.parallel([
-      Animated.timing(backdropOpacity, {
-        toValue: 1,
-        duration: animationDuration,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0, // Trượt vào
-        duration: animationDuration,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
+    if (isVisible) {
+      // Nếu modal được set là visible
+      setActuallyVisible(true); // 1. Mount component
+      // 2. Chạy animation "hiện"
+      Animated.parallel([
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: animationDuration,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0, // Trượt vào
+          duration: animationDuration,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Nếu modal được set là invisible
+      // 1. Chạy animation "ẩn"
+      Animated.parallel([
+        Animated.timing(backdropOpacity, {
+          toValue: 0,
+          duration: animationDuration,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 500, // Trượt ra
+          duration: animationDuration,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // 2. Unmount component SAU KHI animation kết thúc
+        setActuallyVisible(false);
+      });
+    }
   }, [isVisible]);
 
   const handleClose = () => {
-    setIsVisible(false);
+    setIsVisible(false); // Kích hoạt useEffect
   };
 
+  // Nếu chưa mount, không render gì
   if (!actuallyVisible) {
     return null;
   }
@@ -87,6 +109,7 @@ const PlaylistOptionModal = ({
       visible={actuallyVisible}
       onRequestClose={handleClose}
     >
+      {/* Lớp nền mờ */}
       <Pressable
         onPress={handleClose}
         className="flex-1 justify-end"
@@ -99,17 +122,22 @@ const PlaylistOptionModal = ({
           ]}
         />
 
+        {/* Nội dung Modal (trượt lên) */}
         <Animated.View
           style={[
             { transform: [{ translateY: slideAnim }] },
           ]}
         >
           <View className={`${colorScheme === "dark" ? "bg-[#0B1215]" : "bg-white"}`}>
+            {/* Thêm Pressable ở đây để ngăn việc nhấn vào modal bị "click xuyên" */}
             <Pressable
               onPress={() => { }}
               className={`w-full rounded-t-2xl p-4 pb-6`}
             >
+              {/* Tay nắm */}
               <View className="w-12 h-0.5 bg-gray-500 rounded-full self-center mb-4" />
+
+              {/* Header thông tin Artist */}
               <View className="flex-row items-center mb-4 px-2">
                 <Image
                   source={{ uri: data?.imageUrl }}
@@ -121,22 +149,36 @@ const PlaylistOptionModal = ({
                     {data?.name}
                   </Text>
                   <Text className={`text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                    {data?.totalTracks || 0} bài hát • tạo bởi {data?.owner?.name || 'không xác định'}
+                    Nghệ sĩ
                   </Text>
                 </View>
               </View>
 
+              {/* Danh sách tùy chọn */}
               <View className={`border-t ${colorScheme === 'dark' ? 'border-gray-600' : 'border-gray-200'} mb-4`}>
-                {data?.id && <OptionItem text="Chỉnh sửa playlist" iconName="edit-3" onPress={onEdit} colorScheme={colorScheme} />}
-                <OptionItem text="Thêm vào playlist khác" iconName="plus-circle" onPress={onAddToPlaylist} colorScheme={colorScheme} />
-                <OptionItem text="Thêm vào hàng đợi" iconName="list" onPress={onAddToQueue} colorScheme={colorScheme} />
-                {data?.id && <OptionItem text="Thêm bài hát" iconName="plus" onPress={onAddTrack} colorScheme={colorScheme} />}
-                <OptionItem text="Tải xuống" iconName="download-cloud" onPress={onDownload} colorScheme={colorScheme} />
-                {data?.owner === user.id && <OptionItem text={data?.isPublic ? "Đặt về trạng thái riêng tư" : "Đặt về trạng thái công khai"} iconName="lock" onPress={onTogglePrivacy} colorScheme={colorScheme} />}
-                {data?.isPublic && <OptionItem text="Chia sẻ" iconName="share-2" onPress={onShare} colorScheme={colorScheme} />}
-                {data?.id && <OptionItem text="Xóa playlist" iconName="trash-2" onPress={onDelete} isDestructive={true} colorScheme={colorScheme} />}
+                <OptionItem
+                  text={isFollowing ? "Bỏ theo dõi" : "Theo dõi"}
+                  iconName={isFollowing ? "user-check" : "user-plus"}
+                  onPress={onFollow}
+                  colorScheme={colorScheme}
+                  isDestructive={isFollowing} // "Bỏ theo dõi" là hành động destructive
+                />
+                <OptionItem
+                  text="Chia sẻ"
+                  iconName="share-2"
+                  onPress={onShare}
+                  colorScheme={colorScheme}
+                />
+                <OptionItem
+                  text="Chặn nhạc của nghệ sĩ này"
+                  iconName="slash" // Icon "cấm"
+                  onPress={onBlock}
+                  isDestructive={true} // Hành động destructive
+                  colorScheme={colorScheme}
+                />
               </View>
 
+              {/* Nút đóng */}
               <TouchableOpacity
                 onPress={handleClose}
                 className="bg-[#22c55e] rounded-full py-3 items-center justify-center mt-2"
@@ -151,4 +193,4 @@ const PlaylistOptionModal = ({
   );
 };
 
-export default PlaylistOptionModal;
+export default ArtistOptionModal;
