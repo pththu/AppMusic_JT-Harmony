@@ -182,7 +182,7 @@ export default function UsersPage() {
                 <TableCell>{user.email || "N/A"}</TableCell>
                 <TableCell>
                   <Badge variant="outline">
-                    {getRoleById(user.roleId)?.name || "Unknown"}
+                    {getRoleById(Number(user.roleId))?.name || "Unknown"}
                   </Badge>
                 </TableCell>
                 <TableCell>{getStatusBadge(user.status)}</TableCell>
