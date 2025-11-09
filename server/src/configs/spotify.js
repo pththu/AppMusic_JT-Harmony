@@ -1,5 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
+const { response } = require('express');
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -151,12 +152,16 @@ const searchAlbums = async (searchParams) => {
   }
 };
 
+
 const searchArtists = async (query) => {
   try {
     let allArtists = [];
-    let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=30`; // Bắt đầu với URL đầu tiên
+    // Chỉ lấy 5 item/query để tăng độ đa dạng khi gọi nhiều lần
+    let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=5`;
 
-    while (nextUrl) {
+    // Chỉ lấy trang đầu tiên (limit=5)
+    // Bạn có thể bỏ vòng lặp `while` nếu muốn
+    if (nextUrl) {
       const response = await axios.get(nextUrl, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -164,30 +169,24 @@ const searchArtists = async (query) => {
       });
 
       const artistPage = response.data.artists;
-      const validItems = artistPage.items.filter(item => {
-        const invalidNames = ["Object Object", "[object Object]"];
-        if (!item) return false;
-
-        const itemName = item.name;
-        if (!itemName) return false;
-
-        const lowerCaseName = String(itemName).toLowerCase();
-        const isInvalid = invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
-
-        return !isInvalid;
-      });
-
-      allArtists = allArtists.concat(validItems);
-      nextUrl = artistPage.next;
-      if (allArtists.length >= 3) {
-        break;
+      if (artistPage && artistPage.items) {
+        // Logic lọc tên rác của bạn
+        const validItems = artistPage.items.filter(item => {
+          const invalidNames = ["Object Object", "[object Object]"];
+          if (!item || !item.name) return false;
+          const lowerCaseName = String(item.name).toLowerCase();
+          return !invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
+        });
+        allArtists = allArtists.concat(validItems);
       }
     }
 
-    return allArtists.slice(0, 12).map((artist) => artist);
+    // Trả về kết quả thô cho query này
+    return allArtists;
+
   } catch (error) {
-    console.error(`Error searching artists on Spotify:`, error.response ? error.response.data : error.message);
-    throw error;
+    console.error(`Error searching artists on Spotify for query "${query}":`, error.response ? error.response.data : error.message);
+    return [];
   }
 }
 
@@ -223,6 +222,39 @@ const getAlbumTracks = async (albumId) => {
   }
 }
 
+const getArtistTopTracks = async (artistId) => {
+  try {
+    const response = await spotifyApiRequest(`/artists/${artistId}/top-tracks`, { market: 'VN' });
+    return response.tracks;
+  } catch (error) {
+    console.error(`Error getting top tracks for artist ${artistId}:`, error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
+const getArtistAlbums = async (artistId) => {
+  let allAlbums = [];
+  let nextUrl = `/artists/${artistId}/albums?include_groups=album,single&limit=50`;
+
+  try {
+    // Lấy tối đa 2 trang (100 item) để đảm bảo
+    for (let i = 0; i < 2; i++) {
+      if (!nextUrl) break;
+      const response = await spotifyApiRequest(nextUrl);
+
+      if (response.items && response.items) {
+        allAlbums = allAlbums.concat(response.items);
+      }
+      nextUrl = response.next ? response.next.replace('https://api.spotify.com/v1', '') : null;
+    }
+
+    return allAlbums;
+  } catch (error) {
+    console.error(`Error getting albums for artist ${artistId}:`, error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
+
 const shuffle = (array) => {
   let currentIndex = array.length;
   let randomIndex;
@@ -245,8 +277,11 @@ module.exports = {
   searchArtists,
   getPlaylistTracks,
   getAlbumTracks,
+  getArtistTopTracks,
+  getArtistAlbums,
   findAlbumById,
   findPlaylistById,
   findTrackById,
-  findArtistById
+  findArtistById,
+
 };

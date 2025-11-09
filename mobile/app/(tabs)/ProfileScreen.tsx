@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const loginType = useAuthStore((state) => state.loginType);
   const updateUser = useAuthStore((state) => state.updateUser);
-  const clearPlayerStore = usePlayerStore((state) => state.clear);
+  const clearPlayerStore = usePlayerStore((state) => state.clearPlayerStore);
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
@@ -95,33 +95,33 @@ export default function ProfileScreen() {
     }
   };
 
-  // up nhiều file lên cloudinary và server
-  const handlePickMultipleFile = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["audio/*", "video/*", "image/*"],
-        multiple: true,
-        copyToCacheDirectory: true,
-      });
+  // // up nhiều file lên cloudinary và server
+  // const handlePickMultipleFile = async () => {
+  //   try {
+  //     const result = await DocumentPicker.getDocumentAsync({
+  //       type: ["audio/*", "video/*", "image/*"],
+  //       multiple: true,
+  //       copyToCacheDirectory: true,
+  //     });
 
-      if (!result.canceled) {
-        // Truyền trực tiếp mảng result.assets vào hàm upload
-        console.log("Files selected:", result.assets);
-        const uploadResult = await UploadMultipleFile(result.assets);
+  //     if (!result.canceled) {
+  //       // Truyền trực tiếp mảng result.assets vào hàm upload
+  //       console.log("Files selected:", result.assets);
+  //       const uploadResult = await UploadMultipleFile(result.assets);
 
-        if (uploadResult.success) {
-          success("Upload thành công nhiều file!", "");
-          console.log("Server response:", uploadResult);
-        } else {
-          error("Upload thất bại", uploadResult.message);
-        }
-      } else {
-        warning("Bạn chưa chọn file nào để upload!");
-      }
-    } catch (error) {
-      error("Không thể chọn file. Vui lòng thử lại!", error.message);
-    }
-  };
+  //       if (uploadResult.success) {
+  //         success("Upload thành công nhiều file!", "");
+  //         console.log("Server response:", uploadResult);
+  //       } else {
+  //         error("Upload thất bại", uploadResult.message);
+  //       }
+  //     } else {
+  //       warning("Bạn chưa chọn file nào để upload!");
+  //     }
+  //   } catch (error) {
+  //     error("Không thể chọn file. Vui lòng thử lại!", error.message);
+  //   }
+  // };
 
   const handleLogout = async () => {
     try {
@@ -294,19 +294,19 @@ export default function ProfileScreen() {
         {/* Các nút Thư viện (Library) */}
         <View className="flex-row justify-between mb-4 flex-wrap">
           <LibraryItemButton
-            title="... Bài hát"
+            title="Mục yêu thích"
             icon="favorite"
             onPress={() => navigate("LikedSongsScreen")}
             color="#ffb5b5"
           />
           <LibraryItemButton
-            title="... Playlists"
+            title="Danh sách phát"
             icon="list"
             onPress={() => navigate("PlaylistsScreen")}
             color="#82d8ff"
           />
           <LibraryItemButton
-            title="... Nghệ sĩ"
+            title="Nghệ sĩ"
             icon="person"
             onPress={() => navigate("ArtistsFollowingScreen")}
             color="#FFA500"

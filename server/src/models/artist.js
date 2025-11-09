@@ -22,7 +22,12 @@ const Artist = sequelize.define(
     imageUrl: {
       type: DataTypes.STRING,
       field: 'image_url'
-    }
+    },
+    totalFollowers: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      field: 'total_followers',
+    },
   },
   {
     tableName: 'artists',

@@ -81,6 +81,8 @@ export default function CommentsPage() {
       userId: formData.userId,
       fileUrl: formData.fileUrl || undefined,
       commentedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     setComments([...comments, newComment]);
     setFormData({
@@ -99,10 +101,10 @@ export default function CommentsPage() {
       comments.map((comment) =>
         comment.id === editingComment.id
           ? {
-              ...comment,
-              content: formData.content,
-              fileUrl: formData.fileUrl || undefined,
-            }
+            ...comment,
+            content: formData.content,
+            fileUrl: formData.fileUrl || undefined,
+          }
           : comment
       )
     );
@@ -121,7 +123,7 @@ export default function CommentsPage() {
     setEditingComment(comment);
     setFormData({
       content: comment.content,
-      postId: comment.postId,
+      postId: Number(comment.postId),
       parentId: comment.parentId,
       userId: comment.userId,
       fileUrl: comment.fileUrl || "",
@@ -475,10 +477,10 @@ export default function CommentsPage() {
                     })}
                   {comments.filter((c) => c.parentId === selectedComment.id)
                     .length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">
-                      Chưa có phản hồi nào
-                    </p>
-                  )}
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Chưa có phản hồi nào
+                      </p>
+                    )}
                 </div>
               </div>
             </div>

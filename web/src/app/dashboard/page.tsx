@@ -62,6 +62,9 @@ const userStatusData = [
   },
 ];
 
+// +++ TÍNH TỔNG SỐ NGƯỜI DÙNG ĐỂ TÍNH PHẦN TRĂM +++
+const totalUserStatus = userStatusData.reduce((sum, entry) => sum + entry.value, 0);
+
 const postsOverTimeData = Array.from({ length: 7 }, (_, i) => {
   const date = subDays(new Date(), i);
   const posts = mockPosts.filter((p) =>
@@ -247,13 +250,11 @@ export default function DashboardPage() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({
-                    name,
-                    percent,
-                  }: {
-                    name: string;
-                    percent: number;
-                  }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, value }: any) => {
+                    if (totalUserStatus === 0) return name;
+                    const percent = value / totalUserStatus;
+                    return `${name} ${(percent * 100).toFixed(0)}%`;
+                  }}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"

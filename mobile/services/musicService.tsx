@@ -28,7 +28,8 @@ export const GetAlbumsForYou = async (payload) => {
 export const GetArtistsForYou = async (payload) => {
   try {
     const response = await axiosClient.post(`/music/artist-for-you`, {
-      artistName: payload,
+      artistNames: payload.artistNames,
+      genres: payload.genres,
       limit: 3,
     });
     return response.data;
@@ -51,6 +52,26 @@ export const GetTracksByPlaylistId = async (payload) => {
 export const GetTracksByAlbumId = async (payload) => {
   try {
     const response = await axiosClient.get(`/music/album/${payload}/tracks`);
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+};
+
+export const GetTopTracksOfArtist = async (payload) => {
+  try {
+    const response = await axiosClient.get(`/music/artist/${payload}/top-tracks`);
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+};
+
+export const GetAlbumsOfArtist = async (payload) => {
+  try {
+    const response = await axiosClient.get(`/music/artist/${payload}/albums`);
     return response.data;
   } catch (error) {
     console.log(error.message);
