@@ -111,7 +111,7 @@ const protectedRoutes = [
   'comments', // Comment (cần đăng nhập mới comment được)
   'follows', // Theo dõi người dùng, nghệ sĩ
   // 'genres', // Xem thể loại nhạc
-  // 'artists', // Xem thông tin nghệ sĩ
+  'artists', // Xem thông tin nghệ sĩ
   'albums', // Xem album
   // 'search', // Tìm kiếm công khai
   // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)

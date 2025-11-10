@@ -1,4 +1,3 @@
-const e = require('express');
 const { Follow, User, sequelize, FollowArtist, Artist } = require('../models');
 const Sequelize = require('sequelize'); // Import module gốc
 const spotify = require('../configs/spotify');
@@ -306,11 +305,14 @@ exports.getArtistFollowedByUser = async (req, res) => {
             const artist = await Artist.findByPk(follow.artistId);
             if (artist) {
                 dataFormated.push({
-                    ...follow.t,
+                    ...follow.toJSON(),
                     artist: formatArtist(artist)
                 });
             }
         }
+
+        console.log(dataFormated)
+
         return res.status(200).json({
             message: 'Followed artists retrieved successfully',
             data: dataFormated,
@@ -403,9 +405,14 @@ exports.createFollowArtist = async (req, res) => {
         await artist.save();
 
         console.log(10)
+        let dataFormated = {
+            ...row.toJSON(),
+            artist: formatArtist(artist, null)
+        };
+        console.log(dataFormated)
         return res.status(201).json({
             message: 'FollowArtist created successfully',
-            data: { ...row, artist: formatArtist(artist, null) },
+            data: dataFormated,
             success: true
         });
     } catch (error) {

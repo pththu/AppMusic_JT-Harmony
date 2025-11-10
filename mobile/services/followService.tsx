@@ -1,12 +1,25 @@
 import axiosClient from "@/config/axiosClient";
 
+export const ShareArtist = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/artists/share`, {
+      artistId: payload.artistId,
+      artistSpotifyId: payload.artistSpotifyId,
+    });
+    console.log('api share artist response: ', response.data);
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+    throw error;
+  }
+}
+
 export const FollowArtist = async (payload) => {
   try {
     const response = await axiosClient.post(`follows/follow-artist`, {
       artistId: payload.artistId,
       artistSpotifyId: payload.artistSpotifyId,
     })
-    console.log('api response: ', response.data);
     return response.data;
   } catch (error) {
     console.log(error.message);
