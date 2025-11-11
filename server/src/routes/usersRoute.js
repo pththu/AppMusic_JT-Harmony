@@ -25,4 +25,6 @@ router.post('/:userId/follow', authenticateToken, userController.toggleFollow);
 // admin authorization
 router.delete('/remove/:id', authorizeRole, userController.deleteUser)
 
+router.get('/search', authenticateToken, userController.searchUsers);
+
 module.exports = router

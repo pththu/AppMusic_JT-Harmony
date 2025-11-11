@@ -1095,6 +1095,444 @@ const getTracksFromArtist = async (req, res) => {
   }
 };
 
+/**
+ * Tìm kiếm tổng hợp - trả về tất cả loại kết quả
+ */
+const searchAll = async (req, res) => {
+  try {
+    const { query, limit = 10 } = req.body;
+
+    if (!query) {
+      return res.status(400).json({
+        error: 'Query parameter is required',
+        success: false
+      });
+    }
+
+    // Tìm kiếm song song tất cả các loại
+    const [tracksResult, playlistsResult, albumsResult, artistsResult] =
+      await Promise.allSettled([
+        // Tracks
+        (async () => {
+          const whereTrack = { name: { [Op.iLike]: `%${query}%` } };
+          const data = await Track.findAll({
+            where: whereTrack,
+            include: [
+              { model: Album },
+              { model: Artist, as: 'artists' }
+            ],
+            limit: Number.parseInt(limit),
+            order: [['playCount', 'DESC']]
+          });
+
+          const formatted = data.map(track =>
+            formatTrack(track, track.artists, track.Album, track.videoId)
+          );
+
+          // Bổ sung từ Spotify nếu cần
+          if (formatted.length < limit) {
+            try {
+              const spotifyData = await spotify.searchTracks(
+                `track:"${query}"`,
+                'track',
+                limit - formatted.length
+              );
+              spotifyData.forEach(track => formatted.push(formatTrack(track, null, null, null)));
+            } catch (err) {
+              console.error('Spotify search tracks error:', err.message);
+            }
+          }
+
+          return formatted;
+        })(),
+
+        // Playlists
+        (async () => {
+          const dbPlaylists = await Playlist.findAll({
+            where: { name: { [Op.iLike]: `%${query}%` } },
+            limit: Number.parseInt(limit)
+          });
+
+          const formatted = [];
+          for (const playlist of dbPlaylists) {
+            const user = playlist.userId ? await User.findByPk(playlist.userId) : null;
+            formatted.push(formatPlaylist(playlist, user));
+          }
+
+          // Bổ sung từ Spotify
+          if (formatted.length < limit) {
+            try {
+              const spotifyPlaylists = await spotify.searchPlaylists({ name: query });
+              spotifyPlaylists.slice(0, limit - formatted.length).forEach(p =>
+                formatted.push(formatPlaylist(p, null))
+              );
+            } catch (err) {
+              console.error('Spotify search playlists error:', err.message);
+            }
+          }
+
+          return formatted;
+        })(),
+
+        // Albums
+        (async () => {
+          const dbAlbums = await Album.findAll({
+            where: { name: { [Op.iLike]: `%${query}%` } },
+            include: { model: Artist, as: 'artists' },
+            limit: Number.parseInt(limit)
+          });
+
+          const formatted = dbAlbums.map(album =>
+            formatAlbum(album, album.artists)
+          );
+
+          // Bổ sung từ Spotify
+          if (formatted.length < limit) {
+            try {
+              const spotifyAlbums = await spotify.searchAlbums({ name: query });
+              spotifyAlbums.slice(0, limit - formatted.length).forEach(a =>
+                formatted.push(formatAlbum(a, []))
+              );
+            } catch (err) {
+              console.error('Spotify search albums error:', err.message);
+            }
+          }
+
+          return formatted;
+        })(),
+
+        // Artists
+        (async () => {
+          const dbArtists = await Artist.findAll({
+            where: { name: { [Op.iLike]: `%${query}%` } },
+            include: { model: Genres, as: 'genres' },
+            limit: Number.parseInt(limit)
+          });
+
+          const formatted = dbArtists.map(artist =>
+            formatArtist(artist, artist.genres.map(g => g.name))
+          );
+
+          // Bổ sung từ Spotify
+          if (formatted.length < limit) {
+            try {
+              const spotifyArtists = await spotify.searchArtists(query);
+              spotifyArtists.slice(0, limit - formatted.length).forEach(a =>
+                formatted.push(formatArtist(a, null))
+              );
+            } catch (err) {
+              console.error('Spotify search artists error:', err.message);
+            }
+          }
+
+          return formatted;
+        })()
+      ]);
+
+    return res.status(200).json({
+      message: 'Search successful',
+      data: {
+        tracks: tracksResult.status === 'fulfilled' ? tracksResult.value : [],
+        playlists: playlistsResult.status === 'fulfilled' ? playlistsResult.value : [],
+        albums: albumsResult.status === 'fulfilled' ? albumsResult.value : [],
+        artists: artistsResult.status === 'fulfilled' ? artistsResult.value : [],
+      },
+      success: true
+    });
+  } catch (error) {
+    console.error('searchAll error:', error);
+    res.status(500).json({
+      message: error.message || 'Failed to search',
+      success: false
+    });
+  }
+};
+
+/**
+ * Lấy gợi ý tìm kiếm dựa trên query
+ */
+const getSearchSuggestions = async (req, res) => {
+  try {
+    const { q: query } = req.query;
+
+    if (!query || query.length < 2) {
+      return res.status(200).json({ data: [], success: true });
+    }
+
+    const suggestions = new Set(); // Dùng Set để tránh trùng lặp
+
+    // 1. Tìm kiếm nhanh trong DB
+    const [dbTracks, dbArtists, dbAlbums] = await Promise.all([
+      Track.findAll({
+        where: { name: { [Op.iLike]: `%${query}%` } },
+        attributes: ['name'],
+        limit: 3,
+        order: [['playCount', 'DESC']]
+      }),
+      Artist.findAll({
+        where: { name: { [Op.iLike]: `%${query}%` } },
+        attributes: ['name'],
+        limit: 3
+      }),
+      Album.findAll({
+        where: { name: { [Op.iLike]: `%${query}%` } },
+        attributes: ['name'],
+        limit: 2
+      })
+    ]);
+
+    // Thêm kết quả từ DB
+    dbTracks.forEach(t => suggestions.add(t.name));
+    dbArtists.forEach(a => suggestions.add(a.name));
+    dbAlbums.forEach(al => suggestions.add(al.name));
+
+    // 2. Nếu kết quả từ DB < 10, tìm thêm từ Spotify
+    if (suggestions.size < 10) {
+      try {
+        const [spotifyTracks, spotifyArtists, spotifyAlbums] = await Promise.allSettled([
+          spotify.searchTracks(`track:"${query}"`, 'track', 5),
+          spotify.searchArtists(query),
+          spotify.searchAlbums({ name: query })
+        ]);
+
+        // Thêm tracks từ Spotify
+        if (spotifyTracks.status === 'fulfilled' && spotifyTracks.value) {
+          spotifyTracks.value.slice(0, 3).forEach(track => {
+            if (track.name) suggestions.add(track.name);
+          });
+        }
+
+        // Thêm artists từ Spotify
+        if (spotifyArtists.status === 'fulfilled' && spotifyArtists.value) {
+          spotifyArtists.value.slice(0, 3).forEach(artist => {
+            if (artist.name) suggestions.add(artist.name);
+          });
+        }
+
+        // Thêm albums từ Spotify
+        if (spotifyAlbums.status === 'fulfilled' && spotifyAlbums.value) {
+          spotifyAlbums.value.slice(0, 2).forEach(album => {
+            if (album.name) suggestions.add(album.name);
+          });
+        }
+      } catch (spotifyError) {
+        console.error('Spotify suggestions error:', spotifyError.message);
+        // Tiếp tục với kết quả từ DB
+      }
+    }
+
+    // Chuyển Set về Array và giới hạn 15 suggestions
+    const finalSuggestions = Array.from(suggestions).slice(0, 15);
+
+    return res.status(200).json({
+      data: finalSuggestions,
+      success: true
+    });
+  } catch (error) {
+    console.error('getSearchSuggestions error:', error);
+    res.status(500).json({
+      message: error.message || 'Failed to get suggestions',
+      success: false
+    });
+  }
+};
+
+/**
+ * Lấy nội dung theo category/genre
+ */
+const getCategoryContent = async (req, res) => {
+  try {
+    const { category } = req.params;
+    const categoryUpper = category.toUpperCase();
+
+    // Tìm genre trong DB
+    const genre = await Genres.findOne({
+      where: { name: { [Op.iLike]: categoryUpper } }
+    });
+
+    if (!genre) {
+      // Nếu không tìm thấy trong DB, vẫn thử tìm trên Spotify
+      console.log(`Genre "${categoryUpper}" not found in DB, searching Spotify only...`);
+
+      try {
+        const [spotifyPlaylists, spotifyArtists, spotifyAlbums] = await Promise.allSettled([
+          spotify.searchPlaylists({ name: categoryUpper }),
+          spotify.searchArtists(`genre:"${categoryUpper}"`),
+          spotify.searchAlbums({ name: categoryUpper })
+        ]);
+
+        const formattedPlaylists = spotifyPlaylists.status === 'fulfilled' ?
+          spotifyPlaylists.value.slice(0, 15).map(p => formatPlaylist(p, null)) : [];
+
+        const formattedArtists = spotifyArtists.status === 'fulfilled' ?
+          spotifyArtists.value.slice(0, 20).map(a => formatArtist(a, [categoryUpper])) : [];
+
+        const formattedAlbums = spotifyAlbums.status === 'fulfilled' ?
+          spotifyAlbums.value.slice(0, 15).map(al => formatAlbum(al, [])) : [];
+
+        // Lấy tracks từ top artists
+        const trackPromises = formattedArtists.slice(0, 5).map(artist =>
+          artist.spotifyId ? spotify.getArtistTopTracks(artist.spotifyId) : Promise.resolve([])
+        );
+        const trackResults = await Promise.allSettled(trackPromises);
+
+        const allTracks = [];
+        trackResults.forEach(result => {
+          if (result.status === 'fulfilled' && result.value) {
+            allTracks.push(...result.value.slice(0, 3));
+          }
+        });
+
+        const formattedTracks = shuffle(allTracks)
+          .slice(0, 20)
+          .map(t => formatTrack(t, null, null, null));
+
+        return res.status(200).json({
+          message: 'Category content retrieved successfully (Spotify only)',
+          data: {
+            genre: { id: null, name: categoryUpper },
+            playlists: formattedPlaylists,
+            artists: formattedArtists,
+            albums: formattedAlbums,
+            tracks: formattedTracks
+          },
+          success: true
+        });
+      } catch (spotifyError) {
+        console.error('Spotify category search error:', spotifyError);
+        return res.status(404).json({
+          message: 'Category not found',
+          success: false
+        });
+      }
+    }
+
+    // Lấy artists từ DB thuộc genre này
+    const dbArtists = await Artist.findAll({
+      include: [{
+        model: Genres,
+        as: 'genres',
+        where: { id: genre.id }
+      }],
+      limit: 20
+    });
+
+    let formattedArtists = dbArtists.map(a => formatArtist(a, [genre.name]));
+
+    // Nếu artists từ DB < 20, bổ sung từ Spotify
+    if (formattedArtists.length < 20) {
+      try {
+        const spotifyArtists = await spotify.searchArtists(`genre:"${categoryUpper}"`);
+        const additionalArtists = spotifyArtists
+          .slice(0, 20 - formattedArtists.length)
+          .map(a => formatArtist(a, [categoryUpper]));
+        formattedArtists = [...formattedArtists, ...additionalArtists];
+      } catch (err) {
+        console.error('Spotify artists error:', err.message);
+      }
+    }
+
+    // Lấy albums: Từ DB artists + Spotify
+    let formattedAlbums = [];
+
+    // 1. Lấy albums từ DB artists
+    const dbAlbumPromises = dbArtists.slice(0, 10).map(artist =>
+      artist.spotifyId ? spotify.getArtistAlbums(artist.spotifyId) : Promise.resolve([])
+    );
+    const dbAlbumResults = await Promise.allSettled(dbAlbumPromises);
+
+    const allAlbums = [];
+    dbAlbumResults.forEach(result => {
+      if (result.status === 'fulfilled' && result.value) {
+        allAlbums.push(...result.value.slice(0, 2)); // Lấy 2 albums mỗi artist
+      }
+    });
+
+    // 2. Nếu albums < 15, tìm thêm trên Spotify theo genre
+    if (allAlbums.length < 15) {
+      try {
+        const spotifyAlbums = await spotify.searchAlbums({ name: categoryUpper });
+        allAlbums.push(...spotifyAlbums.slice(0, 15 - allAlbums.length));
+      } catch (err) {
+        console.error('Spotify albums search error:', err.message);
+      }
+    }
+
+    // 3. Shuffle và format albums
+    formattedAlbums = shuffle(allAlbums)
+      .slice(0, 15)
+      .map(al => formatAlbum(al, []));
+
+    // Lấy playlists từ Spotify
+    let formattedPlaylists = [];
+    try {
+      const spotifyPlaylists = await spotify.searchPlaylists({
+        name: categoryUpper
+      });
+      formattedPlaylists = spotifyPlaylists.slice(0, 15).map(p =>
+        formatPlaylist(p, null)
+      );
+    } catch (err) {
+      console.error('Spotify playlists error:', err.message);
+    }
+
+    // Lấy tracks: Ưu tiên từ DB artists, sau đó bổ sung từ Spotify
+    let allTracks = [];
+
+    // Lấy tracks từ DB artists
+    const dbTrackPromises = dbArtists.slice(0, 5).map(artist =>
+      artist.spotifyId ? spotify.getArtistTopTracks(artist.spotifyId) : Promise.resolve([])
+    );
+    const dbTrackResults = await Promise.allSettled(dbTrackPromises);
+
+    dbTrackResults.forEach(result => {
+      if (result.status === 'fulfilled' && result.value) {
+        allTracks.push(...result.value.slice(0, 3));
+      }
+    });
+
+    // Nếu tracks < 20, lấy thêm từ Spotify artists
+    if (allTracks.length < 20) {
+      const spotifyTrackPromises = formattedArtists
+        .slice(0, Math.min(10 - dbArtists.length, formattedArtists.length))
+        .filter(a => a.spotifyId)
+        .map(artist => spotify.getArtistTopTracks(artist.spotifyId));
+
+      const spotifyTrackResults = await Promise.allSettled(spotifyTrackPromises);
+      spotifyTrackResults.forEach(result => {
+        if (result.status === 'fulfilled' && result.value) {
+          allTracks.push(...result.value.slice(0, 2));
+        }
+      });
+    }
+
+    const formattedTracks = shuffle(allTracks)
+      .slice(0, 20)
+      .map(t => formatTrack(t, null, null, null));
+
+    return res.status(200).json({
+      message: 'Category content retrieved successfully',
+      data: {
+        genre: {
+          id: genre.id,
+          name: genre.name
+        },
+        playlists: formattedPlaylists,
+        artists: formattedArtists,
+        albums: formattedAlbums,
+        tracks: formattedTracks
+      },
+      success: true
+    });
+  } catch (error) {
+    console.error('getCategoryContent error:', error);
+    res.status(500).json({
+      message: error.message || 'Failed to get category content',
+      success: false
+    });
+  }
+};
+
 module.exports = {
   findSpotifyPlaylist,
   findYoutubeVideo,
@@ -1119,4 +1557,8 @@ module.exports = {
   addTrackToPlaylistAfterConfirm,
   addTracksToPlaylists,
   removeTrackFromPlaylist,
+
+  searchAll,
+  getSearchSuggestions,
+  getCategoryContent,
 };

@@ -523,14 +523,11 @@ export const ClearSearchHistory = async () => {
  */
 export const GetCategoryContent = async (category: string) => {
   try {
-    // const response = await axiosClient.get(
-    //   `/music/category/${encodeURIComponent(category)}`
-    // );
-    const response = {
-      message: "Lấy category thành công",
-      success: true,
-    }
-    return response;
+    const response = await axiosClient.get(
+      `/music/category/${encodeURIComponent(category)}`
+    );
+    console.log('categori: ', response.data)
+    return response.data;
   } catch (error: any) {
     console.error("GetCategoryContent error:", error.message);
     throw error;
