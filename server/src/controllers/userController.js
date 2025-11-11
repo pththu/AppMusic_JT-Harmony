@@ -1,11 +1,10 @@
 const { User, Follow, Post } = require('../models');
-const sequelize = require('../configs/database');
-const { Op } = require("sequelize");
+const Op = require('sequelize').Op;
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const cloudinary = require('../configs/cloudinary');
 
-exports.getAllUser = async(req, res) => {
+exports.getAllUser = async (req, res) => {
     try {
         const rows = await User.findAll();
         res.json(rows);
@@ -14,7 +13,7 @@ exports.getAllUser = async(req, res) => {
     }
 };
 
-exports.getUserById = async(req, res) => {
+exports.getUserById = async (req, res) => {
     try {
         const row = await User.findByPk(req.params.id);
         if (!row) return res.status(404).json({ error: 'User not found' });
@@ -32,7 +31,7 @@ exports.getUserById = async(req, res) => {
  * /search?status=active
  * /search?username=abc&gender=false
  */
-exports.search = async(req, res) => {
+exports.search = async (req, res) => {
     try {
         const { id, username, email, fullName, gender, status } = req.query;
         const where = {};
@@ -56,9 +55,9 @@ exports.search = async(req, res) => {
 }
 
 // không sử dụng
-exports.createUser = async(req, res) => {
+exports.createUser = async (req, res) => {
     try {
-        const payload = {...req.body };
+        const payload = { ...req.body };
         if (payload.password) {
             payload.password = await bcrypt.hash(payload.password, 10);
         }
@@ -69,9 +68,9 @@ exports.createUser = async(req, res) => {
     }
 };
 
-exports.updateInforUser = async(req, res) => {
+exports.updateInforUser = async (req, res) => {
     try {
-        const payload = {...req.body };
+        const payload = { ...req.body };
         const user = await User.findByPk(req.user.id);
 
         if (!payload.gender && user.gender === null) {
@@ -105,7 +104,7 @@ exports.updateInforUser = async(req, res) => {
 };
 
 // Đổi mật khẩu sau khi đăng nhập
-exports.changePassword = async(req, res) => {
+exports.changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -128,7 +127,7 @@ exports.changePassword = async(req, res) => {
     }
 };
 
-exports.deleteUser = async(req, res) => {
+exports.deleteUser = async (req, res) => {
     try {
         const deleted = await User.destroy({ where: { id: req.params.id } });
         if (!deleted) return res.status(404).json({ error: 'User not found' });
@@ -139,12 +138,12 @@ exports.deleteUser = async(req, res) => {
 };
 
 exports.linkSocialAccount = async (req, res) => {
-  try {
-    const { userInfor, provider } = req.body;
-    const user = await User.findByPk(req.user.id);
-    if (!user) {
-      return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
-    }
+    try {
+        const { userInfor, provider } = req.body;
+        const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
+        }
 
         if (provider !== 'google' && provider !== 'facebook') {
             return res.status(200).json({ message: 'Provider không hợp lệ', success: false });
@@ -232,7 +231,7 @@ exports.linkSocialAccount = async (req, res) => {
     }
 };
 
-exports.selfLockAccount = async(req, res) => {
+exports.selfLockAccount = async (req, res) => {
     try {
         const { password } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -252,7 +251,7 @@ exports.selfLockAccount = async(req, res) => {
     }
 };
 
-exports.mergeAccount = async(req, res) => {
+exports.mergeAccount = async (req, res) => {
     try {
         const { userId } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -284,7 +283,7 @@ exports.mergeAccount = async(req, res) => {
     }
 };
 
-exports.changeAvatar = async(req, res) => {
+exports.changeAvatar = async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -324,7 +323,7 @@ exports.changeAvatar = async(req, res) => {
     }
 };
 
-exports.getUserProfileSocial = async(req, res) => {
+exports.getUserProfileSocial = async (req, res) => {
     const { userId } = req.params;
     const currentUserId = req.user.id; // ID của người dùng đang xem (từ authenticateToken)
 
@@ -392,7 +391,7 @@ exports.getUserProfileSocial = async(req, res) => {
 // Toggle Theo dõi/Hủy theo dõi
 // POST /api/v1/users/:userId/follow
 // ----------------------------------------------------------------------
-exports.toggleFollow = async(req, res) => {
+exports.toggleFollow = async (req, res) => {
     // const targetUserId = req.params.userId;
     // const currentUserId = req.user.id;
 
@@ -436,3 +435,39 @@ exports.toggleFollow = async(req, res) => {
     //     res.status(500).json({ error: err.message });
     // }
 };
+
+exports.searchUsers = async (req, res) => {
+    try {
+        const { q: query } = req.query;
+
+        if (!query) {
+            return res.status(400).json({
+                error: 'Query parameter is required',
+                success: false
+            });
+        }
+
+        const users = await User.findAll({
+            where: {
+                [Op.or]: [
+                    { fullName: { [Op.iLike]: `%${query}%` } },
+                    { username: { [Op.iLike]: `%${query}%` } }
+                ]
+            },
+            attributes: ['id', 'fullName', 'username', 'avatarUrl', 'bio'],
+            limit: 20
+        });
+
+        return res.status(200).json({
+            message: 'User search successful',
+            data: users,
+            success: true
+        });
+    } catch (error) {
+        console.error('Search users error:', error);
+        res.status(500).json({
+            message: error.message || 'Failed to search users',
+            success: false
+        });
+    }
+}

@@ -81,7 +81,7 @@ app.set("trust proxy", true);
 app.use(
   cors({
     origin: [
-      "http://localhost:3000", 
+      "http://localhost:3000",
       "http://localhost:3001",
       "http://192.168.1.12:3000"
     ],
@@ -110,8 +110,8 @@ const protectedRoutes = [
   'playlists', // Playlist cá nhân
   'comments', // Comment (cần đăng nhập mới comment được)
   'follows', // Theo dõi người dùng, nghệ sĩ
-  // 'genres', // Xem thể loại nhạc
-  // 'artists', // Xem thông tin nghệ sĩ
+  'genres', // Xem thể loại nhạc
+  'artists', // Xem thông tin nghệ sĩ
   'albums', // Xem album
   // 'search', // Tìm kiếm công khai
   // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)

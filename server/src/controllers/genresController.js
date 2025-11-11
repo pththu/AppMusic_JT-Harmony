@@ -3,12 +3,24 @@ const { Op } = require('sequelize');
 
 exports.getAllGenre = async (req, res) => {
   try {
-    const rows = await Genres.findAll();
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const genres = await Genres.findAll({
+      attributes: ['id', 'name'],
+      order: [['name', 'ASC']]
+    });
+
+    return res.status(200).json({
+      message: 'Genres retrieved successfully',
+      data: genres,
+      success: true
+    });
+  } catch (error) {
+    console.error('Get genres error:', error);
+    res.status(500).json({
+      message: error.message || 'Failed to get genres',
+      success: false
+    });
   }
-};
+}
 
 exports.getGenreById = async (req, res) => {
   try {
@@ -17,6 +29,32 @@ exports.getGenreById = async (req, res) => {
     res.json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const genre = await Genres.findByPk(id);
+
+    if (!genre) {
+      return res.status(404).json({
+        message: 'Genre not found',
+        success: false
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Genre retrieved successfully',
+      data: genre,
+      success: true
+    });
+  } catch (error) {
+    console.error('Get genre by ID error:', error);
+    res.status(500).json({
+      message: error.message || 'Failed to get genre',
+      success: false
+    });
   }
 };
 

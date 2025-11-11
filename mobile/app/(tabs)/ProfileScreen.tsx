@@ -239,7 +239,7 @@ export default function ProfileScreen() {
         {isChoosedImage && <ModalConfirm />}
 
         {/* Thông tin liên hệ */}
-        <View className="my-4 border-b border-gray-300 pb-4">
+        <View className="my-4 pb-4">
           <View className="flex-row items-center mb-2 gap-2">
             <Icon
               name="mail-outline"
@@ -272,7 +272,7 @@ export default function ProfileScreen() {
             <Text
               className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}
             >
-              {new Date(user?.dob).toLocaleDateString() || "Chưa có thông tin"}
+              {user?.dob ? new Date(user?.dob).toLocaleDateString() : "Chưa có thông tin"}
             </Text>
           </View>
 
@@ -312,7 +312,7 @@ export default function ProfileScreen() {
           <LibraryItemButton
             title="Danh sách phát"
             icon="list"
-            onPress={() => navigate("PlaylistsScreen")}
+            onPress={() => navigate("AllPlaylistScreen")}
             color="#82d8ff"
           />
           <LibraryItemButton

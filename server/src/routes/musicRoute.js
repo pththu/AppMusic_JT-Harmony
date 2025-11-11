@@ -43,4 +43,14 @@ router.post('/search-video', musicController.findYoutubeVideo);
 
 router.delete('/playlist/:playlistId/remove-track/:playlistTrackId', musicController.removeTrackFromPlaylist);
 
+
+
+router.post('/search-all', musicController.searchAll);
+
+// Gợi ý tìm kiếm
+router.get('/search-suggestions', musicController.getSearchSuggestions);
+
+// Lấy nội dung theo category
+router.get('/category/:category', musicController.getCategoryContent);
+
 module.exports = router;
