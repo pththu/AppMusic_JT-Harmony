@@ -14,12 +14,15 @@ export default function GlobalPlayer() {
   const repeatMode = usePlayerStore((state) => state.repeatMode);
   const isLastIndex = usePlayerStore((state) => state.isLastIndex);
   const seekTrigger = usePlayerStore((state) => state.seekTrigger);
+  const targetSeekMs = usePlayerStore((state) => state.targetSeekMs); // Bình luận theo mốc thời gian
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const setPlaybackPosition = usePlayerStore((state) => state.setPlaybackPosition);
   const setDuration = usePlayerStore((state) => state.setDuration);
   const setIsPlaying = usePlayerStore((state) => state.setIsPlaying);
   const updateCurrentTrack = usePlayerStore((state) => state.updateCurrentTrack);
+  const setTargetSeekMs = usePlayerStore((state) => state.setTargetSeekMs);
+  const uiOverlayOpen = usePlayerStore((state) => state.uiOverlayOpen); // tránh giật khi mở TrackCommentsModal
 
   const appState = useRef(AppState.currentState);
   const [videoIdTemp, setVideoIdTemp] = useState('');
@@ -52,7 +55,7 @@ export default function GlobalPlayer() {
           latestState.setPlaybackPosition(currentTime);
         }
       } catch (err) {
-        console.log("Lỗi khi lấy thời gian Youtube:", err);
+        console.log("Lỗi khi lấy thởi gian Youtube:", err);
       }
     }
   };
@@ -60,7 +63,7 @@ export default function GlobalPlayer() {
   useEffect(() => {
     let intervalId = null;
 
-    if (isPlaying) {
+    if (isPlaying && !uiOverlayOpen) {
       intervalId = setInterval(async () => {
         if (playerRef.current) {
           try {
@@ -82,7 +85,7 @@ export default function GlobalPlayer() {
         clearInterval(intervalId);
       }
     };
-  }, [isPlaying, setPlaybackPosition]);
+  }, [isPlaying, uiOverlayOpen, setPlaybackPosition]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", async (nextAppState) => {
@@ -191,6 +194,18 @@ export default function GlobalPlayer() {
       playerRef.current.seekTo(0, true);
     }
   }, [seekTrigger]);
+
+  useEffect(() => {
+    if (targetSeekMs != null && playerRef.current) {
+      try {
+        playerRef.current.seekTo(Math.max(0, (targetSeekMs || 0) / 1000), true);
+      } catch (e) {
+        console.log('seekTo error', e);
+      } finally {
+        setTargetSeekMs && setTargetSeekMs(null);
+      }
+    }
+  }, [targetSeekMs]);
 
   if (!currentTrack) {
     return null;

@@ -6,7 +6,7 @@ const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const { sequelize, User } = require("./models");
 const { API_PREFIX } = require("./configs/constants");
-const { authenticateToken } = require("./middlewares/authentication");
+const { authenticateToken, authorizeRole } = require("./middlewares/authentication");
 const seedDatabase = require("./utils/seeder");
 
 const dotenv = require("dotenv");
@@ -26,8 +26,8 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3000",
-      "http://192.168.1.12:3000",
-      "exp://192.168.1.12:8081",
+      "http://192.168.1.22:3000",
+      "exp://192.168.1.22:8081",
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -79,7 +79,11 @@ app.set("trust proxy", true);
 // Middleware CORS cho Express
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://192.168.1.12:3000"],
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://192.168.1.22:3000",
+    ],
     credentials: true,
   })
 );
@@ -99,21 +103,21 @@ app.use(
 
 // Danh sách các route yêu cầu xác thực và không yêu cầu xác thực
 const protectedRoutes = [
-  'favorites', // Yêu thích
-  'histories', // Lịch sử nghe nhạc
-  'notifications', // Thông báo
-  'playlists', // Playlist cá nhân
-  'comments', // Comment (cần đăng nhập mới comment được)
-  'follows', // Theo dõi người dùng, nghệ sĩ
+  "favorites", // Yêu thích
+  "histories", // Lịch sử nghe nhạc
+  "notifications", // Thông báo
+  "playlists", // Playlist cá nhân
+  "comments", // Comment (cần đăng nhập mới comment được)
+  "follows", // Theo dõi người dùng, nghệ sĩ
   // 'genres', // Xem thể loại nhạc
   // 'artists', // Xem thông tin nghệ sĩ
-  'albums', // Xem album
+  "albums", // Xem album
   // 'search', // Tìm kiếm công khai
   // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
-  'conversations',
-  'upload', // Upload hình ảnh, file
-  'music',
-  'tracks',        // Xem bài hát (public), upload bài hát (private)
+  "conversations",
+  "upload", // Upload hình ảnh, file
+  "music",
+  "tracks", // Xem bài hát (public), upload bài hát (private)
   // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
 ];
 // const protectedRoutes = ['albums', 'songs', 'playlists', 'genres', 'follows', 'notifications', 'recommendations', 'history', 'downloads', 'conversations'];
@@ -146,6 +150,14 @@ publicRoutes.forEach((route) => {
   app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
 });
 
+// 4. Admin metrics routes
+app.use(
+  `${API_PREFIX}/admin/metrics`,
+  authenticateToken,
+  authorizeRole,
+  require('./routes/adminMetricsRoute')
+);
+
 // Start server
 async function startServer() {
   try {
@@ -159,7 +171,7 @@ async function startServer() {
       console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);
     });
   } catch (e) {
-    console.error('❌ Server startup error:', e.message);
+    console.error("❌ Server startup error:", e.message);
     process.exit(1);
   }
 }

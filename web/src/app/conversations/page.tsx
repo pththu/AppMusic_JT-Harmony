@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -10,6 +10,7 @@ import {
   Users,
   User,
   Plus,
+  Loader2,
 } from "lucide-react";
 import {
   Button,
@@ -31,51 +32,112 @@ import {
   DialogTitle,
 } from "@/components/ui";
 import {
-  mockConversations,
-  mockConversationMembers,
-  mockMessages,
-  mockUsers,
-  getUserById,
+  fetchConversations,
+  fetchConversationMessages,
+  deleteConversation,
+  createPrivateConversationWithUser,
   type Conversation,
-} from "@/lib/mock-data";
+  type Message,
+} from "@/services/conversationApi";
 
 export default function ConversationsPage() {
-  const [conversations, setConversations] =
-    useState<Conversation[]>(mockConversations);
-  const [selectedConversation, setSelectedConversation] =
-    useState<Conversation | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [conversationMessages, setConversationMessages] = useState<{[key: number]: Message[]}>({});
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [targetUserId, setTargetUserId] = useState<string>("");
+  const [filterType, setFilterType] = useState<string>("");
+  const [filterQ, setFilterQ] = useState<string>("");
+  const [filterMemberId, setFilterMemberId] = useState<string>("");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
 
-  const handleDeleteConversation = (conversationId: number) => {
-    setConversations(
-      conversations.filter((conv) => conv.id !== conversationId)
-    );
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchConversations({
+        type: (filterType as any) || undefined,
+        q: filterQ || undefined,
+        memberId: filterMemberId ? parseInt(filterMemberId, 10) : undefined,
+        dateFrom: filterDateFrom || undefined,
+        dateTo: filterDateTo || undefined,
+      });
+      setConversations(data);
+    } catch (err) {
+      console.error("Error fetching conversations:", err);
+      setError("Không thể tải dữ liệu cuộc trò chuyện");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleViewConversation = (conversation: Conversation) => {
+  const handleDeleteConversation = async (conversationId: number) => {
+    try {
+      await deleteConversation(conversationId);
+      setConversations(conversations.filter((conv) => conv.id !== conversationId));
+    } catch (err) {
+      console.error("Error deleting conversation:", err);
+      setError("Không thể xóa cuộc trò chuyện");
+    }
+  };
+
+  const handleViewConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
     setIsViewDialogOpen(true);
+
+    // Fetch messages for this conversation if not already loaded
+    if (!conversationMessages[conversation.id]) {
+      try {
+        const messages = await fetchConversationMessages(conversation.id);
+        setConversationMessages(prev => ({
+          ...prev,
+          [conversation.id]: messages,
+        }));
+      } catch (err) {
+        console.error("Failed to fetch conversation messages:", err);
+      }
+    }
   };
 
   const getConversationType = (conversation: Conversation) => {
     return conversation.type === "private" ? "Riêng tư" : "Nhóm";
   };
 
-  const getMemberCount = (conversationId: number) => {
-    return mockConversationMembers.filter(
-      (member) => member.conversationId === conversationId
-    ).length;
+  const getMemberCount = (conversation: Conversation) => {
+    return conversation.members?.length || 0;
   };
 
-  const getLastMessage = (conversationId: number) => {
-    const messages = mockMessages.filter(
-      (msg) => msg.conversationId === conversationId
-    );
-    return messages.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )[0];
+  const getLastMessage = (conversation: Conversation) => {
+    return conversation.lastMessage;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Đang tải...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Lỗi: {error}</p>
+          <Button onClick={loadConversations}>Thử lại</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -88,10 +150,82 @@ export default function ConversationsPage() {
             Quản lý các cuộc trò chuyện và tin nhắn
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Thêm Cuộc Trò Chuyện
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Loại</label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full border rounded px-3 py-2 text-sm"
+            >
+              <option value="">Tất cả</option>
+              <option value="private">Riêng tư</option>
+              <option value="group">Nhóm</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Từ khóa tên</label>
+            <input
+              type="text"
+              value={filterQ}
+              onChange={(e) => setFilterQ(e.target.value)}
+              placeholder="Nhập từ khóa"
+              className="w-full border rounded px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">ID thành viên</label>
+            <input
+              type="number"
+              value={filterMemberId}
+              onChange={(e) => setFilterMemberId(e.target.value)}
+              placeholder="VD: 123"
+              className="w-full border rounded px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Từ ngày</label>
+            <input
+              type="date"
+              value={filterDateFrom}
+              onChange={(e) => setFilterDateFrom(e.target.value)}
+              className="w-full border rounded px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Đến ngày</label>
+            <input
+              type="date"
+              value={filterDateTo}
+              onChange={(e) => setFilterDateTo(e.target.value)}
+              className="w-full border rounded px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <Button onClick={loadConversations}>Áp dụng</Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setFilterType("");
+              setFilterQ("");
+              setFilterMemberId("");
+              setFilterDateFrom("");
+              setFilterDateTo("");
+              loadConversations();
+            }}
+          >
+            Đặt lại
+          </Button>
+        </div>
       </div>
 
       {/* Conversations Table */}
@@ -109,11 +243,8 @@ export default function ConversationsPage() {
           </TableHeader>
           <TableBody>
             {conversations.map((conversation) => {
-              const memberCount = getMemberCount(conversation.id);
-              const lastMessage = getLastMessage(conversation.id);
-              const creator = conversation.creatorId
-                ? getUserById(conversation.creatorId)
-                : null;
+              const memberCount = getMemberCount(conversation);
+              const lastMessage = getLastMessage(conversation);
 
               return (
                 <TableRow key={conversation.id}>
@@ -131,11 +262,6 @@ export default function ConversationsPage() {
                           {conversation.name ||
                             `Cuộc trò chuyện ${conversation.id}`}
                         </div>
-                        {creator && (
-                          <div className="text-sm text-gray-500">
-                            Tạo bởi: {creator.username}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </TableCell>
@@ -158,7 +284,7 @@ export default function ConversationsPage() {
                             {lastMessage.content || "File đính kèm"}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {getUserById(lastMessage.senderId)?.username}
+                            {lastMessage.User?.username}
                           </p>
                         </div>
                       ) : (
@@ -180,9 +306,7 @@ export default function ConversationsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => {
-                            window.location.href = `/conversations/${conversation.id}`;
-                          }}
+                          onClick={() => handleViewConversation(conversation)}
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           Xem Chi Tiết
@@ -242,13 +366,6 @@ export default function ConversationsPage() {
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <span>{getConversationType(selectedConversation)}</span>
                       <span>
-                        Tạo:{" "}
-                        {format(
-                          new Date(selectedConversation.createdAt),
-                          "MMM dd, yyyy"
-                        )}
-                      </span>
-                      <span>
                         Cập nhật:{" "}
                         {format(
                           new Date(selectedConversation.updatedAt),
@@ -263,63 +380,41 @@ export default function ConversationsPage() {
               {/* Members */}
               <div>
                 <h4 className="font-medium text-gray-900 mb-3">
-                  Thành Viên ({getMemberCount(selectedConversation.id)})
+                  Thành Viên ({getMemberCount(selectedConversation)})
                 </h4>
                 <div className="grid gap-2">
-                  {mockConversationMembers
-                    .filter(
-                      (member) =>
-                        member.conversationId === selectedConversation.id
-                    )
-                    .map((member) => {
-                      const user = getUserById(member.userId);
-                      return user ? (
-                        <div
-                          key={member.id}
-                          className="flex items-center justify-between p-3 bg-white rounded border"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              {user.avatarUrl ? (
-                                <img
-                                  src={user.avatarUrl}
-                                  alt={user.username}
-                                  className="w-8 h-8 rounded-full"
-                                />
-                              ) : (
-                                <User className="h-4 w-4 text-gray-600" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {user.username}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {user.fullName}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            {member.isAdmin && (
-                              <Badge variant="secondary">Admin</Badge>
+                  {(selectedConversation.members as any[])?.map((member) => {
+                    const u: any = (member as any).User || (member as any);
+                    return (
+                      <div
+                        key={(member as any).id}
+                        className="flex items-center justify-between p-3 bg-white rounded border"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            {u?.avatarUrl ? (
+                              <img
+                                src={u.avatarUrl}
+                                alt={u.username || u.fullName || "member"}
+                                className="w-8 h-8 rounded-full"
+                              />
+                            ) : (
+                              <User className="h-4 w-4 text-gray-600" />
                             )}
-                            <Badge
-                              variant={
-                                member.status === "active"
-                                  ? "default"
-                                  : "outline"
-                              }
-                            >
-                              {member.status === "active"
-                                ? "Hoạt động"
-                                : member.status === "left"
-                                  ? "Đã rời"
-                                  : "Bị xóa"}
-                            </Badge>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {u?.username || u?.fullName || "Người dùng"}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {u?.fullName || ""}
+                            </p>
                           </div>
                         </div>
-                      ) : null;
-                    })}
+                        <Badge variant="default">Hoạt động</Badge>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -329,64 +424,52 @@ export default function ConversationsPage() {
                   Tin Nhắn Gần Đây
                 </h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {mockMessages
-                    .filter(
-                      (msg) => msg.conversationId === selectedConversation.id
-                    )
-                    .sort(
-                      (a, b) =>
-                        new Date(b.createdAt).getTime() -
-                        new Date(a.createdAt).getTime()
-                    )
-                    .slice(0, 10)
-                    .map((message) => {
-                      const sender = getUserById(message.senderId);
-                      return (
-                        <div
-                          key={message.id}
-                          className="flex items-start space-x-3 p-3 bg-white rounded border"
-                        >
-                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                            {sender?.avatarUrl ? (
-                              <img
-                                src={sender.avatarUrl}
-                                alt={sender.username}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <User className="h-4 w-4 text-gray-600" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span className="font-medium text-gray-900 text-sm">
-                                {sender?.username}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {format(
-                                  new Date(message.createdAt),
-                                  "MMM dd, HH:mm"
-                                )}
-                              </span>
-                              <Badge variant="outline" className="text-xs">
-                                {message.type}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-900 break-words">
-                              {message.content || "File đính kèm"}
-                            </p>
-                            {message.fileUrl && (
-                              <p className="text-xs text-blue-600 mt-1">
-                                File: {message.fileUrl}
-                              </p>
-                            )}
-                          </div>
+                  {conversationMessages[selectedConversation.id]?.slice(0, 10).map((message) => {
+                    const sender = message.User;
+                    return (
+                      <div
+                        key={message.id}
+                        className="flex items-start space-x-3 p-3 bg-white rounded border"
+                      >
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                          {sender?.avatarUrl ? (
+                            <img
+                              src={sender.avatarUrl}
+                              alt={sender.username}
+                              className="w-8 h-8 rounded-full"
+                            />
+                          ) : (
+                            <User className="h-4 w-4 text-gray-600" />
+                          )}
                         </div>
-                      );
-                    })}
-                  {mockMessages.filter(
-                    (msg) => msg.conversationId === selectedConversation.id
-                  ).length === 0 && (
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="font-medium text-gray-900 text-sm">
+                              {sender?.username}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {format(
+                                new Date(message.createdAt),
+                                "MMM dd, HH:mm"
+                              )}
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {message.type}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-900 break-words">
+                            {message.content || "File đính kèm"}
+                          </p>
+                          {message.fileUrl && (
+                            <p className="text-xs text-green-600 mt-1">
+                              File: {message.fileUrl}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(!conversationMessages[selectedConversation.id] || conversationMessages[selectedConversation.id].length === 0) && (
                     <p className="text-sm text-gray-500 text-center py-4">
                       Chưa có tin nhắn nào
                     </p>
@@ -395,6 +478,52 @@ export default function ConversationsPage() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Conversation Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Thêm Cuộc Trò Chuyện</DialogTitle>
+            <DialogDescription>
+              Tạo cuộc trò chuyện riêng tư với User ID chỉ định
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">User ID</label>
+              <input
+                type="number"
+                value={targetUserId}
+                onChange={(e) => setTargetUserId(e.target.value)}
+                placeholder="Nhập User ID"
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Hủy
+              </Button>
+              <Button
+                onClick={async () => {
+                  const uid = parseInt(targetUserId, 10);
+                  if (!uid || uid <= 0) return;
+                  try {
+                    const res = await createPrivateConversationWithUser(uid);
+                    setIsAddDialogOpen(false);
+                    setTargetUserId("");
+                    // Điều hướng sang trang tin nhắn của cuộc trò chuyện vừa tạo
+                    window.location.href = `/messages?conversationId=${res.conversationId}`;
+                  } catch (err) {
+                    console.error("Failed to create private conversation:", err);
+                  }
+                }}
+              >
+                Tạo
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

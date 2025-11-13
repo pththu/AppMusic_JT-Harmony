@@ -124,7 +124,7 @@ export function Sidebar() {
       >
         {/* Logo */}
         <div className="flex h-16 items-center px-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">AppMusic Admin</h1>
+          <h1 className="text-xl font-bold text-gray-900">JT-Harmony Admin</h1>
         </div>
 
         {/* Navigation */}
@@ -145,7 +145,7 @@ export function Sidebar() {
                         "flex items-center flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors",
                         isActive ||
                           item.subItems?.some((sub) => pathname === sub.href)
-                          ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                          ? "bg-green-50 text-green-700 border-r-2 border-green-700"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       )}
                     >
@@ -170,7 +170,7 @@ export function Sidebar() {
                     className={cn(
                       "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                       isActive
-                        ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                        ? "bg-green-50 text-green-700 border-r-2 border-green-700"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     )}
                   >
@@ -191,7 +191,7 @@ export function Sidebar() {
                           className={cn(
                             "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                             isSubActive
-                              ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                              ? "bg-green-50 text-green-700 border-r-2 border-green-700"
                               : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                           )}
                         >
@@ -210,7 +210,7 @@ export function Sidebar() {
         {/* Footer */}
         <div className="border-t border-gray-200 p-4">
           <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
               <span className="text-sm font-medium text-white">A</span>
             </div>
             <div className="ml-3">

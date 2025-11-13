@@ -10,6 +10,187 @@ const {
   Track,
   Artist,
 } = require("../models");
+const { Op } = require('sequelize');
+
+function isAdmin(req) {
+  const u = (req && (req.currentUser || req.user)) || {};
+  return u.roleId === 1 || u.role_id === 1;
+}
+
+// === ADMIN: DANH SÁCH TẤT CẢ LIKE VỚI FILTER/PAGINATION ===
+exports.getAllLikesAdmin = async (req, res) => {
+  try {
+    const { postId, userId, dateFrom, dateTo } = req.query;
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const offset = parseInt(req.query.offset, 10) || 0;
+
+    const where = {};
+    if (postId) where.postId = parseInt(postId, 10);
+    if (userId) where.userId = parseInt(userId, 10);
+    if (dateFrom || dateTo) {
+      where.liked_at = {};
+      if (dateFrom) where.liked_at[Op.gte] = new Date(`${dateFrom}T00:00:00`);
+      if (dateTo) {
+        const endExclusive = new Date(`${dateTo}T00:00:00`);
+        endExclusive.setDate(endExclusive.getDate() + 1);
+        where.liked_at[Op.lt] = endExclusive;
+      }
+    }
+
+    const rows = await Like.findAll({
+      where,
+      include: [
+        { model: User, as: 'User', attributes: ['id','username','fullName','avatarUrl'] },
+        { model: Post, as: 'Post', attributes: ['id','userId','content','createdAt'] },
+      ],
+      order: [['liked_at','DESC']],
+      limit,
+      offset,
+    });
+
+    const data = rows.map(like => ({
+      id: like.id,
+      userId: like.userId,
+      postId: like.postId,
+      likedAt: like.liked_at,
+      User: like.User,
+      Post: like.Post,
+    }));
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error('Error fetching likes (admin):', error);
+    return res.status(500).json({ error: 'Failed to fetch likes.' });
+  }
+};
+
+// --- ADMIN: DANH SÁCH BÀI ĐĂNG VỚI FILTER/PAGINATION ---
+exports.getPostsAdmin = async (req, res) => {
+  try {
+    const { q, userId, isCover, dateFrom, dateTo } = req.query;
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const offset = parseInt(req.query.offset, 10) || 0;
+
+    const where = {};
+    if (q) where.content = { [Op.iLike || Op.like]: `%${q}%` };
+    if (userId) where.userId = parseInt(userId, 10);
+    if (isCover === 'true') where.isCover = true;
+    if (isCover === 'false') where.isCover = false;
+    if (dateFrom || dateTo) {
+      where.uploadedAt = {};
+      if (dateFrom) where.uploadedAt[Op.gte] = new Date(`${dateFrom}T00:00:00`);
+      if (dateTo) {
+        const endExclusive = new Date(`${dateTo}T00:00:00`);
+        endExclusive.setDate(endExclusive.getDate() + 1);
+        where.uploadedAt[Op.lt] = endExclusive;
+      }
+    }
+
+    const posts = await Post.findAll({
+      where,
+      include: [
+        { model: User, as: 'User', attributes: ['id','username','fullName','avatarUrl'] },
+      ],
+      order: [['uploadedAt','DESC']],
+      limit,
+      offset,
+    });
+
+    const result = posts.map((p) => {
+      const j = p.toJSON();
+      try {
+        if (j.fileUrl) {
+          j.fileUrl = JSON.parse(j.fileUrl);
+          if (!Array.isArray(j.fileUrl)) j.fileUrl = [j.fileUrl];
+        } else {
+          j.fileUrl = [];
+        }
+      } catch (e) {
+        j.fileUrl = j.fileUrl ? [j.fileUrl] : [];
+      }
+      return j;
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error fetching admin posts:', error);
+    res.status(500).json({ error: 'Failed to fetch posts.' });
+  }
+};
+
+// === ADMIN: DANH SÁCH BÁO CÁO BÀI ĐĂNG ===
+exports.getPostReportsAdmin = async (req, res) => {
+  try {
+    const { status, postId, reporterId, dateFrom, dateTo } = req.query;
+    const where = {};
+    if (status) where.status = status;
+    if (postId) where.postId = parseInt(postId, 10);
+    if (reporterId) where.reporterId = parseInt(reporterId, 10);
+    if (dateFrom || dateTo) {
+      where.reportedAt = {};
+      if (dateFrom) where.reportedAt[Op.gte] = new Date(`${dateFrom}T00:00:00`);
+      if (dateTo) {
+        const endExclusive = new Date(`${dateTo}T00:00:00`);
+        endExclusive.setDate(endExclusive.getDate() + 1);
+        where.reportedAt[Op.lt] = endExclusive;
+      }
+    }
+
+    const reports = await PostReport.findAll({
+      where,
+      include: [
+        { model: Post, as: 'Post', include: [{ model: User, as: 'User', attributes: ['id','username','fullName','avatarUrl'] }] },
+        { model: User, as: 'Reporter', attributes: ['id','username','fullName','avatarUrl'] },
+      ],
+      order: [['reportedAt','DESC']],
+    });
+    res.status(200).json(reports);
+  } catch (error) {
+    console.error('Error fetching post reports (admin):', error);
+    res.status(500).json({ error: 'Failed to fetch reports.' });
+  }
+};
+
+// === ADMIN: CẬP NHẬT TRẠNG THÁI BÁO CÁO ===
+exports.updatePostReportAdmin = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { status, adminNotes } = req.body;
+    const valid = ['pending','reviewed','resolved','dismissed'];
+    if (status && !valid.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    const [updated] = await PostReport.update({
+      ...(status ? { status } : {}),
+      ...(adminNotes !== undefined ? { adminNotes } : {}),
+      ...(status ? { reviewedAt: new Date() } : {}),
+    }, { where: { id } });
+    if (!updated) return res.status(404).json({ error: 'Report not found' });
+    const report = await PostReport.findByPk(id);
+    res.status(200).json(report);
+  } catch (error) {
+    console.error('Error updating post report (admin):', error);
+    res.status(500).json({ error: 'Failed to update report.' });
+  }
+};
+
+// === ADMIN: XÓA LIKE CỦA USER KHỎI BÀI ĐĂNG ===
+exports.removeLikeAdmin = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.id, 10);
+    const userId = parseInt(req.params.userId, 10);
+    const deleted = await Like.destroy({ where: { postId, userId } });
+    if (!deleted) return res.status(404).json({ error: 'Like not found' });
+    const post = await Post.findByPk(postId);
+    if (post && post.heartCount > 0) {
+      post.heartCount = Math.max(0, post.heartCount - 1);
+      await post.save();
+    }
+    res.status(200).json({ message: 'Like removed by admin.' });
+  } catch (error) {
+    console.error('Error removing like (admin):', error);
+    res.status(500).json({ error: 'Failed to remove like.' });
+  }
+};
 
 // Hàm này kiểm tra xem người dùng đã thích bài đăng cụ thể chưa
 async function checkIsLiked(userId, postId) {
@@ -481,21 +662,26 @@ exports.getPostsByUserId = async (req, res) => {
 // --- HÀM CẬP NHẬT BÀI ĐĂNG ---
 exports.updatePost = async (req, res) => {
   try {
-    //  Lấy fileUrls nếu có và chuyển thành JSON string
+    const postId = parseInt(req.params.id, 10);
+    const post = await Post.findByPk(postId);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    const admin = isAdmin(req);
+    const currentUserId = req.user && req.user.id;
+    if (!admin && (!currentUserId || post.userId !== currentUserId)) {
+      return res.status(403).json({ error: "Forbidden: Not allowed to update this post" });
+    }
+
     const body = req.body;
     if (body.fileUrls) {
       body.fileUrl = JSON.stringify(body.fileUrls);
-      delete body.fileUrls; // Loại bỏ fileUrls khỏi body
+      delete body.fileUrls;
     }
 
-    const [updated] = await Post.update(body, { where: { id: req.params.id } });
-    if (!updated) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-    const post = await Post.findByPk(req.params.id);
+    await Post.update(body, { where: { id: postId } });
+    const updatedPost = await Post.findByPk(postId);
 
-    //  Thêm logic parse JSON cho fileUrl trước khi trả về
-    let postJson = post.toJSON();
+    let postJson = updatedPost.toJSON();
     try {
       if (postJson.fileUrl) {
         postJson.fileUrl = JSON.parse(postJson.fileUrl);
@@ -518,10 +704,17 @@ exports.updatePost = async (req, res) => {
 // --- HÀM XÓA BÀI ĐĂNG ---
 exports.deletePost = async (req, res) => {
   try {
-    const deleted = await Post.destroy({ where: { id: req.params.id } });
-    if (!deleted) {
-      return res.status(404).json({ error: "Post not found" });
+    const postId = parseInt(req.params.id, 10);
+    const post = await Post.findByPk(postId);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    const admin = isAdmin(req);
+    const currentUserId = req.user && req.user.id;
+    if (!admin && (!currentUserId || post.userId !== currentUserId)) {
+      return res.status(403).json({ error: "Forbidden: Not allowed to delete this post" });
     }
+
+    await post.destroy();
     res.json({ message: "Post deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -584,9 +777,12 @@ exports.toggleLike = async (req, res) => {
   }
 };
 
-// --- HÀM LẤY DANH SÁCH NGƯỜI ĐÃ THÍCH BÀI ĐĂNG ---
+// --- HÀM LẤY DANH SÁCH NGƯỜI ĐÃ THÍCH BÀI ĐĂNG (HỖ TRỢ FILTER/PAGINATION) ---
 exports.getLikesByPostId = async (req, res) => {
-  const postId = req.params.id;
+  const postId = parseInt(req.params.id, 10);
+  const { userId, dateFrom, dateTo } = req.query;
+  const limit = parseInt(req.query.limit, 10) || undefined;
+  const offset = parseInt(req.query.offset, 10) || undefined;
 
   try {
     // Kiểm tra bài đăng có tồn tại không
@@ -595,9 +791,21 @@ exports.getLikesByPostId = async (req, res) => {
       return res.status(404).json({ message: "Bài đăng không tồn tại." });
     }
 
+    const where = { postId };
+    if (userId) where.userId = parseInt(userId, 10);
+    if (dateFrom || dateTo) {
+      where.liked_at = {};
+      if (dateFrom) where.liked_at[Op.gte] = new Date(`${dateFrom}T00:00:00`);
+      if (dateTo) {
+        const endExclusive = new Date(`${dateTo}T00:00:00`);
+        endExclusive.setDate(endExclusive.getDate() + 1);
+        where.liked_at[Op.lt] = endExclusive;
+      }
+    }
+
     // Lấy danh sách likes với thông tin user
     const likes = await Like.findAll({
-      where: { postId: postId },
+      where,
       include: [
         {
           model: User,
@@ -605,7 +813,9 @@ exports.getLikesByPostId = async (req, res) => {
           attributes: ["id", "username", "avatarUrl", "fullName"],
         },
       ],
-      order: [["liked_at", "DESC"]], // Sắp xếp theo thời gian thích mới nhất
+      order: [["liked_at", "DESC"]],
+      ...(limit ? { limit } : {}),
+      ...(offset ? { offset } : {}),
     });
 
     // Map dữ liệu để trả về
@@ -724,3 +934,4 @@ exports.hidePost = async (req, res) => {
     res.status(500).json({ error: "Failed to hide post." });
   }
 };
+

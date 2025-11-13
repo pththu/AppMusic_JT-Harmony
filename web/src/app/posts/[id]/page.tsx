@@ -84,7 +84,7 @@ export default function PostDetailPage() {
             )}
             {track && (
               <div className="flex items-center space-x-2 mb-4">
-                <Play className="h-4 w-4 text-blue-500" />
+                <Play className="h-4 w-4 text-green-500" />
                 <span className="text-sm text-gray-600">
                   Bài hát: {track.title}
                 </span>

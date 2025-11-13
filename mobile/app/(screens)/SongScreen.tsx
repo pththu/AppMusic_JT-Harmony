@@ -14,6 +14,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 import LyricsSection from "@/components/LyricsSection";
+import TrackCommentsModal from "@/components/modals/TrackCommentsModal";
 import ArtistsSection from "@/components/artists/ArtistsSection";
 import { useNavigate } from "@/hooks/useNavigate";
 import { usePlayerStore } from "@/store/playerStore";
@@ -73,6 +74,8 @@ export default function SongScreen() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [trackCommentsVisible, setTrackCommentsVisible] = useState(false);
+  const [defaultTimecodeMs, setDefaultTimecodeMs] = useState<number | null>(null);
 
   //get height window
 
@@ -83,6 +86,12 @@ export default function SongScreen() {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
+  const handleCommentAtCurrentTime = () => {
+    const timecodeMs = Math.max(0, Math.floor((playbackPosition || 0) * 1000));
+    setDefaultTimecodeMs(timecodeMs);
+    setTrackCommentsVisible(true);
   };
 
   // State cho covers
@@ -427,6 +436,23 @@ export default function SongScreen() {
           {formatTime(duration)}
         </Text>
       </View>
+
+      {/* Comment at current time */}
+      <View className="items-end px-3 mb-4">
+        <TouchableOpacity onPress={handleCommentAtCurrentTime} className="px-3 py-1 rounded-full bg-indigo-500 flex-row items-center">
+          <Icon name="comment" size={16} color="#fff" />
+          <Text className="text-white font-semibold ml-2">Bình luận tại {formatTime(playbackPosition)}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Track Comments Modal */}
+      <TrackCommentsModal
+        visible={trackCommentsVisible}
+        onClose={() => setTrackCommentsVisible(false)}
+        trackId={currentTrack?.id}
+        defaultTimecodeMs={defaultTimecodeMs}
+        onUserPress={(userId) => navigate("ProfileSocialScreen", { userId })}
+      />
 
       {/* Up Next Header */}
       <View className={`flex-row justify-between items-center mb-2`}>

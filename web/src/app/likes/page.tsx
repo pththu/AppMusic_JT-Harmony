@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -8,7 +8,6 @@ import {
   Trash2,
   Heart,
   User,
-  MessageSquare,
 } from "lucide-react";
 import {
   Button,
@@ -28,28 +27,121 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  Input,
+  Label,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
 } from "@/components/ui";
-import {
-  mockLikes,
-  mockUsers,
-  mockPosts,
-  getUserById,
-  getPostById,
-  type Like,
-} from "@/lib/mock-data";
+import { getPostLikesAdmin, removePostLikeAdmin, getAllLikesAdmin } from "@/services/postAdminApi";
+
+type LikeItem = {
+  id: number;
+  userId: number;
+  postId: number;
+  likedAt: string;
+  User?: { id: number; username: string; fullName?: string; avatarUrl?: string };
+};
 
 export default function LikesPage() {
-  const [likes, setLikes] = useState<Like[]>(mockLikes);
-  const [selectedLike, setSelectedLike] = useState<Like | null>(null);
+  const [postIdInput, setPostIdInput] = useState<string>("");
+  const [likes, setLikes] = useState<LikeItem[]>([]);
+  const [selectedLike, setSelectedLike] = useState<LikeItem | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [userIdInput, setUserIdInput] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [limit, setLimit] = useState<string>("");
+  const [offset, setOffset] = useState<string>("");
 
-  const handleDeleteLike = (likeId: number) => {
-    setLikes(likes.filter((like) => like.id !== likeId));
+  const loadLikes = async () => {
+    const pid = parseInt(postIdInput, 10);
+    setLoading(true);
+    try {
+      const commonParams = {
+        userId: userIdInput ? parseInt(userIdInput, 10) : undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        offset: offset ? parseInt(offset, 10) : undefined,
+      } as any;
+      const data = postIdInput
+        ? await getPostLikesAdmin(pid, commonParams)
+        : await getAllLikesAdmin(commonParams);
+      // data có thể là [{User: {...}}] hoặc chỉ là user list, chuẩn hóa về LikeItem[]
+      const normalized: LikeItem[] = Array.isArray(data)
+        ? (data as any[]).map((item: any, idx) => {
+            if (item && (item.User || item.userId)) {
+              return {
+                id: item.id ?? idx,
+                userId: item.userId ?? item.User?.id,
+                postId: (item.postId ?? pid),
+                likedAt: item.likedAt || item.liked_at || new Date().toISOString(),
+                User: item.User || (item.id ? item : undefined),
+              } as LikeItem;
+            }
+            return {
+              id: idx,
+              userId: 0,
+              postId: (item?.postId ?? pid),
+              likedAt: new Date().toISOString(),
+            } as LikeItem;
+          })
+        : [];
+      setLikes(normalized);
+    } catch (e) {
+      console.error("Failed to load likes:", e);
+      setLikes([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleViewLike = (like: Like) => {
+  const handleDeleteLike = async (like: LikeItem) => {
+    try {
+      await removePostLikeAdmin(like.postId, like.userId);
+      setLikes((prev) => prev.filter((l) => !(l.postId === like.postId && l.userId === like.userId)));
+    } catch (e) {
+      console.error("Failed to remove like:", e);
+    }
+  };
+
+  const handleViewLike = (like: LikeItem) => {
     setSelectedLike(like);
     setIsViewDialogOpen(true);
+  };
+
+  useEffect(() => {
+    // Tự động tải tất cả likes khi mở trang
+    loadLikes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const resetFilters = async () => {
+    setPostIdInput("");
+    setUserIdInput("");
+    setDateFrom("");
+    setDateTo("");
+    setLimit("");
+    setOffset("");
+    setLoading(true);
+    try {
+      const data = await getAllLikesAdmin({});
+      const normalized: LikeItem[] = Array.isArray(data)
+        ? (data as any[]).map((item: any, idx) => ({
+            id: item.id ?? idx,
+            userId: item.userId,
+            postId: item.postId,
+            likedAt: item.likedAt || item.liked_at,
+            User: item.User,
+          }))
+        : [];
+      setLikes(normalized);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,8 +153,85 @@ export default function LikesPage() {
         </div>
       </div>
 
-      {/* Likes Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bộ lọc</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3 flex-wrap">
+            <div>
+              <Label htmlFor="postId">ID bài đăng</Label>
+              <Input
+                id="postId"
+                placeholder="Nhập Post ID"
+                value={postIdInput}
+                onChange={(e) => setPostIdInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { loadLikes(); } }}
+                className="w-48"
+              />
+            </div>
+            <div>
+              <Label htmlFor="userId">ID người dùng</Label>
+              <Input
+                id="userId"
+                placeholder="Lọc theo User ID"
+                value={userIdInput}
+                onChange={(e) => setUserIdInput(e.target.value)}
+                className="w-48"
+              />
+            </div>
+            <div>
+              <Label htmlFor="dateFrom">Từ ngày</Label>
+              <Input
+                id="dateFrom"
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-44"
+              />
+            </div>
+            <div>
+              <Label htmlFor="dateTo">Đến ngày</Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-44"
+              />
+            </div>
+            <div>
+              <Label htmlFor="limit">Limit</Label>
+              <Input
+                id="limit"
+                placeholder="vd 50"
+                value={limit}
+                onChange={(e) => setLimit(e.target.value)}
+                className="w-28"
+              />
+            </div>
+            <div>
+              <Label htmlFor="offset">Offset</Label>
+              <Input
+                id="offset"
+                placeholder="vd 0"
+                value={offset}
+                onChange={(e) => setOffset(e.target.value)}
+                className="w-28"
+              />
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button onClick={loadLikes} disabled={loading}>
+                {loading ? "Đang tải..." : "Áp dụng"}
+              </Button>
+              <Button variant="outline" onClick={resetFilters} disabled={loading}>Đặt lại</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto mt-4">
         <Table>
           <TableHeader>
             <TableRow>
@@ -73,9 +242,9 @@ export default function LikesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {likes.map((like) => {
-              const user = getUserById(like.userId);
-              const post = getPostById(like.postId);
+            {Array.isArray(likes) && likes.map((like) => {
+              const user = (like as any).User;
+              const post = (like as any).Post || undefined;
               return (
                 <TableRow key={like.id}>
                   <TableCell>
@@ -93,29 +262,16 @@ export default function LikesPage() {
                       </div>
                       <div>
                         <div className="font-medium text-gray-900">
-                          {user?.username}
+                          {user?.fullName || user?.username || `User #${like.userId}`}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {user?.fullName}
-                        </div>
+                        <div className="text-sm text-gray-500">@{user?.username} · ID: {user?.id ?? like.userId}</div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="max-w-xs">
-                      <p className="text-sm text-gray-900 truncate">
-                        {post?.content.substring(0, 50)}...
-                      </p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          <Heart className="h-3 w-3 mr-1" />
-                          {post?.heartCount} likes
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          <MessageSquare className="h-3 w-3 mr-1" />
-                          {post?.commentCount} comments
-                        </Badge>
-                      </div>
+                      <div className="text-sm text-gray-900 truncate">{post?.content ? post.content : `Post #${like.postId}`}</div>
+                      <div className="text-xs text-gray-500">Post ID: {like.postId}</div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -135,7 +291,7 @@ export default function LikesPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => handleDeleteLike(like.id)}
+                          onClick={() => handleDeleteLike(like)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Xóa Like
@@ -167,10 +323,7 @@ export default function LikesPage() {
                       Lượt Thích
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {format(
-                        new Date(selectedLike.likedAt),
-                        "MMM dd, yyyy 'lúc' HH:mm"
-                      )}
+                      {format(new Date(selectedLike.likedAt), "MMM dd, yyyy 'lúc' HH:mm")}
                     </p>
                   </div>
                 </div>
@@ -179,7 +332,7 @@ export default function LikesPage() {
                 <div className="mb-4">
                   <h4 className="font-medium text-gray-900 mb-2">Người Dùng</h4>
                   {(() => {
-                    const user = getUserById(selectedLike.userId);
+                    const user = selectedLike.User;
                     return user ? (
                       <div className="flex items-center space-x-3 p-3 bg-white rounded border">
                         <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
@@ -210,30 +363,12 @@ export default function LikesPage() {
                     );
                   })()}
                 </div>
-
-                {/* Post Info */}
+                {/* Post Info (chỉ hiển thị postId) */}
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Bài Đăng</h4>
-                  {(() => {
-                    const post = getPostById(selectedLike.postId);
-                    return post ? (
-                      <div className="p-3 bg-white rounded border">
-                        <p className="text-gray-900 mb-2">{post.content}</p>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <span>❤️ {post.heartCount} likes</span>
-                          <span>💬 {post.commentCount} comments</span>
-                          <span>
-                            📅{" "}
-                            {format(new Date(post.createdAt), "MMM dd, yyyy")}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        Không tìm thấy thông tin bài đăng
-                      </p>
-                    );
-                  })()}
+                  <div className="p-3 bg-white rounded border text-sm text-gray-700">
+                    Post ID: {selectedLike.postId}
+                  </div>
                 </div>
               </div>
             </div>

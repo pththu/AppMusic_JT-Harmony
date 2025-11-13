@@ -1,6 +1,14 @@
 const { Conversation, Message, User, ConversationMember, MessageHide, sequelize } = require('../models');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+const {
+  isAdmin: isAdminReq,
+  buildDateRangeWhere,
+  buildAdminConversationsInclude,
+  formatPrivateChatTitle,
+  parsePagination,
+  buildMessageWhere,
+} = require('../utils/conversationUtils');
 
 // ==========================================================
 // 1. LẤY DANH SÁCH CONVERSATIONS CỦA USER HIỆN TẠI
@@ -8,8 +16,48 @@ const Op = Sequelize.Op;
 // ==========================================================
 exports.getConversations = async(req, res) => {
     const currentUserId = req.user.id;
+    const isAdmin = isAdminReq(req);
 
     try {
+        // Admin can request all conversations via ?all=true
+        if (isAdmin && (req.query.all === 'true' || req.query.all === true)) {
+            // Admin filters: type, q (name keyword), memberId, dateFrom, dateTo
+            const { type, q, memberId, dateFrom, dateTo } = req.query;
+
+            const where = {};
+            if (type) where.type = type;
+            Object.assign(where, buildDateRangeWhere(dateFrom, dateTo));
+
+            const include = buildAdminConversationsInclude(memberId);
+
+            if (q) {
+                where.name = { [Op.iLike || Op.like]: `%${q}%` };
+            }
+
+            const conversations = await Conversation.findAll({
+                where,
+                include,
+                order: [
+                    [{ model: Message, as: 'LastMessage' }, 'createdAt', 'DESC'],
+                ],
+            });
+
+            const formattedConversations = conversations.map(conv => {
+                const isPrivate = conv.type === 'private';
+                const chatTitle = isPrivate ? formatPrivateChatTitle(conv) : (conv.name || '');
+                return {
+                    id: conv.id,
+                    type: conv.type,
+                    name: chatTitle,
+                    lastMessage: conv.LastMessage,
+                    updatedAt: conv.updatedAt,
+                    members: conv.Members.map(m => m.User)
+                };
+            });
+
+            return res.status(200).json(formattedConversations);
+        }
+
         // Trước tiên, lấy danh sách conversationId mà user là thành viên active
         const userConversations = await ConversationMember.findAll({
             where: {
@@ -103,6 +151,46 @@ exports.getConversations = async(req, res) => {
     } catch (error) {
         console.error('Error getting conversations:', error);
         res.status(500).json({ error: 'Failed to retrieve conversations' });
+    }
+};
+
+// ==========================================================
+// 1b. ADMIN: LẤY TOÀN BỘ TIN NHẮN (PHÂN TRANG)
+// [GET] /api/v1/conversations/messages?limit&offset
+// ==========================================================
+exports.getAllMessagesAdmin = async (req, res) => {
+    try {
+        const isAdmin = isAdminReq(req);
+        if (!isAdmin) {
+            return res.status(403).json({ error: 'Forbidden: Admin only.' });
+        }
+
+        const { limit, offset } = parsePagination(req);
+        const where = buildMessageWhere(req.query);
+
+        const messages = await Message.findAll({
+            where,
+            include: [
+                {
+                    model: User,
+                    as: 'Sender',
+                    attributes: ['id', 'username', 'fullName', 'avatarUrl'],
+                },
+                {
+                    model: Conversation,
+                    as: 'Conversation',
+                    attributes: ['id', 'type', 'name'],
+                },
+            ],
+            limit,
+            offset,
+            order: [['createdAt', 'DESC']],
+        });
+
+        return res.status(200).json(messages);
+    } catch (err) {
+        console.error('Error getting all messages for admin:', err);
+        return res.status(500).json({ error: 'Failed to retrieve messages.' });
     }
 };
 
@@ -217,8 +305,6 @@ exports.createOrGetPrivateConversation = async(req, res) => {
     }
 };
 
-
-// ==========================================================
 // 3. LẤY LỊCH SỬ TIN NHẮN
 // [GET] /api/v1/conversations/:conversationId/messages
 // ==========================================================
@@ -230,16 +316,18 @@ exports.getConversationMessages = async(req, res) => {
     const offset = parseInt(req.query.offset) || 0; // Để load thêm tin nhắn cũ
 
     try {
-        // 1. Kiểm tra người dùng có phải là thành viên của Conversation không
-        const isMember = await ConversationMember.findOne({
-            where: {
-                conversationId: conversationId,
-                userId: currentUserId,
+        const isAdmin = isAdminReq(req);
+        // 1. Kiểm tra người dùng có phải là thành viên của Conversation không (trừ admin)
+        if (!isAdmin) {
+            const isMember = await ConversationMember.findOne({
+                where: {
+                    conversationId: conversationId,
+                    userId: currentUserId,
+                }
+            });
+            if (!isMember) {
+                return res.status(403).json({ error: 'Forbidden: Not a member of this conversation.' });
             }
-        });
-
-        if (!isMember) {
-            return res.status(403).json({ error: 'Forbidden: Not a member of this conversation.' });
         }
 
         // 2. Lấy danh sách tin nhắn, loại bỏ tin nhắn đã bị user ẩn
@@ -295,8 +383,9 @@ exports.deleteMessage = async(req, res) => {
             return res.status(404).json({ error: 'Message not found.' });
         }
 
-        // 2. Kiểm tra quyền: Chỉ người gửi mới có thể xóa
-        if (message.senderId !== currentUserId) {
+        const isAdmin = isAdminReq(req);
+        // 2. Kiểm tra quyền: Admin có thể xóa bất kỳ tin nhắn nào; user thường chỉ xóa tin nhắn của mình
+        if (!isAdmin && message.senderId !== currentUserId) {
             return res.status(403).json({ error: 'Forbidden: You can only delete your own messages.' });
         }
 
@@ -370,6 +459,38 @@ exports.deleteConversation = async(req, res) => {
     }
 
     try {
+        const isAdmin = isAdminReq(req);
+
+        if (isAdmin) {
+            // Admin: xóa toàn bộ cuộc trò chuyện
+            await sequelize.transaction(async (t) => {
+                // Xóa ẩn tin nhắn liên quan
+                await MessageHide.destroy({
+                    where: {
+                        messageId: {
+                            [Op.in]: sequelize.literal(`(SELECT id FROM messages WHERE conversation_id = ${conversationId})`)
+                        }
+                    },
+                    transaction: t,
+                });
+
+                // Xóa tất cả tin nhắn
+                await Message.destroy({ where: { conversationId }, transaction: t });
+
+                // Xóa tất cả thành viên
+                await ConversationMember.destroy({ where: { conversationId }, transaction: t });
+
+                // Xóa conversation
+                const deleted = await Conversation.destroy({ where: { id: conversationId }, transaction: t });
+                if (!deleted) {
+                    throw new Error('Conversation not found');
+                }
+            });
+
+            return res.status(200).json({ message: 'Conversation deleted globally by admin.' });
+        }
+
+        // Non-admin: chỉ xóa bên phía người dùng hiện tại
         // 1. Kiểm tra người dùng có phải là thành viên của cuộc trò chuyện không
         const isMember = await ConversationMember.findOne({
             where: {

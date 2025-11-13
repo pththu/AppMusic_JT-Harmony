@@ -74,6 +74,8 @@ const SocialScreen = () => {
   // State cho Upload Cover Modal
   const [uploadCoverModalVisible, setUploadCoverModalVisible] = useState(false);
 
+  // console.log("User: ", user);
+
   // Helper function để format thời gian
   const formatTime = (dateString) => {
     const now = new Date();
@@ -547,26 +549,114 @@ const SocialScreen = () => {
 
   // Hàm cập nhật like cho comment với optimistic update
   const updateCommentLike = async (postId, commentId, isReply, replyId) => {
-    // Tạm thời bỏ qua API cho Reply, chỉ xử lý Comment Cha
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+    // Chuẩn hóa parent/reply khi gọi từ UI có thể truyền commentId = replyId
+    let parentComment = post.comments.find((c) => c.id === commentId);
+    let targetReplyId = replyId;
     if (isReply) {
-      Alert.alert(
-        "Thông báo",
-        "Chức năng thích trả lời (Reply) chưa được triển khai API."
+      // Nếu không có replyId, coi commentId chính là replyId
+      if (!targetReplyId) targetReplyId = commentId;
+      // Nếu chưa tìm được parent theo commentId, dò theo danh sách Replies
+      if (!parentComment) {
+        parentComment = post.comments.find((c) =>
+          (c.Replies || []).some((r) => r.id === targetReplyId)
+        );
+      }
+    }
+    if (!parentComment) return;
+
+    // Nếu là Reply: cập nhật vào Replies của comment cha
+    if (isReply && (targetReplyId || replyId)) {
+      const targetReply = (parentComment.Replies || []).find((r) => r.id === (targetReplyId || replyId));
+      if (!targetReply) return;
+
+      const prevIsLiked = targetReply.isLiked;
+      const prevLikeCount = targetReply.likeCount || 0;
+      const newIsLikedOptimistic = !prevIsLiked;
+      const likeChangeOptimistic = newIsLikedOptimistic ? 1 : -1;
+
+      // 1. Optimistic update cho Reply
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p;
+          return {
+            ...p,
+            comments: p.comments.map((c) => {
+              if (c.id !== parentComment.id) return c;
+              return {
+                ...c,
+                Replies: (c.Replies || []).map((r) =>
+                  r.id === (targetReplyId || replyId)
+                    ? {
+                        ...r,
+                        isLiked: newIsLikedOptimistic,
+                        likeCount: (prevLikeCount || 0) + likeChangeOptimistic,
+                      }
+                    : r
+                ),
+              };
+            }),
+          };
+        })
       );
+
+      try {
+        const result = await toggleCommentLike(targetReplyId || replyId);
+        if ("message" in result) throw new Error(result.message);
+
+        // 2. Cập nhật theo kết quả server
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== postId) return p;
+            return {
+              ...p,
+              comments: p.comments.map((c) => {
+                if (c.id !== parentComment.id) return c;
+                return {
+                  ...c,
+                  Replies: (c.Replies || []).map((r) =>
+                    r.id === (targetReplyId || replyId)
+                      ? { ...r, isLiked: result.isLiked, likeCount: result.likeCount }
+                      : r
+                  ),
+                };
+              }),
+            };
+          })
+        );
+      } catch (error) {
+        console.error("Lỗi khi thích/bỏ thích trả lời:", error);
+        Alert.alert("Lỗi", "Không thể cập nhật trạng thái thích trả lời.");
+        // 3. Rollback
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== postId) return p;
+            return {
+              ...p,
+              comments: p.comments.map((c) => {
+                if (c.id !== parentComment.id) return c;
+                return {
+                  ...c,
+                  Replies: (c.Replies || []).map((r) =>
+                    r.id === (targetReplyId || replyId) ? { ...r, isLiked: prevIsLiked, likeCount: prevLikeCount } : r
+                  ),
+                };
+              }),
+            };
+          })
+        );
+      }
       return;
     }
 
-    const post = posts.find((p) => p.id === postId);
-    if (!post) return;
-    const comment = post.comments.find((c) => c.id === commentId);
-    if (!comment) return;
-
-    const prevIsLiked = comment.isLiked;
-    const prevLikeCount = comment.likeCount;
+    // Mặc định: xử lý Comment cha như trước
+    const prevIsLiked = parentComment.isLiked;
+    const prevLikeCount = parentComment.likeCount;
     const newIsLikedOptimistic = !prevIsLiked;
     const likeChangeOptimistic = newIsLikedOptimistic ? 1 : -1;
 
-    // 1. Optimistic Update: Cập nhật UI tạm thời
+    // 1. Optimistic Update: Cập nhật UI tạm thời cho comment cha
     setPosts((prevPosts) =>
       prevPosts.map((p) => {
         if (p.id === postId) {
@@ -589,14 +679,12 @@ const SocialScreen = () => {
     );
 
     try {
-      // 2. GỌI API MỚI
       const result = await toggleCommentLike(commentId);
-
       if ("message" in result) {
         throw new Error(result.message);
       }
 
-      // 3. Cập nhật trạng thái chính thức từ Server
+      // 2. Cập nhật trạng thái chính thức từ Server
       setPosts((prevPosts) =>
         prevPosts.map((p) => {
           if (p.id === postId) {
@@ -606,8 +694,8 @@ const SocialScreen = () => {
                 if (c.id === commentId) {
                   return {
                     ...c,
-                    isLiked: result.isLiked, // Dùng kết quả từ API
-                    likeCount: result.likeCount, // Dùng kết quả từ API
+                    isLiked: result.isLiked,
+                    likeCount: result.likeCount,
                   };
                 }
                 return c;
@@ -621,7 +709,7 @@ const SocialScreen = () => {
       console.error("Lỗi khi thích/bỏ thích bình luận:", error);
       Alert.alert("Lỗi", "Không thể cập nhật trạng thái thích bình luận.");
 
-      // 4. Rollback nếu thất bại
+      // 3. Rollback nếu thất bại
       setPosts((prevPosts) =>
         prevPosts.map((p) => {
           if (p.id === postId) {
@@ -761,7 +849,7 @@ const SocialScreen = () => {
                       : "text-black dark:text-white"
                     }`}
                 >
-                  Posts
+                  Bài đăng
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -777,7 +865,7 @@ const SocialScreen = () => {
                       : "text-black dark:text-white"
                     }`}
                 >
-                  Covers
+                  Covers/Sáng tác
                 </Text>
               </TouchableOpacity>
             </View>

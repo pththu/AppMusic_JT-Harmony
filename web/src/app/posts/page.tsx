@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -35,23 +35,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
 } from "@/components/ui";
-import {
-  mockPosts,
-  mockUsers,
-  mockTracks,
-  getUserById,
-  getCommentsByPostId,
-  type Post,
-} from "@/lib/mock-data";
+import { type Post as MockPost } from "@/lib/mock-data";
+import { fetchPostsAdmin, updatePostAdmin, deletePostAdmin, type AdminPost } from "@/services/postAdminApi";
+import { getUserById, mockUsers, mockTracks, getCommentsByPostId } from "@/lib/mock-data";
 
 export default function PostsPage() {
   const router = useRouter();
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts, setPosts] = useState<(AdminPost | any)[]>([]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [editingPost, setEditingPost] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     content: "",
     userId: 1, // Default to first user for demo
@@ -60,27 +59,52 @@ export default function PostsPage() {
     isCover: false,
     originalSongId: undefined as number | undefined,
   });
+  // Server-side filters
+  const [q, setQ] = useState<string>("");
+  const [filterUserId, setFilterUserId] = useState<string>("");
   const [filterIsCover, setFilterIsCover] = useState<string>("all");
-  const [filterSongId, setFilterSongId] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [limit, setLimit] = useState<string>("50");
+  const [offset, setOffset] = useState<string>("0");
 
-  const filteredPosts = posts.filter((post) => {
-    const matchesIsCover =
-      filterIsCover === "all" ||
-      (filterIsCover === "cover" && post.isCover) ||
-      (filterIsCover === "original" && !post.isCover);
+  const loadPosts = async () => {
+    try {
+      const params: any = {};
+      if (q) params.q = q;
+      if (filterUserId) params.userId = parseInt(filterUserId, 10);
+      if (filterIsCover === "cover") params.isCover = true;
+      if (filterIsCover === "original") params.isCover = false;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+      if (limit) params.limit = parseInt(limit, 10);
+      if (offset) params.offset = parseInt(offset, 10);
+      const data = await fetchPostsAdmin(params);
+      setPosts(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error('Failed to load admin posts:', e);
+      setPosts([]);
+    }
+  };
 
-    const matchesSongId =
-      filterSongId === "all" || post.songId?.toString() === filterSongId;
+  const resetFilters = async () => {
+    setQ("");
+    setFilterUserId("");
+    setFilterIsCover("all");
+    setDateFrom("");
+    setDateTo("");
+    setLimit("50");
+    setOffset("0");
+    await loadPosts();
+  };
 
-    return matchesIsCover && matchesSongId;
-  });
-
-  const handleDeletePost = (postId: number) => {
-    setPosts(posts.filter((post) => post.id !== postId));
+  const handleDeletePost = async (postId: number) => {
+    await deletePostAdmin(postId);
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
   const handleAddPost = () => {
-    const newPost: Post = {
+    const newPost: any = {
       id: Math.max(...posts.map((p) => p.id)) + 1,
       userId: formData.userId,
       content: formData.content,
@@ -107,21 +131,19 @@ export default function PostsPage() {
     setIsAddDialogOpen(false);
   };
 
-  const handleEditPost = () => {
+  const handleEditPost = async () => {
     if (!editingPost) return;
-    setPosts(
-      posts.map((post) =>
+    await updatePostAdmin(editingPost.id, {
+      content: formData.content,
+      fileUrls: formData.fileUrl ? [formData.fileUrl] : [],
+      songId: formData.songId ?? null,
+      isCover: formData.isCover,
+      originalSongId: formData.originalSongId ?? null,
+    });
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === editingPost.id
-          ? {
-              ...post,
-              content: formData.content,
-              userId: formData.userId,
-              fileUrl: formData.fileUrl || undefined,
-              songId: formData.songId,
-              isCover: formData.isCover,
-              originalSongId: formData.originalSongId,
-              updatedAt: new Date().toISOString(),
-            }
+          ? { ...post, content: formData.content, updatedAt: new Date().toISOString() }
           : post
       )
     );
@@ -137,7 +159,7 @@ export default function PostsPage() {
     setEditingPost(null);
   };
 
-  const openEditDialog = (post: Post) => {
+  const openEditDialog = (post: any) => {
     setEditingPost(post);
     setFormData({
       content: post.content,
@@ -154,6 +176,10 @@ export default function PostsPage() {
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + "...";
   };
+
+  useEffect(() => {
+    loadPosts();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -308,22 +334,56 @@ export default function PostsPage() {
         </Dialog>
       </div>
 
-      {/* Filter */}
-      <div className="flex items-center space-x-4">
-        <Label htmlFor="filter-isCover" className="text-sm font-medium">
-          Lọc theo loại:
-        </Label>
-        <select
-          id="filter-isCover"
-          value={filterIsCover}
-          onChange={(e) => setFilterIsCover(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md"
-        >
-          <option value="all">Tất cả</option>
-          <option value="cover">Cover</option>
-          <option value="original">Gốc</option>
-        </select>
-      </div>
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bộ lọc</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3 flex-wrap">
+            <div>
+              <Label className="text-sm font-medium">Tìm kiếm</Label>
+              <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Nội dung" className="w-56" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">ID người dùng</Label>
+              <Input value={filterUserId} onChange={(e)=>setFilterUserId(e.target.value)} placeholder="vd 1" className="w-32" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Loại</Label>
+              <select
+                value={filterIsCover}
+                onChange={(e)=>setFilterIsCover(e.target.value)}
+                className="px-3 py-2 border rounded-md"
+              >
+                <option value="all">Tất cả</option>
+                <option value="cover">Cover</option>
+                <option value="original">Gốc</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Từ ngày</Label>
+              <Input type="date" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Đến ngày</Label>
+              <Input type="date" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Limit</Label>
+              <Input value={limit} onChange={(e)=>setLimit(e.target.value)} className="w-24" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Offset</Label>
+              <Input value={offset} onChange={(e)=>setOffset(e.target.value)} className="w-24" />
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button onClick={loadPosts}>Áp dụng</Button>
+              <Button variant="outline" onClick={resetFilters}>Đặt lại</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Posts Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
@@ -339,8 +399,8 @@ export default function PostsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPosts.map((post) => {
-              const author = getUserById(post.userId);
+            {(Array.isArray(posts) ? posts : []).map((post: any) => {
+              const author = post.User || post.user || null;
               return (
                 <TableRow key={post.id}>
                   <TableCell>
@@ -383,7 +443,7 @@ export default function PostsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-1">
-                      <MessageSquare className="h-4 w-4 text-blue-500" />
+                      <MessageSquare className="h-4 w-4 text-green-500" />
                       <span className="text-sm">{post.commentCount}</span>
                     </div>
                   </TableCell>

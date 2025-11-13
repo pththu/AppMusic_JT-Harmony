@@ -5,11 +5,11 @@ const coverController = require("../controllers/coverController");
 const {
   authenticateToken,
   optionalAuthenticateToken,
+  authorizeRole,
 } = require("../middlewares/authentication");
 
 // --- ROUTE CÔNG KHAI ---
 router.get("/", optionalAuthenticateToken, postController.getAllPost); // Lấy tất cả bài đăng (public)
-router.get("/:id", postController.getPostById); // Lấy bài đăng theo ID (public)
 router.get("/user/:userId", postController.getPostsByUserId); // Lấy bài đăng theo User ID (public)
 
 // --- ROUTE COVER ---
@@ -32,5 +32,15 @@ router.put("/update/:id", authenticateToken, postController.updatePost); // Cậ
 router.delete("/remove/:id", authenticateToken, postController.deletePost); // Xóa bài đăng
 router.post("/:id/report", authenticateToken, postController.reportPost); // Báo cáo bài đăng
 router.post("/:id/hide", authenticateToken, postController.hidePost); // Ẩn bài đăng
+
+// --- ADMIN ROUTES ---
+router.get("/admin", authenticateToken, authorizeRole, postController.getPostsAdmin); // Admin: danh sách bài đăng có filter/pagination
+router.get("/reports", authenticateToken, authorizeRole, postController.getPostReportsAdmin); // Admin: danh sách báo cáo bài đăng
+router.put("/reports/:id", authenticateToken, authorizeRole, postController.updatePostReportAdmin); // Admin: cập nhật trạng thái báo cáo
+router.delete("/:id/likes/:userId", authenticateToken, authorizeRole, postController.removeLikeAdmin); // Admin: xóa like của user khỏi bài đăng
+router.get("/likes/admin", authenticateToken, authorizeRole, postController.getAllLikesAdmin); // Admin: danh sách tất cả likes
+
+// Đặt route theo ID sau cùng để tránh nuốt các path cụ thể như /admin, /reports
+router.get("/:id", postController.getPostById); // Lấy bài đăng theo ID (public)
 
 module.exports = router;
