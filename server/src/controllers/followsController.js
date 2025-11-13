@@ -311,8 +311,6 @@ exports.getArtistFollowedByUser = async (req, res) => {
             }
         }
 
-        console.log(dataFormated)
-
         return res.status(200).json({
             message: 'Followed artists retrieved successfully',
             data: dataFormated,
@@ -327,7 +325,6 @@ exports.createFollowArtist = async (req, res) => {
         let { artistId, artistSpotifyId } = req.body;
         const userId = req.user.id;
 
-        console.log(req.body)
         if (!userId) {
             return res.status(400).json({ error: 'User ID is required' });
         }
@@ -337,32 +334,24 @@ exports.createFollowArtist = async (req, res) => {
         }
 
         if (!artistId) {
-            console.log('first')
-
             const existingArtist = await Artist.findOne({
                 where: { spotifyId: artistSpotifyId },
             });
 
-            console.log(12)
             if (!existingArtist) {
-                console.log(14)
                 const artistRow = await Artist.create({
                     spotifyId: artistSpotifyId,
                 });
-                console.log('artist row: ', artistRow);
                 if (!artistRow) {
                     return res.status(500).json({ error: 'Cannot create artist to follow' });
                 }
 
-                console.log(2)
                 artistId = artistRow.id;
             } else {
-                console.log(13)
                 artistId = existingArtist.id;
             }
         }
 
-        console.log(3)
         const existingFollow = await FollowArtist.findOne({
             where: {
                 followerId: userId,
@@ -370,27 +359,20 @@ exports.createFollowArtist = async (req, res) => {
             },
         });
 
-        console.log(4)
         if (existingFollow) {
-            console.log(5)
             return res.status(400).json({ error: 'You are already following this artist' });
         }
 
-        console.log(6)
-        console.log(6)
         const row = await FollowArtist.create({
             followerId: userId,
             artistId,
             artistSpotifyId,
         });
 
-        console.log(7)
         if (!row) {
-            console.log(8)
             return res.status(500).json({ error: 'Cannot create follow artist' });
         }
 
-        console.log(9)
         let artist = await Artist.findByPk(artistId);
         if (artist) {
             artist.totalFollowers += 1;
@@ -404,19 +386,16 @@ exports.createFollowArtist = async (req, res) => {
         }
         await artist.save();
 
-        console.log(10)
         let dataFormated = {
             ...row.toJSON(),
             artist: formatArtist(artist, null)
         };
-        console.log(dataFormated)
         return res.status(201).json({
             message: 'FollowArtist created successfully',
             data: dataFormated,
             success: true
         });
     } catch (error) {
-        console.log(11)
         res.status(500).json({ error: error.message });
     }
 };

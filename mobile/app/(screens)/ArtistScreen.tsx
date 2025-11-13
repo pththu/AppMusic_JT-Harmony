@@ -11,7 +11,8 @@ import {
   Share,
   Pressable,
   useColorScheme,
-  Dimensions, // Thêm StyleSheet để tạo bóng
+  Dimensions,
+  ImageBackground, // Thêm StyleSheet để tạo bóng
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import HeaderBackButton from '@/components/button/HeaderBackButton';
@@ -454,26 +455,26 @@ export default function ArtistScreen() {
           <ActivityIndicator size="large" color="#22c55e" />
         </View>
       )}
-      <View className="relative w-full h-80">
-        <Image
-          source={{ uri: currentArtist?.imageUrl }}
-          className="w-full h-full object-cover"
-        />
-        <View className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
 
-        {/* Header */}
-        <View className="absolute top-0 left-0 right-0 p-4 z-10 flex-row items-center">
-          <HeaderBackButton onPress={() => router.back()} />
-          <View className="flex-1" />
+      <View className='w-full h-96'>
+        <View className='mt-5 w-full h-80'>
+          <ImageBackground
+            source={{ uri: currentArtist?.imageUrl || '' }}
+            className='w-full h-full'
+          />
+          <TouchableOpacity
+            className='absolute top-5 left-4 p-2 bg-black/50 rounded-full'
+            onPress={() => router.back()}
+          >
+            <Icon name="chevron-back" size={24} color="white" />
+          </TouchableOpacity>
         </View>
-
-        {/* Tên nghệ sĩ */}
-        <Text className="absolute bottom-4 left-4 text-white text-4xl font-extrabold">
-          {currentArtist.name}
+        <Text className="text-black dark:text-white text-3xl font-bold mt-2 px-4">
+          {currentArtist?.name || 'Nghệ sĩ'}
         </Text>
       </View>
 
-      <View className="p-4">
+      <View className="px-4 mt-2">
         <View className="flex-row items-center mb-6 gap-2">
           <CustomButton
             title={isFollowing ? 'Đang theo dõi' : 'Theo dõi'}

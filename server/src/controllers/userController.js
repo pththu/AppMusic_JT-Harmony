@@ -23,33 +23,48 @@ exports.getUserById = async (req, res) => {
     }
 };
 
-/**
- * Tìm kiếm với nhiều tiêu chí
- * /search?fullName=admin
- * /search?email=admin@example.com
- * /search?gender=male
- * /search?status=active
- * /search?username=abc&gender=false
- */
+
 exports.search = async (req, res) => {
     try {
-        const { id, username, email, fullName, gender, status } = req.query;
-        const where = {};
+        const { id, username, email, fullName, gender, status } = req.body;
+        const orConditions = [];
 
-        if (id) where.id = id;
-        if (username) where.username = {
-            [Op.iLike]: `%${username}%`
+        if (fullName) {
+            orConditions.push({ fullName: { [Op.iLike]: `%${fullName}%` } });
+        }
+
+        if (username) {
+            orConditions.push({
+                username: {
+                    [Op.iLike]: `%${username}%`
+                }
+            });
+        }
+
+        if (email) {
+            orConditions.push({
+                email: {
+                    [Op.iLike]: `%${email}%`
+                }
+            });
+        }
+
+        if (orConditions.length === 0) {
+            return res.json([]);
+        }
+
+        const where = {
+            [Op.or]: orConditions
         };
-        if (fullName) where.fullName = {
-            [Op.iLike]: `%${fullName}%`
-        };
-        if (email) where.email = email;
-        if (gender) where.gender = gender;
-        if (status) where.status = status;
 
         const rows = await User.findAll({ where });
-        return res.json(rows);
+        return res.status(200).json({
+            message: 'User search successful',
+            data: rows,
+            success: true
+        });
     } catch (error) {
+        console.error(error); // Nên log lỗi
         res.status(500).json({ error: error.message });
     }
 }

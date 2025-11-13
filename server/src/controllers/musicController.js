@@ -5,6 +5,10 @@ const youtube = require('../configs/youtube');
 const { Playlist, Track, Album, Artist, PlaylistTrack, User, Genres } = require('../models');
 const Op = require('sequelize').Op;
 const { get } = require("../routes/musicRoute");
+const { redisClient } = require('../configs/redis');
+
+const DEFAULT_TTL_SECONDS = 3600 * 2; // 2 giờ (cho dữ liệu Spotify ít đổi)
+const SHORT_TTL_SECONDS = 1800;
 
 const shuffle = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -143,7 +147,6 @@ const findAlbumById = async (req, res) => {
 const findPlaylistById = async (req, res) => {
   try {
     const { market } = req.body;
-    console.log(market);
     if (!market || !TOP_50_PLAYLIST_ID[market]) {
       return res
         .status(400)
@@ -242,7 +245,7 @@ const searchTracks = async (req, res) => {
         const album = track.Album;
         const artist = [];
         for (const a of track.artists) {
-          artist.push(a);
+          artist.push(a.toJSON());
         }
         const itemFormat = formatTrack(track, artist, album, track?.videoId || null)
         dataFormated.push(itemFormat);
@@ -250,10 +253,7 @@ const searchTracks = async (req, res) => {
     }
 
     // chuyển đổi thành chuỗi truy vấn
-    const spotifyQueryString = Object.entries(query)
-      .map(([key, value]) => `${key.toLowerCase()}:("${String(value)}")`)
-      .join(' ');
-    console.log("Spotify Query:", spotifyQueryString);
+    const spotifyQueryString = trackName;
 
     if ((limit && dataFormated.length < limit) || dataFormated.length < 30) {
       let spotifyData = [];
@@ -306,7 +306,7 @@ const searchPlaylists = async (req, res) => {
       });
     }
 
-    data = await spotify.searchPlaylists({ name, artist });
+    data = await spotify.searchPlaylists(name);
     data.map(item => dataFormated.push(formatPlaylist(item, null)));
 
     return res.status(200).json({
@@ -353,7 +353,7 @@ const searchAlbums = async (req, res) => {
       });
     }
 
-    data = await spotify.searchAlbums({ name, artist });
+    data = await spotify.searchAlbums(name);
     data.map(item => {
       const itemFormat = formatAlbum(item, []);
       dataFormated.push(itemFormat);
@@ -371,7 +371,6 @@ const searchAlbums = async (req, res) => {
     });
   }
 };
-
 
 const searchArtists = async (req, res) => {
   try {
@@ -422,6 +421,17 @@ const getTracksFromPlaylist = async (req, res) => {
   try {
     const { playlistId } = req.params;
     const { type } = req.body;
+
+    // lấy từ redis cache nếu có
+    const cacheKey = `playlist:tracks:${type}:${playlistId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getTracksFromPlaylist)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    console.log('CACHE MISS (getTracksFromPlaylist)');
+
     let playlist = null;
     let data = [];
     let track = null;
@@ -484,11 +494,16 @@ const getTracksFromPlaylist = async (req, res) => {
       return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong playlist này', success: false });
     }
 
-    return res.status(200).json({
+    const response = {
       message: 'Get tracks from playlist successful',
       data: dataFormated,
       success: true
-    });
+    };
+
+    const ttl = (type === 'local') ? SHORT_TTL_SECONDS : DEFAULT_TTL_SECONDS;
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: ttl });
+
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to get tracks from playlist on Spotify",
@@ -499,6 +514,15 @@ const getTracksFromPlaylist = async (req, res) => {
 const getTracksFromAlbum = async (req, res) => {
   try {
     const { spotifyId } = req.params;
+
+    const cacheKey = `album:tracks:${spotifyId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getTracksFromAlbum)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getTracksFromAlbum)');
+
     const dataFormated = [];
 
     if (!spotifyId) {
@@ -521,11 +545,15 @@ const getTracksFromAlbum = async (req, res) => {
       dataFormated.push(itemFormat);
     }
 
-    return res.status(200).json({
+    const response = {
       message: 'Lấy nhạc thành công',
       data: dataFormated,
       success: true
-    });
+    };
+
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ message: error.message || 'Lỗi không xác định' });
   }
@@ -534,6 +562,16 @@ const getTracksFromAlbum = async (req, res) => {
 const getPlaylistsForYou = async (req, res) => {
   try {
     const { playlistName } = req.body;
+
+    // lấy từ cache nếu có
+    const cacheKey = `playlists:foryou:${playlistName.join('-')}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getPlaylistsForYou)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    console.log('CACHE MISS (getPlaylistsForYou)');
     const playlists = [];
     const dataFormated = [];
 
@@ -545,7 +583,7 @@ const getPlaylistsForYou = async (req, res) => {
     }
 
     for (const name of playlistName) {
-      const responsePlaylist = await spotify.searchPlaylists({ name });
+      const responsePlaylist = await spotify.searchPlaylists(name);
       playlists.push(...responsePlaylist);
     }
 
@@ -553,11 +591,17 @@ const getPlaylistsForYou = async (req, res) => {
       dataFormated.push(formatPlaylist(playlist, null));
     }
 
-    return res.status(200).json({
+    const response = {
       message: 'Get personalized playlists successful',
       data: dataFormated,
       success: true
+    };
+
+    await redisClient.set(cacheKey, JSON.stringify(response), {
+      EX: DEFAULT_TTL_SECONDS
     });
+
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
       message:
@@ -569,6 +613,15 @@ const getPlaylistsForYou = async (req, res) => {
 const getAlbumsForYou = async (req, res) => {
   try {
     const { albumName } = req.body;
+
+    const cacheKey = `albums:foryou:${albumName.join('-')}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getAlbumsForYou)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getAlbumsForYou)');
+
     const albums = [];
     const dataFormated = [];
 
@@ -579,7 +632,7 @@ const getAlbumsForYou = async (req, res) => {
     }
 
     for (const name of albumName) {
-      const responseAlbum = await spotify.searchAlbums({ name });
+      const responseAlbum = await spotify.searchAlbums(name);
       albums.push(...responseAlbum);
     }
 
@@ -587,11 +640,16 @@ const getAlbumsForYou = async (req, res) => {
       dataFormated.push(formatAlbum(album, null));
     }
 
-    return res.status(200).json({
+    const response = {
       message: 'Album search successful',
       data: dataFormated,
       success: true
-    });
+    };
+
+    // 4. LƯU VÀO CACHE
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to get personalized albums on Spotify",
@@ -602,6 +660,15 @@ const getAlbumsForYou = async (req, res) => {
 const getArtistsForYou = async (req, res) => {
   try {
     const { artistNames = [], genres = [] } = req.body;
+
+    const cacheKey = `artists:foryou:${artistNames.join('-')}:${genres.join('-')}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getArtistsForYou)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getArtistsForYou)');
+
     const allResults = [];
     const dataFormated = [];
 
@@ -633,11 +700,14 @@ const getArtistsForYou = async (req, res) => {
 
     const finalData = shuffle(dataFormated).slice(0, 12);
 
-    return res.status(200).json({
+    const response = {
       message: 'Get artist for you successful',
       data: finalData,
       success: true
-    });
+    };
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to get artist for you on Spotify",
@@ -647,6 +717,15 @@ const getArtistsForYou = async (req, res) => {
 
 const getMyPlaylists = async (req, res) => {
   try {
+
+    const cacheKey = `user:${req.user.id}:playlists`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getMyPlaylists)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getMyPlaylists)');
+
     const user = await User.findByPk(req.user.id, {
       include: [{ model: Playlist }]
     })
@@ -656,11 +735,15 @@ const getMyPlaylists = async (req, res) => {
       dataFormated.push(formatPlaylist(playlist, user));
     }
 
-    return res.status(200).json({
+    const response = {
       message: 'Get my playlists successful',
       data: dataFormated,
       success: true
-    });
+    };
+
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: SHORT_TTL_SECONDS });
+
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to get my playlists on Spotify",
@@ -731,6 +814,10 @@ const addTrackToPlaylist = async (req, res) => {
     playlist.totalTracks += 1;
     await playlist.save();
 
+    const cacheKey = `playlist:tracks:local:${playlistId}`;
+    await redisClient.del(cacheKey);
+    console.log(`CACHE INVALIDATED: ${cacheKey}`);
+
     const track = await spotify.findTrackById(trackSpotifyId)
     const dataFormated = formatTrack(track, null, null, null);
     dataFormated.playlistTrack = {
@@ -800,6 +887,10 @@ const addTracksToPlaylists = async (req, res) => {
 
       playlist.totalTracks += trackIds.length;
       await playlist.save();
+      // xóa cache
+      const cacheKey = `playlist:tracks:local:${playlistId}`;
+      await redisClient.del(cacheKey);
+      console.log(`CACHE INVALIDATED: ${cacheKey}`);
     }
 
     return res.status(200).json({
@@ -840,8 +931,12 @@ const addTrackToPlaylistAfterConfirm = async (req, res) => {
     playlist.totalTracks += 1;
     await playlist.save();
 
-    const track = await spotify.findTrackById(trackSpotifyId)
+    // xóa cache
+    const cacheKey = `playlist:tracks:local:${playlistId}`;
+    await redisClient.del(cacheKey);
+    console.log(`CACHE INVALIDATED: ${cacheKey}`);
 
+    const track = await spotify.findTrackById(trackSpotifyId)
     return res.status(200).json({
       message: 'Thêm bài hát vào playlist thành công',
       data: formatTrack(track, null, null, null),
@@ -878,20 +973,31 @@ const removeTrackFromPlaylist = async (req, res) => {
     playlist.totalTracks = Math.max(0, playlist.totalTracks - 1);
     await playlist.save();
 
+    const cacheKey = `playlist:tracks:local:${playlistId}`;
+    await redisClient.del(cacheKey);
+    console.log(`CACHE INVALIDATED: ${cacheKey}`);
+
     return res.status(200).json({ message: 'Đã xóa track khỏi playlist', success: true });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Có lỗi xảy ra khi xóa track khỏi playlist' });
   }
 };
 
-
 const findVideoIdForTrack = async (req, res) => {
   try {
     const { trackSpotifyId } = req.params;
     console.log('trackSpotifyId', trackSpotifyId);
+
+    const cacheKey = `track:videoid:${trackSpotifyId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (findVideoIdForTrack)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (findVideoIdForTrack)');
+
     let videoData = null;
     let videoId = null;
-    let row = null;
     if (!trackSpotifyId) {
       return res.status(400).json({ message: 'Track Spotify ID is required', success: false });
     }
@@ -902,7 +1008,6 @@ const findVideoIdForTrack = async (req, res) => {
         { model: Artist, as: 'artists' }
       ]
     });
-    console.log('track', track)
 
     if (track) {
       if (track.videoId) {
@@ -915,11 +1020,8 @@ const findVideoIdForTrack = async (req, res) => {
       }
     } else {
       track = await spotify.findTrackById(trackSpotifyId);
-      console.log(track.name);
-      console.log(track.artists[0]?.name)
       videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
       videoId = videoData.videoId;
-      console.log(videoId);
       const row = await Track.create({
         spotifyId: trackSpotifyId,
         videoId: videoId,
@@ -927,17 +1029,19 @@ const findVideoIdForTrack = async (req, res) => {
         playCount: 0
       })
 
-      console.log(1)
       if (!row) {
         res.status(500).json({ message: 'Failed to create track with video ID', success: false });
       }
     }
 
-    return res.status(200).json({
+    const response = {
       message: 'Đã tìm thấy video id',
       data: videoId,
       success: true
-    })
+    };
+
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS * 10 });
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ message: error.message || 'Failed to find video ID for track' });
   }
@@ -994,8 +1098,15 @@ const getTopTrackFromArtist = async (req, res) => {
       return res.status(400).json({ message: "Artist ID is required", success: false });
     }
 
-    const tracks = await spotify.getArtistTopTracks(artistId);
+    const cacheKey = `artist:toptracks:${artistId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getTopTrackFromArtist)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getTopTrackFromArtist)');
 
+    const tracks = await spotify.getArtistTopTracks(artistId);
     if (!tracks || tracks.length === 0) {
       return res.status(200).json({
         message: 'No top tracks found for this artist',
@@ -1009,12 +1120,14 @@ const getTopTrackFromArtist = async (req, res) => {
       return formatTrack(track, null, null, null);
     });
 
-    return res.status(200).json({
+    const response = {
       message: 'Get artist top tracks successful',
       data: dataFormated,
       success: true
-    });
+    };
 
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+    return res.status(200).json(response);
   } catch (error) {
     res.status(error.status || 500).json({
       message: error.message || "Failed to get artist top tracks",
@@ -1025,10 +1138,17 @@ const getTopTrackFromArtist = async (req, res) => {
 const getAlbumsFromArtist = async (req, res) => {
   try {
     const { artistId } = req.params;
-    console.log('album: ', artistId)
     if (!artistId) {
       return res.status(400).json({ message: "Artist ID is required", success: false });
     }
+
+    const cacheKey = `artist:albums:${artistId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getAlbumsFromArtist)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getAlbumsFromArtist)');
 
     const albums = await spotify.getArtistAlbums(artistId);
     if (!albums || albums.length === 0) {
@@ -1043,12 +1163,14 @@ const getAlbumsFromArtist = async (req, res) => {
       return formatAlbum(album, null);
     });
 
-    return res.status(200).json({
+    const response = {
       message: 'Get artist albums successful',
       data: dataFormated,
       success: true
-    });
+    };
 
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to get artist albums",
@@ -1063,9 +1185,15 @@ const getTracksFromArtist = async (req, res) => {
       return res.status(400).json({ message: "artistName is required in body", success: false });
     }
 
-    const spotifyQueryString = `artist:"${artistName}"`;
+    const cacheKey = `artist:tracks:${artistName.replace(/\s/g, '-')}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getTracksFromArtist)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getTracksFromArtist)');
 
-    // 2. Gọi service spotify.searchTracks (lấy tối đa 50 bài)
+    const spotifyQueryString = `artist:"${artistName}"`;
     const spotifyData = await spotify.searchTracks(spotifyQueryString, 'track', 50);
 
     if (!spotifyData || spotifyData.length === 0) {
@@ -1076,18 +1204,18 @@ const getTracksFromArtist = async (req, res) => {
       });
     }
 
-    // 3. Dùng formatTrack để chuẩn hóa dữ liệu
     const dataFormated = spotifyData.map(track => {
       return formatTrack(track, null, null, null);
     });
 
-    // 4. Trả về kết quả
-    return res.status(200).json({
+    const response = {
       message: 'Get tracks from artist successful',
       data: dataFormated,
       success: true
-    });
+    };
 
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+    return res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to get tracks from artist",
@@ -1229,14 +1357,17 @@ const searchAll = async (req, res) => {
         })()
       ]);
 
+    const dataFormated = {
+      tracks: tracksResult.status === 'fulfilled' ? tracksResult.value : [],
+      playlists: playlistsResult.status === 'fulfilled' ? playlistsResult.value : [],
+      albums: albumsResult.status === 'fulfilled' ? albumsResult.value : [],
+      artists: artistsResult.status === 'fulfilled' ? artistsResult.value : [],
+    }
+
+
     return res.status(200).json({
       message: 'Search successful',
-      data: {
-        tracks: tracksResult.status === 'fulfilled' ? tracksResult.value : [],
-        playlists: playlistsResult.status === 'fulfilled' ? playlistsResult.value : [],
-        albums: albumsResult.status === 'fulfilled' ? albumsResult.value : [],
-        artists: artistsResult.status === 'fulfilled' ? artistsResult.value : [],
-      },
+      data: dataFormated,
       success: true
     });
   } catch (error) {
@@ -1337,6 +1468,19 @@ const getSearchSuggestions = async (req, res) => {
   }
 };
 
+const CATEGORY_SEARCH_STRATEGIES_PLAYLISTS_NAME = {
+  'K-POP': ['KPOP', 'korean', 'Hàn Quốc', 'Nhạc Hàn'],
+  'J-POP': ['JPOP', 'japanese', 'Nhạc Nhật', 'Nhật Bản', 'anime'],
+  'V-POP': ['VPOP', 'vietnamese', 'Nhạc Việt', 'Việt Nam', 'Nhạc trẻ việt nam'],
+  'POP': ['pop', 'nhạc pop thinh hành'],
+  'HIP-HOP': ['hip hop', 'hip-hop', 'rap', 'trap'],
+  'INDIE': ['indie', 'independent'],
+  'JAZZ': ['jazz', 'smooth jazz', 'contemporary jazz'],
+  'RAP': ['rap', 'k-rap', 'hip hop', 'j-rap', 'v-rap', 'nhạc rap'],
+  'DANCE': ['dance', 'edm', 'house', 'nhạc điện tử', 'nhạc dance'],
+  'ROCK': ['rock', 'classic rock', 'alternative rock'],
+  'C-POP': ['CPOP', 'chinese', 'Nhạc Hoa', 'Trung Quốc', 'Cổ phong'],
+}
 /**
  * Lấy nội dung theo category/genre
  */
@@ -1345,185 +1489,89 @@ const getCategoryContent = async (req, res) => {
     const { category } = req.params;
     const categoryUpper = category.toUpperCase();
 
-    // Tìm genre trong DB
-    const genre = await Genres.findOne({
-      where: { name: { [Op.iLike]: categoryUpper } }
-    });
-
-    if (!genre) {
-      // Nếu không tìm thấy trong DB, vẫn thử tìm trên Spotify
-      console.log(`Genre "${categoryUpper}" not found in DB, searching Spotify only...`);
-
-      try {
-        const [spotifyPlaylists, spotifyArtists, spotifyAlbums] = await Promise.allSettled([
-          spotify.searchPlaylists({ name: categoryUpper }),
-          spotify.searchArtists(`genre:"${categoryUpper}"`),
-          spotify.searchAlbums({ name: categoryUpper })
-        ]);
-
-        const formattedPlaylists = spotifyPlaylists.status === 'fulfilled' ?
-          spotifyPlaylists.value.slice(0, 15).map(p => formatPlaylist(p, null)) : [];
-
-        const formattedArtists = spotifyArtists.status === 'fulfilled' ?
-          spotifyArtists.value.slice(0, 20).map(a => formatArtist(a, [categoryUpper])) : [];
-
-        const formattedAlbums = spotifyAlbums.status === 'fulfilled' ?
-          spotifyAlbums.value.slice(0, 15).map(al => formatAlbum(al, [])) : [];
-
-        // Lấy tracks từ top artists
-        const trackPromises = formattedArtists.slice(0, 5).map(artist =>
-          artist.spotifyId ? spotify.getArtistTopTracks(artist.spotifyId) : Promise.resolve([])
-        );
-        const trackResults = await Promise.allSettled(trackPromises);
-
-        const allTracks = [];
-        trackResults.forEach(result => {
-          if (result.status === 'fulfilled' && result.value) {
-            allTracks.push(...result.value.slice(0, 3));
-          }
-        });
-
-        const formattedTracks = shuffle(allTracks)
-          .slice(0, 20)
-          .map(t => formatTrack(t, null, null, null));
-
-        return res.status(200).json({
-          message: 'Category content retrieved successfully (Spotify only)',
-          data: {
-            genre: { id: null, name: categoryUpper },
-            playlists: formattedPlaylists,
-            artists: formattedArtists,
-            albums: formattedAlbums,
-            tracks: formattedTracks
-          },
-          success: true
-        });
-      } catch (spotifyError) {
-        console.error('Spotify category search error:', spotifyError);
-        return res.status(404).json({
-          message: 'Category not found',
-          success: false
-        });
-      }
+    const cacheKey = `category:${categoryUpper.replace(/\s/g, '-')}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getCategoryContent)');
+      return res.status(200).json(JSON.parse(cachedData));
     }
+    console.log('CACHE MISS (getCategoryContent)');
 
-    // Lấy artists từ DB thuộc genre này
-    const dbArtists = await Artist.findAll({
-      include: [{
-        model: Genres,
-        as: 'genres',
-        where: { id: genre.id }
-      }],
-      limit: 20
-    });
+    let responseData;
 
-    let formattedArtists = dbArtists.map(a => formatArtist(a, [genre.name]));
+    console.log(`Genre "${categoryUpper}", searching Spotify only...`);
 
-    // Nếu artists từ DB < 20, bổ sung từ Spotify
-    if (formattedArtists.length < 20) {
-      try {
-        const spotifyArtists = await spotify.searchArtists(`genre:"${categoryUpper}"`);
-        const additionalArtists = spotifyArtists
-          .slice(0, 20 - formattedArtists.length)
-          .map(a => formatArtist(a, [categoryUpper]));
-        formattedArtists = [...formattedArtists, ...additionalArtists];
-      } catch (err) {
-        console.error('Spotify artists error:', err.message);
-      }
-    }
-
-    // Lấy albums: Từ DB artists + Spotify
-    let formattedAlbums = [];
-
-    // 1. Lấy albums từ DB artists
-    const dbAlbumPromises = dbArtists.slice(0, 10).map(artist =>
-      artist.spotifyId ? spotify.getArtistAlbums(artist.spotifyId) : Promise.resolve([])
-    );
-    const dbAlbumResults = await Promise.allSettled(dbAlbumPromises);
-
-    const allAlbums = [];
-    dbAlbumResults.forEach(result => {
-      if (result.status === 'fulfilled' && result.value) {
-        allAlbums.push(...result.value.slice(0, 2)); // Lấy 2 albums mỗi artist
-      }
-    });
-
-    // 2. Nếu albums < 15, tìm thêm trên Spotify theo genre
-    if (allAlbums.length < 15) {
-      try {
-        const spotifyAlbums = await spotify.searchAlbums({ name: categoryUpper });
-        allAlbums.push(...spotifyAlbums.slice(0, 15 - allAlbums.length));
-      } catch (err) {
-        console.error('Spotify albums search error:', err.message);
-      }
-    }
-
-    // 3. Shuffle và format albums
-    formattedAlbums = shuffle(allAlbums)
-      .slice(0, 15)
-      .map(al => formatAlbum(al, []));
-
-    // Lấy playlists từ Spotify
-    let formattedPlaylists = [];
     try {
-      const spotifyPlaylists = await spotify.searchPlaylists({
-        name: categoryUpper
-      });
-      formattedPlaylists = spotifyPlaylists.slice(0, 15).map(p =>
-        formatPlaylist(p, null)
-      );
-    } catch (err) {
-      console.error('Spotify playlists error:', err.message);
-    }
-
-    // Lấy tracks: Ưu tiên từ DB artists, sau đó bổ sung từ Spotify
-    let allTracks = [];
-
-    // Lấy tracks từ DB artists
-    const dbTrackPromises = dbArtists.slice(0, 5).map(artist =>
-      artist.spotifyId ? spotify.getArtistTopTracks(artist.spotifyId) : Promise.resolve([])
-    );
-    const dbTrackResults = await Promise.allSettled(dbTrackPromises);
-
-    dbTrackResults.forEach(result => {
-      if (result.status === 'fulfilled' && result.value) {
-        allTracks.push(...result.value.slice(0, 3));
+      let spotifyPlaylists = [];
+      const playlistSearchTerms = CATEGORY_SEARCH_STRATEGIES_PLAYLISTS_NAME[categoryUpper] || [categoryUpper];
+      for (const term of playlistSearchTerms) {
+        spotifyPlaylists.push(...await spotify.searchPlaylists(term, 15)); // tìm theo từng từ khóa
       }
-    });
 
-    // Nếu tracks < 20, lấy thêm từ Spotify artists
-    if (allTracks.length < 20) {
-      const spotifyTrackPromises = formattedArtists
-        .slice(0, Math.min(10 - dbArtists.length, formattedArtists.length))
-        .filter(a => a.spotifyId)
-        .map(artist => spotify.getArtistTopTracks(artist.spotifyId));
+      const [spotifyArtists, spotifyAlbums] = await Promise.allSettled([
+        spotify.searchArtistsAdvanced(categoryUpper, 15),
+        spotify.searchAlbums(categoryUpper, 15)
+      ]);
 
-      const spotifyTrackResults = await Promise.allSettled(spotifyTrackPromises);
-      spotifyTrackResults.forEach(result => {
+      let foundArtists = [];
+      if (spotifyArtists.status === 'fulfilled' && spotifyArtists.value) {
+        for (const artist of spotifyArtists.value) {
+          let isMatch = false;
+          if (artist.genres) {
+            isMatch = artist.genres.some(genre => {
+              return genre.toLowerCase().includes(category.toLowerCase());
+            });
+          }
+
+          if (isMatch) {
+            console.log(`✅ Matched artist (Genre includes "${category}"):`, artist.name, artist.genres);
+            foundArtists.push(artist);
+          }
+        }
+      }
+
+      const formattedPlaylists = spotifyPlaylists.map(p => formatPlaylist(p, null));
+      const formattedArtists = foundArtists.map(a => formatArtist(a, [categoryUpper]));
+      const formattedAlbums = spotifyAlbums.status === 'fulfilled' ?
+        spotifyAlbums.value.map(al => formatAlbum(al, [])) : [];
+      const trackPromises = formattedArtists.slice(0, 5).map(artist =>
+        artist.spotifyId ? spotify.getArtistTopTracks(artist.spotifyId) : Promise.resolve([])
+      );
+      const trackResults = await Promise.allSettled(trackPromises);
+
+      const allTracks = [];
+      trackResults.forEach(result => {
         if (result.status === 'fulfilled' && result.value) {
-          allTracks.push(...result.value.slice(0, 2));
+          allTracks.push(...result.value.slice(0, 4)); // Lấy 4 track mỗi artist
         }
       });
+
+      const formattedTracks = shuffle(allTracks)
+        .slice(0, 20)
+        .map(t => formatTrack(t, null, null, null));
+
+      responseData = {
+        message: 'Category content retrieved successfully (Spotify only)',
+        data: {
+          genre: { id: null, name: categoryUpper },
+          playlists: formattedPlaylists,
+          artists: formattedArtists,
+          albums: formattedAlbums,
+          tracks: formattedTracks
+        },
+        success: true
+      };
+    } catch (spotifyError) {
+      console.error('Spotify category search error:', spotifyError);
+      return res.status(404).json({
+        message: 'Category not found or Spotify error',
+        success: false
+      });
     }
 
-    const formattedTracks = shuffle(allTracks)
-      .slice(0, 20)
-      .map(t => formatTrack(t, null, null, null));
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
 
-    return res.status(200).json({
-      message: 'Category content retrieved successfully',
-      data: {
-        genre: {
-          id: genre.id,
-          name: genre.name
-        },
-        playlists: formattedPlaylists,
-        artists: formattedArtists,
-        albums: formattedAlbums,
-        tracks: formattedTracks
-      },
-      success: true
-    });
+    return res.status(200).json(responseData);
   } catch (error) {
     console.error('getCategoryContent error:', error);
     res.status(500).json({

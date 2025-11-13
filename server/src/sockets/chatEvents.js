@@ -4,7 +4,7 @@ const { User, Message, Conversation, ConversationMember, sequelize } = require('
  *  Export một hàm nhận instance của Socket.IO Server (io)
  * @param {import('socket.io').Server} io - Instance của Socket.IO Server
  */
-module.exports = function(io) {
+module.exports = function (io) {
     // Sự kiện khi một client kết nối thành công
     io.on('connection', (socket) => {
         const userId = socket.user.id;
@@ -29,7 +29,7 @@ module.exports = function(io) {
         });
 
         // 3. Xử lý sự kiện `send_message` (Gửi tin nhắn)
-        socket.on('send_message', async(data, callback) => {
+        socket.on('send_message', async (data, callback) => {
             const { conversationId, content, type = 'text', fileUrl = null } = data;
 
             if (!conversationId || (!content && !fileUrl)) {

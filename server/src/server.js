@@ -8,6 +8,7 @@ const { sequelize, User } = require("./models");
 const { API_PREFIX } = require("./configs/constants");
 const { authenticateToken } = require("./middlewares/authentication");
 const seedDatabase = require("./utils/seeder");
+const { connectRedis } = require('./configs/redis');
 
 const dotenv = require("dotenv");
 const { Server } = require("socket.io");
@@ -25,10 +26,9 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
-      "http://localhost:3000",
       "http://localhost:3001",
-      "http://192.168.1.12:3000",
       "exp://192.168.1.12:8081",
+      "exp://192.168.1.14:8081",
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -42,6 +42,7 @@ const io = new Server(server, {
 io.use(async (socket, next) => {
   // Lấy token từ handshake query (hoặc header, tùy cách client gửi)
   const token = socket.handshake.auth.token;
+  console.log('token', token)
 
   if (!token) {
     return next(new Error("Authentication error: Token not provided"));
@@ -49,9 +50,8 @@ io.use(async (socket, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-
-    // 1. Kiểm tra User tồn tại
     const user = await User.findByPk(decoded.id);
+    console.log('user', user)
     if (!user) {
       return next(new Error("Authentication error: User not found"));
     }
@@ -81,9 +81,7 @@ app.set("trust proxy", true);
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
       "http://localhost:3001",
-      "http://192.168.1.12:3000"
     ],
     credentials: true,
   })
@@ -159,6 +157,8 @@ async function startServer() {
     // await sequelize.sync();
     // console.log('✅ Database synchronized successfully')
     // await seedDatabase();
+
+    await connectRedis();
 
     server.listen(process.env.PORT || 3001, () => {
       console.log(`🚀 Server is running on port ${process.env.PORT || 3001}`);

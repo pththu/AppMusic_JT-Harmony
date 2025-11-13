@@ -26,5 +26,6 @@ router.post('/:userId/follow', authenticateToken, userController.toggleFollow);
 router.delete('/remove/:id', authorizeRole, userController.deleteUser)
 
 router.get('/search', authenticateToken, userController.searchUsers);
+router.post('/search-all', userController.search);
 
 module.exports = router

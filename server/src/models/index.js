@@ -27,6 +27,7 @@ const Track = require('./track');
 const Playlist = require('./playlist');
 const PlaylistTrack = require('./playlist_track');
 const ListeningHistory = require('./listening_history');
+const SearchHistory = require('./search_history');
 const FavoriteItem = require('./favorite_items')
 // ================= Associations ================= //
 
@@ -174,6 +175,9 @@ FavoriteItem.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASC
 
 User.hasMany(ListeningHistory, { foreignKey: 'userId', as: 'ListeningHistories', onDelete: 'CASCADE', hooks: true });
 ListeningHistory.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
+
+User.hasMany(SearchHistory, { foreignKey: 'userId', as: 'SearchHistories', onDelete: 'CASCADE', hooks: true });
+SearchHistory.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
 
 // Like - User & Post
 Like.belongsTo(User, { foreignKey: 'userId', as: 'User' });
