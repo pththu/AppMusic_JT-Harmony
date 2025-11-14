@@ -26,18 +26,22 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { usePlayerStore } from "@/store/playerStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 export default function ProfileScreen() {
-  const settings = useContext(SettingsContext);
-  const user = useAuthStore((state) => state.user);
-  const loginType = useAuthStore((state) => state.loginType);
-  const updateUser = useAuthStore((state) => state.updateUser);
-  const clearPlayerStore = usePlayerStore((state) => state.clearPlayerStore);
-  const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error, warning } = useCustomAlert();
+
+  const settings = useContext(SettingsContext);
+  const user = useAuthStore((state) => state.user);
+  const loginType = useAuthStore((state) => state.loginType);
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const updateUser = useAuthStore((state) => state.updateUser);
+  const clearPlayerStore = usePlayerStore((state) => state.clearPlayerStore);
+  const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
   const logout = useAuthStore((state) => state.logout);
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -124,8 +128,10 @@ export default function ProfileScreen() {
   // };
 
   const handleLogout = async () => {
+    console.log('out')
     try {
       const response = await Logout();
+      console.log(response)
       if (loginType === "google") {
         await GoogleSignin.signOut();
       }
@@ -189,7 +195,11 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F]">
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F]"
+      style={{
+        paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0,
+      }}
+    >
       <ScrollView contentContainerStyle={{ padding: 24 }}>
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-black dark:text-white text-3xl font-bold">
@@ -229,7 +239,7 @@ export default function ProfileScreen() {
         {isChoosedImage && <ModalConfirm />}
 
         {/* Thông tin liên hệ */}
-        <View className="my-4 border-b border-gray-300 pb-4">
+        <View className="my-4 pb-4">
           <View className="flex-row items-center mb-2 gap-2">
             <Icon
               name="mail-outline"
@@ -262,7 +272,7 @@ export default function ProfileScreen() {
             <Text
               className={`ml-3 ${colorScheme === "dark" ? "text-white" : "text-gray-800"}`}
             >
-              {new Date(user?.dob).toLocaleDateString() || "Chưa có thông tin"}
+              {user?.dob ? new Date(user?.dob).toLocaleDateString() : "Chưa có thông tin"}
             </Text>
           </View>
 
@@ -302,7 +312,7 @@ export default function ProfileScreen() {
           <LibraryItemButton
             title="Danh sách phát"
             icon="list"
-            onPress={() => navigate("PlaylistsScreen")}
+            onPress={() => navigate("AllPlaylistScreen")}
             color="#82d8ff"
           />
           <LibraryItemButton

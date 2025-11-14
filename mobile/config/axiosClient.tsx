@@ -4,8 +4,8 @@ import { ENV } from './env';
 
 const axiosClient = axios.create({
   baseURL: ENV.API_URL,
-  headers: { 
-    'Content-Type': 'application/json;  charset=UTF-8' 
+  headers: {
+    'Content-Type': 'application/json;  charset=UTF-8'
   },
 });
 

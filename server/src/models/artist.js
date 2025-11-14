@@ -28,6 +28,11 @@ const Artist = sequelize.define(
       defaultValue: 0,
       field: 'total_followers',
     },
+    shareCount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      field: 'share_count',
+    },
   },
   {
     tableName: 'artists',

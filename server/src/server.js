@@ -26,6 +26,9 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3000",
+      "http://localhost:3001",
+      "http://192.168.1.12:3000",
+      "exp://192.168.1.12:8081",
       "http://192.168.1.22:3000",
       "exp://192.168.1.22:8081",
     ],
@@ -82,6 +85,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
+      "http://192.168.1.12:3000"
       "http://192.168.1.22:3000",
     ],
     credentials: true,
@@ -103,15 +107,15 @@ app.use(
 
 // Danh sách các route yêu cầu xác thực và không yêu cầu xác thực
 const protectedRoutes = [
-  "favorites", // Yêu thích
-  "histories", // Lịch sử nghe nhạc
-  "notifications", // Thông báo
-  "playlists", // Playlist cá nhân
-  "comments", // Comment (cần đăng nhập mới comment được)
-  "follows", // Theo dõi người dùng, nghệ sĩ
-  // 'genres', // Xem thể loại nhạc
-  // 'artists', // Xem thông tin nghệ sĩ
-  "albums", // Xem album
+  'favorites', // Yêu thích
+  'histories', // Lịch sử nghe nhạc
+  'notifications', // Thông báo
+  'playlists', // Playlist cá nhân
+  'comments', // Comment (cần đăng nhập mới comment được)
+  'follows', // Theo dõi người dùng, nghệ sĩ
+  'genres', // Xem thể loại nhạc
+  'artists', // Xem thông tin nghệ sĩ
+  'albums', // Xem album
   // 'search', // Tìm kiếm công khai
   // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
   "conversations",
@@ -167,8 +171,8 @@ async function startServer() {
     // console.log('✅ Database synchronized successfully')
     // await seedDatabase();
 
-    server.listen(process.env.PORT || 3000, () => {
-      console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);
+    server.listen(process.env.PORT || 3001, () => {
+      console.log(`🚀 Server is running on port ${process.env.PORT || 3001}`);
     });
   } catch (e) {
     console.error("❌ Server startup error:", e.message);
