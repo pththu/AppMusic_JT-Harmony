@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -33,28 +33,26 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import {
-  mockComments,
-  mockUsers,
-  mockPosts,
-  getUserById,
-  getPostById,
-  type Comment,
-} from "@/lib/mock-data";
+import { mockUsers, mockPosts, getUserById, getPostById, type Comment as MockComment } from "@/lib/mock-data";
+import { fetchAllComments, deleteCommentAdmin, type AdminComment } from "@/services/commentAdminApi";
 
 export default function CommentsPage() {
-  const [comments, setComments] = useState<Comment[]>(mockComments);
-  const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
+  const [comments, setComments] = useState<(AdminComment | any)[]>([]);
+  const [selectedComment, setSelectedComment] = useState<any | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingComment, setEditingComment] = useState<Comment | null>(null);
+  const [editingComment, setEditingComment] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     content: "",
     postId: 1,
@@ -62,18 +60,39 @@ export default function CommentsPage() {
     userId: 1,
     fileUrl: "",
   });
+  // Server-side filters
+  const [filterPostId, setFilterPostId] = useState<string>("");
+  const [filterUserId, setFilterUserId] = useState<string>("");
+  const [q, setQ] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [limit, setLimit] = useState<string>("50");
+  const [offset, setOffset] = useState<string>("0");
+  const [loading, setLoading] = useState(false);
 
-  const handleDeleteComment = (commentId: number) => {
-    setComments(comments.filter((comment) => comment.id !== commentId));
+  const handleDeleteComment = async (commentId: number) => {
+    await deleteCommentAdmin(commentId);
+    setComments((prev) => prev.filter((comment) => comment.id !== commentId));
   };
 
-  const handleViewComment = (comment: Comment) => {
+  const resetFilters = async () => {
+    setFilterPostId("");
+    setFilterUserId("");
+    setQ("");
+    setDateFrom("");
+    setDateTo("");
+    setLimit("50");
+    setOffset("0");
+    await loadComments();
+  };
+
+  const handleViewComment = (comment: any) => {
     setSelectedComment(comment);
     setIsViewDialogOpen(true);
   };
 
   const handleAddComment = () => {
-    const newComment: Comment = {
+    const newComment: any = {
       id: Math.max(...comments.map((c) => c.id)) + 1,
       content: formData.content,
       postId: formData.postId,
@@ -119,7 +138,7 @@ export default function CommentsPage() {
     setEditingComment(null);
   };
 
-  const openEditDialog = (comment: Comment) => {
+  const openEditDialog = (comment: any) => {
     setEditingComment(comment);
     setFormData({
       content: comment.content,
@@ -131,9 +150,34 @@ export default function CommentsPage() {
     setIsEditDialogOpen(true);
   };
 
-  const getCommentType = (comment: Comment) => {
+  const getCommentType = (comment: any) => {
     return comment.parentId ? "Phản hồi" : "Bình luận";
   };
+
+  const loadComments = async () => {
+    setLoading(true);
+    try {
+      const params: any = {};
+      if (filterPostId) params.postId = parseInt(filterPostId, 10);
+      if (filterUserId) params.userId = parseInt(filterUserId, 10);
+      if (q) params.q = q;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+      if (limit) params.limit = parseInt(limit, 10);
+      if (offset) params.offset = parseInt(offset, 10);
+      const data = await fetchAllComments(params);
+      setComments(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error('Failed to load comments admin:', e);
+      setComments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadComments();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -267,6 +311,49 @@ export default function CommentsPage() {
         </Dialog>
       </div>
 
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bộ lọc</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3 flex-wrap">
+            <div>
+              <Label className="text-sm font-medium">ID bài đăng</Label>
+              <Input value={filterPostId} onChange={(e)=>setFilterPostId(e.target.value)} className="w-32" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">ID người dùng</Label>
+              <Input value={filterUserId} onChange={(e)=>setFilterUserId(e.target.value)} className="w-32" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Tìm kiếm</Label>
+              <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Nội dung" className="w-56" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Từ ngày</Label>
+              <Input type="date" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Đến ngày</Label>
+              <Input type="date" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Limit</Label>
+              <Input value={limit} onChange={(e)=>setLimit(e.target.value)} className="w-24" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Offset</Label>
+              <Input value={offset} onChange={(e)=>setOffset(e.target.value)} className="w-24" />
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button onClick={loadComments} disabled={loading}>{loading ? 'Đang tải...' : 'Áp dụng'}</Button>
+              <Button variant="outline" onClick={resetFilters} disabled={loading}>Đặt lại</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Comments Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         <Table>
@@ -281,7 +368,7 @@ export default function CommentsPage() {
           </TableHeader>
           <TableBody>
             {comments.map((comment) => {
-              const author = getUserById(comment.userId);
+              const author = (comment as any).User || null;
               const replies = comments.filter((c) => c.parentId === comment.id);
               return (
                 <TableRow key={comment.id}>
@@ -291,7 +378,7 @@ export default function CommentsPage() {
                         {comment.content}
                       </p>
                       {comment.fileUrl && (
-                        <p className="text-xs text-blue-600 mt-1">
+                        <p className="text-xs text-green-600 mt-1">
                           Có file đính kèm
                         </p>
                       )}
@@ -313,11 +400,11 @@ export default function CommentsPage() {
                           />
                         ) : (
                           <span className="text-xs font-medium text-gray-600">
-                            {author?.username.charAt(0).toUpperCase()}
+                            {author?.username?.charAt(0)?.toUpperCase()}
                           </span>
                         )}
                       </div>
-                      <span className="text-sm">{author?.username}</span>
+                      <span className="text-sm">{author?.fullName || author?.username}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -412,7 +499,7 @@ export default function CommentsPage() {
                 </div>
                 <p className="text-gray-900 mb-2">{selectedComment.content}</p>
                 {selectedComment.fileUrl && (
-                  <div className="text-sm text-blue-600">
+                  <div className="text-sm text-green-600">
                     File đính kèm: {selectedComment.fileUrl}
                   </div>
                 )}
@@ -431,8 +518,8 @@ export default function CommentsPage() {
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {comments
                     .filter((c) => c.parentId === selectedComment.id)
-                    .map((reply) => {
-                      const replyAuthor = getUserById(reply.userId);
+                    .map((reply: any) => {
+                      const replyAuthor = reply.User || null;
                       return (
                         <div
                           key={reply.id}
@@ -448,14 +535,12 @@ export default function CommentsPage() {
                                 />
                               ) : (
                                 <span className="text-xs font-medium text-gray-600">
-                                  {replyAuthor?.username
-                                    .charAt(0)
-                                    .toUpperCase()}
+                                  {replyAuthor?.username?.charAt(0)?.toUpperCase()}
                                 </span>
                               )}
                             </div>
                             <span className="text-sm font-medium">
-                              {replyAuthor?.username}
+                              {replyAuthor?.fullName || replyAuthor?.username}
                             </span>
                             <span className="text-xs text-gray-500">
                               {format(
@@ -468,7 +553,7 @@ export default function CommentsPage() {
                             {reply.content}
                           </p>
                           {reply.fileUrl && (
-                            <p className="text-xs text-blue-600 mt-1">
+                            <p className="text-xs text-green-600 mt-1">
                               File: {reply.fileUrl}
                             </p>
                           )}

@@ -23,6 +23,11 @@ const Comment = sequelize.define(
             allowNull: true,
             field: 'post_id'
         },
+        trackId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'track_id'
+        },
         content: {
             type: DataTypes.TEXT,
             allowNull: false
@@ -37,13 +42,18 @@ const Comment = sequelize.define(
             allowNull: true,
             field: 'file_url'
         },
+        timecodeMs: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'timecode_ms'
+        },
         commentedAt: {
             type: DataTypes.DATE,
             allowNull: false,
             field: 'commented_at',
             defaultValue: DataTypes.NOW
         },
-        // likeCount: {       type: DataTypes.INTEGER,       allowNull: false,       defaultValue: 0,       field: 'like_count' // Tên cột trong DB
+        // likeCount: {       type: DataTypes.INTEGER,       allowNull: false,       defaultValue: 0,       field: 'like_count' // Tên cột trong DB
         //              }
     }, {
         tableName: 'comments',

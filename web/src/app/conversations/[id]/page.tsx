@@ -197,7 +197,7 @@ export default function ConversationDetailPage() {
                             {message.content || "File đính kèm"}
                           </p>
                           {message.fileUrl && (
-                            <p className="text-xs text-blue-600 mt-2">
+                            <p className="text-xs text-green-600 mt-2">
                               File: {message.fileUrl}
                             </p>
                           )}

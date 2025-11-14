@@ -27,6 +27,7 @@ export interface Comment {
     username: string;
     content: string;
   };
+  timecodeMs?: number;
 }
 
 export interface Post {
@@ -84,10 +85,60 @@ const mapCommentData = (comment: any): Comment => {
       id: comment.User?.id,
       username: comment.User?.username,
       avatarUrl: comment.User?.avatarUrl,
-      fullName: comment.User?.fullName || comment.User?.username || "User",
+      fullName: comment.User?.fullName || "",
     },
     replies: comment.Replies ? mapReplies(comment.Replies) : [],
   };
+};
+
+/** Lấy danh sách bình luận theo Track (thread theo bài hát)
+ * trackId: ID bài hát.
+ * Optional: fromMs, toMs để lọc theo khoảng thời gian.
+ * Endpoint: GET /api/v1/comments/byTrack/:trackId
+ */
+export const fetchCommentsByTrackId = async (
+  trackId: number,
+  options?: { fromMs?: number; toMs?: number }
+): Promise<Comment[]> => {
+  try {
+    const params: any = {};
+    if (options?.fromMs != null) params.fromMs = options.fromMs;
+    if (options?.toMs != null) params.toMs = options.toMs;
+    const response = await api.get(`/comments/byTrack/${trackId}`, { params });
+    const data = response.data;
+    if (!Array.isArray(data)) return [];
+    return data.map(mapCommentData) as Comment[];
+  } catch (error) {
+    console.error("Lỗi khi tải bình luận theo track:", error);
+    return [];
+  }
+};
+
+/** Tạo bình luận theo Track (thread theo bài hát)
+ * trackId: ID bài hát.
+ * Endpoint: POST /api/v1/comments
+ */
+export const createTrackComment = async (
+  trackId: number,
+  content: string,
+  parentId: string | null = null,
+  timecodeMs?: number
+): Promise<Comment | { message: string; status: string }> => {
+  try {
+    if (!useAuthStore.getState().user)
+      return { message: "Chưa đăng nhập", status: "error" };
+
+    const response = await api.post("/comments", {
+      trackId,
+      content,
+      parentId,
+      timecodeMs: typeof timecodeMs === 'number' ? timecodeMs : undefined,
+    });
+    return response.data as Comment;
+  } catch (error) {
+    console.error("Lỗi khi đăng bình luận theo track:", error);
+    return { message: "Không thể đăng bình luận.", status: "error" };
+  }
 };
 
 // === API CHO BÀI ĐĂNG ===
@@ -215,7 +266,8 @@ export const fetchCommentsByPostId = async (
 export const createNewComment = async (
   postId: string,
   content: string,
-  parentId: string | null = null
+  parentId: string | null = null,
+  timecodeMs?: number
 ): Promise<Comment | { message: string; status: string }> => {
   try {
     if (!useAuthStore.getState().user)
@@ -225,6 +277,7 @@ export const createNewComment = async (
       postId: postId,
       content: content,
       parentId: parentId,
+      timecodeMs: typeof timecodeMs === 'number' ? timecodeMs : undefined,
     });
     return response.data as Comment;
   } catch (error) {

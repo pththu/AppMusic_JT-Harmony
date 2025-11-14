@@ -6,6 +6,7 @@ const { authenticateToken } = require('../middlewares/authentication');
 
 
 router.get('/', authenticateToken, controller.getConversations); // Lấy danh sách các cuộc trò chuyện của người dùng hiện tại
+router.get('/messages', authenticateToken, controller.getAllMessagesAdmin); // Admin: Lấy toàn bộ tin nhắn (phân trang)
 router.post('/user/:userId', authenticateToken, controller.createOrGetPrivateConversation); // Tạo hoặc lấy cuộc trò chuyện riêng với 1 người dùng
 router.get('/:conversationId/messages', authenticateToken, controller.getConversationMessages); //  Lấy lịch sử tin nhắn của 1 cuộc trò chuyện
 
