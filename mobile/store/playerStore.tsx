@@ -19,6 +19,7 @@ interface PlayerState {
   isPlaying: boolean;
   tabBarHeight: number;
   seekTrigger: number | null;
+  targetSeekMs?: number | null;
 
   volume: number;
   currentTime: number;
@@ -27,6 +28,7 @@ interface PlayerState {
   repeatMode: 'none' | 'one' | 'all';
   isLoading: boolean;
   isMiniPlayerVisible: boolean;
+  uiOverlayOpen: boolean;
 
   // basic actions
   setCurrentTrack: (track: any) => void;
@@ -72,6 +74,8 @@ interface PlayerState {
   removeTrackFromQueue: (tracks: any[]) => void;
   clearQueue: () => void;
   clearPlayerStore: () => void;
+  setTargetSeekMs?: (ms: number | null) => void;
+  setUiOverlayOpen?: (open: boolean) => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -89,6 +93,7 @@ export const usePlayerStore = create<PlayerState>()(
       tabBarHeight: 0,
       queue: [],
       seekTrigger: null,
+      targetSeekMs: null,
       isLastIndex: false,
       isPlaying: false,
       volume: 1,
@@ -98,6 +103,7 @@ export const usePlayerStore = create<PlayerState>()(
       repeatMode: 'none',
       isLoading: false,
       isMiniPlayerVisible: false,
+      uiOverlayOpen: false,
 
       // === BASIC ACTIONS ===
       setCurrentTrack: (track) => {
@@ -384,7 +390,11 @@ export const usePlayerStore = create<PlayerState>()(
         repeatMode: 'none',
         isLoading: false,
         isMiniPlayerVisible: false,
+        uiOverlayOpen: false,
+        targetSeekMs: null,
       }),
+      setTargetSeekMs: (ms: number | null) => set({ targetSeekMs: ms })
+      ,setUiOverlayOpen: (open: boolean) => set({ uiOverlayOpen: open })
     }),
 
     {
