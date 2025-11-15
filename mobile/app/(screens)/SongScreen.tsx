@@ -19,18 +19,14 @@ import ArtistsSection from "@/components/artists/ArtistsSection";
 import { useNavigate } from "@/hooks/useNavigate";
 import { usePlayerStore } from "@/store/playerStore";
 import { router } from "expo-router";
-import { useTheme } from "@/components/ThemeContext";
 import { albumData, trackData } from "@/constants/data";
-import { SafeAreaView } from "react-native-safe-area-context";
 import SongItem from "@/components/items/SongItem";
 import TextTicker from "react-native-text-ticker";
-import { is } from "date-fns/locale";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { ShareTrack } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
 import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
-import { opacity } from "react-native-reanimated/lib/typescript/Colors";
 import { fetchCoversBySongId } from "@/services/coverApi";
 import CoverItem from "@/components/items/CoverItem";
 
@@ -60,6 +56,7 @@ export default function SongScreen() {
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const playPrevious = usePlayerStore((state) => state.playPrevious);
+  const playTrackFromQueue = usePlayerStore((state) => state.playTrackFromQueue);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
   const removeTrackFromQueue = usePlayerStore((state) => state.removeTrackFromQueue);
@@ -68,7 +65,7 @@ export default function SongScreen() {
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = colorScheme === 'dark' ? '#888' : 'gray';
 
-  const [isShuffle, setIsShuffle] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(isShuffled);
   const [isRepeat, setIsRepeat] = useState(false);
   const [isRepeatOne, setIsRepeatOne] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -99,7 +96,7 @@ export default function SongScreen() {
   const [loadingCovers, setLoadingCovers] = useState(false);
 
   // Load covers khi component mount
-  React.useEffect(() => {
+  useEffect(() => {
     const loadCovers = async () => {
       if (currentTrack?.id) {
         setLoadingCovers(true);
@@ -123,7 +120,7 @@ export default function SongScreen() {
 
   const handleSelectTrack = (track) => {
     setCurrentTrack(track);
-    navigate('SongScreen');
+    // navigate('SongScreen');
   }
 
   const handlePlayPrevious = () => {
@@ -305,7 +302,6 @@ export default function SongScreen() {
     }
   }, []);
 
-  // ???
   const handleViewAllCovers = () => {
     // Navigate to SocialScreen with covers filter
     navigate("SocialScreen", { filter: "covers", songId: currentTrack.id });
@@ -397,14 +393,14 @@ export default function SongScreen() {
 
       {/* Controls */}
       <View className="flex-row justify-between items-center mb-3 px-6">
-        <TouchableOpacity onPress={handleShufflePlay} className="p-2">
+        <TouchableOpacity onPress={handleShufflePlay} className="p-4">
           <Icon name="shuffle" size={24} color={isShuffled ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handlePlayPrevious} className="p-2">
+        <TouchableOpacity onPress={handlePlayPrevious} className="p-4">
           <Icon name="skip-previous" size={30} color={primaryIconColor} />
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-white rounded-full p-2 shadow-lg"
+          className="bg-white rounded-full p-4 shadow-lg"
           onPress={togglePlayPause}
         >
           <Icon
@@ -413,10 +409,10 @@ export default function SongScreen() {
             color={'black'}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handlePlayNext} className="p-2">
+        <TouchableOpacity onPress={handlePlayNext} className="p-4">
           <Icon name="skip-next" size={30} color={primaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleRepeat} className="p-2">
+        <TouchableOpacity onPress={handleRepeat} className="p-4">
           <Icon name={isRepeatOne ? 'repeat-one' : 'repeat'} size={24} color={isRepeat ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
       </View>
@@ -438,21 +434,21 @@ export default function SongScreen() {
       </View>
 
       {/* Comment at current time */}
-      <View className="items-end px-3 mb-4">
+      {/* <View className="items-end px-3 mb-4">
         <TouchableOpacity onPress={handleCommentAtCurrentTime} className="px-3 py-1 rounded-full bg-indigo-500 flex-row items-center">
           <Icon name="comment" size={16} color="#fff" />
           <Text className="text-white font-semibold ml-2">Bình luận tại {formatTime(playbackPosition)}</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       {/* Track Comments Modal */}
-      <TrackCommentsModal
+      {/* <TrackCommentsModal
         visible={trackCommentsVisible}
         onClose={() => setTrackCommentsVisible(false)}
         trackId={currentTrack?.id}
         defaultTimecodeMs={defaultTimecodeMs}
         onUserPress={(userId) => navigate("ProfileSocialScreen", { userId })}
-      />
+      /> */}
 
       {/* Up Next Header */}
       <View className={`flex-row justify-between items-center mb-2`}>

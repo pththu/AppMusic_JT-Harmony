@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigate } from '@/hooks/useNavigate';
@@ -6,7 +6,13 @@ import LibraryItemButton from '@/components/button/LibraryItemButton';
 import SongItem from '@/components/items/SongItem';
 import { usePlayerStore } from '@/store/playerStore';
 import { trackData, albumData } from "@/constants/data";
-import MINI_PLAYER_HEIGHT from "@/components/player/MiniPlayer";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import { useHistoriesStore } from '@/store/historiesStore';
+import AlbumItem from '@/components/items/AlbumItem';
+import PlaylistItem from '@/components/items/PlaylistItem';
+import { useArtistStore } from '@/store/artistStore';
+import ArtistItem from '@/components/artists/ArtistItem';
+import { ScrollView } from 'react-native';
 
 const libraryItems = [
   {
@@ -40,72 +46,207 @@ const libraryItems = [
 ];
 
 export default function YourLibraryScreen() {
-  const playPlaylist = usePlayerStore((state) => state.playPlaylist);
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
 
-  const { navigate } = useNavigate();
   const colorScheme = useColorScheme();
+  const { navigate } = useNavigate();
 
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const listenHistory = useHistoriesStore((state) => state.listenHistory);
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const playPlaylist = usePlayerStore((state) => state.playPlaylist);
 
-  const handleSelectSong = (song, index) => {
-    const playlistWithVideoId = trackData.map((item) => ({
-      ...item,
-      videoId: item.videoId || "5BdSZkY6F4M",
-      artists: item.artists,
-      imageUrl:
-        item.imageUrl ||
-        albumData.find((album) => album.name === item.album)?.imageUrl ||
-        "",
-    }));
+  const albumList = useMemo(() => {
+    const albums = listenHistory
+      .filter((item) => item.itemType === 'album')
+      .map((item) => item);
+    return albums;
+  }, [listenHistory]);
 
-    playPlaylist(playlistWithVideoId, index);
+  const playlistList = useMemo(() => {
+    const playlists = listenHistory
+      .filter((item) => item.itemType === 'playlist')
+      .map((item) => item);
+    return playlists;
+  }, [listenHistory]);
+
+  const artistList = useMemo(() => {
+    const artists = listenHistory
+      .filter((item) => item.itemType === 'artist')
+      .map((item) => item);
+    return artists;
+  }, [listenHistory]);
+
+  const trackList = useMemo(() => {
+    const tracks = listenHistory
+      .filter((item) => item.itemType === 'track')
+      .map((item) => item);
+    return tracks;
+  }, [listenHistory]);
+
+  const handleSelectSong = (track, index) => {
+    // const playlistWithVideoId = trackData.map((item) => ({
+    //   ...item,
+    //   videoId: item.videoId || "5BdSZkY6F4M",
+    //   artists: item.artists,
+    //   imageUrl:
+    //     item.imageUrl ||
+    //     albumData.find((album) => album.name === item.album)?.imageUrl ||
+    //     "",
+    // }));
+    // playPlaylist(playlistWithVideoId, index);
   };
 
-  const renderRecentlyPlayedItem = ({ item, index }) => (
-    <SongItem
-      item={item}
-      image={
-        item.imageUrl ||
-        albumData.find((album) => album.name === item.album)?.imageUrl ||
-        ""
-      }
-      onPress={() => handleSelectSong(item, index)}
-      onOptionsPress={() => { }}
-    />
-  );
+  const handleSelectAlbum = (album) => {
+    setCurrentAlbum(album);
+    navigate("AlbumScreen");
+  };
+
+  const handleSelectArtist = (artist) => {
+    setCurrentArtist(artist);
+    navigate("ArtistScreen");
+  }
+
+  const handleSelectPlaylist = (playlist) => {
+    setCurrentPlaylist(playlist);
+    navigate("PlaylistScreen");
+  };
+
+  const renderRecentlyPlayedItem = ({ item, index }) => {
+    const itemType = item.itemType; // track - album - playlist - artist
+    console.log('item', item.itemType, item.item.name)
+
+    switch (itemType) {
+      case 'track':
+        return (
+          <SongItem
+            item={item.item}
+            image={item.item?.imageUrl || ""}
+            onPress={() => handleSelectSong(item, index)}
+            onOptionsPress={() => { }}
+          />
+        );
+      case 'album':
+        return (
+          <AlbumItem
+            title={item.item.name}
+            image={item.item?.imageUrl || ""}
+            onPress={() => handleSelectAlbum(item.item)}
+          />
+        )
+      case 'playlist':
+        return (
+          <PlaylistItem
+            item={item.item}
+            totalTrack={item.item.totalTracks || 0}
+            onPress={() => handleSelectPlaylist(item.item)}
+          />
+        )
+      case 'artist':
+        return (
+          <ArtistItem
+            name={item.name}
+            image={item?.imageUrl || item?.imgUrl}
+            onPress={() => handleSelectArtist(item)}
+          />
+        )
+      default:
+        return null;
+    }
+  };
 
   return (
     <SafeAreaView
       className={`flex-1 px-4 pt-4 ${colorScheme === 'dark' ? 'bg-black' : 'bg-white'}`}
+      style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
     >
-      <Text className="text-black dark:text-white text-2xl font-semibold mb-4">
-        Thư viện của bạn
-      </Text>
-      <View className="mb-6  flex-row gap-2 flex-wrap justify-between p-1">
-        {libraryItems?.map((item, index) => (
-          <LibraryItemButton
-            key={index.toString()}
-            title={item.title}
-            icon={item.icon}
-            onPress={() => navigate(item.screen)}
-            color={item.color}
-          />
-        ))}
-      </View>
-      <View className="flex-row justify-between items-center mb-2">
-        <Text className="text-black dark:text-white text-lg font-semibold">
-          Nghe gần đây
+      <ScrollView showsVerticalScrollIndicator={false} className='flex-1'>
+        <Text className="text-black dark:text-white text-2xl font-semibold mb-4">
+          Thư viện của bạn
         </Text>
-        <TouchableOpacity>
-          <Text className="text-gray-400 dark:text-gray-300">Xem thêm</Text>
-        </TouchableOpacity>
-      </View>
+        <View className="mb-6  flex-row gap-2 flex-wrap justify-between p-1">
+          {libraryItems?.map((item, index) => (
+            <LibraryItemButton
+              key={index.toString()}
+              title={item.title}
+              icon={item.icon}
+              onPress={() => navigate(item.screen)}
+              color={item.color}
+            />
+          ))}
+        </View>
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-black dark:text-white text-xl font-semibold">
+            Gần đây
+          </Text>
+          <TouchableOpacity onPress={() => navigate("ListenHistoryScreen")}>
+            <Text className="text-gray-400 dark:text-gray-300">Xem thêm</Text>
+          </TouchableOpacity>
+        </View>
 
-      <FlatList
-        data={trackData}
-        renderItem={renderRecentlyPlayedItem}
-        keyExtractor={(item, index) => index.toString()}
-      />
+        <View className='flex-1'>
+          <Text className="text-black dark:text-white text-lg mb-2 italic">
+            Bài hát
+          </Text>
+          {trackList.slice(0, 5).map((item, index) => (
+            <SongItem
+              key={item.id}
+              item={item.item}
+              image={item.item?.imageUrl || ""}
+              onPress={() => handleSelectSong(item, index)}
+              onOptionsPress={() => { }}
+              isHistoryItem={true}
+            />
+          ))}
+        </View>
+        <View>
+          <Text className="text-black dark:text-white text-lg mb-2 italic">
+            Album
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {albumList.slice(0, 5).map((item, index) => (
+              <AlbumItem
+                key={item.id}
+                title={item.item.name}
+                image={item.item?.imageUrl || ""}
+                onPress={() => handleSelectAlbum(item.item)}
+              />
+            ))}
+          </ScrollView>
+        </View>
+        <View>
+          <Text className="text-black dark:text-white text-lg mb-2 italic">
+            Playlist
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {playlistList.slice(0, 5).map((item, index) => (
+              <PlaylistItem
+                key={item.id}
+                item={item.item}
+                totalTrack={item.item.totalTracks || 0}
+                onPress={() => handleSelectPlaylist(item.item)}
+              />
+            ))}
+          </ScrollView>
+        </View>
+        <View className="">
+          <Text className="text-black dark:text-white text-lg mb-2 italic">
+            Nghệ sĩ
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {artistList.slice(0, 5).map((item, index) => (
+              <ArtistItem
+                key={item.id}
+                name={item.item.name}
+                image={item.item?.imageUrl || item.item?.imgUrl}
+                onPress={() => handleSelectArtist(item.item)}
+              />
+            ))}
+          </ScrollView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

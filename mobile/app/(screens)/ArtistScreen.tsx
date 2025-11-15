@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,7 @@ import {
   Dimensions,
   ImageBackground, // Thêm StyleSheet để tạo bóng
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import HeaderBackButton from '@/components/button/HeaderBackButton';
+import { useRouter } from 'expo-router';
 import SongItem from '@/components/items/SongItem';
 import CustomButton from '@/components/custom/CustomButton';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -30,7 +29,9 @@ import AddTrackToPlaylistsModal from '@/components/modals/AddTrackToPlaylistsMod
 import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
 import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
 import ArtistOptionModal from '@/components/modals/ArtistOptionModal';
-import { FollowArtist, GetFollowersOfArtist, ShareArtist, UnfollowArtist } from '@/services/followService';
+import { FollowArtist, ShareArtist, UnfollowArtist } from '@/services/followService';
+import { SaveToListeningHistory } from '@/services/historiesService';
+import { useHistoriesStore } from '@/store/historiesStore';
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -42,6 +43,7 @@ export default function ArtistScreen() {
 
   const user = useAuthStore((state) => state.user);
   const currentArtist = useArtistStore((state) => state.currentArtist);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isFollowing = useArtistStore((state) => state.isFollowing);
   const followers = useArtistStore((state) => state.followers);
   const popularTracks = useArtistStore((state) => state.popularTracks);
@@ -50,6 +52,7 @@ export default function ArtistScreen() {
   const artistFollowed = useArtistStore((state) => state.artistFollowed);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const isShuffled = usePlayerStore((state) => state.isShuffled);
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const setPopularTracks = useArtistStore((state) => state.setPopularTracks);
   const setAlbums = useArtistStore((state) => state.setAlbums);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
@@ -61,6 +64,7 @@ export default function ArtistScreen() {
   const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
   const addArtistFollowed = useArtistStore((state) => state.addArtistFollowed);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const removeArtistFollowed = useArtistStore((state) => state.removeArtistFollowed);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
@@ -77,12 +81,61 @@ export default function ArtistScreen() {
 
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
 
+  const historySavedRef = useRef(null);
+
   const [isLoading, setIsLoading] = useState({
     topTracks: true,
     albums: true,
     following: false,
     screen: true,
   });
+
+  const saveTrackToListeningHistory = async (track, duration) => {
+    if (!track) return;
+
+    if (duration > 15) {
+      const payload = {
+        itemType: 'track',
+        itemId: track?.id,
+        itemSpotifyId: track?.spotifyId,
+        durationListened: duration
+      };
+
+      const response = await SaveToListeningHistory(payload);
+
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
+        } else {
+          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
+          addListenHistory(response.data);
+        }
+      } else {
+        console.error('Lưu lịch sử thất bại, reset cờ.');
+        historySavedRef.current = null;
+      }
+    } else {
+      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
+    }
+  }
+
+  const saveArtistToListeningHistory = async () => {
+    const payload = {
+      itemType: 'artist',
+      itemId: currentArtist?.id,
+      itemSpotifyId: currentArtist?.spotifyId,
+      durationListened: 0
+    }
+    const response = await SaveToListeningHistory(payload);
+    if (response.success) {
+      if (response.updated) {
+        console.log('Cập nhật lịch sử nghe thành công:', response.data);
+      } else {
+        console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        addListenHistory(response.data);
+      }
+    }
+  }
 
   const handleSongAddToPlaylist = () => {
     setSongModalVisible(false);
@@ -215,7 +268,7 @@ export default function ArtistScreen() {
     }
   };
 
-  const handlePlayTrack = (track,) => {
+  const handlePlayTrack = async (track,) => {
     const playIndex = listTrack.findIndex(t =>
       (t.spotifyId && t.spotifyId === track.spotifyId) ||
       (t.id && t.id === track.id)
@@ -229,7 +282,7 @@ export default function ArtistScreen() {
     setQueue(queueData);
   };
 
-  const handlePlayTopTracks = () => {
+  const handlePlayTopTracks = async () => {
     if (popularTracks.length === 0) {
       warning("Không có bài hát để phát.");
       return;
@@ -239,6 +292,8 @@ export default function ArtistScreen() {
     const queueData = popularTracks.slice(1);
     setCurrentTrack(popularTracks[0]);
     setQueue(queueData);
+
+    await saveArtistToListeningHistory();
   }
 
   const handleToggleShuffle = () => {
@@ -362,8 +417,22 @@ export default function ArtistScreen() {
   };
 
   const handleBlock = async () => {
-
+    info('Chức năng đang phát triển');
   };
+
+  useEffect(() => {
+    historySavedRef.current = null;
+  }, [currentTrack]);
+
+  useEffect(() => {
+    const trackId = currentTrack?.spotifyId || currentTrack?.id;
+    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
+    ) {
+      historySavedRef.current = trackId;
+      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
+      saveTrackToListeningHistory(currentTrack, playbackPosition);
+    }
+  }, [playbackPosition, currentTrack]);
 
   useEffect(() => {
     setIsFollowing(false);

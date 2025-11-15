@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   ImageBackground,
+  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -22,33 +23,49 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useTheme } from "@/components/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlaylistItem from "@/components/items/PlaylistItem";
-import { GetAlbumsForYou, GetArtistsForYou, GetMyPlaylists, GetPlaylistsForYou } from "@/services/musicService";
+import { GetAlbumsForYou, GetArtistsForYou, GetMyPlaylists, GetPlaylistsForYou, GetTracksByPlaylistId } from "@/services/musicService";
 import { usePlayerStore } from "@/store/playerStore";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { GetFavoriteItemsGrouped } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { useArtistStore } from "@/store/artistStore";
 import { GetArtistFollowed } from "@/services/followService";
+import { GetListeningHistory, GetSearchHistory, SaveToListeningHistory } from "@/services/historiesService";
+import { useHistoriesStore } from "@/store/historiesStore";
 
 export default function HomeScreen() {
+
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { theme } = useTheme();
-  const { success, error } = useCustomAlert();
+  const { info, error, success, confirm, warning } = useCustomAlert();
+  const listTrack = usePlayerStore((state) => state.listTrack);
   const user = useAuthStore((state) => state.user);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
+  const setListTrack = usePlayerStore((state) => state.setListTrack);
+  const setQueue = usePlayerStore((state) => state.setQueue);
   const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
   const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
   const setArtistFollowed = useArtistStore((state) => state.setArtistFollowed);
-  const colorScheme = useColorScheme();
+  const setListenHistory = useHistoriesStore((state) => state.setListenHistory);
+  const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
+  const playPlaylist = usePlayerStore((state) => state.playPlaylist);
+
+  const [hasNotification] = useState(true);
+
+  const historySavedRef = useRef(null);
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
   const totalMarginBottom = isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0;
   const iconColor = theme === 'light' ? '#000' : '#fff';
-
-  const [hasNotification] = useState(true);
 
   const [queryParam, setQueryParam] = useState({
     playlistForYou: ["Chill Hits", "kpop", "tình yêu", "thời thanh xuân"],
@@ -87,6 +104,83 @@ export default function HomeScreen() {
     setCurrentArtist(artist);
     navigate("ArtistScreen");
   }
+
+  const handlePlayPlaylist = async () => {
+    console.log('handlePlay')
+    if (!listTrack || listTrack.length === 0) {
+      warning('Playlist không có bài hát để phát!');
+      return;
+    }
+
+    playPlaylist(listTrack, 0);
+    const queueData = listTrack.filter((item, index) => {
+      if (index > 0) return item;
+    });
+    setQueue(queueData);
+    setCurrentTrack(listTrack[0])
+    await savePlaylistToListeningHistory();
+  };
+
+  const savePlaylistToListeningHistory = async () => {
+    if (!currentPlaylist) return;
+    const payload = {
+      itemType: 'playlist',
+      itemId: currentPlaylist?.id || '',
+      itemSpotifyId: currentPlaylist?.spotifyId,
+      durationListened: 0
+    };
+    const response = await SaveToListeningHistory(payload);
+    if (response.success) {
+      if (response.updated) {
+        console.log('Cập nhật lịch sử nghe thành công:', response.data);
+      } else {
+        console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        addListenHistory(response.data);
+      }
+    }
+  }
+
+  const saveTrackToListeningHistory = async (track, duration) => {
+    if (!track) return;
+    if (duration > 15) {
+      const payload = {
+        itemType: 'track',
+        itemId: track?.id,
+        itemSpotifyId: track?.spotifyId,
+        durationListened: duration
+      };
+
+      const response = await SaveToListeningHistory(payload);
+
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
+        } else {
+          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
+          addListenHistory(response.data);
+        }
+      } else {
+        console.error('Lưu lịch sử thất bại, reset cờ.');
+        historySavedRef.current = null;
+      }
+    } else {
+      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
+    }
+  }
+
+  useEffect(() => {
+    historySavedRef.current = null;
+  }, [currentTrack]);
+
+  useEffect(() => {
+    const trackId = currentTrack?.spotifyId || currentTrack?.id;
+    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
+    ) {
+      historySavedRef.current = trackId;
+      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
+      saveTrackToListeningHistory(currentTrack, playbackPosition);
+    }
+  }, [playbackPosition, currentTrack]);
 
   useEffect(() => {
     Animated.parallel([
@@ -223,6 +317,21 @@ export default function HomeScreen() {
       }
     }
 
+    const fetchHistory = async () => {
+      const [responseListen, responseSearch] = await Promise.all([
+        GetListeningHistory(),
+        GetSearchHistory()
+      ]);
+      if (responseSearch.success) {
+        setSearchHistory(responseSearch.data);
+      }
+      if (responseListen.success) {
+        setListenHistory(responseListen.data);
+      }
+    }
+
+
+
     fetchPlaylistsForYou()
     fetchAlbumsForYou()
     fetchTrendingPlaylists()
@@ -231,8 +340,39 @@ export default function HomeScreen() {
     fetchMyPlaylists();
     fetchFavoritesItem();
     fetchArtistFollowed();
+    fetchHistory();
   }, []);
 
+  const fetchTracks = async (playlist) => {
+    console.log(playlist)
+    if (playlist?.spotifyId) {
+      const response = await GetTracksByPlaylistId({
+        playlistId: playlist?.spotifyId,
+        type: 'api'
+      });
+      if (response.success) {
+        setListTrack(response.data);
+      } else {
+        setListTrack([]);
+      }
+    } else {
+      const response = await GetTracksByPlaylistId({
+        playlistId: playlist?.id,
+        type: 'local'
+      });
+      if (response.success) {
+        setListTrack(response.data);
+      } else {
+        setListTrack([]);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (dataForYou.playlistsForYou[0]) {
+      fetchTracks(dataForYou.playlistsForYou[0]);
+    }
+  }, [dataForYou.playlistsForYou[0]]);
   return (
     <SafeAreaView
       className={`flex-1 pt-4 ${colorScheme === "dark" ? "bg-black" : "bg-white"} `}
@@ -260,7 +400,9 @@ export default function HomeScreen() {
 
       <ScrollView className="px-5" showsVerticalScrollIndicator={false}>
         {/* Featuring Today Card */}
-        <View className="mb-6 w-full h-64 rounded-lg overflow-hidden">
+        <Pressable
+          onPress={() => handleSelectPlaylist(dataForYou.playlistsForYou[0])}
+          className="mb-6 w-full h-64 rounded-lg overflow-hidden">
           <ImageBackground
             source={{ uri: dataForYou.playlistsForYou[0]?.imageUrl }}
             className="w-full h-full justify-end"
@@ -276,13 +418,13 @@ export default function HomeScreen() {
                 </Text>
                 <CustomButton
                   title="Phát"
-                  onPress={() => { }}
+                  onPress={() => handlePlayPlaylist()}
                   className="mt-2 bg-green-500 px-4 py-2 rounded-full"
                 />
               </View>
             </View>
           </ImageBackground>
-        </View>
+        </Pressable>
 
         {/* Recently Played Horizontal List */}
         <View className="mb-6">

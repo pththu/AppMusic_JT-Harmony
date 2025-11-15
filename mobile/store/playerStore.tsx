@@ -66,6 +66,7 @@ interface PlayerState {
   playNext: () => void;
   playPrevious: () => void;
   togglePlayPause: () => void;
+  playTrackFromQueue: (track: any) => void;
 
   // queue actions
   addTrackToQueue: (tracks: any[]) => void;
@@ -255,44 +256,200 @@ export const usePlayerStore = create<PlayerState>()(
           queue: [],
         }),
 
+      // playNext: () => {
+      //   const { queue, playlistTracksPlaying, currentIndex } = get();
+      //   if (playlistTracksPlaying.length === 0) return;
+      //   if (queue.length === 0) {
+      //     set({
+      //       currentTrack: playlistTracksPlaying[0],
+      //       currentIndex: 0,
+      //       isPlaying: true,
+      //       playbackPosition: 0,
+      //       queue: playlistTracksPlaying.filter(t => t.id !== playlistTracksPlaying[0].id),
+      //       isLastIndex: false,
+      //     });
+      //   } else {
+      //     const nextIndex = (currentIndex + 1) % playlistTracksPlaying.length;
+      //     set({
+      //       currentIndex: nextIndex,
+      //       currentTrack: playlistTracksPlaying[nextIndex],
+      //       isPlaying: true,
+      //       playbackPosition: 0,
+      //       queue: queue.filter(t => t.id !== playlistTracksPlaying[nextIndex].id),
+      //       isLastIndex: nextIndex === playlistTracksPlaying.length - 1,
+      //     });
+      //   }
+      // },
+
+      // playPrevious: () => {
+      //   const { playlistTracksPlaying, currentIndex } = get();
+      //   if (playlistTracksPlaying.length === 0) return;
+      //   const prevIndex = (currentIndex - 1 + playlistTracksPlaying.length) % playlistTracksPlaying.length;
+      //   if (prevIndex < 0 || prevIndex >= playlistTracksPlaying.length) return;
+      //   if (currentIndex === 0) return;
+      //   set({
+      //     currentIndex: prevIndex,
+      //     currentTrack: playlistTracksPlaying[prevIndex],
+      //     isPlaying: true,
+      //     playbackPosition: 0,
+      //     queue: playlistTracksPlaying.filter((_, index) => index > prevIndex),
+      //     isLastIndex: false,
+      //   });
+      // },
       playNext: () => {
-        const { queue, playlistTracksPlaying, currentIndex } = get();
+        const { queue, playlistTracksPlaying, currentIndex, isShuffled, repeatMode } = get();
         if (playlistTracksPlaying.length === 0) return;
-        if (queue.length === 0) {
-          set({
-            currentTrack: playlistTracksPlaying[0],
-            currentIndex: 0,
-            isPlaying: true,
-            playbackPosition: 0,
-            queue: playlistTracksPlaying.filter(t => t.id !== playlistTracksPlaying[0].id),
-            isLastIndex: false,
-          });
+
+        if (isShuffled) {
+          if (queue.length > 0) {
+            const nextTrack = queue[0];
+            const newQueue = queue.slice(1);
+            // Tìm index của track mới trong playlist GỐC
+            const newCurrentIndex = playlistTracksPlaying.findIndex(t =>
+              (t.spotifyId && t.spotifyId === nextTrack.spotifyId) || (t.id && t.id === nextTrack.id)
+            );
+
+            set({
+              currentTrack: nextTrack,
+              queue: newQueue,
+              currentIndex: newCurrentIndex !== -1 ? newCurrentIndex : 0,
+              isPlaying: true,
+              playbackPosition: 0,
+              seekTrigger: Date.now(),
+              isLastIndex: newQueue.length === 0,
+            });
+          } else {
+            // Hàng đợi shuffle đã hết
+            if (repeatMode === 'all') {
+              // Nếu lặp lại tất cả, xáo trộn lại toàn bộ
+              const { currentTrack } = get();
+              const otherTracks = playlistTracksPlaying.filter(t =>
+                (t.spotifyId ? t.spotifyId !== currentTrack?.spotifyId : t.id !== currentTrack?.id)
+              );
+              for (let i = otherTracks.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [otherTracks[i], otherTracks[j]] = [otherTracks[j], otherTracks[i]];
+              }
+
+              if (otherTracks.length > 0) {
+                const nextTrack = otherTracks[0];
+                const newQueue = otherTracks.slice(1);
+                const newCurrentIndex = playlistTracksPlaying.findIndex(t =>
+                  (t.spotifyId && t.spotifyId === nextTrack.spotifyId) || (t.id && t.id === nextTrack.id)
+                );
+                set({
+                  currentTrack: nextTrack,
+                  queue: newQueue,
+                  currentIndex: newCurrentIndex !== -1 ? newCurrentIndex : 0,
+                  isPlaying: true,
+                  playbackPosition: 0,
+                  seekTrigger: Date.now(),
+                  isLastIndex: newQueue.length === 0,
+                });
+              }
+            } else {
+              set({ isPlaying: false, isLastIndex: true });
+            }
+          }
         } else {
-          const nextIndex = (currentIndex + 1) % playlistTracksPlaying.length;
-          set({
-            currentIndex: nextIndex,
-            currentTrack: playlistTracksPlaying[nextIndex],
-            isPlaying: true,
-            playbackPosition: 0,
-            queue: queue.filter(t => t.id !== playlistTracksPlaying[nextIndex].id),
-            isLastIndex: nextIndex === playlistTracksPlaying.length - 1,
-          });
+          const nextIndex = currentIndex + 1;
+
+          if (nextIndex >= playlistTracksPlaying.length) {
+            // Đã đến cuối danh sách
+            if (repeatMode === 'all') {
+              const nextTrack = playlistTracksPlaying[0];
+              set({
+                currentTrack: nextTrack,
+                currentIndex: 0,
+                queue: playlistTracksPlaying.slice(1), // Đặt lại queue
+                isPlaying: true,
+                playbackPosition: 0,
+                seekTrigger: Date.now(),
+                isLastIndex: playlistTracksPlaying.length === 1,
+              });
+            } else {
+              set({ isPlaying: false, isLastIndex: true });
+            }
+          } else {
+            // Phát bài tiếp theo bình thường
+            const nextTrack = playlistTracksPlaying[nextIndex];
+            set({
+              currentTrack: nextTrack,
+              currentIndex: nextIndex,
+              queue: playlistTracksPlaying.slice(nextIndex + 1), // Đặt lại queue
+              isPlaying: true,
+              playbackPosition: 0,
+              seekTrigger: Date.now(),
+              isLastIndex: nextIndex === playlistTracksPlaying.length - 1,
+            });
+          }
         }
       },
-
       playPrevious: () => {
-        const { playlistTracksPlaying, currentIndex } = get();
+        const { playlistTracksPlaying, currentIndex, isShuffled } = get();
         if (playlistTracksPlaying.length === 0) return;
-        const prevIndex = (currentIndex - 1 + playlistTracksPlaying.length) % playlistTracksPlaying.length;
-        if (prevIndex < 0 || prevIndex >= playlistTracksPlaying.length) return;
-        if (currentIndex === 0) return;
+
+        // Logic 'previous' chỉ hoạt động dựa trên thứ tự playlist gốc
+        const prevIndex = currentIndex - 1;
+
+        // (Logic ở SongScreen sẽ handle việc seekTo(0) nếu currentIndex === 0)
+        if (prevIndex < 0) return;
+
+        const prevTrack = playlistTracksPlaying[prevIndex];
+        let newQueue = [];
+
+        if (isShuffled) {
+          // Nếu đang shuffle, việc nhấn 'previous' không nên thay đổi hàng đợi đã shuffle
+          // Chúng ta chỉ phát bài hát trước đó từ playlist gốc
+          const { queue } = get();
+          newQueue = queue;
+        } else {
+          // Nếu không shuffle, đặt lại hàng đợi là tất cả các bài sau bài mới
+          newQueue = playlistTracksPlaying.slice(prevIndex + 1);
+        }
+
         set({
           currentIndex: prevIndex,
-          currentTrack: playlistTracksPlaying[prevIndex],
+          currentTrack: prevTrack,
           isPlaying: true,
           playbackPosition: 0,
-          queue: playlistTracksPlaying.filter((_, index) => index > prevIndex),
+          seekTrigger: Date.now(),
+          queue: newQueue,
           isLastIndex: false,
+        });
+      },
+      playTrackFromQueue: (track) => {
+        const { queue, playlistTracksPlaying, isShuffled } = get();
+
+        // Tìm vị trí của track được nhấn trong 'queue' HIỆN TẠI
+        const trackIndexInQueue = queue.findIndex(t =>
+          (t.spotifyId && t.spotifyId === track.spotifyId) || (t.id && t.id === track.id)
+        );
+
+        let newQueue = [];
+        if (trackIndexInQueue !== -1) {
+          // Nếu tìm thấy, 'queue' mới là tất cả các bài sau nó
+          newQueue = queue.slice(trackIndexInQueue + 1);
+        } else {
+          // Không tìm thấy (lỗi hiếm gặp), fallback:
+          if (isShuffled) {
+            newQueue = queue; // Giữ nguyên queue
+          }
+        }
+
+        // Tìm index của track trong playlist GỐC để cập nhật currentIndex
+        const newCurrentIndex = playlistTracksPlaying.findIndex(t =>
+          (t.spotifyId && t.spotifyId === track.spotifyId) || (t.id && t.id === track.id)
+        );
+
+        set({
+          currentTrack: track,
+          currentIndex: newCurrentIndex !== -1 ? newCurrentIndex : 0,
+          queue: newQueue,
+          isPlaying: true,
+          playbackPosition: 0,
+          seekTrigger: Date.now(),
+          isLastIndex: newQueue.length === 0,
         });
       },
       setDuration: (duration) => {
@@ -394,7 +551,7 @@ export const usePlayerStore = create<PlayerState>()(
         targetSeekMs: null,
       }),
       setTargetSeekMs: (ms: number | null) => set({ targetSeekMs: ms })
-      ,setUiOverlayOpen: (open: boolean) => set({ uiOverlayOpen: open })
+      , setUiOverlayOpen: (open: boolean) => set({ uiOverlayOpen: open })
     }),
 
     {

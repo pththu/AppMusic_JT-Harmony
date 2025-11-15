@@ -144,54 +144,6 @@ export const SaveSearchHistory = async (query) => {
 };
 
 /**
- * Lấy lịch sử tìm kiếm
- */
-export const GetSearchHistory = async () => {
-  try {
-    // Option 1: Lấy từ AsyncStorage
-    // const history = await AsyncStorage.getItem('searchHistory');
-    // return history ? JSON.parse(history) : [];
-
-    // Option 2: Lấy từ server
-    // const response = await axiosClient.get('/users/search-history');
-    // return response.data;
-
-    return [];
-  } catch (error: any) {
-    console.error("GetSearchHistory error:", error.message);
-    return [];
-  }
-};
-
-/**
- * Xóa lịch sử tìm kiếm
- */
-export const ClearSearchHistory = async (SEARCH_HISTORY_KEY) => {
-  try {
-    // Option 1: Xóa local
-    await AsyncStorage.removeItem(SEARCH_HISTORY_KEY);
-    const response = await axiosClient.delete('/histories/search/user/me');
-    console.log('response api clear search history: ', response.data);
-    return response.data;
-  } catch (error: any) {
-    console.error("ClearSearchHistory error:", error.message);
-    return { success: false };
-  }
-};
-
-export const RemoveItemSearchHistory = async (payload) => {
-  try {
-    console.log('payload', payload)
-    const response = await axiosClient.delete(`/histories/search/${payload}`);
-    console.log('response api remove search history item: ', response.data);
-    return response.data;
-  } catch (error) {
-    console.error("RemoveItemSearchHistory error:", error.message);
-    throw error;
-  }
-}
-
-/**
  * Lấy danh sách items theo genre/category
  * @param category - tên category (TAMIL, POP, HIP-HOP, etc.)
  */

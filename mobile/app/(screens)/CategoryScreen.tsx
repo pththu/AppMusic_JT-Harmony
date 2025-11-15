@@ -21,6 +21,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useArtistStore } from "@/store/artistStore";
 import { pl } from "date-fns/locale";
 import { set } from "date-fns";
+import { SaveToListeningHistory } from "@/services/historiesService";
 
 // Component hiển thị Playlist/Track/Album
 const ContentItem = ({ item, onPress }) => {
@@ -89,6 +90,7 @@ export default function CategoryScreen() {
   const { navigate } = useNavigate();
   const { info } = useCustomAlert();
 
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
@@ -161,12 +163,33 @@ export default function CategoryScreen() {
     setCurrentArtist(item);
     navigate("ArtistScreen", { artist: JSON.stringify(item) });
   };
-  const handleTrackPress = (item) => {
+  const handleTrackPress = async (item) => {
     setCurrentTrack(item);
     playPlaylist([item], 0);
     setQueue([]);
-    // navigate("SongScreen", { track: JSON.stringify(item) });
+    await saveTrackToListeningHistory(item);
   };
+
+  const saveTrackToListeningHistory = async (track) => {
+    if (!track) return;
+    if (track) {
+      const payload = {
+        itemType: 'track',
+        itemId: track?.id,
+        itemSpotifyId: track?.spotifyId,
+        durationListened: playbackPosition || 0
+      };
+
+      const response = await SaveToListeningHistory(payload);
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe thành công:', response.data);
+        } else {
+          console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        }
+      }
+    }
+  }
   // THÊM MỚI: Handler cho Album
   const handleAlbumPress = (item) => {
     setCurrentAlbum(item);

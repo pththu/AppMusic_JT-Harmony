@@ -35,6 +35,8 @@ import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
 import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
+import { SaveToListeningHistory } from "@/services/historiesService";
+import { useHistoriesStore } from "@/store/historiesStore";
 
 const HEADER_SCROLL_THRESHOLD = 256;
 const screenHeight = Dimensions.get("window").height;
@@ -48,9 +50,11 @@ export default function PlaylistScreen() {
 
   const user = useAuthStore((state) => state.user);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
   const listTrack = usePlayerStore((state) => state.listTrack);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setQueue = usePlayerStore((state) => state.setQueue);
@@ -66,14 +70,18 @@ export default function PlaylistScreen() {
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
   const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
   const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
 
+  const historySavedRef = useRef(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
+  const bgColor = colorScheme === 'dark' ? '#0E0C1F' : '#fff';
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
@@ -100,11 +108,7 @@ export default function PlaylistScreen() {
   const [newDescription, setNewDescription] = useState("");
   const [newImage, setNewImage] = useState(null);
   const [newIsPublic, setNewIsPublic] = useState(true);
-
-  const [trackIds, setTrackIds] = useState([]);
   const imageDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
-
-  const scrollY = useRef(new Animated.Value(0)).current;
 
   const headerTitleOpacity = scrollY.interpolate({
     inputRange: [HEADER_SCROLL_THRESHOLD, HEADER_SCROLL_THRESHOLD + 30],
@@ -117,6 +121,53 @@ export default function PlaylistScreen() {
     outputRange: [0, 1],
     extrapolate: 'clamp',
   });
+
+  const saveTrackToListeningHistory = async (track, duration) => {
+    if (!track) return;
+    if (duration > 15) {
+      const payload = {
+        itemType: 'track',
+        itemId: track?.id,
+        itemSpotifyId: track?.spotifyId,
+        durationListened: duration
+      };
+
+      const response = await SaveToListeningHistory(payload);
+
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
+        } else {
+          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
+          addListenHistory(response.data);
+        }
+      } else {
+        console.error('Lưu lịch sử thất bại, reset cờ.');
+        historySavedRef.current = null;
+      }
+    } else {
+      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
+    }
+  }
+
+  const savePlaylistToListeningHistory = async () => {
+    if (!currentPlaylist) return;
+    const payload = {
+      itemType: 'playlist',
+      itemId: currentPlaylist?.id,
+      itemSpotifyId: currentPlaylist?.spotifyId,
+      durationListened: 0
+    };
+    const response = await SaveToListeningHistory(payload);
+    if (response.success) {
+      if (response.updated) {
+        console.log('Cập nhật lịch sử nghe thành công:', response.data);
+      } else {
+        console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        addListenHistory(response.data);
+      }
+    }
+  }
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -258,7 +309,7 @@ export default function PlaylistScreen() {
     setIsShuffle(!isShuffle);
   };
 
-  const handlePlayPlaylist = () => {
+  const handlePlayPlaylist = async () => {
     console.log('handlePlay')
     if (!listTrack || listTrack.length === 0) {
       warning('Playlist không có bài hát để phát!');
@@ -271,9 +322,10 @@ export default function PlaylistScreen() {
     });
     setQueue(queueData);
     setCurrentTrack(listTrack[0])
+    await savePlaylistToListeningHistory();
   };
 
-  const handlePlayTrack = (track, index) => {
+  const handlePlayTrack = async (track, index) => {
     playPlaylist(listTrack, index);
     const queueData = listTrack.filter((item, i) => {
       if (i > index)
@@ -692,6 +744,20 @@ export default function PlaylistScreen() {
     checkIsFavorite();
   }, []);
 
+  useEffect(() => {
+    historySavedRef.current = null;
+  }, [currentTrack]);
+
+  useEffect(() => {
+    const trackId = currentTrack?.spotifyId || currentTrack?.id;
+    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
+    ) {
+      historySavedRef.current = trackId;
+      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
+      saveTrackToListeningHistory(currentTrack, playbackPosition);
+    }
+  }, [playbackPosition, currentTrack]);
+
   const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
       item={item}
@@ -701,8 +767,6 @@ export default function PlaylistScreen() {
       onOptionsPress={() => handleSongOptionsPress(item)}
     />
   );
-
-  const bgColor = colorScheme === 'dark' ? '#0E0C1F' : '#fff';
 
   return (
     <Animated.View

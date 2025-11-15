@@ -30,17 +30,16 @@ import {
   SearchAlbums,
   SearchArtists,
   GetSearchSuggestions,
-  ClearSearchHistory,
   SearchUsers,
   SaveSearchHistory,
-  RemoveItemSearchHistory,
 } from "@/services/searchService";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { usePlayerStore } from "@/store/playerStore";
 import { useArtistStore } from "@/store/artistStore";
 import useAuthStore from "@/store/authStore";
-import { se } from "date-fns/locale";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { ClearSearchHistory, RemoveItemSearchHistory, SaveToListeningHistory } from "@/services/historiesService";
+import { useHistoriesStore } from "@/store/historiesStore";
 
 const ACTIVE_COLOR = "#22C55E";
 const SEARCH_HISTORY_KEY = "search_history";
@@ -93,7 +92,10 @@ export default function SearchScreen() {
   const isDark = colorScheme === "dark";
 
   const user = useAuthStore((state) => state.user);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const searchHistory = useHistoriesStore((state) => state.searchHistory);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
@@ -101,6 +103,7 @@ export default function SearchScreen() {
   const setQueue = usePlayerStore((state) => state.setQueue);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
 
+  const historySavedRef = useRef(null);
   const inputRef = useRef<TextInput>(null);
   const animation = useRef(new Animated.Value(0)).current;
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -130,28 +133,34 @@ export default function SearchScreen() {
     ],
   });
 
-  useEffect(() => {
-    loadSearchHistory();
-    loadTrendingArtists();
-  }, []);
-
-  const loadSearchHistory = async () => {
-    try {
-      const history = await AsyncStorage.getItem(SEARCH_HISTORY_KEY);
-      if (history) {
-        setRecentSearches(JSON.parse(history));
-      }
-    } catch (error) {
-      console.error("Failed to load search history:", error);
-    }
+  const resetToDefaultState = () => {
+    setIsFocused(false);
+    setIsSearching(false);
+    setSearchText("");
+    setQuerySuggestions([]);
+    Keyboard.dismiss();
+    Animated.timing(animation, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
   };
 
-  const loadTrendingArtists = async () => {
-    try {
-      const response = await GetArtistsForYou({ artistNames: [], genres: ['POP', 'HIP-HOP'] });
-      setTrendingArtists(response.data);
-    } catch (error) {
-      console.error("Failed to load trending artists:", error);
+  const onFocus = () => {
+    setIsFocused(true);
+    setIsSearching(false);
+    Animated.timing(animation, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const onBlur = () => {
+    if (!searchText && !isSearching) {
+      resetToDefaultState();
+    } else if (searchText && !isSearching) {
+      Keyboard.dismiss();
     }
   };
 
@@ -199,44 +208,41 @@ export default function SearchScreen() {
     }
   };
 
-  const performFilteredSearch = async (query: string, filter: string) => {
+  const performFilteredSearch = async (query, filter) => {
     try {
       let results = { tracks: [], playlists: [], albums: [], artists: [], users: [] };
 
       switch (filter) {
-        case "Track":
-          console.log(1)
-          const trackRes = await SearchTracks({
-            trackName: query,
-            artist: query,
-            album: query,
-            limit: 30
-          });
+        case "Track": {
+          const payload = { trackName: query, artist: query, album: query, limit: 30 };
+          const trackRes = await SearchTracks(payload);
           results.tracks = trackRes.data || [];
           break;
-        case "Playlist":
-          console.log(2)
+        }
+        case "Playlist": {
           const playlistRes = await SearchPlaylists({ name: query });
           results.playlists = playlistRes.data || [];
           break;
-        case "Album":
-          console.log(3)
+        }
+        case "Album": {
           const albumRes = await SearchAlbums({
             name: query,
             artist: query
           });
           results.albums = albumRes.data || [];
           break;
-        case "Artist":
-          console.log(4)
+        }
+        case "Artist": {
           const artistRes = await SearchArtists({ name: query });
           results.artists = artistRes.data || [];
           break;
-        case "User":
+        }
+        case "User": {
           console.log(5)
           const userRes = await SearchUsers({ username: query, fullName: query, email: query });
           results.users = userRes.data || [];
           break;
+        }
       }
 
       setSearchResults(results);
@@ -273,7 +279,7 @@ export default function SearchScreen() {
       // Format suggestions
       const formatted = [
         {
-          id: "current-query",
+          id: "current-query-" + query,
           type: "Query",
           title: query,
           subtitle: `Đã tìm kiếm "${query}"`,
@@ -362,6 +368,34 @@ export default function SearchScreen() {
     }
   };
 
+  const saveTrackToListeningHistory = async (track, duration) => {
+    if (!track) return;
+    if (duration > 15) {
+      const payload = {
+        itemType: 'track',
+        itemId: track?.id,
+        itemSpotifyId: track?.spotifyId,
+        durationListened: duration
+      };
+
+      const response = await SaveToListeningHistory(payload);
+
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
+        } else {
+          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
+        }
+      } else {
+        console.error('Lưu lịch sử thất bại, reset cờ.');
+        historySavedRef.current = null;
+      }
+    } else {
+      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
+    }
+  }
+
+
   const handleItemPress = useCallback((item) => {
     console.log('item: ', item)
     const itemType = item.type || "Track";
@@ -397,37 +431,6 @@ export default function SearchScreen() {
     }
   }, [navigate]);
 
-  const resetToDefaultState = () => {
-    setIsFocused(false);
-    setIsSearching(false);
-    setSearchText("");
-    setQuerySuggestions([]);
-    Keyboard.dismiss();
-    Animated.timing(animation, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const onFocus = () => {
-    setIsFocused(true);
-    setIsSearching(false);
-    Animated.timing(animation, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const onBlur = () => {
-    if (!searchText && !isSearching) {
-      resetToDefaultState();
-    } else if (searchText && !isSearching) {
-      Keyboard.dismiss();
-    }
-  };
-
   const clearSearch = () => {
     setSearchText("");
     setIsSearching(false);
@@ -435,6 +438,51 @@ export default function SearchScreen() {
     inputRef.current?.clear();
     inputRef.current?.focus();
   };
+
+  useEffect(() => {
+    const loadSearchHistory = async () => {
+      try {
+        console.log(searchHistory)
+        for (const item of searchHistory) {
+          setRecentSearches((prev) => [...prev, {
+            id: item.id,
+            type: "Query",
+            title: item.query,
+            subtitle: `Đã tìm kiếm "${item.query}"`,
+            searchedAt: new Date(item?.searchedAt).toLocaleDateString(),
+          }]);
+        }
+      } catch (error) {
+        console.error("Failed to load search history:", error);
+      }
+    };
+
+    const loadTrendingArtists = async () => {
+      try {
+        const response = await GetArtistsForYou({ artistNames: [], genres: ['POP', 'HIP-HOP'] });
+        setTrendingArtists(response.data);
+      } catch (error) {
+        console.error("Failed to load trending artists:", error);
+      }
+    };
+
+    loadSearchHistory();
+    loadTrendingArtists();
+  }, []);
+
+  useEffect(() => {
+    historySavedRef.current = null;
+  }, [currentTrack]);
+
+  useEffect(() => {
+    const trackId = currentTrack?.spotifyId || currentTrack?.id;
+    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
+    ) {
+      historySavedRef.current = trackId;
+      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
+      saveTrackToListeningHistory(currentTrack, playbackPosition);
+    }
+  }, [playbackPosition, currentTrack]);
 
   const renderSearchItem = ({ item, isSuggestion = false }) => {
     let iconName = "musical-notes";

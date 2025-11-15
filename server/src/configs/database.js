@@ -3,7 +3,7 @@ const { Sequelize } = require('sequelize');
 const { Client } = require('pg');
 
 // Hàm tạo cơ sở dữ liệu nếu chưa tồn tại
-const createDatabaseIfNotExists = async() => {
+const createDatabaseIfNotExists = async () => {
     const { DB_NAME, DB_USER, DB_PASS, DB_HOST, DB_PORT } = process.env;
 
     try {
@@ -14,9 +14,9 @@ const createDatabaseIfNotExists = async() => {
             password: DB_PASS,
             port: DB_PORT,
             database: 'postgres', // Kết nối tới cơ sở dữ liệu mặc định
-            // ssl: {
-            //     rejectUnauthorized: false, // Thiết lập này chỉ nên dùng cho môi trường phát triển
-            // },
+            ssl: {
+                rejectUnauthorized: false, // Thiết lập này chỉ nên dùng cho môi trường phát triển
+            },
         });
 
         await client.connect();
@@ -44,19 +44,19 @@ const initializeSequelize = () => {
         dialect: 'postgres',
         port: process.env.DB_PORT,
         logging: false, // Hiển thị log các câu SQL (có thể tắt nếu không cần)
-        // dialectOptions: {
-        //     ssl: {
-        //         require: true,
-        //         rejectUnauthorized: false, // Thiết lập này chỉ nên dùng cho môi trường phát triển
-        //     },
-        // },
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false, // Thiết lập này chỉ nên dùng cho môi trường phát triển
+            },
+        },
     });
 
     return sequelize;
 };
 
 // Thực hiện kiểm tra và khởi tạo cơ sở dữ liệu
-(async() => {
+(async () => {
     await createDatabaseIfNotExists();
 })();
 

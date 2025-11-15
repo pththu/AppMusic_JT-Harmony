@@ -19,6 +19,8 @@ import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
 import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { AddFavoriteItem, RemoveFavoriteItem } from '@/services/favoritesService';
+import { SaveToListeningHistory } from '@/services/historiesService';
+import { useHistoriesStore } from '@/store/historiesStore';
 
 const HEADER_SCROLL_THRESHOLD = 256;
 const screenHeight = Dimensions.get("window").height;
@@ -26,14 +28,15 @@ const screenHeight = Dimensions.get("window").height;
 const AlbumScreen = () => {
   const { navigate } = useNavigate();
   const { info, error, success, confirm, warning } = useCustomAlert();
-  const params = useLocalSearchParams();
   const colorScheme = useColorScheme();
 
   const user = useAuthStore((state) => state.user);
   const currentAlbum = usePlayerStore((state) => state.currentAlbum);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const listTrack = usePlayerStore((state) => state.listTrack);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setQueue = usePlayerStore((state) => state.setQueue);
@@ -41,7 +44,7 @@ const AlbumScreen = () => {
   const addFavoriteItem = useFavoritesStore((state) => state.addFavoriteItem);
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
-  const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
@@ -61,16 +64,67 @@ const AlbumScreen = () => {
   const [tracks, setTracks] = useState([]);
   const [album, setAlbum] = useState(null);
   const [selectedTrack, setSelectedTrack] = useState(null);
-
+  
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newImage, setNewImage] = useState(null);
   const [newIsPublic, setNewIsPublic] = useState(true);
-
+  
+  const historySavedRef = useRef(null);
   const opacity = useRef(new Animated.Value(0)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
+
+  const saveTrackToListeningHistory = async (track, duration) => {
+    if (!track) return;
+
+    if (duration > 15) {
+      const payload = {
+        itemType: 'track',
+        itemId: track?.id,
+        itemSpotifyId: track?.spotifyId,
+        durationListened: duration
+      };
+
+      const response = await SaveToListeningHistory(payload);
+
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
+        } else {
+          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
+          addListenHistory(response.data);
+        }
+      } else {
+        console.error('Lưu lịch sử thất bại, reset cờ.');
+        historySavedRef.current = null;
+      }
+    } else {
+      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
+    }
+  }
+
+  const saveAlbumToListeningHistory = async () => {
+    if (!currentAlbum) return;
+    const payload = {
+      itemType: 'album',
+      itemId: currentAlbum?.id,
+      itemSpotifyId: currentAlbum?.spotifyId,
+      durationListened: 0
+    };
+
+    console.log('payload Ui: ', payload)
+    const response = await SaveToListeningHistory(payload);
+    if (response.success) {
+      if (response.updated) {
+        console.log('Cập nhật lịch sử nghe thành công:', response.data);
+      } else {
+        console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        addListenHistory(response.data);
+      }
+    }
+  }
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -81,7 +135,7 @@ const AlbumScreen = () => {
     return true;
   };
 
-  const handlePlayTrack = (track, index) => {
+  const handlePlayTrack = async (track, index) => {
     playPlaylist(listTrack, index);
     const queueData = listTrack.filter((item, i) => {
       if (i > index)
@@ -92,7 +146,7 @@ const AlbumScreen = () => {
   };
 
   const handleSongOptionsPress = (track) => {
-    setSelectedTrack(track); // Lưu bài hát đã chọn
+    setSelectedTrack(track);
     console.log('track', track);
     setModalTrackVisible(true); // Mở modal
   };
@@ -153,7 +207,7 @@ const AlbumScreen = () => {
     }
   };
 
-  const handlePlayAlbum = () => {
+  const handlePlayAlbum = async () => {
     if (!listTrack || listTrack?.length === 0) {
       warning('Album không có bài hát để phát!');
       return;
@@ -166,6 +220,8 @@ const AlbumScreen = () => {
     });
     setQueue(queueData);
     setCurrentTrack(listTrack[0])
+
+    await saveAlbumToListeningHistory();
   }
 
   const handleAddFavorite = async (album) => {
@@ -235,7 +291,6 @@ const AlbumScreen = () => {
     info('Chức năng tải album sẽ được cập nhật sau!');
   };
 
-  // Mở modal chọn playlist
   const handleAddToPlaylist = () => {
     setModalVisible(false);
     if (!listTrack || listTrack?.length === 0) {
@@ -245,7 +300,6 @@ const AlbumScreen = () => {
     setModalAddToPlaylistVisible(true);
   };
 
-  // Xử lý khi xác nhận thêm (từ AddToAnotherPlaylistModal)
   const handleConfirmAddToPlaylist = async (playlistIds) => {
     if (!playlistIds || !playlistIds.length) {
       warning('Vui lòng chọn ít nhất một playlist!');
@@ -353,8 +407,6 @@ const AlbumScreen = () => {
     setModalArtistVisible(false);
   };
 
-
-  // Xử lý khi tạo playlist mới (từ AddPlaylistModal)
   const handleAddPlaylist = async () => {
     try {
       const payload = {
@@ -400,7 +452,6 @@ const AlbumScreen = () => {
         if (item?.itemType === 'album') {
           if ((currentAlbum?.id && (item?.itemId === currentAlbum?.id))
             || (currentAlbum?.spotifyId && (item?.itemSpotifyId === currentAlbum?.spotifyId))) {
-            console.log(12)
             setIsFavorite(true);
             return;
           }
@@ -413,6 +464,20 @@ const AlbumScreen = () => {
   useEffect(() => {
     checkIsFavorite();
   }, []);
+
+  useEffect(() => {
+    historySavedRef.current = null;
+  }, [currentTrack]);
+
+  useEffect(() => {
+    const trackId = currentTrack?.spotifyId || currentTrack?.id;
+    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
+    ) {
+      historySavedRef.current = trackId;
+      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
+      saveTrackToListeningHistory(currentTrack, playbackPosition);
+    }
+  }, [playbackPosition, currentTrack]);
 
   useEffect(() => {
     const fetchTracks = async () => {

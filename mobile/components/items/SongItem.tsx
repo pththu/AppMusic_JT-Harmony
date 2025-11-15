@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-export default function SongItem({ item, image, onPress, onOptionsPress, isQueueItem = false }) {
+export default function SongItem({ item, image, onPress, onOptionsPress, isHistoryItem = false, isQueueItem = false }) {
   const colorScheme = useColorScheme();
 
   const artistName = item?.artists?.map(a => a?.name).join(', ');
@@ -15,15 +15,17 @@ export default function SongItem({ item, image, onPress, onOptionsPress, isQueue
         <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semibold`}>{item.name}</Text>
         <Text className={`${colorScheme === 'dark' ? 'text-gray-300' : 'text-gray-800'} text-xs`}>{artistName}</Text>
       </View>
-      <TouchableOpacity onPress={onOptionsPress}>
-        <Text>
-          {isQueueItem ? (
-            <SimpleLineIcons name="close" color={colorScheme === 'dark' ? '#888' : 'black'} size={20} />
-          ) : (
-            <Icon name="ellipsis-vertical" size={20} color={colorScheme === 'dark' ? '#888' : 'black'} />
-          )}
-        </Text>
-      </TouchableOpacity>
+      {!isHistoryItem && (
+        <TouchableOpacity onPress={onOptionsPress}>
+          <Text>
+            {isQueueItem ? (
+              <SimpleLineIcons name="close" color={colorScheme === 'dark' ? '#888' : 'black'} size={20} />
+            ) : (
+              <Icon name="ellipsis-vertical" size={20} color={colorScheme === 'dark' ? '#888' : 'black'} />
+            )}
+          </Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }
