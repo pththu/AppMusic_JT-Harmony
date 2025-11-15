@@ -1,6 +1,5 @@
 import axiosClient from "@/config/axiosClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { th } from "date-fns/locale";
 
 export const SaveToListeningHistory = async (payload) => {
   try {
@@ -18,8 +17,14 @@ export const GetListeningHistory = async () => {
     const response = await axiosClient.get('/histories/listening/user/me');
     return response.data;
   } catch (error) {
-    console.log(error.message);
-    throw error;
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 }
 
@@ -28,8 +33,14 @@ export const GetSearchHistory = async () => {
     const response = await axiosClient.get('/histories/search/user/me');
     return response.data;
   } catch (error: any) {
-    console.error("GetSearchHistory error:", error.message);
-    return [];
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 };
 

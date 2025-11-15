@@ -115,7 +115,8 @@ const GetListeningHistoriesByUserId = async (req, res) => {
     let itemFormatted = null;
     const histories = await ListeningHistory.findAll({
       where: { userId: req.user.id },
-      order: [['updatedAt', 'DESC']]
+      order: [['updatedAt', 'DESC']],
+      limit: 100
     });
     if (!histories || histories.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy lịch sử của người dùng này' });
@@ -206,6 +207,7 @@ const CreateOneListeningHistory = async (req, res) => {
     if (existingHistory) {
       if (existingHistory.itemType === 'track') {
         existingHistory.durationListened = durationListened;
+        existingHistory.playCount += 1;
         existingHistory.updatedAt = new Date();
         await existingHistory.save();
         return res.status(200).json({

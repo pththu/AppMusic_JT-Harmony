@@ -22,6 +22,7 @@ import {
   toggleCommentLike,
   updatePost,
   deletePost,
+  fetchPostsForGuest,
 } from "../../services/socialApi";
 import useAuthStore from "@/store/authStore";
 import * as ImagePicker from "expo-image-picker";
@@ -33,14 +34,18 @@ import CommentModal from "../../components/modals/CommentModal";
 import LikeModal from "../../components/modals/LikeModal";
 import UploadCoverModal from "../../components/modals/UploadCoverModal";
 import NewPostCreator from "../../components/items/NewPostItem";
-import { createNewCover } from "../../services/coverApi";
+import { createNewCover, fetchTopCovers } from "../../services/coverService";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 const SocialScreen = () => {
   const colorScheme = useColorScheme();
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isGuest = useAuthStore((state) => state.isGuest);
   const { navigate } = useNavigate();
+  const { info, success, error, warning, confirm } = useCustomAlert();
 
   // State cho New Post Creator
   const [newPostText, setNewPostText] = useState("");
@@ -66,7 +71,7 @@ const SocialScreen = () => {
   // State cho search
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState([]);
 
   // State cho tabs
   const [activeTab, setActiveTab] = useState<"posts" | "covers">("posts");
@@ -138,55 +143,9 @@ const SocialScreen = () => {
   );
 
   // logic tải bài đăng vào hàm useCallback
-  const loadPosts = useCallback(async () => {
-    try {
-      let apiPosts;
-      if (activeTab === "covers") {
-        // Fetch only covers when covers tab is active
-        const { fetchTopCovers } = await import("../../services/coverApi");
-        apiPosts = await fetchTopCovers();
-      } else {
-        // Fetch all posts when posts tab is active
-        apiPosts = await fetchPosts();
-      }
-      const mappedPosts = apiPosts.map(mapApiPostToLocal);
-      setPosts(mappedPosts);
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-      Alert.alert("Lỗi", "Không thể tải bài đăng");
-    }
-  }, [activeTab]);
 
-  // Hàm xử lý khi vuốt xuống làm mới
-  const onRefresh = useCallback(async () => {
-    setIsRefreshing(true); // Bắt đầu trạng thái làm mới
-    await loadPosts(); // Gọi hàm tải bài đăng
-    setIsRefreshing(false); // Kết thúc trạng thái làm mới
-  }, [loadPosts]);
 
-  // useEffect để tải bài đăng lần đầu
-  useEffect(() => {
-    setLoading(true);
-    loadPosts().finally(() => setLoading(false));
-  }, [loadPosts]);
 
-  // useEffect để lọc bài đăng khi searchQuery thay đổi (không cần lọc covers nữa vì đã fetch riêng)
-  useEffect(() => {
-    let filtered = posts;
-
-    // Lọc theo search query
-    if (searchQuery.trim() !== "") {
-      filtered = filtered.filter(
-        (post) =>
-          post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (post.fullName &&
-            post.fullName.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    setFilteredPosts(filtered);
-  }, [searchQuery, posts]);
 
   const handleSelectMedia = async () => {
     if (isUploading) return;
@@ -194,7 +153,7 @@ const SocialScreen = () => {
     // Yêu cầu cấp quyền
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Lỗi", "Cần quyền truy cập thư viện ảnh để tiếp tục.");
+      error("Cần quyền truy cập thư viện ảnh để tiếp tục.");
       return;
     }
 
@@ -213,7 +172,8 @@ const SocialScreen = () => {
       setSelectedMediaAssets((prevAssets) => [...prevAssets, ...result.assets]);
     } catch (e) {
       console.error("Lỗi khi chọn media:", e);
-      Alert.alert("Lỗi", "Không thể chọn media.");
+      error("Không thể chọn media.");
+
     }
   };
 
@@ -221,7 +181,7 @@ const SocialScreen = () => {
   const addPost = async () => {
     // Kiểm tra điều kiện đăng bài (ít nhất phải có Content HOẶC Media)
     if (newPostText.trim() === "" && selectedMediaAssets.length === 0) {
-      Alert.alert("Thông báo", "Vui lòng nhập nội dung hoặc chọn ảnh/video.");
+      warning("Vui lòng nhập nội dung hoặc chọn ảnh/video.");
       return;
     }
     try {
@@ -231,7 +191,7 @@ const SocialScreen = () => {
       if (selectedMediaAssets.length > 0) {
         const uploadResult = await UploadMultipleFile(selectedMediaAssets);
         if (!uploadResult.success) {
-          Alert.alert("Lỗi", "Upload thất bại: " + uploadResult.message);
+          error("Upload thất bại: " + uploadResult.message);
           return;
         }
         if (
@@ -239,7 +199,8 @@ const SocialScreen = () => {
           !uploadResult.data.data ||
           !Array.isArray(uploadResult.data.data)
         ) {
-          Alert.alert("Lỗi", "Dữ liệu upload không hợp lệ từ server");
+          error("Dữ liệu upload không hợp lệ từ server");
+
           return;
         }
         fileUrlsToSend = uploadResult.data.data.map((item: any) => item.url);
@@ -261,12 +222,8 @@ const SocialScreen = () => {
       setSelectedMediaAssets([]);
       setSelectedSongId(null);
       Keyboard.dismiss();
-    } catch (error) {
-      console.error("Lỗi khi tạo bài đăng:", error);
-      Alert.alert(
-        "Lỗi Đăng Bài",
-        error.response?.data?.error || "Không thể tạo bài đăng."
-      );
+    } catch (err) {
+      error("Lỗi Đăng Bài", err.response?.data?.error || "Không thể tạo bài đăng.");
     } finally {
       setIsUploading(false);
     }
@@ -327,56 +284,59 @@ const SocialScreen = () => {
             : post
         )
       );
-      Alert.alert("Thành công", "Bài viết đã được cập nhật.");
+      success("Bài viết đã được cập nhật.");
     } catch (error) {
       console.error("Lỗi khi chỉnh sửa bài viết:", error);
-      Alert.alert("Lỗi", "Không thể cập nhật bài viết.");
+      error("Lỗi", "Không thể cập nhật bài viết.");
     }
   };
 
   // Hàm xử lý xóa bài viết
   const handleDeletePost = async (postId: string) => {
-    Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa bài viết này?", [
-      { text: "Hủy", style: "cancel" },
-      {
-        text: "Xóa",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const result = await deletePost(postId);
-            if ("message" in result) {
-              throw new Error(result.message);
-            }
-            // Xóa bài viết khỏi state
-            setPosts((prevPosts) =>
-              prevPosts.filter((post) => post.id !== postId)
-            );
-            Alert.alert("Thành công", "Bài viết đã được xóa.");
-          } catch (error) {
-            console.error("Lỗi khi xóa bài viết:", error);
-            Alert.alert("Lỗi", "Không thể xóa bài viết.");
+    // Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa bài viết này?", [
+    //   { text: "Hủy", style: "cancel" },
+    //   {
+    //     text: "Xóa",
+    //     style: "destructive",
+    //     onPress: async () => {
+    //       try {
+    //         const result = await deletePost(postId);
+    //         if ("message" in result) {
+    //           throw new Error(result.message);
+    //         }
+    //         // Xóa bài viết khỏi state
+    //         setPosts((prevPosts) =>
+    //           prevPosts.filter((post) => post.id !== postId)
+    //         );
+    //         Alert.alert("Thành công", "Bài viết đã được xóa.");
+    //       } catch (error) {
+    //         console.error("Lỗi khi xóa bài viết:", error);
+    //         Alert.alert("Lỗi", "Không thể xóa bài viết.");
+    //       }
+    //     },
+    //   },
+    // ]);
+    confirm(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa bài viết này?",
+      async () => {
+        try {
+          const result = await deletePost(postId);
+          if ("message" in result) {
+            throw new Error(result.message);
           }
-        },
+          // Xóa bài viết khỏi state
+          setPosts((prevPosts) =>
+            prevPosts.filter((post) => post.id !== postId)
+          );
+          success("Bài viết đã được xóa.");
+        } catch (error) {
+          console.error("Lỗi khi xóa bài viết:", error);
+          error("Lỗi", "Không thể xóa bài viết.");
+        }
       },
-    ]);
-  };
-
-  // Chức năng Comment Modal
-  // Dùng để tải comments khi modal mở
-  const loadComments = async (postId: string) => {
-    try {
-      const fetchedComments = await fetchCommentsByPostId(postId);
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId ? { ...post, comments: fetchedComments } : post
-        )
-      );
-      return fetchedComments;
-    } catch (e) {
-      console.error("Lỗi tải comments:", e);
-      Alert.alert("Lỗi", "Không thể tải bình luận cho bài viết này.");
-      return [];
-    }
+      () => { }
+    )
   };
 
   // Mở modal comment
@@ -517,9 +477,9 @@ const SocialScreen = () => {
           return post;
         })
       );
-    } catch (error) {
-      console.error("Lỗi khi gửi bình luận:", error);
-      Alert.alert("Lỗi", "Gửi bình luận thất bại. Đã hoàn tác.");
+    } catch (err) {
+      console.error("Lỗi khi gửi bình luận:", err);
+      error("Lỗi", "Gửi bình luận thất bại. Đã hoàn tác.");
 
       // ROLLBACK nếu API thất bại (Xóa comment tạm thời khỏi UI)
       setPosts((prevPosts) =>
@@ -589,10 +549,10 @@ const SocialScreen = () => {
                 Replies: (c.Replies || []).map((r) =>
                   r.id === (targetReplyId || replyId)
                     ? {
-                        ...r,
-                        isLiked: newIsLikedOptimistic,
-                        likeCount: (prevLikeCount || 0) + likeChangeOptimistic,
-                      }
+                      ...r,
+                      isLiked: newIsLikedOptimistic,
+                      likeCount: (prevLikeCount || 0) + likeChangeOptimistic,
+                    }
                     : r
                 ),
               };
@@ -625,9 +585,9 @@ const SocialScreen = () => {
             };
           })
         );
-      } catch (error) {
-        console.error("Lỗi khi thích/bỏ thích trả lời:", error);
-        Alert.alert("Lỗi", "Không thể cập nhật trạng thái thích trả lời.");
+      } catch (err) {
+        console.error("Lỗi khi thích/bỏ thích trả lời:", err);
+        error("Lỗi", "Không thể cập nhật trạng thái thích trả lời.");
         // 3. Rollback
         setPosts((prev) =>
           prev.map((p) => {
@@ -705,9 +665,9 @@ const SocialScreen = () => {
           return p;
         })
       );
-    } catch (error) {
-      console.error("Lỗi khi thích/bỏ thích bình luận:", error);
-      Alert.alert("Lỗi", "Không thể cập nhật trạng thái thích bình luận.");
+    } catch (err) {
+      console.error("Lỗi khi thích/bỏ thích bình luận:", err);
+      error("Lỗi", "Không thể cập nhật trạng thái thích bình luận.");
 
       // 3. Rollback nếu thất bại
       setPosts((prevPosts) =>
@@ -735,7 +695,10 @@ const SocialScreen = () => {
 
   // Hàm xử lý khi nhấn chia sẻ bài viết
   const handleShare = () => {
-    Alert.alert("Chia sẻ", "Chức năng chia sẻ sẽ được triển khai sau.");
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
   };
 
   // Mở modal like
@@ -749,6 +712,86 @@ const SocialScreen = () => {
     setLikeModalVisible(false);
     setSelectedPostIdForLikes(null);
   };
+
+  // Chức năng Comment Modal
+  // Dùng để tải comments khi modal mở
+  const loadComments = async (postId) => {
+    try {
+      const fetchedComments = await fetchCommentsByPostId(postId);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, comments: fetchedComments } : post
+        )
+      );
+      return fetchedComments;
+    } catch (e) {
+      error("Lỗi", "Không thể tải bình luận cho bài viết này." + e.message);
+      return [];
+    }
+  };
+
+  const loadPosts = useCallback(async () => {
+    try {
+      let apiPosts;
+      if (activeTab === "covers") {
+        // Fetch only covers when covers tab is active
+        console.log(1)
+        apiPosts = await fetchTopCovers();
+      } else {
+        // Fetch all posts when posts tab is active
+        console.log(2)
+        if (isGuest) {
+          apiPosts = await fetchPostsForGuest();
+        } else {
+          apiPosts = await fetchPosts();
+        }
+      }
+
+      if (apiPosts.success === false) {
+        error("Lỗi", apiPosts.message || "Không thể tải bài đăng từ server.");
+        return;
+      }
+      const mappedPosts = apiPosts.map(mapApiPostToLocal);
+      setPosts(mappedPosts);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+      error("Lỗi", "Không thể tải bài đăng từ server.");
+    }
+  }, [activeTab]);
+
+  // useEffect để tải bài đăng lần đầu
+  useEffect(() => {
+    setLoading(true);
+    loadPosts().finally(() => setLoading(false));
+  }, [loadPosts]);
+
+  // useEffect để lọc bài đăng khi searchQuery thay đổi (không cần lọc covers nữa vì đã fetch riêng)
+  useEffect(() => {
+    let filtered = posts;
+
+    // Lọc theo search query
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter(
+        (post) =>
+          post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          post.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (post.fullName &&
+            post.fullName.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+
+    setFilteredPosts(filtered);
+  }, [searchQuery, posts]);
+
+  /**
+ * Hàm xử lý khi vuốt xuống làm mới
+ */
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadPosts();
+    setIsRefreshing(false);
+  }, [loadPosts]);
+
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0E0C1F]">
@@ -780,7 +823,7 @@ const SocialScreen = () => {
         ) : (
           <View className="flex-row justify-between items-center">
             <Text className="text-2xl font-extrabold text-black dark:text-white">
-              Social Feed
+              Khám phá
             </Text>
             <View className="flex-row items-center">
               <TouchableOpacity
@@ -839,14 +882,14 @@ const SocialScreen = () => {
               <TouchableOpacity
                 onPress={() => setActiveTab("posts")}
                 className={`px-3 py-1 rounded-l-lg ${activeTab === "posts"
-                    ? "bg-indigo-500"
-                    : "bg-gray-200 dark:bg-gray-700"
+                  ? "bg-indigo-500"
+                  : "bg-gray-200 dark:bg-gray-700"
                   }`}
               >
                 <Text
                   className={`text-sm font-medium ${activeTab === "posts"
-                      ? "text-white"
-                      : "text-black dark:text-white"
+                    ? "text-white"
+                    : "text-black dark:text-white"
                     }`}
                 >
                   Bài đăng
@@ -855,14 +898,14 @@ const SocialScreen = () => {
               <TouchableOpacity
                 onPress={() => setActiveTab("covers")}
                 className={`px-3 py-1 rounded-r-lg ${activeTab === "covers"
-                    ? "bg-indigo-500"
-                    : "bg-gray-200 dark:bg-gray-700"
+                  ? "bg-indigo-500"
+                  : "bg-gray-200 dark:bg-gray-700"
                   }`}
               >
                 <Text
                   className={`text-sm font-medium ${activeTab === "covers"
-                      ? "text-white"
-                      : "text-black dark:text-white"
+                    ? "text-white"
+                    : "text-black dark:text-white"
                     }`}
                 >
                   Covers/Sáng tác

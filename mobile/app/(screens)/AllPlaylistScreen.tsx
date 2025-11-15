@@ -196,9 +196,10 @@ const SearchResultItem = ({ item, index, onPress, onPressOptions, primaryIconCol
 
 export default function AllPlaylistScreen() {
   const colorScheme = useColorScheme();
-  const { success, error, warning, confirm } = useCustomAlert();
+  const { success, error, warning, confirm, info} = useCustomAlert();
   const { navigate } = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const isGuest = useAuthStore((state) => state.isGuest);
   const myPlaylists = usePlayerStore((state) => state.myPlaylists);
   const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
@@ -507,6 +508,10 @@ export default function AllPlaylistScreen() {
 
   const handleShare = async () => {
     if (!selectedPlaylist) return;
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng tính năng này.");
+      return;
+    }
     try {
       let shareMessage = `${user?.fullName}: `;
 
@@ -621,7 +626,7 @@ export default function AllPlaylistScreen() {
 
     myPlaylists.forEach(item => {
       const nameMatch = item.name?.toLowerCase().includes(normalizedQuery);
-      const ownerMatch = user.fullName?.toLowerCase().includes(normalizedQuery);
+      const ownerMatch = user?.fullName?.toLowerCase().includes(normalizedQuery);
 
       if (nameMatch || ownerMatch) {
         results.push({ ...item, resultType: 'myPlaylist' });
@@ -652,7 +657,7 @@ export default function AllPlaylistScreen() {
     });
 
     setSearchResults(results);
-  }, [searchQuery, myPlaylists, favoritePlaylists, favoriteAlbums, user.fullName]);
+  }, [searchQuery, myPlaylists, favoritePlaylists, favoriteAlbums, user?.fullName]);
 
   const filteredSearchResults = useMemo(() => {
     if (searchFilter === 'all') {
@@ -751,14 +756,16 @@ export default function AllPlaylistScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="arrow-back" size={24} color={primaryIconColor} />
         </TouchableOpacity>
-        <View>
-          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-semibold mb-1`}>
-            Mục yêu thích của tôi
-          </Text>
-          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
-            {user.fullName}
-          </Text>
-        </View>
+        {!isGuest && (
+          <View>
+            <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-semibold mb-1`}>
+              Mục yêu thích của tôi
+            </Text>
+            <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
+              {user?.fullName}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Thanh Search (CẬP NHẬT) */}

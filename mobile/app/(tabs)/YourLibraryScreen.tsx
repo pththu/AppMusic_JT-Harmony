@@ -13,6 +13,7 @@ import PlaylistItem from '@/components/items/PlaylistItem';
 import { useArtistStore } from '@/store/artistStore';
 import ArtistItem from '@/components/artists/ArtistItem';
 import { ScrollView } from 'react-native';
+import useAuthStore from '@/store/authStore';
 
 const libraryItems = [
   {
@@ -50,6 +51,7 @@ export default function YourLibraryScreen() {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
 
+  const isGuest = useAuthStore((state) => state.isGuest);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const listenHistory = useHistoriesStore((state) => state.listenHistory);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
@@ -181,71 +183,110 @@ export default function YourLibraryScreen() {
           <Text className="text-black dark:text-white text-xl font-semibold">
             Gần đây
           </Text>
-          <TouchableOpacity onPress={() => navigate("ListenHistoryScreen")}>
-            <Text className="text-gray-400 dark:text-gray-300">Xem thêm</Text>
-          </TouchableOpacity>
+          {
+            listenHistory.length > 0 && (
+              <TouchableOpacity className='p-4' onPress={() => navigate("ListenHistoryScreen")}>
+                <Text className="text-gray-400 dark:text-gray-300">Xem thêm</Text>
+              </TouchableOpacity>
+            )
+          }
         </View>
-
-        <View className='flex-1'>
-          <Text className="text-black dark:text-white text-lg mb-2 italic">
-            Bài hát
-          </Text>
-          {trackList.slice(0, 5).map((item, index) => (
-            <SongItem
-              key={item.id}
-              item={item.item}
-              image={item.item?.imageUrl || ""}
-              onPress={() => handleSelectSong(item, index)}
-              onOptionsPress={() => { }}
-              isHistoryItem={true}
-            />
-          ))}
-        </View>
-        <View>
-          <Text className="text-black dark:text-white text-lg mb-2 italic">
-            Album
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {albumList.slice(0, 5).map((item, index) => (
-              <AlbumItem
-                key={item.id}
-                title={item.item.name}
-                image={item.item?.imageUrl || ""}
-                onPress={() => handleSelectAlbum(item.item)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-        <View>
-          <Text className="text-black dark:text-white text-lg mb-2 italic">
-            Playlist
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {playlistList.slice(0, 5).map((item, index) => (
-              <PlaylistItem
-                key={item.id}
-                item={item.item}
-                totalTrack={item.item.totalTracks || 0}
-                onPress={() => handleSelectPlaylist(item.item)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-        <View className="">
-          <Text className="text-black dark:text-white text-lg mb-2 italic">
-            Nghệ sĩ
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {artistList.slice(0, 5).map((item, index) => (
-              <ArtistItem
-                key={item.id}
-                name={item.item.name}
-                image={item.item?.imageUrl || item.item?.imgUrl}
-                onPress={() => handleSelectArtist(item.item)}
-              />
-            ))}
-          </ScrollView>
-        </View>
+        {
+          isGuest ? (
+            <Text className="text-gray-500 dark:text-gray-400 text-center mt-10">
+              Vui lòng đăng nhập để xem lịch sử nghe của bạn.
+            </Text>
+          ) : (
+            <>
+              {
+                listenHistory.length > 0 ? (
+                  <>
+                    <View className='flex-1'>
+                      {
+                        trackList.length > 0 && (
+                          <Text className="text-black dark:text-white text-lg mb-2 italic">
+                            Bài hát
+                          </Text>
+                        )
+                      }
+                      {trackList.slice(0, 5).map((item, index) => (
+                        <SongItem
+                          key={item.id}
+                          item={item.item}
+                          image={item.item?.imageUrl || ""}
+                          onPress={() => handleSelectSong(item, index)}
+                          onOptionsPress={() => { }}
+                          isHistoryItem={true}
+                        />
+                      ))}
+                    </View>
+                    <View>
+                      {
+                        albumList.length > 0 && (
+                          <Text className="text-black dark:text-white text-lg mb-2 italic">
+                            Album
+                          </Text>
+                        )
+                      }
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {albumList.slice(0, 5).map((item, index) => (
+                          <AlbumItem
+                            key={item.id}
+                            title={item.item.name}
+                            image={item.item?.imageUrl || ""}
+                            onPress={() => handleSelectAlbum(item.item)}
+                          />
+                        ))}
+                      </ScrollView>
+                    </View>
+                    <View>
+                      {
+                        playlistList.length > 0 && (
+                          <Text className="text-black dark:text-white text-lg mb-2 italic">
+                            Playlist
+                          </Text>
+                        )
+                      }
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {playlistList.slice(0, 5).map((item, index) => (
+                          <PlaylistItem
+                            key={item.id}
+                            item={item.item}
+                            totalTrack={item.item.totalTracks || 0}
+                            onPress={() => handleSelectPlaylist(item.item)}
+                          />
+                        ))}
+                      </ScrollView>
+                    </View>
+                    <View className="">
+                      {
+                        artistList.length > 0 && (
+                          <Text className="text-black dark:text-white text-lg mb-2 italic">
+                            Nghệ sĩ
+                          </Text>
+                        )
+                      }
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {artistList.slice(0, 5).map((item, index) => (
+                          <ArtistItem
+                            key={item.id}
+                            name={item.item.name}
+                            image={item.item?.imageUrl || item.item?.imgUrl}
+                            onPress={() => handleSelectArtist(item.item)}
+                          />
+                        ))}
+                      </ScrollView>
+                    </View>
+                  </>
+                ) : (
+                  <Text className="text-gray-500 dark:text-gray-400 text-center mt-10">
+                    Bạn không có lịch sử nghe gần đây.
+                  </Text>
+                )
+              }
+            </>
+          )
+        }
       </ScrollView>
     </SafeAreaView>
   );

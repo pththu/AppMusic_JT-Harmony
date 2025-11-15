@@ -11,7 +11,7 @@ import {
 import Icon from "react-native-vector-icons/Feather";
 import FontAwesome from "react-native-vector-icons/FontAwesome"; // Import thêm FontAwesome cho icon Share
 // import { Video, Audio } from "expo-av"; // Temporarily commented out
-import { voteCover } from "../../services/coverApi";
+import { voteCover } from "../../services/coverService";
 import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from "@/store/authStore";
 

@@ -5,8 +5,9 @@ import useAuthStore from '@/store/authStore';
 
 export default function AuthLayout() {
   const isLoggedIn = useAuthStore(state => state.isLoggedIn);
+  const isGuest = useAuthStore(state => state.isGuest);
 
-  if (isLoggedIn) {
+  if (isGuest) {
     return <Redirect href="/(tabs)/HomeScreen" />;
   }
 

@@ -49,6 +49,8 @@ export default function PlaylistScreen() {
   const colorScheme = useColorScheme();
 
   const user = useAuthStore((state) => state.user);
+  const isGuest = useAuthStore((state) => state.isGuest);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const listTrack = usePlayerStore((state) => state.listTrack);
@@ -122,36 +124,9 @@ export default function PlaylistScreen() {
     extrapolate: 'clamp',
   });
 
-  const saveTrackToListeningHistory = async (track, duration) => {
-    if (!track) return;
-    if (duration > 15) {
-      const payload = {
-        itemType: 'track',
-        itemId: track?.id,
-        itemSpotifyId: track?.spotifyId,
-        durationListened: duration
-      };
-
-      const response = await SaveToListeningHistory(payload);
-
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
-        } else {
-          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
-          addListenHistory(response.data);
-        }
-      } else {
-        console.error('Lưu lịch sử thất bại, reset cờ.');
-        historySavedRef.current = null;
-      }
-    } else {
-      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
-    }
-  }
-
   const savePlaylistToListeningHistory = async () => {
     if (!currentPlaylist) return;
+    if (isGuest) return;
     const payload = {
       itemType: 'playlist',
       itemId: currentPlaylist?.id,
@@ -161,9 +136,9 @@ export default function PlaylistScreen() {
     const response = await SaveToListeningHistory(payload);
     if (response.success) {
       if (response.updated) {
-        console.log('Cập nhật lịch sử nghe thành công:', response.data);
+        console.log('Cập nhật lịch sử nghe playlist thành công:', response.data);
       } else {
-        console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        console.log('Tạo mới lịch sử nghe playlist thành công:', response.data);
         addListenHistory(response.data);
       }
     }
@@ -218,21 +193,19 @@ export default function PlaylistScreen() {
           trackIds.push(track.spotifyId);
         });
 
-        console.log(playlistIds)
-        console.log(trackIds)
         if (trackIds.length > 0) {
           const addResponse = await AddTracksToPlaylists({
             playlistIds: playlistIds,
             trackSpotifyIds: trackIds
           });
           if (addResponse.success) {
-            updateTotalTracksInMyPlaylists(response.playlist.id, trackIds.length);
+            updateTotalTracksInMyPlaylists(response.playlist?.id, trackIds.length);
             success('Đã tạo playlist và thêm bài hát thành công!');
           }
         }
       }
-    } catch (error) {
-      error('Không thể tạo playlist. Vui lòng thử lại!', error.message);
+    } catch (err) {
+      error('Không thể tạo playlist. Vui lòng thử lại!', err.message);
     } finally {
       setNewName("");
       setNewDescription("");
@@ -243,6 +216,11 @@ export default function PlaylistScreen() {
   };
 
   const handleSharePlaylist = async () => {
+    if (isGuest) {
+      warning("Tài khoản khách không thể chia sẻ playlist!");
+      return;
+    };
+
     try {
       let shareMessage = `${user?.fullName}: `;
 
@@ -294,7 +272,6 @@ export default function PlaylistScreen() {
 
   const handleMoreOptions = () => {
     console.log('handleMoreOptions')
-    console.log(playlist)
     setModalVisible(true);
   };
 
@@ -337,17 +314,16 @@ export default function PlaylistScreen() {
 
   const handleDeletePlaylist = async () => {
     console.log('handleDeletePlaylist')
+    if (isGuest) return;
     try {
-      console.log('is mine', isMine)
       if (isMine) {
         confirm(
           'Xác nhận xóa',
           'Bạn có chắc chắn muốn xóa playlist này?',
           async () => {
-            const response = await DeletePlaylist(playlist.id);
-            console.log('response úi', response);
+            const response = await DeletePlaylist(playlist?.id);
             if (response.success) {
-              removeFromMyPlaylists(playlist.id);
+              removeFromMyPlaylists(playlist?.id);
               success('Đã xóa playlist thành công!');
               router.back();
             } else {
@@ -367,7 +343,7 @@ export default function PlaylistScreen() {
     console.log('handleEditPlaylist')
     try {
       const payload = {
-        id: playlist.id,
+        id: playlist?.id,
         image: image || null,
         name: name || null,
         description: description,
@@ -393,6 +369,10 @@ export default function PlaylistScreen() {
   };
 
   const handleDownloadPlaylist = () => {
+    if (isGuest) {
+      info('Hãy đăng nhập để sử dụng chức năng này!');
+      return;
+    }
     console.log('handleDownloadPlaylist')
     info('Chức năng tải playlist sẽ được cập nhật sau!');
   };
@@ -411,8 +391,10 @@ export default function PlaylistScreen() {
   }
 
   const handleAddToAnotherPlaylist = async (playlistIds) => {
-    console.log('handleAddToAnotherPlaylist')
-    console.log(playlistIds);
+    if (isGuest) {
+      info('Hãy đăng nhập để sử dụng chức năng này!');
+      return;
+    }
     if (!listTrack || !listTrack.length) {
       warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
       return;
@@ -462,7 +444,6 @@ export default function PlaylistScreen() {
 
   const handleSongOptionsPress = (track) => {
     setSelectedTrack(track); // Lưu bài hát đã chọn
-    console.log('track', track);
     setSongModalVisible(true); // Mở modal
   };
 
@@ -472,11 +453,19 @@ export default function PlaylistScreen() {
   };
 
   const handleSongAddToPlaylist = () => {
+    if (isGuest) {
+      info('Hãy đăng nhập để sử dụng chức năng này!');
+      return;
+    }
     setSongModalVisible(false);
     setAddTrackToPlaylistModalVisible(true);
   };
 
   const handleConfirmAddTrackToPlaylists = async (playlistIds) => {
+    if (isGuest) {
+      info('Hãy đăng nhập để sử dụng chức năng này!');
+      return;
+    }
     if (!playlistIds || playlistIds.length === 0) {
       warning("Vui lòng chọn ít nhất một playlist.");
       return;
@@ -517,7 +506,7 @@ export default function PlaylistScreen() {
       `Bạn có chắc muốn xóa "${track.name}" khỏi playlist này?`,
       async () => {
         const response = await RemoveTrackFromPlaylist({
-          playlistId: playlist.id,
+          playlistId: playlist?.id,
           playlistTrackId: selectedTrack.playlistTrack?.id
         });
 
@@ -566,8 +555,11 @@ export default function PlaylistScreen() {
   };
 
   const handleSongShare = async (track) => {
+    if (isGuest) {
+      info('Hãy đăng nhập để sử dụng chức năng này!');
+      return;
+    }
     try {
-      console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
       let shareMessage = `${user?.fullName}: `;
 
@@ -618,6 +610,10 @@ export default function PlaylistScreen() {
   };
 
   const handleAddFavorite = async (playlist) => {
+    if (isGuest) {
+      info('Hãy đăng nhập để sử dụng chức năng này!');
+      return;
+    }
     try {
       setIsFavoriteLoading(true);
       console.log('fav')
@@ -627,7 +623,6 @@ export default function PlaylistScreen() {
         itemSpotifyId: currentPlaylist.spotifyId
       });
       if (response.success) {
-        console.log('response.data playlist:', response.data)
         setIsFavorite(true);
         setIsFavoriteLoading(false);
         addFavoriteItem(response.data[0]);
@@ -639,6 +634,10 @@ export default function PlaylistScreen() {
   }
 
   const handleUnFavorite = async (playlist) => {
+    if (isGuest) {
+      info('Hãy đăng nhập để sử dụng chức năng này!');
+      return;
+    }
     try {
       console.log('un')
       setIsFavoriteLoading(true);
@@ -669,42 +668,40 @@ export default function PlaylistScreen() {
     }
   };
 
+  const fetchTracks = async () => {
+    setIsLoading(true);
+    if (currentPlaylist?.spotifyId) {
+      const response = await GetTracksByPlaylistId({
+        playlistId: currentPlaylist.spotifyId,
+        type: 'api'
+      });
+      if (response.success) {
+        setListTrack(response.data);
+      } else {
+        setListTrack([]);
+      }
+    } else {
+      const response = await GetTracksByPlaylistId({
+        playlistId: currentPlaylist.id,
+        type: 'local'
+      });
+      if (response.success) {
+        setListTrack(response.data);
+      } else {
+        setListTrack([]);
+      }
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     setPlaylist(currentPlaylist);
     if (currentPlaylist?.owner?.id === user?.id || currentPlaylist?.userId === user?.id) {
       setIsMine(true);
     }
-  }, [currentPlaylist]);
-
-  useEffect(() => {
-    const fetchTracks = async () => {
-      setIsLoading(true);
-      if (currentPlaylist?.spotifyId) {
-        const response = await GetTracksByPlaylistId({
-          playlistId: currentPlaylist.spotifyId,
-          type: 'api'
-        });
-        if (response.success) {
-          setListTrack(response.data);
-        } else {
-          setListTrack([]);
-        }
-      } else {
-        const response = await GetTracksByPlaylistId({
-          playlistId: currentPlaylist.id,
-          type: 'local'
-        });
-        if (response.success) {
-          setListTrack(response.data);
-        } else {
-          setListTrack([]);
-        }
-      }
-      setIsLoading(false);
-    };
 
     fetchTracks();
-  }, []);
+  }, [currentPlaylist?.spotifyId]);
 
   useEffect(() => {
     if (currentPlaylist) {
@@ -730,7 +727,6 @@ export default function PlaylistScreen() {
         if (item?.itemType === 'playlist') {
           if ((currentPlaylist?.id && (item?.itemId === currentPlaylist?.id))
             || (currentPlaylist?.spotifyId && (item?.itemSpotifyId === currentPlaylist?.spotifyId))) {
-            console.log(12)
             setIsFavorite(true);
             return;
           }
@@ -741,22 +737,13 @@ export default function PlaylistScreen() {
   }
 
   useEffect(() => {
-    checkIsFavorite();
-  }, []);
-
-  useEffect(() => {
-    historySavedRef.current = null;
-  }, [currentTrack]);
-
-  useEffect(() => {
-    const trackId = currentTrack?.spotifyId || currentTrack?.id;
-    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
-    ) {
-      historySavedRef.current = trackId;
-      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
-      saveTrackToListeningHistory(currentTrack, playbackPosition);
+    if (user && isLoggedIn) {
+      checkIsFavorite();
+    } else {
+      setIsFavorite(false);
     }
-  }, [playbackPosition, currentTrack]);
+  }, [user, isLoggedIn]);
+
 
   const renderRecentlyPlayedItem = ({ item, index }) => (
     <SongItem
@@ -861,7 +848,7 @@ export default function PlaylistScreen() {
                     size={22} />
                 </Pressable>
               )}
-              {(currentPlaylist?.owner?.id !== user?.id && currentPlaylist?.userId !== user.id) && (
+              {(isGuest || (currentPlaylist?.owner?.id !== user?.id && currentPlaylist?.userId !== user.id)) && (
                 <TouchableOpacity className="p-2"
                   onPress={() => {
                     if (isFavorite) {

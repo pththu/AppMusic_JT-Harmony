@@ -42,6 +42,8 @@ export default function ArtistScreen() {
   const { info, error, success, confirm, warning } = useCustomAlert();
 
   const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isGuest = useAuthStore((state) => state.isGuest);
   const currentArtist = useArtistStore((state) => state.currentArtist);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isFollowing = useArtistStore((state) => state.isFollowing);
@@ -81,7 +83,6 @@ export default function ArtistScreen() {
 
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
 
-  const historySavedRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState({
     topTracks: true,
@@ -90,36 +91,8 @@ export default function ArtistScreen() {
     screen: true,
   });
 
-  const saveTrackToListeningHistory = async (track, duration) => {
-    if (!track) return;
-
-    if (duration > 15) {
-      const payload = {
-        itemType: 'track',
-        itemId: track?.id,
-        itemSpotifyId: track?.spotifyId,
-        durationListened: duration
-      };
-
-      const response = await SaveToListeningHistory(payload);
-
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
-        } else {
-          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
-          addListenHistory(response.data);
-        }
-      } else {
-        console.error('Lưu lịch sử thất bại, reset cờ.');
-        historySavedRef.current = null;
-      }
-    } else {
-      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
-    }
-  }
-
   const saveArtistToListeningHistory = async () => {
+    if (isGuest) return;
     const payload = {
       itemType: 'artist',
       itemId: currentArtist?.id,
@@ -129,9 +102,9 @@ export default function ArtistScreen() {
     const response = await SaveToListeningHistory(payload);
     if (response.success) {
       if (response.updated) {
-        console.log('Cập nhật lịch sử nghe thành công:', response.data);
+        console.log('Cập nhật lịch sử nghe artist thành công:', response.data);
       } else {
-        console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        console.log('Tạo mới lịch sử nghe artist thành công:', response.data);
         addListenHistory(response.data);
       }
     }
@@ -159,6 +132,15 @@ export default function ArtistScreen() {
   };
 
   const handleSongShare = async (track) => {
+    if (!track) {
+      return;
+    }
+
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
+
     try {
       console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
@@ -306,6 +288,11 @@ export default function ArtistScreen() {
   };
 
   const handleToggleFollow = async () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
+
     if (isFollowing) {
       handleUnfollow();
     } else {
@@ -365,6 +352,11 @@ export default function ArtistScreen() {
   }
 
   const handleShare = async () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
+
     try {
       let shareMessage = `${user?.fullName}: `;
 
@@ -417,68 +409,58 @@ export default function ArtistScreen() {
   };
 
   const handleBlock = async () => {
+    if (isGuest) {
+      warning("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     info('Chức năng đang phát triển');
   };
 
-  useEffect(() => {
-    historySavedRef.current = null;
-  }, [currentTrack]);
-
-  useEffect(() => {
-    const trackId = currentTrack?.spotifyId || currentTrack?.id;
-    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
-    ) {
-      historySavedRef.current = trackId;
-      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
-      saveTrackToListeningHistory(currentTrack, playbackPosition);
+  const fetchAlbums = async () => {
+    try {
+      const response = await GetAlbumsOfArtist(currentArtist.spotifyId);
+      if (response.success === true) {
+        setAlbums(response.data);
+        setIsLoading((prev) => ({ ...prev, albums: false }));
+      }
+    } catch (err) {
+      console.log('Error fetching albums:', err);
     }
-  }, [playbackPosition, currentTrack]);
+  }
+
+  const fetchTopTracks = async () => {
+    try {
+      const response = await GetTopTracksOfArtist(currentArtist.spotifyId);
+      if (response.success === true) {
+        setPopularTracks(response.data);
+        setIsLoading((prev) => ({ ...prev, topTracks: false }));
+        setListTrack(response.data);
+      }
+    } catch (err) {
+      console.log('Error fetching top tracks:', err);
+    }
+  }
 
   useEffect(() => {
     setIsFollowing(false);
     setIsLoading((prev) => ({ ...prev, screen: true }));
-    const fetchTopTracks = async () => {
-      try {
-        const response = await GetTopTracksOfArtist(currentArtist.spotifyId);
-        if (response.success === true) {
-          setPopularTracks(response.data);
-          setIsLoading((prev) => ({ ...prev, topTracks: false }));
-          setListTrack(response.data);
-        }
-      } catch (err) {
-        console.log('Error fetching top tracks:', err);
-      }
-    }
 
-    const fetchAlbums = async () => {
-      try {
-        const response = await GetAlbumsOfArtist(currentArtist.spotifyId);
-        if (response.success === true) {
-          setAlbums(response.data);
-          setIsLoading((prev) => ({ ...prev, albums: false }));
-        }
-      } catch (err) {
-        console.log('Error fetching albums:', err);
-      }
-    }
-
-    console.log('curret artist: ', currentArtist);
     if (currentArtist) {
       fetchTopTracks();
       fetchAlbums();
       setIsLoading((prev) => ({ ...prev, screen: false }));
     }
-  }, [currentArtist]);
+  }, [currentArtist?.spotifyId]);
 
   useEffect(() => {
     setIsFollowing(false);
-    console.log(artistFollowed)
-    const artist = artistFollowed.find(a => a.artistSpotifyId === currentArtist.spotifyId);
-    console.log(artist)
-    if (artist) {
-      setIsFollowing(true);
+    if (isLoggedIn && user) {
+      const artist = artistFollowed.find(a => a.artistSpotifyId === currentArtist.spotifyId);
+      if (artist) {
+        setIsFollowing(true);
+      }
     }
-  }, [artistFollowed]);
+  }, [artistFollowed, user, isLoggedIn]);
 
   const renderSongItem = ({ item, index }) => (
     <SongItem
@@ -489,7 +471,7 @@ export default function ArtistScreen() {
     />
   );
 
-  const renderAlbumItem = ({ item }: { item: any }) => (
+  const renderAlbumItem = ({ item }) => (
     <TouchableOpacity
       className="mr-4 w-36"
       onPress={() => {
@@ -516,11 +498,7 @@ export default function ArtistScreen() {
   return (
     <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F]">
       {isLoading.following && (
-        <View className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/50 justify-center items-center"
-          style={{
-            height: screenHeight
-          }}
-        >
+        <View className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/50 justify-center items-center">
           <ActivityIndicator size="large" color="#22c55e" />
         </View>
       )}
@@ -662,7 +640,7 @@ export default function ArtistScreen() {
           setIsVisible={setArtistOptionModalVisible}
           data={currentArtist}
           isFollowing={isFollowing}
-          onFollow={isFollowing ? handleUnfollow : handleFollow}
+          onFollow={handleToggleFollow}
           onShare={handleShare}
           onBlock={handleBlock}
         />

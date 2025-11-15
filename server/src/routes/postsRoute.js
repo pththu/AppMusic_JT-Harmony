@@ -8,6 +8,9 @@ const {
   authorizeRole,
 } = require("../middlewares/authentication");
 
+
+router.get('/post-for-guests', postController.getAllPostForGuest); // Lấy bài đăng dành cho khách
+
 // --- ROUTE CÔNG KHAI ---
 router.get("/", optionalAuthenticateToken, postController.getAllPost); // Lấy tất cả bài đăng (public)
 router.get("/user/:userId", postController.getPostsByUserId); // Lấy bài đăng theo User ID (public)

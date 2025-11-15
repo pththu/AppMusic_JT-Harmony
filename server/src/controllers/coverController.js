@@ -162,7 +162,11 @@ exports.getTopCovers = async (req, res) => {
       })
     );
 
-    res.json(coversWithExtras);
+    res.status(200).json({
+      message: "Lấy top covers thành công",
+      success: true,
+      data: coversWithExtras,
+    })
   } catch (error) {
     console.error("Lỗi khi tải top covers:", error.message, error.stack);
     res.status(500).json({ error: "Server Error: " + error.message });

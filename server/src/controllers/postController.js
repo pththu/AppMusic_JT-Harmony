@@ -40,10 +40,10 @@ exports.getAllLikesAdmin = async (req, res) => {
     const rows = await Like.findAll({
       where,
       include: [
-        { model: User, as: 'User', attributes: ['id','username','fullName','avatarUrl'] },
-        { model: Post, as: 'Post', attributes: ['id','userId','content','createdAt'] },
+        { model: User, as: 'User', attributes: ['id', 'username', 'fullName', 'avatarUrl'] },
+        { model: Post, as: 'Post', attributes: ['id', 'userId', 'content', 'createdAt'] },
       ],
-      order: [['liked_at','DESC']],
+      order: [['liked_at', 'DESC']],
       limit,
       offset,
     });
@@ -88,9 +88,9 @@ exports.getPostsAdmin = async (req, res) => {
     const posts = await Post.findAll({
       where,
       include: [
-        { model: User, as: 'User', attributes: ['id','username','fullName','avatarUrl'] },
+        { model: User, as: 'User', attributes: ['id', 'username', 'fullName', 'avatarUrl'] },
       ],
-      order: [['uploadedAt','DESC']],
+      order: [['uploadedAt', 'DESC']],
       limit,
       offset,
     });
@@ -138,10 +138,10 @@ exports.getPostReportsAdmin = async (req, res) => {
     const reports = await PostReport.findAll({
       where,
       include: [
-        { model: Post, as: 'Post', include: [{ model: User, as: 'User', attributes: ['id','username','fullName','avatarUrl'] }] },
-        { model: User, as: 'Reporter', attributes: ['id','username','fullName','avatarUrl'] },
+        { model: Post, as: 'Post', include: [{ model: User, as: 'User', attributes: ['id', 'username', 'fullName', 'avatarUrl'] }] },
+        { model: User, as: 'Reporter', attributes: ['id', 'username', 'fullName', 'avatarUrl'] },
       ],
-      order: [['reportedAt','DESC']],
+      order: [['reportedAt', 'DESC']],
     });
     res.status(200).json(reports);
   } catch (error) {
@@ -155,7 +155,7 @@ exports.updatePostReportAdmin = async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { status, adminNotes } = req.body;
-    const valid = ['pending','reviewed','resolved','dismissed'];
+    const valid = ['pending', 'reviewed', 'resolved', 'dismissed'];
     if (status && !valid.includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
@@ -351,14 +351,62 @@ exports.getAllPost = async (req, res) => {
       })
     );
 
-    res.json(postsWithExtras);
+    res.status(200).json({
+      message: "Lấy danh sách bài đăng thành công!",
+      success: true,
+      data: postsWithExtras,
+    })
   } catch (error) {
     console.error("Lỗi khi tải bài đăng:", error.message, error.stack);
     res.status(500).json({ error: "Server Error: " + error.message });
   }
 };
 
-// --- HÀM TẠO BÀI ĐĂNG ---
+exports.getAllPostForGuest = async (req, res) => {
+  console.log('Lấy danh sách bài đăng cho Guest (Khách)');
+
+  try {
+    const posts = await Post.findAll({
+      where: {
+        isCover: false,
+      },
+      attributes: {
+        include: [
+          [
+            sequelize.literal('false'),
+            'isLiked',
+          ],
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")`
+            ),
+            'commentCount', // Ghi đè trực tiếp lên 'commentCount'
+          ],
+        ],
+        exclude: ['commentCount'],
+      },
+      include: [
+        {
+          model: User,
+          as: 'User',
+          attributes: ['id', 'username', 'avatarUrl', 'fullName'],
+        },
+      ],
+      order: [['uploadedAt', 'DESC']],
+    });
+
+    res.status(200).json({
+      message: 'Lấy danh sách bài đăng (guest) thành công!',
+      success: true,
+      data: posts,
+    });
+  } catch (error) {
+    console.error('Lỗi khi tải bài đăng (guest):', error.message, error.stack);
+    res.status(500).json({ error: 'Server Error: ' + error.message });
+  }
+};
+
+
 exports.createPost = async (req, res) => {
   console.log("createPost called with body:", req.body);
   try {
@@ -481,7 +529,8 @@ exports.createPost = async (req, res) => {
 
     return res.status(201).json({
       message: "Tạo bài đăng thành công!",
-      post: returnedPost,
+      data: returnedPost,
+      success: true,
     });
   } catch (error) {
     console.error("Lỗi khi tạo bài đăng:", error.message || error.toString());

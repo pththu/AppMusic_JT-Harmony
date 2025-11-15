@@ -27,24 +27,31 @@ import * as DocumentPicker from "expo-document-picker";
 import { usePlayerStore } from "@/store/playerStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import { useHistoriesStore } from "@/store/historiesStore";
+import { useArtistStore } from "@/store/artistStore";
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
-  const { success, error, warning } = useCustomAlert();
+  const { success, error, warning, info } = useCustomAlert();
 
   const settings = useContext(SettingsContext);
   const user = useAuthStore((state) => state.user);
+  const isGuest = useAuthStore((state) => state.isGuest);
   const loginType = useAuthStore((state) => state.loginType);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const setIsGuest = useAuthStore((state) => state.setIsGuest);
+  const setShowLoginWall = useAuthStore((state) => state.setShowLoginWall);
+  const setGuestSongPlayCount = useAuthStore((state) => state.setGuestSongPlayCount);
   const clearPlayerStore = usePlayerStore((state) => state.clearPlayerStore);
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
+  const clearListenHistory = useHistoriesStore((state) => state.clearListenHistory);
+  const clearSearchHistory = useHistoriesStore((state) => state.clearSearchHistory);
+  const clearArtistStore = useArtistStore((state) => state.clearArtistStore);
   const logout = useAuthStore((state) => state.logout);
 
   const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedImages, setSelectedImages] = useState([]);
-  const [uploadedImages, setUploadedImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isChoosedImage, setIsChoosedImage] = useState(false);
 
@@ -99,37 +106,17 @@ export default function ProfileScreen() {
     }
   };
 
-  // // up nhiều file lên cloudinary và server
-  // const handlePickMultipleFile = async () => {
-  //   try {
-  //     const result = await DocumentPicker.getDocumentAsync({
-  //       type: ["audio/*", "video/*", "image/*"],
-  //       multiple: true,
-  //       copyToCacheDirectory: true,
-  //     });
-
-  //     if (!result.canceled) {
-  //       // Truyền trực tiếp mảng result.assets vào hàm upload
-  //       console.log("Files selected:", result.assets);
-  //       const uploadResult = await UploadMultipleFile(result.assets);
-
-  //       if (uploadResult.success) {
-  //         success("Upload thành công nhiều file!", "");
-  //         console.log("Server response:", uploadResult);
-  //       } else {
-  //         error("Upload thất bại", uploadResult.message);
-  //       }
-  //     } else {
-  //       warning("Bạn chưa chọn file nào để upload!");
-  //     }
-  //   } catch (error) {
-  //     error("Không thể chọn file. Vui lòng thử lại!", error.message);
-  //   }
-  // };
+  const handleNavigateAuthLanding = () => {
+    setIsGuest(false);
+  }
 
   const handleLogout = async () => {
     console.log('out')
     try {
+      if (isGuest) {
+        warning("Tài khoản khách không thể đăng xuất!");
+        return;
+      }
       const response = await Logout();
       console.log(response)
       if (loginType === "google") {
@@ -144,6 +131,12 @@ export default function ProfileScreen() {
       logout();
       clearPlayerStore();
       clearFavorites();
+      clearArtistStore();
+      clearSearchHistory();
+      clearListenHistory();
+      setIsGuest(true);
+      setShowLoginWall(false);
+      setGuestSongPlayCount(0);
     } catch (error) {
       console.log(error);
     }
@@ -195,19 +188,25 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-[#0E0C1F]"
+    <SafeAreaView className={`flex-1 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}
       style={{
         paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0,
       }}
     >
       <ScrollView contentContainerStyle={{ padding: 24 }}>
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-black dark:text-white text-3xl font-bold">
+          <Text className={`text-2xl font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Hồ sơ
           </Text>
           <CustomButton
             title="Cài đặt"
-            onPress={() => navigate("Setting")}
+            onPress={() => {
+              if (isGuest) {
+                info("Tài khoản khách không thể truy cập vào mục cài đặt tài khoản!");
+              } else {
+                navigate("Setting")
+              }
+            }}
             iconName="settings-sharp"
           />
         </View>
@@ -216,6 +215,7 @@ export default function ProfileScreen() {
           <Pressable
             className={`items-center w-24 h-24 mb-4 border-2 rounded-full border-green-500 shadow-xl`}
             onPress={() => handlePickSingleImage()}
+            disabled={isGuest}
           >
             <Image
               source={{
@@ -232,7 +232,7 @@ export default function ProfileScreen() {
           <Text
             className={`text-lg font-bold ${colorScheme === "dark" ? "text-white" : "text-[#1C1A2F]"}`}
           >
-            {user?.fullName || user?.username}
+            {isGuest ? "Khách" : user?.fullName || user?.username}
           </Text>
         </View>
 
@@ -295,12 +295,6 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        {/* <Pressable className="p-5 border border-slate-300"
-          onPress={() => handlePickMultipleFile()}
-        >
-          <Text>Chọn nhiều file</Text>
-        </Pressable> */}
-
         {/* Các nút Thư viện (Library) */}
         <View className="flex-row justify-between mb-4 flex-wrap">
           <LibraryItemButton
@@ -324,7 +318,7 @@ export default function ProfileScreen() {
         </View>
 
         <View>
-          <Text className="text-black dark:text-white font-semibold mb-2 text-2xl">
+          <Text className={`text-2xl font-semibold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
             Cấu hình
           </Text>
           <SettingItem
@@ -340,13 +334,25 @@ export default function ProfileScreen() {
             title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
             onPress={() => navigate("MusicLanguage")}
           />
-          <TouchableOpacity
-            className={`py-4`}
-            onPress={() => handleLogout()}
-            activeOpacity={0.7}
-          >
-            <Text className={`text-red-500 font-bold text-lg`}>Đăng xuất</Text>
-          </TouchableOpacity>
+          {
+            isGuest ? (
+              <TouchableOpacity
+                className={`py-4 bg-green-600 rounded-full my-4`}
+                onPress={() => handleNavigateAuthLanding()}
+                activeOpacity={0.7}
+              >
+                <Text className={`text-white text-center font-bold text-lg`}>Đi đến trang đăng nhập</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                className={`py-4`}
+                onPress={() => handleLogout()}
+                activeOpacity={0.7}
+              >
+                <Text className={`text-red-500 font-bold text-lg`}>Đăng xuất</Text>
+              </TouchableOpacity>
+            )
+          }
         </View>
       </ScrollView>
     </SafeAreaView>

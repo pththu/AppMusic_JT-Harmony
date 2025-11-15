@@ -35,7 +35,14 @@ export const GetArtistsForYou = async (payload) => {
     });
     return response.data;
   } catch (error) {
-    return { message: error.message, status: "error" };
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 };
 
@@ -46,7 +53,14 @@ export const GetTracksByPlaylistId = async (payload) => {
     })
     return response.data;
   } catch (error) {
-    return { message: error.message, status: "error" };
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 };
 
@@ -85,8 +99,14 @@ export const GetMyPlaylists = async () => {
     const response = await axiosClient.get(`/music/mine/playlists`);
     return response.data;
   } catch (error) {
-    console.log(error.message);
-    throw error;
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 };
 
@@ -96,8 +116,14 @@ export const GetTracks = async (payload) => {
     const response = await axiosClient.post(`/music//search-track`, payload);
     return response.data;
   } catch (error) {
-    console.log(error.message);
-    throw error;
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 }
 

@@ -31,6 +31,8 @@ const AlbumScreen = () => {
   const colorScheme = useColorScheme();
 
   const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isGuest = useAuthStore((state) => state.isGuest);
   const currentAlbum = usePlayerStore((state) => state.currentAlbum);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
@@ -64,48 +66,20 @@ const AlbumScreen = () => {
   const [tracks, setTracks] = useState([]);
   const [album, setAlbum] = useState(null);
   const [selectedTrack, setSelectedTrack] = useState(null);
-  
+
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newImage, setNewImage] = useState(null);
   const [newIsPublic, setNewIsPublic] = useState(true);
-  
+
   const historySavedRef = useRef(null);
   const opacity = useRef(new Animated.Value(0)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
 
-  const saveTrackToListeningHistory = async (track, duration) => {
-    if (!track) return;
-
-    if (duration > 15) {
-      const payload = {
-        itemType: 'track',
-        itemId: track?.id,
-        itemSpotifyId: track?.spotifyId,
-        durationListened: duration
-      };
-
-      const response = await SaveToListeningHistory(payload);
-
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
-        } else {
-          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
-          addListenHistory(response.data);
-        }
-      } else {
-        console.error('Lưu lịch sử thất bại, reset cờ.');
-        historySavedRef.current = null;
-      }
-    } else {
-      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
-    }
-  }
-
   const saveAlbumToListeningHistory = async () => {
+    if (isGuest) return;
     if (!currentAlbum) return;
     const payload = {
       itemType: 'album',
@@ -118,9 +92,9 @@ const AlbumScreen = () => {
     const response = await SaveToListeningHistory(payload);
     if (response.success) {
       if (response.updated) {
-        console.log('Cập nhật lịch sử nghe thành công:', response.data);
+        console.log('Cập nhật lịch sử nghe album thành công:', response.data);
       } else {
-        console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        console.log('Tạo mới lịch sử nghe album thành công:', response.data);
         addListenHistory(response.data);
       }
     }
@@ -169,6 +143,10 @@ const AlbumScreen = () => {
   };
 
   const handleShareAlbum = async () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     setModalVisible(false);
     try {
       let shareMessage = `${user?.fullName} muốn chia sẻ với bạn album: `;
@@ -225,9 +203,12 @@ const AlbumScreen = () => {
   }
 
   const handleAddFavorite = async (album) => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     try {
       setIsFavoriteLoading(true);
-      console.log('fav')
       const response = await AddFavoriteItem({
         itemType: 'album',
         itemId: album?.id,
@@ -246,8 +227,11 @@ const AlbumScreen = () => {
   }
 
   const handleUnFavorite = async (album) => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     try {
-      console.log('un')
       setIsFavoriteLoading(true);
       const favoriteItem = favoriteItems.find((item) => {
         if (item?.itemType === 'album') {
@@ -287,11 +271,19 @@ const AlbumScreen = () => {
   };
 
   const handleDownloadAlbum = () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     setModalVisible(false);
     info('Chức năng tải album sẽ được cập nhật sau!');
   };
 
   const handleAddToPlaylist = () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     setModalVisible(false);
     if (!listTrack || listTrack?.length === 0) {
       warning('Album không có bài hát để thêm vào playlist!');
@@ -301,6 +293,10 @@ const AlbumScreen = () => {
   };
 
   const handleConfirmAddToPlaylist = async (playlistIds) => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     if (!playlistIds || !playlistIds.length) {
       warning('Vui lòng chọn ít nhất một playlist!');
       return;
@@ -332,6 +328,10 @@ const AlbumScreen = () => {
   };
 
   const handleSongAddToPlaylist = () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     setModalTrackVisible(false);
     setModalAddToPlaylistVisible(true);
   };
@@ -351,6 +351,10 @@ const AlbumScreen = () => {
   };
 
   const handleSongShare = async (track) => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     try {
       console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
@@ -408,6 +412,10 @@ const AlbumScreen = () => {
   };
 
   const handleAddPlaylist = async () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
     try {
       const payload = {
         image: newImage || null,
@@ -461,40 +469,29 @@ const AlbumScreen = () => {
     return;
   }
 
-  useEffect(() => {
-    checkIsFavorite();
-  }, []);
-
-  useEffect(() => {
-    historySavedRef.current = null;
-  }, [currentTrack]);
-
-  useEffect(() => {
-    const trackId = currentTrack?.spotifyId || currentTrack?.id;
-    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
-    ) {
-      historySavedRef.current = trackId;
-      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
-      saveTrackToListeningHistory(currentTrack, playbackPosition);
-    }
-  }, [playbackPosition, currentTrack]);
-
-  useEffect(() => {
-    const fetchTracks = async () => {
-      if (currentAlbum) {
-        const response = await GetTracksByAlbumId(currentAlbum?.spotifyId);
-        if (response.success) {
-          response.data?.map((track) => {
-            track.imageUrl = currentAlbum?.imageUrl;
-          });
-          setTracks(response.data);
-          setListTrack(response.data);
-          setIsLoading(false);
-        }
+  const fetchTracks = async () => {
+    if (currentAlbum) {
+      const response = await GetTracksByAlbumId(currentAlbum?.spotifyId);
+      if (response.success) {
+        response.data?.map((track) => {
+          track.imageUrl = currentAlbum?.imageUrl;
+        });
+        setTracks(response.data);
+        setListTrack(response.data);
+        setIsLoading(false);
       }
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchTracks();
-  }, []);
+  }, [currentAlbum?.spotifyId]);
+
+  useEffect(() => {
+    if (user && isLoggedIn) {
+      checkIsFavorite();
+    }
+  }, [favoriteItems, user, isLoggedIn]);
 
   useEffect(() => {
     if (currentAlbum) {

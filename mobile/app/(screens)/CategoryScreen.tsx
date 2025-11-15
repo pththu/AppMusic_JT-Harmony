@@ -22,6 +22,7 @@ import { useArtistStore } from "@/store/artistStore";
 import { pl } from "date-fns/locale";
 import { set } from "date-fns";
 import { SaveToListeningHistory } from "@/services/historiesService";
+import { useHistoriesStore } from "@/store/historiesStore";
 
 // Component hiển thị Playlist/Track/Album
 const ContentItem = ({ item, onPress }) => {
@@ -96,6 +97,7 @@ export default function CategoryScreen() {
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
   const setQueue = usePlayerStore((state) => state.setQueue);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
 
   const isDark = colorScheme === "dark";
@@ -167,29 +169,30 @@ export default function CategoryScreen() {
     setCurrentTrack(item);
     playPlaylist([item], 0);
     setQueue([]);
-    await saveTrackToListeningHistory(item);
+    // await saveTrackToListeningHistory(item);
   };
 
-  const saveTrackToListeningHistory = async (track) => {
-    if (!track) return;
-    if (track) {
-      const payload = {
-        itemType: 'track',
-        itemId: track?.id,
-        itemSpotifyId: track?.spotifyId,
-        durationListened: playbackPosition || 0
-      };
+  // const saveTrackToListeningHistory = async (track) => {
+  //   if (!track) return;
+  //   if (track) {
+  //     const payload = {
+  //       itemType: 'track',
+  //       itemId: track?.id,
+  //       itemSpotifyId: track?.spotifyId,
+  //       durationListened: playbackPosition || 0
+  //     };
 
-      const response = await SaveToListeningHistory(payload);
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe thành công:', response.data);
-        } else {
-          console.log('Tạo mới lịch sử nghe thành công:', response.data);
-        }
-      }
-    }
-  }
+  //     const response = await SaveToListeningHistory(payload);
+  //     if (response.success) {
+  //       if (response.updated) {
+  //         console.log('Cập nhật lịch sử nghe track from category thành công:', response.data);
+  //       } else {
+  //         console.log('Tạo mới lịch sử nghe track from category thành công:', response.data);
+  //         addListenHistory(response.data);
+  //       }
+  //     }
+  //   }
+  // }
   // THÊM MỚI: Handler cho Album
   const handleAlbumPress = (item) => {
     setCurrentAlbum(item);

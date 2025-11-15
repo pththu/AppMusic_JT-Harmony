@@ -17,12 +17,36 @@ import { AlertProvider } from "@/context/AlertContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import MiniPlayer from "@/components/player/MiniPlayer";
 import GlobalPlayer from "@/components/player/GlobalPlayer";
+import { usePlayerStore } from "@/store/playerStore";
+import { useArtistStore } from "@/store/artistStore";
+import { useFavoritesStore } from "@/store/favoritesStore";
+import { useHistoriesStore } from "@/store/historiesStore";
+
+import { useGuestTriggers } from "@/hooks/useGuestTriggers";
+import LoginWall from "@/components/guest/LoginWall";
 
 export { ErrorBoundary } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
+  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
+  const setListTrack = usePlayerStore((state) => state.setListTrack);
+  const setQueue = usePlayerStore((state) => state.setQueue);
+  const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
+  const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
+  const setArtistFollowed = useArtistStore((state) => state.setArtistFollowed);
+  const setListenHistory = useHistoriesStore((state) => state.setListenHistory);
+  const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
+  const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
+  const setRepeatMode = usePlayerStore((state) => state.setRepeatMode);
+  const setDuration = usePlayerStore((state) => state.setDuration);
+  const setMiniPlayerVisible = usePlayerStore((state) => state.setMiniPlayerVisible);
+
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
@@ -37,6 +61,26 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // useEffect(() => {
+  //   setCurrentPlaylist(null);
+  //   setCurrentAlbum(null);
+  //   setCurrentArtist(null);
+  //   setCurrentTrack(null);
+  //   setIsShuffled(false);
+  //   setRepeatMode("none");
+  //   setDuration(0);
+  //   setMiniPlayerVisible(false);
+  //   setListTrack([]);
+  //   setQueue([]);
+  //   setMyPlaylists([]);
+  //   setFavoriteItems([]);
+  //   setArtistFollowed([]);
+  //   setListenHistory([]);
+  //   setSearchHistory([]);
+  // }, []);
+
+  useGuestTriggers();
 
   if (!loaded) {
     return <View />;
@@ -62,15 +106,16 @@ function RootLayoutNav() {
     >
       <View className="flex-1 bg-white dark:bg-black">
         <SafeAreaProvider>
-            <AlertProvider>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="(screens)" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              </Stack>
-              <MiniPlayer />
-              <GlobalPlayer />
-            </AlertProvider>
+          <AlertProvider>
+            <Stack initialRouteName="(tabs)">
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(screens)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            </Stack>
+            <MiniPlayer />
+            <GlobalPlayer />
+            <LoginWall />
+          </AlertProvider>
         </SafeAreaProvider>
       </View>
     </NavigationThemeProvider>

@@ -32,6 +32,11 @@ const ListeningHistory = sequelize.define(
     durationListened: {
       type: DataTypes.DOUBLE,
       field: 'duration_listened'
+    },
+    playCount: {
+      type: DataTypes.INTEGER,
+      field: 'play_count',
+      defaultValue: 1
     }
   },
   {

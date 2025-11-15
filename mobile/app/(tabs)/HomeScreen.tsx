@@ -41,6 +41,8 @@ export default function HomeScreen() {
   const { info, error, success, confirm, warning } = useCustomAlert();
   const listTrack = usePlayerStore((state) => state.listTrack);
   const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isGuest = useAuthStore((state) => state.isGuest);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
@@ -132,55 +134,13 @@ export default function HomeScreen() {
     const response = await SaveToListeningHistory(payload);
     if (response.success) {
       if (response.updated) {
-        console.log('Cập nhật lịch sử nghe thành công:', response.data);
+        console.log('Cập nhật lịch sử nghe playlist from home thành công:', response.data);
       } else {
-        console.log('Tạo mới lịch sử nghe thành công:', response.data);
+        console.log('Tạo mới lịch sử nghe playlist from home thành công:', response.data);
         addListenHistory(response.data);
       }
     }
   }
-
-  const saveTrackToListeningHistory = async (track, duration) => {
-    if (!track) return;
-    if (duration > 15) {
-      const payload = {
-        itemType: 'track',
-        itemId: track?.id,
-        itemSpotifyId: track?.spotifyId,
-        durationListened: duration
-      };
-
-      const response = await SaveToListeningHistory(payload);
-
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
-        } else {
-          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
-          addListenHistory(response.data);
-        }
-      } else {
-        console.error('Lưu lịch sử thất bại, reset cờ.');
-        historySavedRef.current = null;
-      }
-    } else {
-      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
-    }
-  }
-
-  useEffect(() => {
-    historySavedRef.current = null;
-  }, [currentTrack]);
-
-  useEffect(() => {
-    const trackId = currentTrack?.spotifyId || currentTrack?.id;
-    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
-    ) {
-      historySavedRef.current = trackId;
-      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
-      saveTrackToListeningHistory(currentTrack, playbackPosition);
-    }
-  }, [playbackPosition, currentTrack]);
 
   useEffect(() => {
     Animated.parallel([
@@ -205,146 +165,138 @@ export default function HomeScreen() {
     return description;
   };
 
-  useEffect(() => {
-    const fetchMyPlaylists = async () => {
-      try {
-        const response = await GetMyPlaylists();
-        if (response.success) {
-          setMyPlaylists(response.data);
-        }
-      } catch (error) {
-        console.log("Lỗi khi lấy playlist của tôi:", error);
+  const fetchPlaylistsForYou = async () => {
+    try {
+      const response = await GetPlaylistsForYou(queryParam.playlistForYou);
+      if (response.success) {
+        setDataForYou((prev) => ({
+          ...prev,
+          playlistsForYou: response.data
+        }));
+        setIsLoading((prev) => ({ ...prev, playlistForYou: false }));
       }
+    } catch (error) {
+      console.log('Error fetching playlists: ', error);
     }
+  };
 
-    const fetchPlaylistsForYou = async () => {
-      try {
-        const response = await GetPlaylistsForYou(queryParam.playlistForYou);
-        if (response.success) {
-          setDataForYou((prev) => ({
-            ...prev,
-            playlistsForYou: response.data
-          }));
-          setIsLoading((prev) => ({ ...prev, playlistForYou: false }));
-        }
-      } catch (error) {
-        console.log('Error fetching playlists: ', error);
+  const fetchAlbumsForYou = async () => {
+    try {
+      const response = await GetAlbumsForYou(queryParam.albumForYou);
+      if (response.success) {
+        setDataForYou((prev) => ({
+          ...prev,
+          albumsForYou: response.data
+        }));
+        setIsLoading((prev) => ({ ...prev, albumsForYou: false }));
       }
-    };
-
-    const fetchAlbumsForYou = async () => {
-      try {
-        const response = await GetAlbumsForYou(queryParam.albumForYou);
-        if (response.success) {
-          setDataForYou((prev) => ({
-            ...prev,
-            albumsForYou: response.data
-          }));
-          setIsLoading((prev) => ({ ...prev, albumsForYou: false }));
-        }
-      } catch (error) {
-        console.log('Error fetching albums: ', error);
-      }
-    };
-
-    const fetchTrendingPlaylists = async () => {
-      try {
-        const response = await GetPlaylistsForYou(queryParam.playlistTrending);
-        if (response.success) {
-          setDataForYou((prev) => ({
-            ...prev,
-            playlistsTrending: response.data
-          }));
-          setIsLoading((prev) => ({ ...prev, playlistTrending: false }));
-        }
-      } catch (error) {
-        console.log('Error fetching trending playlists: ', error);
-      }
-    };
-
-    const fetchTrendingAlbums = async () => {
-      try {
-        const response = await GetAlbumsForYou(queryParam.albumTrending);
-        if (response.success) {
-          setDataForYou((prev) => ({
-            ...prev,
-            albumsTrending: response.data
-          }));
-          setIsLoading((prev) => ({ ...prev, albumsTrending: false }));
-        }
-      } catch (error) {
-        console.log('Error fetching trending albums: ', error);
-      }
-    };
-
-    const fetchArtistsForYou = async () => {
-      try {
-        const response = await GetArtistsForYou({
-          artistNames: queryParam.artistNames,
-          genres: queryParam.genres
-        });
-        if (response.success) {
-          setDataForYou((prev) => ({
-            ...prev,
-            artistsForYou: response.data
-          }));
-          setIsLoading((prev) => ({ ...prev, artistsForYou: false }));
-        }
-      } catch (error) {
-        console.log('Error fetching artists: ', error);
-      }
-    };
-
-    const fetchFavoritesItem = async () => {
-      try {
-        const response = await GetFavoriteItemsGrouped();
-        if (response.success) {
-          setFavoriteItems(response.data);
-        }
-      } catch (error) {
-        console.log('errorr fetch favorites: ', error);
-      }
+    } catch (error) {
+      console.log('Error fetching albums: ', error);
     }
+  };
 
-    const fetchArtistFollowed = async () => {
-      try {
-        const response = await GetArtistFollowed();
-        if (response.success) {
-          setArtistFollowed(response.data);
-        }
-      } catch (error) {
-        console.log('error fetch follow artist', error);
+  const fetchTrendingPlaylists = async () => {
+    try {
+      const response = await GetPlaylistsForYou(queryParam.playlistTrending);
+      if (response.success) {
+        setDataForYou((prev) => ({
+          ...prev,
+          playlistsTrending: response.data
+        }));
+        setIsLoading((prev) => ({ ...prev, playlistTrending: false }));
       }
+    } catch (error) {
+      console.log('Error fetching trending playlists: ', error);
     }
+  };
 
-    const fetchHistory = async () => {
-      const [responseListen, responseSearch] = await Promise.all([
-        GetListeningHistory(),
-        GetSearchHistory()
-      ]);
-      if (responseSearch.success) {
-        setSearchHistory(responseSearch.data);
+  const fetchTrendingAlbums = async () => {
+    try {
+      const response = await GetAlbumsForYou(queryParam.albumTrending);
+      if (response.success) {
+        setDataForYou((prev) => ({
+          ...prev,
+          albumsTrending: response.data
+        }));
+        setIsLoading((prev) => ({ ...prev, albumsTrending: false }));
       }
-      if (responseListen.success) {
-        setListenHistory(responseListen.data);
-      }
+    } catch (error) {
+      console.log('Error fetching trending albums: ', error);
     }
+  };
 
+  const fetchArtistsForYou = async () => {
+    try {
+      const response = await GetArtistsForYou({
+        artistNames: queryParam.artistNames,
+        genres: queryParam.genres
+      });
+      if (response.success) {
+        setDataForYou((prev) => ({
+          ...prev,
+          artistsForYou: response.data
+        }));
+        setIsLoading((prev) => ({ ...prev, artistsForYou: false }));
+      }
+    } catch (error) {
+      console.log('Error fetching artists: ', error);
+    }
+  };
 
+  const fetchFavoritesItem = async () => {
+    try {
+      const response = await GetFavoriteItemsGrouped();
+      if (response.success) {
+        setFavoriteItems(response.data);
+      }
+    } catch (error) {
+      console.log('errorr fetch favorites: ', error);
+    }
+  }
 
-    fetchPlaylistsForYou()
-    fetchAlbumsForYou()
-    fetchTrendingPlaylists()
-    fetchTrendingAlbums()
-    fetchArtistsForYou()
-    fetchMyPlaylists();
-    fetchFavoritesItem();
-    fetchArtistFollowed();
-    fetchHistory();
-  }, []);
+  const fetchArtistFollowed = async () => {
+    try {
+      const response = await GetArtistFollowed();
+      if (response.success) {
+        setArtistFollowed(response.data);
+      }
+    } catch (error) {
+      console.log('error fetch follow artist', error);
+    }
+  }
+
+  const fetchMyPlaylists = async () => {
+    try {
+      const response = await GetMyPlaylists();
+      if (response.success) {
+        console.log('response data ui my playlist: ', response.data)
+        setMyPlaylists(response.data);
+      } else {
+        setMyPlaylists([]);
+      }
+    } catch (error) {
+      console.log("Lỗi khi lấy playlist của tôi:", error);
+    }
+  }
+
+  const fetchHistory = async () => {
+    const [responseListen, responseSearch] = await Promise.all([
+      GetListeningHistory(),
+      GetSearchHistory()
+    ]);
+    if (responseSearch.success) {
+      setSearchHistory(responseSearch.data);
+    } else {
+      setSearchHistory([]);
+    }
+    if (responseListen.success) {
+      setListenHistory(responseListen.data);
+    } else {
+      setListenHistory([]);
+    }
+  }
 
   const fetchTracks = async (playlist) => {
-    console.log(playlist)
     if (playlist?.spotifyId) {
       const response = await GetTracksByPlaylistId({
         playlistId: playlist?.spotifyId,
@@ -369,10 +321,28 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
+    fetchPlaylistsForYou()
+    fetchAlbumsForYou()
+    fetchTrendingPlaylists()
+    fetchTrendingAlbums()
+    fetchArtistsForYou()
+  }, []);
+
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      fetchMyPlaylists();
+      fetchHistory();
+      fetchFavoritesItem();
+      fetchArtistFollowed();
+    }
+  }, [user, isLoggedIn]);
+
+  useEffect(() => {
     if (dataForYou.playlistsForYou[0]) {
       fetchTracks(dataForYou.playlistsForYou[0]);
     }
   }, [dataForYou.playlistsForYou[0]]);
+
   return (
     <SafeAreaView
       className={`flex-1 pt-4 ${colorScheme === "dark" ? "bg-black" : "bg-white"} `}
@@ -380,7 +350,7 @@ export default function HomeScreen() {
     >
       <View className={`fixed flex-row justify-between items-center mx-5 mb-4 `}>
         <Text className="text-black dark:text-white text-2xl font-bold">
-          Hi, {String(user?.fullName || user?.username)} 👋
+          Hi, {isGuest ? "Guest" : String(user?.fullName || user?.username)} 👋
         </Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative">

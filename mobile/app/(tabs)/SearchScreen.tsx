@@ -92,6 +92,8 @@ export default function SearchScreen() {
   const isDark = colorScheme === "dark";
 
   const user = useAuthStore((state) => state.user);
+  const isGuest = useAuthStore((state) => state.isGuest);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
@@ -101,6 +103,7 @@ export default function SearchScreen() {
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
   const setQueue = usePlayerStore((state) => state.setQueue);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
 
   const historySavedRef = useRef(null);
@@ -167,25 +170,28 @@ export default function SearchScreen() {
   const handleSearchSubmit = async (query = searchText) => {
     if (!query.trim()) return;
 
+
     setSearchText(query);
     setIsSearching(true);
     setLoading(true);
     Keyboard.dismiss();
 
-    console.log('query', query)
     try {
-      const response = await SaveSearchHistory(query);
-      if (response && response.success) {
-        if (response.updated) {
-          console.log("Search history synced with server.");
-        } else {
-          await saveToHistory({
-            id: response.data.id,
-            type: "Query",
-            title: query,
-            subtitle: `Đã tìm kiếm "${query}"`,
-            searchedAt: new Date(response.data.searchedAt).toLocaleDateString(),
-          });
+
+      if (!isGuest) {
+        const response = await SaveSearchHistory(query);
+        if (response && response.success) {
+          if (response.updated) {
+            console.log("Search history synced with server.");
+          } else {
+            await saveToHistory({
+              id: response.data.id,
+              type: "Query",
+              title: query,
+              subtitle: `Đã tìm kiếm "${query}"`,
+              searchedAt: new Date(response.data.searchedAt).toLocaleDateString(),
+            });
+          }
         }
       }
 
@@ -238,7 +244,6 @@ export default function SearchScreen() {
           break;
         }
         case "User": {
-          console.log(5)
           const userRes = await SearchUsers({ username: query, fullName: query, email: query });
           results.users = userRes.data || [];
           break;
@@ -320,6 +325,7 @@ export default function SearchScreen() {
   };
 
   const saveToHistory = async (item: any) => {
+    if (isGuest) return;
     try {
       const history = [...recentSearches];
       const existingIndex = history.findIndex(
@@ -354,7 +360,6 @@ export default function SearchScreen() {
 
   const removeSearchHistoryItem = async (itemId) => {
     try {
-      console.log('item id: ', itemId)
       const response = await RemoveItemSearchHistory(itemId);
       if (response.success) {
         const updatedHistory = recentSearches.filter(
@@ -370,6 +375,7 @@ export default function SearchScreen() {
 
   const saveTrackToListeningHistory = async (track, duration) => {
     if (!track) return;
+    if (isGuest) return;
     if (duration > 15) {
       const payload = {
         itemType: 'track',
@@ -382,9 +388,10 @@ export default function SearchScreen() {
 
       if (response.success) {
         if (response.updated) {
-          console.log('Cập nhật lịch sử nghe thành công:', response.data.id);
+          console.log('Cập nhật lịch sử nghe track from search thành công:', response.data.id);
         } else {
-          console.log('Tạo mới lịch sử nghe thành công:', response.data.id);
+          console.log('Tạo mới lịch sử nghe track from search thành công:', response.data.id);
+          addListenHistory(response.data);
         }
       } else {
         console.error('Lưu lịch sử thất bại, reset cờ.');
@@ -395,9 +402,7 @@ export default function SearchScreen() {
     }
   }
 
-
   const handleItemPress = useCallback((item) => {
-    console.log('item: ', item)
     const itemType = item.type || "Track";
 
     switch (itemType) {
@@ -419,7 +424,6 @@ export default function SearchScreen() {
         navigate("ArtistScreen", { artist: JSON.stringify(item) });
         break;
       case "User":
-        console.log(item.id)
         if (user && item.id === user?.id) {
           navigate("Profile");
         } else {
@@ -439,40 +443,44 @@ export default function SearchScreen() {
     inputRef.current?.focus();
   };
 
+  const fetchSearchHistory = async () => {
+    try {
+      for (const item of searchHistory) {
+        setRecentSearches((prev) => [...prev, {
+          id: item.id,
+          type: "Query",
+          title: item.query,
+          subtitle: `Đã tìm kiếm "${item.query}"`,
+          searchedAt: new Date(item?.searchedAt).toLocaleDateString(),
+        }]);
+      }
+    } catch (error) {
+      console.error("Failed to load search history:", error);
+    }
+  };
+
+  const fetchTrendingArtists = async () => {
+    try {
+      const response = await GetArtistsForYou({ artistNames: [], genres: ['pop', 'K-pop', 'v-pop'] });
+      setTrendingArtists(response.data);
+    } catch (error) {
+      console.error("Failed to load trending artists:", error);
+    }
+  };
+
   useEffect(() => {
-    const loadSearchHistory = async () => {
-      try {
-        console.log(searchHistory)
-        for (const item of searchHistory) {
-          setRecentSearches((prev) => [...prev, {
-            id: item.id,
-            type: "Query",
-            title: item.query,
-            subtitle: `Đã tìm kiếm "${item.query}"`,
-            searchedAt: new Date(item?.searchedAt).toLocaleDateString(),
-          }]);
-        }
-      } catch (error) {
-        console.error("Failed to load search history:", error);
-      }
-    };
-
-    const loadTrendingArtists = async () => {
-      try {
-        const response = await GetArtistsForYou({ artistNames: [], genres: ['POP', 'HIP-HOP'] });
-        setTrendingArtists(response.data);
-      } catch (error) {
-        console.error("Failed to load trending artists:", error);
-      }
-    };
-
-    loadSearchHistory();
-    loadTrendingArtists();
+    fetchTrendingArtists();
   }, []);
 
   useEffect(() => {
+    if (user && isLoggedIn) {
+      fetchSearchHistory();
+    }
+  }, [user?.id, isLoggedIn]);
+
+  useEffect(() => {
     historySavedRef.current = null;
-  }, [currentTrack]);
+  }, [currentTrack?.spotifyId]);
 
   useEffect(() => {
     const trackId = currentTrack?.spotifyId || currentTrack?.id;
@@ -482,7 +490,7 @@ export default function SearchScreen() {
       console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
       saveTrackToListeningHistory(currentTrack, playbackPosition);
     }
-  }, [playbackPosition, currentTrack]);
+  }, [playbackPosition, currentTrack?.spotifyId]);
 
   const renderSearchItem = ({ item, isSuggestion = false }) => {
     let iconName = "musical-notes";
@@ -491,8 +499,6 @@ export default function SearchScreen() {
     else if (item.type === "Playlist") iconName = "list";
     else if (item.type === "User") iconName = "people-circle";
     else if (item.type === "Query") iconName = isSuggestion ? "search-outline" : "time";
-
-    console.log('id', item.id)
 
     return (
       <TouchableOpacity
@@ -752,11 +758,18 @@ export default function SearchScreen() {
                 ) : (
                   <View className="">
                     {
-                      (searchText.length > 0 ? querySuggestions : recentSearches).map((item) => (
+
+                      isGuest && searchText.length === 0 ? (
+                        <Text
+                          className={`text-${isDark ? "gray-400" : "gray-600"
+                            } text-center mt-10`}>
+                          Tài khoản khách không có lịch sử tìm kiếm.
+                        </Text>
+                      ) : ((searchText.length > 0 ? querySuggestions : recentSearches).map((item) => (
                         <View key={item.id}>
                           {renderSearchItem({ item, isSuggestion: searchText.length > 0 })}
                         </View>
-                      ))
+                      )))
                     }
                     <View>
                       {recentSearches.length > 0 && !searchText && (

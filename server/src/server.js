@@ -72,15 +72,9 @@ io.use(async (socket, next) => {
   }
 });
 
-// Khởi tạo các sự kiện chat sau khi xác thực
 chatEvents(io);
 
-// ==========================================================
-// CẤU HÌNH EXPRESS MIDDLEWARE
-// ==========================================================
 app.set("trust proxy", true);
-
-// Middleware CORS cho Express
 app.use(
   cors({
     origin: [
@@ -103,42 +97,27 @@ app.use(
 );
 
 // --- KHAI BÁO ROUTES Ở PHẠM VI TOÀN CỤC ---
-
-// Danh sách các route yêu cầu xác thực và không yêu cầu xác thực
 const protectedRoutes = [
   'favorites', // Yêu thích
   'histories', // Lịch sử nghe nhạc
   'notifications', // Thông báo
   'playlists', // Playlist cá nhân
-  'comments', // Comment (cần đăng nhập mới comment được)
   'follows', // Theo dõi người dùng, nghệ sĩ
   'genres', // Xem thể loại nhạc
   'artists', // Xem thông tin nghệ sĩ
   'albums', // Xem album
-  // 'search', // Tìm kiếm công khai
-  // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
   "conversations",
   "upload", // Upload hình ảnh, file
-  "music",
   "tracks", // Xem bài hát (public), upload bài hát (private)
-  // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
 ];
-// const protectedRoutes = ['albums', 'songs', 'playlists', 'genres', 'follows', 'notifications', 'recommendations', 'history', 'downloads', 'conversations'];
-const publicRoutes = ["auth", "users", "posts"]; // posts được xử lý riêng
+const publicRoutes = ["auth", "users", "posts", "music", "comments"]; // posts được xử lý riêng
 
 // 1. Xử lý các route yêu cầu authentication bắt buộc
-// Setup public routes
 publicRoutes.forEach((route) => {
   app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
 });
 
-// 2. TẠO NGOẠI LỆ CHO GET /posts (LOAD FEED CÔNG KHAI)
-// Dòng này đảm bảo chỉ request GET /posts được xử lý mà không cần Token
-app.get(`${API_PREFIX}/posts`, require("./routes/postsRoute"));
-
-// 3. Setup protected routes với authentication bắt buộc
 protectedRoutes.forEach((route) => {
-  // Các route này cần authenticateToken toàn cục
   app.use(
     `${API_PREFIX}/${route}`,
     authenticateToken,
@@ -146,14 +125,11 @@ protectedRoutes.forEach((route) => {
   );
 });
 
-// 2. Xử lý các route public/ đặc biệt
-publicRoutes.forEach((route) => {
-  // Posts cần xử lý đặc biệt vì nó chứa cả public (GET /) và private (POST, PUT, DELETE, GET /mine)
-  // Chúng ta sẽ gọi router trực tiếp mà không có middleware toàn cục nào
-  app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
-});
+// // 2. Xử lý các route public/ đặc biệt
+// publicRoutes.forEach((route) => {
+//   app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
+// });
 
-// 4. Admin metrics routes
 app.use(
   `${API_PREFIX}/admin/metrics`,
   authenticateToken,
@@ -181,5 +157,4 @@ async function startServer() {
   }
 }
 
-// Gọi hàm khởi động server
 startServer();

@@ -16,10 +16,11 @@ import {
 import Icon from "react-native-vector-icons/Feather";
 import * as ImagePicker from "expo-image-picker";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
-import { createNewCover } from "@/services/coverApi";
+import { createNewCover } from "@/services/coverService";
 import { fetchTracks } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
 import CustomButton from "@/components/custom/CustomButton";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 interface UploadCoverModalProps {
   visible: boolean;
@@ -41,6 +42,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
   onCoverPosted,
 }) => {
   const colorScheme = useColorScheme();
+  const { error, info, warning, confirm, success } = useCustomAlert();
   const [selectedSong, setSelectedSong] = useState<Track | null>(null);
   const [coverText, setCoverText] = useState("");
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
@@ -113,32 +115,27 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         return;
       }
 
-      const fileUrls = uploadResult.data.data.map((item: any) => item.url);
+      const fileUrls = uploadResult.data.data.map((item) => item.url);
 
       // Tạo cover
-      const coverResult = await createNewCover(
+      const response = await createNewCover(
         coverText,
         fileUrls,
         selectedSong.id
       );
-      if (coverResult.status === "error") {
-        Alert.alert(
-          "Lỗi Tạo Cover",
-          `Không thể tạo cover: ${coverResult.message}`
-        );
+
+      if (!response || (response as any).success === false) {
+        const resp = response as any;
+        error(`Không thể tạo cover: ${resp.message || "Lỗi không xác định"}`);
         return;
       }
 
-      Alert.alert("Thành công", "Cover đã được đăng!");
+      success("Cover đã được đăng!");
       onCoverPosted?.();
       handleClose();
-    } catch (error) {
-      console.error("Lỗi không mong muốn khi đăng cover:", error);
-      const errorMessage =
-        error.response?.data?.error ||
-        (error as Error).message ||
-        "Lỗi không xác định";
-      Alert.alert("Lỗi", `Không thể đăng cover: ${errorMessage}`);
+    } catch (err) {
+      console.error("Lỗi không mong muốn khi đăng cover:", err);
+      error(`Không thể đăng cover: ${err.response?.data?.message || (err as Error).message || "Lỗi không xác định"}`);
     } finally {
       setIsUploading(false);
     }
@@ -163,11 +160,10 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
     <View className="flex-1">
       <TouchableOpacity
         onPress={() => setShowSongSelector(true)}
-        className={`flex-row items-center border rounded-xl p-4 mb-4 ${
-          selectedSong
-            ? "border-green-500 bg-green-500/10"
-            : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#171431]"
-        }`}
+        className={`flex-row items-center border rounded-xl p-4 mb-4 ${selectedSong
+          ? "border-green-500 bg-green-500/10"
+          : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#171431]"
+          }`}
       >
         <Icon
           name="music"
@@ -192,11 +188,10 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
       {/* Chọn media - Thiết kế dạng thẻ nổi bật */}
       <TouchableOpacity
         onPress={handleSelectMedia}
-        className={`flex-row items-center border rounded-xl p-4 mb-4 ${
-          selectedMedia
-            ? "border-indigo-500 bg-indigo-500/10"
-            : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#171431]"
-        }`}
+        className={`flex-row items-center border rounded-xl p-4 mb-4 ${selectedMedia
+          ? "border-indigo-500 bg-indigo-500/10"
+          : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#171431]"
+          }`}
       >
         <Icon
           name="video"
@@ -239,11 +234,10 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         onPress={handlePostCover}
         variant="primary"
         size="large"
-        className={`${
-          isUploading || !selectedSong || !selectedMedia
-            ? "bg-green-300 dark:bg-green-700"
-            : "bg-green-500 dark:bg-green-600"
-        }`}
+        className={`${isUploading || !selectedSong || !selectedMedia
+          ? "bg-green-300 dark:bg-green-700"
+          : "bg-green-500 dark:bg-green-600"
+          }`}
       />
     </View>
   );

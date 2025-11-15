@@ -83,40 +83,40 @@ export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
       // === STATE ===
-      currentTrack: null,
-      currentPlaylist: null,
-      currentAlbum: null,
       listTrack: [],
       playlistTracksPlaying: [],
       myPlaylists: [],
+      queue: [],
+      volume: 1,
       currentIndex: -1,
       playbackPosition: 0,
       tabBarHeight: 0,
-      queue: [],
+      currentTime: 0,
+      duration: 0,
+      currentTrack: null,
+      currentPlaylist: null,
+      currentAlbum: null,
       seekTrigger: null,
       targetSeekMs: null,
       isLastIndex: false,
       isPlaying: false,
-      volume: 1,
-      currentTime: 0,
-      duration: 0,
       isShuffled: false,
-      repeatMode: 'none',
       isLoading: false,
       isMiniPlayerVisible: false,
       uiOverlayOpen: false,
+      repeatMode: 'none',
 
       // === BASIC ACTIONS ===
       setCurrentTrack: (track) => {
         const { listTrack } = get();
-        const index = listTrack.findIndex(s => s.id === track.id);
+        const index = listTrack.findIndex(s => s?.id === track?.id) || -1;
         set({
           currentTrack: track,
           currentIndex: index !== -1 ? index : -1,
           currentTime: 0,
           seekTrigger: Date.now(),
           playbackPosition: 0,
-          isLastIndex: index === listTrack.length - 1,
+          isLastIndex: index === listTrack?.length - 1,
         });
       },
       setCurrentPlaylist: (playlist) => {
@@ -139,7 +139,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
       addToMyPlaylists: (playlist) => {
         const { myPlaylists } = get();
-        const existingIndex = myPlaylists.findIndex(p => p.id === playlist.id);
+        const existingIndex = myPlaylists.findIndex(p => p?.id === playlist?.id);
         if (existingIndex !== -1) return;
         set({ myPlaylists: [...myPlaylists, playlist] });
       },
@@ -177,7 +177,7 @@ export const usePlayerStore = create<PlayerState>()(
         const { myPlaylists } = get();
         const updatedPlaylists = myPlaylists.map(p => {
           console.log(p, playlistId);
-          if (p.id === playlistId) {
+          if (p?.id === playlistId) {
             return {
               ...p,
               totalTracks: p.totalTracks + total,
@@ -190,7 +190,7 @@ export const usePlayerStore = create<PlayerState>()(
       updateSharedCountPlaylist: (playlistId) => {
         const { myPlaylists } = get();
         const updatedPlaylists = myPlaylists.map(p => {
-          if (p.id === playlistId) {
+          if (p?.id === playlistId) {
             return {
               ...p,
               sharedCount: (p.sharedCount || 0) + 1,
@@ -202,12 +202,12 @@ export const usePlayerStore = create<PlayerState>()(
       },
       updateMyPlaylists: (playlist) => {
         const { myPlaylists } = get();
-        const updatedPlaylists = myPlaylists.map(p => p.id === playlist.id ? playlist : p);
+        const updatedPlaylists = myPlaylists.map(p => p?.id === playlist?.id ? playlist : p);
         set({ myPlaylists: updatedPlaylists });
       },
       updatePrivacy: (playlistId) => {
         const { currentPlaylist, myPlaylists } = get();
-        if (currentPlaylist && currentPlaylist.id === playlistId) {
+        if (currentPlaylist && currentPlaylist?.id === playlistId) {
           set({
             currentPlaylist: {
               ...currentPlaylist,
@@ -216,7 +216,7 @@ export const usePlayerStore = create<PlayerState>()(
           });
         }
         const updatedPlaylists = myPlaylists.map(p => {
-          if (p.id === playlistId) {
+          if (p?.id === playlistId) {
             return {
               ...p,
               isPublic: !p.isPublic,
@@ -228,12 +228,12 @@ export const usePlayerStore = create<PlayerState>()(
       },
       removeFromMyPlaylists: (playlistId) => {
         const { myPlaylists } = get();
-        const newPlaylists = myPlaylists.filter(p => p.id !== playlistId);
+        const newPlaylists = myPlaylists.filter(p => p?.id !== playlistId);
         set({ myPlaylists: newPlaylists });
       },
       removeTrackFromPlaylist: (playlistTrackId) => {
         const { listTrack } = get();
-        const newTracks = listTrack.filter(t => t.playlistTrack.id !== playlistTrackId);
+        const newTracks = listTrack.filter(t => t.playlistTrack?.id !== playlistTrackId);
         set({ listTrack: newTracks });
       },
       playPlaylist: (tracks, startIndex = 0) =>
@@ -255,47 +255,6 @@ export const usePlayerStore = create<PlayerState>()(
           playbackPosition: 0,
           queue: [],
         }),
-
-      // playNext: () => {
-      //   const { queue, playlistTracksPlaying, currentIndex } = get();
-      //   if (playlistTracksPlaying.length === 0) return;
-      //   if (queue.length === 0) {
-      //     set({
-      //       currentTrack: playlistTracksPlaying[0],
-      //       currentIndex: 0,
-      //       isPlaying: true,
-      //       playbackPosition: 0,
-      //       queue: playlistTracksPlaying.filter(t => t.id !== playlistTracksPlaying[0].id),
-      //       isLastIndex: false,
-      //     });
-      //   } else {
-      //     const nextIndex = (currentIndex + 1) % playlistTracksPlaying.length;
-      //     set({
-      //       currentIndex: nextIndex,
-      //       currentTrack: playlistTracksPlaying[nextIndex],
-      //       isPlaying: true,
-      //       playbackPosition: 0,
-      //       queue: queue.filter(t => t.id !== playlistTracksPlaying[nextIndex].id),
-      //       isLastIndex: nextIndex === playlistTracksPlaying.length - 1,
-      //     });
-      //   }
-      // },
-
-      // playPrevious: () => {
-      //   const { playlistTracksPlaying, currentIndex } = get();
-      //   if (playlistTracksPlaying.length === 0) return;
-      //   const prevIndex = (currentIndex - 1 + playlistTracksPlaying.length) % playlistTracksPlaying.length;
-      //   if (prevIndex < 0 || prevIndex >= playlistTracksPlaying.length) return;
-      //   if (currentIndex === 0) return;
-      //   set({
-      //     currentIndex: prevIndex,
-      //     currentTrack: playlistTracksPlaying[prevIndex],
-      //     isPlaying: true,
-      //     playbackPosition: 0,
-      //     queue: playlistTracksPlaying.filter((_, index) => index > prevIndex),
-      //     isLastIndex: false,
-      //   });
-      // },
       playNext: () => {
         const { queue, playlistTracksPlaying, currentIndex, isShuffled, repeatMode } = get();
         if (playlistTracksPlaying.length === 0) return;
@@ -306,7 +265,7 @@ export const usePlayerStore = create<PlayerState>()(
             const newQueue = queue.slice(1);
             // Tìm index của track mới trong playlist GỐC
             const newCurrentIndex = playlistTracksPlaying.findIndex(t =>
-              (t.spotifyId && t.spotifyId === nextTrack.spotifyId) || (t.id && t.id === nextTrack.id)
+              (t.spotifyId && t.spotifyId === nextTrack.spotifyId) || (t?.id && t?.id === nextTrack?.id)
             );
 
             set({
@@ -324,7 +283,7 @@ export const usePlayerStore = create<PlayerState>()(
               // Nếu lặp lại tất cả, xáo trộn lại toàn bộ
               const { currentTrack } = get();
               const otherTracks = playlistTracksPlaying.filter(t =>
-                (t.spotifyId ? t.spotifyId !== currentTrack?.spotifyId : t.id !== currentTrack?.id)
+                (t.spotifyId ? t.spotifyId !== currentTrack?.spotifyId : t?.id !== currentTrack?.id)
               );
               for (let i = otherTracks.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -335,7 +294,7 @@ export const usePlayerStore = create<PlayerState>()(
                 const nextTrack = otherTracks[0];
                 const newQueue = otherTracks.slice(1);
                 const newCurrentIndex = playlistTracksPlaying.findIndex(t =>
-                  (t.spotifyId && t.spotifyId === nextTrack.spotifyId) || (t.id && t.id === nextTrack.id)
+                  (t.spotifyId && t.spotifyId === nextTrack.spotifyId) || (t?.id && t?.id === nextTrack?.id)
                 );
                 set({
                   currentTrack: nextTrack,
@@ -423,7 +382,7 @@ export const usePlayerStore = create<PlayerState>()(
 
         // Tìm vị trí của track được nhấn trong 'queue' HIỆN TẠI
         const trackIndexInQueue = queue.findIndex(t =>
-          (t.spotifyId && t.spotifyId === track.spotifyId) || (t.id && t.id === track.id)
+          (t?.spotifyId && t?.spotifyId === track?.spotifyId) || (t?.id && t?.id === track?.id)
         );
 
         let newQueue = [];
@@ -439,7 +398,7 @@ export const usePlayerStore = create<PlayerState>()(
 
         // Tìm index của track trong playlist GỐC để cập nhật currentIndex
         const newCurrentIndex = playlistTracksPlaying.findIndex(t =>
-          (t.spotifyId && t.spotifyId === track.spotifyId) || (t.id && t.id === track.id)
+          (t?.spotifyId && t?.spotifyId === track?.spotifyId) || (t?.id && t?.id === track?.id)
         );
 
         set({
@@ -489,10 +448,10 @@ export const usePlayerStore = create<PlayerState>()(
         }
 
         const otherTracks = playlistTracksPlaying.filter(t => {
-          if (currentTrack.spotifyId) {
-            return t.spotifyId !== currentTrack.spotifyId;
+          if (currentTrack?.spotifyId) {
+            return t?.spotifyId !== currentTrack?.spotifyId;
           }
-          return t.id !== currentTrack.id;
+          return t?.id !== currentTrack?.id;
         });
 
         for (let i = otherTracks.length - 1; i > 0; i--) {
@@ -509,7 +468,7 @@ export const usePlayerStore = create<PlayerState>()(
       unShuffleQueue: () => {
         const { playlistTracksPlaying, currentTrack } = get();
         if (!currentTrack) return;
-        const newCurrentIndex = playlistTracksPlaying.findIndex(t => t.id === currentTrack.id);
+        const newCurrentIndex = playlistTracksPlaying.findIndex(t => t?.id === currentTrack?.id);
         set({
           queue: playlistTracksPlaying.filter((_, index) => index > newCurrentIndex),
           isShuffled: false,
@@ -518,8 +477,8 @@ export const usePlayerStore = create<PlayerState>()(
       },
       removeTrackFromQueue: (tracks) => {
         const { queue } = get();
-        const trackIdsToRemove = tracks.map(t => t.id);
-        const newQueue = queue.filter(t => !trackIdsToRemove.includes(t.id));
+        const trackIdsToRemove = tracks.map(t => t?.id);
+        const newQueue = queue.filter(t => !trackIdsToRemove.includes(t?.id));
         set({ queue: newQueue });
       },
       clearQueue: () => {

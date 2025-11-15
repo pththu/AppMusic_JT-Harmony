@@ -2,7 +2,7 @@
 
 import { useTheme } from "@/components/ThemeContext";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
 interface SettingItemProps {
@@ -19,14 +19,15 @@ export default function SettingItem({
   rightComponent,
 }: SettingItemProps) {
   // Lấy theme hiện tại
-  const { theme } = useTheme(); 
+  // const { theme } = useTheme(); 
+  const colorScheme = useColorScheme();
 
   let textColor = "black";
   if (color) {
     textColor = color; // Ưu tiên prop 'color' nếu có (ví dụ: 'red')
-  } else if (theme === "dark") {
+  } else if (colorScheme === "dark") {
     textColor = "white"; // Nếu Dark Mode, dùng màu trắng
-  } 
+  }
   // Logic tính toán màu cho Icon mũi tên (đã đúng)
   let iconColor = textColor; // Tận dụng màu chữ đã tính toán cho icon
 
@@ -37,7 +38,7 @@ export default function SettingItem({
       activeOpacity={0.7}
       disabled={!!rightComponent}
     >
-      <Text 
+      <Text
         style={{ color: textColor }}
         className={"text-base font-medium"}
       >
@@ -47,7 +48,6 @@ export default function SettingItem({
         {rightComponent ? (
           rightComponent
         ) : (
-          // Áp dụng iconColor đã tính toán
           <Icon name="chevron-forward" size={24} color={iconColor} />
         )}
       </View>

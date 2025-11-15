@@ -5,10 +5,17 @@ import { usePlayerStore } from "@/store/playerStore";
 import { GetVideoId } from "@/services/musicService";
 import { SaveToListeningHistory } from "@/services/historiesService";
 import { AppState } from "react-native";
+import { useHistoriesStore } from "@/store/historiesStore";
+import useAuthStore from "@/store/authStore";
+import { useSegments } from "expo-router";
+
+const GUEST_SONG_PLAY_LIMIT = 3;
 
 export default function GlobalPlayer() {
   const playerRef = useRef(null);
-
+  const segments = useSegments();
+  const isGuest = useAuthStore((state) => state.isGuest);
+  const guestSongPlayCount = useAuthStore((state) => state.guestSongPlayCount);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const playbackPosition = usePlayerStore((state) => state.playbackPosition);
@@ -17,38 +24,86 @@ export default function GlobalPlayer() {
   const seekTrigger = usePlayerStore((state) => state.seekTrigger);
   const targetSeekMs = usePlayerStore((state) => state.targetSeekMs); // Bình luận theo mốc thời gian
   const uiOverlayOpen = usePlayerStore((state) => state.uiOverlayOpen); // tránh giật khi mở TrackCommentsModal
+  const incrementGuestSongPlayCount = useAuthStore((state) => state.incrementGuestSongPlayCount);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const setPlaybackPosition = usePlayerStore((state) => state.setPlaybackPosition);
   const setDuration = usePlayerStore((state) => state.setDuration);
   const setIsPlaying = usePlayerStore((state) => state.setIsPlaying);
   const updateCurrentTrack = usePlayerStore((state) => state.updateCurrentTrack);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const setTargetSeekMs = usePlayerStore((state) => state.setTargetSeekMs);
 
+  const latestPositionRef = useRef(0);
+  const historySavedRef = useRef(null);
   const appState = useRef(AppState.currentState);
+
   const [videoIdTemp, setVideoIdTemp] = useState('');
 
-  const latestPositionRef = useRef(0);
+  const isAuthScreen = segments[0] === "(auth)";
+
+  const isVisible = !!currentTrack && !isAuthScreen;
+
+  const saveTrackToListeningHistory = async (track, duration) => {
+    if (isGuest) {
+      console.log("Guest user - not saving listening history.");
+      return;
+    }
+    console.log('duration: ', duration)
+    if (!track) return;
+    if (duration < 1000) {
+      duration *= 1000; // Chuyển sang mili-giây
+    }
+    if (duration > 15000) {
+      const payload = {
+        itemType: 'track',
+        itemId: track?.id,
+        itemSpotifyId: track?.spotifyId,
+        durationListened: duration
+      };
+
+      const response = await SaveToListeningHistory(payload);
+
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe track from global thành công:', response.data.id);
+        } else {
+          console.log('Tạo mới lịch sử nghe track from global thành công:', response.data.id);
+          addListenHistory(response.data);
+        }
+      } else {
+        console.error('Lưu lịch sử thất bại, reset cờ.');
+        historySavedRef.current = null;
+      }
+    } else {
+      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
+    }
+  }
+
   useEffect(() => {
     latestPositionRef.current = playbackPosition;
   }, [playbackPosition]);
 
-  const handleSaveHistory = (track, durationInSeconds) => {
-    if (!track) return;
-    const durationMs = durationInSeconds * 1000; // Chuyển sang mili-giây
-
-    // Chỉ lưu nếu đã nghe > 15 giây
-    if (durationMs > 15000) {
-      console.log(`SAVING HISTORY: ${track.name} at ${durationMs}ms`);
-      // "Fire-and-forget" - Chạy ngầm, không cần await
-      SaveToListeningHistory({
-        itemType: 'track',
-        itemId: track?.id,
-        itemSpotifyId: track?.spotifyId,
-        durationListened: durationMs
-      }).catch(err => console.error("SaveToListeningHistory failed:", err));
+  const handleSaveHistory = async (track, duration) => {
+    if (duration > 15) { // Chỉ lưu nếu nghe hơn 15s
+      if (isGuest) {
+        console.log("Guest user - not saving listening history.");
+        return;
+      };
+      console.log(`SAVING HISTORY: ${track.name} at ${duration}s`);
+      try {
+        const response = SaveToListeningHistory({
+          itemType: 'track',
+          itemId: track?.id,
+          itemSpotifyId: track?.spotifyId,
+          durationListened: duration
+        })
+        console.log(response)
+      } catch (err) {
+        console.error("SaveToListeningHistory failed:", err)
+      }
     } else {
-      console.log(`NOT SAVING: ${track.name} - duration ${durationMs}ms <= 15000ms`);
+      console.log(`NOT SAVING: ${track.name} - duration ${duration}s <= 15s`);
     }
   };
 
@@ -62,14 +117,11 @@ export default function GlobalPlayer() {
     const latestState = usePlayerStore.getState();
     if (state === "ended") {
       try {
-        // Lấy tổng thời lượng bài hát
-        const duration = await playerRef.current?.getDuration();
-        // Lưu lại trước khi chuyển bài
-        handleSaveHistory(latestState.currentTrack, duration || latestState.playbackPosition);
+        const duration = await playerRef.current?.getDuration(); // Lấy tổng thời lượng bài hát
+        handleSaveHistory(latestState.currentTrack, duration || latestState.playbackPosition); // Lưu lại trước khi chuyển bài
       } catch (e) {
         console.log("Lỗi khi lấy duration lúc 'ended'", e);
-        // Fallback: lưu vị trí cuối cùng biết được
-        handleSaveHistory(latestState.currentTrack, latestState.playbackPosition);
+        handleSaveHistory(latestState.currentTrack, latestState.playbackPosition); // Fallback: lưu vị trí cuối cùng biết được
       }
 
       if (repeatMode === "one") {
@@ -99,7 +151,6 @@ export default function GlobalPlayer() {
 
   useEffect(() => {
     let intervalId = null;
-
     if (isPlaying && !uiOverlayOpen) {
       intervalId = setInterval(async () => {
         if (playerRef.current) {
@@ -126,14 +177,11 @@ export default function GlobalPlayer() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", async (nextAppState) => {
-      if (
-        appState.current.match(/active/) && // Nếu app đang active
-        nextAppState.match(/inactive|background/) // Và sắp bị inactive/background
-      ) {
+      // Nếu app đang active và sắp bị inactive/background
+      if (appState.current.match(/active/) && nextAppState.match(/inactive|background/)) {
+        const { isPlaying, setIsPlaying } = usePlayerStore.getState();
         if (playerRef.current && isPlaying) {
           try {
-            // const currentTime = await playerRef.current.getCurrentTime();
-            // setPlaybackPosition(currentTime); // Lưu vị trí lại
             setIsPlaying(!isPlaying);
           } catch (e) {
             console.error("Lỗi khi lưu playback position:", e);
@@ -146,168 +194,41 @@ export default function GlobalPlayer() {
     return () => {
       subscription.remove();
     };
-  }, [isPlaying, setIsPlaying]);
+  }, []);
 
-  // useEffect(() => {
-  //   const trackForThisEffect = currentTrack;
-  //   console.log('currentTrack global: ', currentTrack);
-  //   const updateVideoId = async () => {
-  //     if (!currentTrack?.videoId) {
-  //       console.log('Đang tìm video id')
-  //       try {
-  //         const response = await GetVideoId(currentTrack?.spotifyId);
-  //         console.log('response ui: ', response)
-  //         if (response.success) {
-  //           currentTrack.videoId = response.data;
-  //           console.log(response.data)
-  //           updateCurrentTrack(currentTrack)
-  //           setVideoIdTemp(response.data);
-  //           return true;
-  //         }
-  //         console.log('aaaaaaaaa')
-  //       } catch (err) {
-  //         console.log(err)
-  //         return false;
-  //       }
-  //     } else {
-  //       setVideoIdTemp(currentTrack?.videoId);
-  //     }
-  //     return false;
-  //   }
-  //   if (currentTrack) {
-  //     updateVideoId();
-  //   }
-
-  //   if (currentTrack && videoIdTemp && playerRef.current) {
-  //     playerRef.current.seekTo(0, true);
-  //     setDuration(0);
-  //     let intervalId = null;
-  //     let retries = 0;
-  //     const maxRetries = 10;
-  //     const pollInterval = 500;
-  //     setDuration(currentTrack?.duration * 0.001)
-
-  //     const tryGetDuration = async () => {
-  //       if (!playerRef.current) {
-  //         console.log('lỗi trình phát')
-  //         if (intervalId) clearInterval(intervalId);
-  //         return;
-  //       }
-
-  //       try {
-  //         const duration = await playerRef.current.getDuration();
-  //         if (typeof duration === "number" && duration > 0) {
-  //           console.log(retries, "đã lấy duration", duration)
-  //           setDuration(duration);
-  //           if (intervalId) clearInterval(intervalId);
-  //         } else {
-  //           retries++;
-  //           if (retries >= maxRetries) {
-  //             console.log("Không thể lấy duration video sau", maxRetries, "lần thử.");
-  //             setDuration(currentTrack.duration * 0.001);
-  //             if (intervalId) clearInterval(intervalId);
-  //           }
-  //         }
-  //       } catch (error) {
-  //         console.log("Lỗi khi gọi getDuration():", error);
-  //         retries++;
-  //         if (retries >= maxRetries) {
-  //           if (intervalId) clearInterval(intervalId);
-  //         }
-  //       }
-  //     };
-
-  //     intervalId = setInterval(tryGetDuration, pollInterval);
-
-  //     return () => {
-  //       if (intervalId) {
-  //         clearInterval(intervalId);
-  //       }
-  //     };
-  //   }
-  // }, [currentTrack]);
-
-  /**
-   * 'currentTrack' trong closure này là track SẮP PHÁT
-   * latestPositionRef.current' LÚC NÀY vẫn là của track CŨ
-   * trước khi logic tìm videoId chạy)
-   * 'usePlayerStore.getState().currentTrack' LÚC NÀY cũng là track MỚI
-   */
   useEffect(() => {
-    // Biến này lưu lại track của lần render này
     const trackForThisEffect = currentTrack;
     const updateVideoId = async () => {
-      if (!currentTrack?.videoId) {
-        console.log('Đang tìm video id')
+      if (!trackForThisEffect) return;
+
+      const latestState = usePlayerStore.getState();
+      if (latestState.currentTrack?.spotifyId !== trackForThisEffect.spotifyId) {
+        console.log('Track đã thay đổi, hủy tìm videoId.');
+        return;
+      }
+
+      if (!trackForThisEffect.videoId) {
+        console.log(`Đang tìm video id cho: ${trackForThisEffect.name}`);
         try {
-          const response = await GetVideoId(currentTrack?.spotifyId);
-          console.log('response ui: ', response)
+          const response = await GetVideoId(trackForThisEffect.spotifyId);
           if (response.success) {
-            currentTrack.videoId = response.data;
-            console.log(response.data)
-            updateCurrentTrack(currentTrack)
+            const updatedTrack = {
+              ...trackForThisEffect,
+              videoId: response.data
+            };
+            updateCurrentTrack(updatedTrack);
             setVideoIdTemp(response.data);
-            return true;
           }
-          console.log('aaaaaaaaa')
         } catch (err) {
-          console.log(err)
-          return false;
+          console.log(err);
         }
       } else {
-        setVideoIdTemp(currentTrack?.videoId);
+        setVideoIdTemp(trackForThisEffect.videoId);
       }
-      return false;
-    }
+    };
 
-    if (currentTrack) updateVideoId();
-
-    if (currentTrack && videoIdTemp && playerRef.current) {
-      playerRef.current.seekTo(0, true);
-      setDuration(0);
-      let intervalId = null;
-      let retries = 0;
-      const maxRetries = 10;
-      const pollInterval = 500;
-      setDuration(currentTrack?.duration * 0.001)
-
-      const tryGetDuration = async () => {
-        if (!playerRef.current) {
-          console.log('lỗi trình phát')
-          if (intervalId) clearInterval(intervalId);
-          return;
-        }
-
-        try {
-          const duration = await playerRef.current.getDuration();
-          if (typeof duration === "number" && duration > 0) {
-            console.log(retries, "đã lấy duration", duration)
-            setDuration(duration);
-            if (intervalId) clearInterval(intervalId);
-          } else {
-            retries++;
-            if (retries >= maxRetries) {
-              console.log("Không thể lấy duration video sau", maxRetries, "lần thử.");
-              setDuration(currentTrack.duration * 0.001);
-              if (intervalId) clearInterval(intervalId);
-            }
-          }
-        } catch (error) {
-          console.log("Lỗi khi gọi getDuration():", error);
-          retries++;
-          if (retries >= maxRetries) {
-            if (intervalId) clearInterval(intervalId);
-          }
-        }
-      };
-
-      intervalId = setInterval(tryGetDuration, pollInterval);
-
-      return () => {
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
-      };
+    if (currentTrack) {
+      updateVideoId();
     }
 
     return () => {
@@ -316,25 +237,68 @@ export default function GlobalPlayer() {
       console.log(`TRACK CHANGE CLEANUP: Saving ${trackForThisEffect?.name} at ${lastPosition}s`);
       handleSaveHistory(trackForThisEffect, lastPosition);
     };
-  }, [currentTrack]);
+
+  }, [currentTrack?.spotifyId]);
 
   useEffect(() => {
     if (!currentTrack) return;
-    // Tạm pause player
-    setIsPlaying(false);
-    let timeout = setTimeout(async () => {
-      try {
-        if (playerRef.current && playbackPosition > 0) {
-          await playerRef.current.seekTo(playbackPosition, true);
-        }
-        setIsPlaying(true);
-      } catch (err) {
-        console.log("Delayed play error", err);
-      }
-    }, 1800);
 
-    return () => clearTimeout(timeout);
-  }, [currentTrack?.spotifyId]);
+    // Luôn tạm dừng player khi đổi bài mới
+    setIsPlaying(false);
+    let timeoutId = null;
+
+    if (isGuest) {
+      // --- Logic cho Khách ---
+      if (guestSongPlayCount < GUEST_SONG_PLAY_LIMIT) {
+        // 1. Khách còn lượt
+        console.log(
+          `Khách: còn lượt (${guestSongPlayCount + 1
+          }/${GUEST_SONG_PLAY_LIMIT}). Đang phát...`
+        );
+        // Đếm lượt này
+        incrementGuestSongPlayCount();
+
+        // Phát nhạc như bình thường
+        timeoutId = setTimeout(async () => {
+          try {
+            if (playerRef.current && playbackPosition > 0) {
+              await playerRef.current.seekTo(playbackPosition, true);
+            }
+            setIsPlaying(true);
+          } catch (err) {
+            console.log("Delayed play error (Guest)", err);
+          }
+        }, 1800);
+      } else {
+        // 2. Khách đã hết lượt
+        console.log("Khách: Đã hết lượt. Kích hoạt Login Wall.");
+        // Không làm gì cả (player vẫn bị pause)
+      }
+    } else {
+      // --- Logic cho User đã đăng nhập ---
+      console.log("User: Đã đăng nhập. Đang phát...");
+      // Phát nhạc như bình thường
+      timeoutId = setTimeout(async () => {
+        try {
+          if (playerRef.current && playbackPosition > 0) {
+            await playerRef.current.seekTo(playbackPosition, true);
+          }
+          setIsPlaying(true);
+        } catch (err) {
+          console.log("Delayed play error (User)", err);
+        }
+      }, 1800);
+    }
+
+    // Cleanup
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [
+    currentTrack?.spotifyId,
+  ]);
 
   useEffect(() => {
     if (seekTrigger && playerRef.current) {
@@ -354,7 +318,22 @@ export default function GlobalPlayer() {
     }
   }, [targetSeekMs]);
 
+  useEffect(() => {
+    historySavedRef.current = null;
+  }, [currentTrack?.spotifyId]);
+
+  useEffect(() => {
+    const trackId = currentTrack?.spotifyId;
+    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId) {
+      historySavedRef.current = trackId;
+      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
+      saveTrackToListeningHistory(currentTrack, playbackPosition);
+    }
+  }, [playbackPosition, currentTrack?.spotifyId]);
+
   if (!currentTrack) return null;
+
+  if (!isVisible) return null;
 
   return (
     <YoutubePlayer

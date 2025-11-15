@@ -26,6 +26,7 @@ import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { Modal } from "react-native";
 import { SaveToListeningHistory } from "@/services/historiesService";
+import { useHistoriesStore } from "@/store/historiesStore";
 
 export default function LikedSongsScreen() {
   const colorScheme = useColorScheme();
@@ -43,6 +44,7 @@ export default function LikedSongsScreen() {
   const setQueue = usePlayerStore((state) => state.setQueue);
   const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
@@ -62,26 +64,27 @@ export default function LikedSongsScreen() {
   const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
 
-  const saveTrackToListeningHistory = async (track) => {
-    if (!track) return;
-    if (track) {
-      const payload = {
-        itemType: 'track',
-        itemId: track?.id,
-        itemSpotifyId: track?.spotifyId,
-        durationListened: playbackPosition || 0
-      };
+  // const saveTrackToListeningHistory = async (track) => {
+  //   if (!track) return;
+  //   if (track) {
+  //     const payload = {
+  //       itemType: 'track',
+  //       itemId: track?.id,
+  //       itemSpotifyId: track?.spotifyId,
+  //       durationListened: playbackPosition || 0
+  //     };
 
-      const response = await SaveToListeningHistory(payload);
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe thành công:', response.data);
-        } else {
-          console.log('Tạo mới lịch sử nghe thành công:', response.data);
-        }
-      }
-    }
-  }
+  //     const response = await SaveToListeningHistory(payload);
+  //     if (response.success) {
+  //       if (response.updated) {
+  //         console.log('Cập nhật lịch sử nghe track from like thành công:', response.data);
+  //       } else {
+  //         console.log('Tạo mới lịch sử nghe track from like thành công:', response.data);
+  //         addListenHistory(response.data);
+  //       }
+  //     }
+  //   }
+  // }
 
   const handleSongAddToPlaylist = () => {
     setSongModalVisible(false);
@@ -105,7 +108,7 @@ export default function LikedSongsScreen() {
 
     setCurrentTrack(track);
     setQueue(queueData);
-    await saveTrackToListeningHistory(track);
+    // await saveTrackToListeningHistory(track);
   };
 
   const handlePlayLikedSongs = async () => {
@@ -118,7 +121,7 @@ export default function LikedSongsScreen() {
     const queueData = filteredTracks.slice(1);
     setCurrentTrack(filteredTracks[0]);
     setQueue(queueData);
-    await saveTrackToListeningHistory(filteredTracks[0]);
+    // await saveTrackToListeningHistory(filteredTracks[0]);
   };
 
   const handleToggleShuffle = () => {
