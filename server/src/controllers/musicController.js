@@ -265,7 +265,7 @@ const searchTracks = async (req, res) => {
 
     return res.status(200).json({
       message: 'Tìm bài hát thành công',
-      data: dataFormated,
+      data: dataFormated.slice(0, 150),
       success: true
     });
   } catch (error) {
@@ -301,7 +301,7 @@ const searchPlaylists = async (req, res) => {
     if (dataFormated.length > 20) {
       return res.status(200).json({
         message: 'Playlist search successful',
-        data: dataFormated,
+        data: dataFormated.slice(0, 150),
         success: true
       });
     }
@@ -311,7 +311,7 @@ const searchPlaylists = async (req, res) => {
 
     return res.status(200).json({
       message: 'Playlist search successful',
-      data: dataFormated,
+      data: dataFormated.slice(0, 150),
       success: true
     });
   } catch (error) {
@@ -348,7 +348,7 @@ const searchAlbums = async (req, res) => {
     if (data.length > 20) {
       return res.status(200).json({
         message: 'Album search successful',
-        data: dataFormated,
+        data: dataFormated.slice(0, 150),
         success: true
       });
     }
@@ -361,7 +361,7 @@ const searchAlbums = async (req, res) => {
 
     return res.status(200).json({
       message: 'Album search successful',
-      data: dataFormated,
+      data: dataFormated.slice(0, 150),
       success: true
     });
   } catch (error) {
@@ -399,7 +399,7 @@ const searchArtists = async (req, res) => {
     if (dataFormated.length > 20) {
       return res.status(200).json({
         message: 'Artist search successful',
-        data: dataFormated,
+        data: dataFormated.slice(0, 150),
         success: true
       });
     }
@@ -407,7 +407,7 @@ const searchArtists = async (req, res) => {
     data.map(item => { dataFormated.push(formatArtist(item, null)) });
     return res.status(200).json({
       message: 'Artist search successful',
-      data: dataFormated,
+      data: dataFormated.slice(0, 150),
       success: true
     });
   } catch (error) {
@@ -998,6 +998,7 @@ const findVideoIdForTrack = async (req, res) => {
 
     let videoData = null;
     let videoId = null;
+    let duration = 0;
     if (!trackSpotifyId) {
       return res.status(400).json({ message: 'Track Spotify ID is required', success: false });
     }
@@ -1012,19 +1013,46 @@ const findVideoIdForTrack = async (req, res) => {
     if (track) {
       if (track.videoId) {
         videoId = track.videoId;
+        if (track.duration > 0) {
+          duration = track.duration;
+        } else {
+          console.log(3)
+          duration = await youtube.searchVideoWithDuration(videoId);
+          console.log(2)
+          track.duration = duration;
+          await track.save();
+        }
       } else if (!track.videoId) {
         videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
         videoId = videoData.videoId;
         track.videoId = videoId;
+        if (videoId) {
+          console.log(4)
+          duration = await youtube.searchVideoWithDuration(videoId);
+          console.log(5)
+        }
+        track.duration = duration;
         await track.save();
       }
     } else {
+      console.log(11)
       track = await spotify.findTrackById(trackSpotifyId);
+      console.log(21)
       videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
+      console.log(31)
       videoId = videoData.videoId;
+      if (videoId) {
+        console.log(14)
+        duration = await youtube.searchVideoWithDuration(videoId);
+        console.log(51)
+      }
+
+      console.log('duration: ', duration);
+
       const row = await Track.create({
         spotifyId: trackSpotifyId,
         videoId: videoId,
+        duration: duration,
         shareCount: 0,
         playCount: 0
       })
@@ -1036,7 +1064,10 @@ const findVideoIdForTrack = async (req, res) => {
 
     const response = {
       message: 'Đã tìm thấy video id',
-      data: videoId,
+      data: {
+        videoId: videoId,
+        duration: duration
+      },
       success: true
     };
 

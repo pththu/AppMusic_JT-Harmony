@@ -1,6 +1,9 @@
 const { FavoriteItem, User, Track, Album, Artist, Playlist } = require('../models');
 const spotify = require('../configs/spotify');
+const { redisClient } = require('../configs/redis');
 
+const DEFAULT_TTL_SECONDS = 3600 * 2; // 2 giờ (cho dữ liệu Spotify ít đổi)
+const ITEM_CACHE_TTL_SECONDS = 86400;
 
 const formatTrack = (track, artist, album, videoId) => {
   return {
@@ -79,6 +82,142 @@ const formatArtist = (artist, genres) => {
   }
 }
 
+const getFormattedTrack = async (favorite) => {
+  const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
+  const cacheKey = `fav_item:track:${itemSpotifyId || itemId}`;
+
+  // B1: Kiểm tra Item Cache
+  try {
+    const cachedItem = await redisClient.get(cacheKey);
+    if (cachedItem) {
+      const parsedItem = JSON.parse(cachedItem);
+      // Thêm thông tin 'favoriteItem' (vì nó không được cache)
+      parsedItem.favoriteItem = { id: favoriteId, createdAt };
+      return parsedItem;
+    }
+  } catch (e) {
+    console.error("Lỗi đọc item cache (track):", e.message);
+  }
+
+  // B2: Cache Miss, build lại
+  let album = null;
+  let artist = [];
+  let track = null;
+
+  if (itemSpotifyId) {
+    track = await Track.findOne({
+      where: { spotifyId: itemSpotifyId },
+      include: [{ model: Album }, { model: Artist, as: 'artists' }]
+    });
+    const idTemp = track?.id || null;
+    if (!track || !track.name) {
+      track = await spotify.findTrackById(itemSpotifyId);
+      if (idTemp) track.tempId = idTemp;
+    } else {
+      album = track.Album;
+      artist = track.artists || [];
+    }
+  } else {
+    track = await Track.findByPk(itemId, {
+      include: [{ model: Album }, { model: Artist, as: 'artists' }]
+    });
+    album = track.Album;
+    artist = track.artists || [];
+  }
+
+  if (!track) return null; // Không tìm thấy track
+
+  const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+
+  // B3: Lưu vào Item Cache (không lưu 'favoriteItem')
+  try {
+    await redisClient.set(cacheKey, JSON.stringify(itemFormat), { EX: ITEM_CACHE_TTL_SECONDS });
+  } catch (e) {
+    console.error("Lỗi ghi item cache (track):", e.message);
+  }
+
+  // B4: Thêm 'favoriteItem' và trả về
+  itemFormat.favoriteItem = { id: favoriteId, createdAt };
+  return itemFormat;
+};
+
+// --- (MỚI) HÀM HELPER LẤY ALBUM (CÓ CACHE TỪNG ITEM) ---
+const getFormattedAlbum = async (favorite) => {
+  const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
+  const cacheKey = `fav_item:album:${itemSpotifyId || itemId}`;
+
+  // B1: Kiểm tra Item Cache
+  try {
+    const cachedItem = await redisClient.get(cacheKey);
+    if (cachedItem) {
+      const parsedItem = JSON.parse(cachedItem);
+      parsedItem.favoriteItem = { id: favoriteId, createdAt };
+      return parsedItem;
+    }
+  } catch (e) { console.error("Lỗi đọc item cache (album):", e.message); }
+
+  // B2: Cache Miss
+  let album = null;
+  if (itemSpotifyId) {
+    album = await spotify.findAlbumById(itemSpotifyId);
+  } else {
+    album = await Album.findByPk(itemId, { include: [{ model: Artist, as: 'artists' }] });
+  }
+
+  if (!album) return null;
+
+  const itemFormat = formatAlbum(album, null);
+
+  // B3: Lưu vào Item Cache
+  try {
+    await redisClient.set(cacheKey, JSON.stringify(itemFormat), { EX: ITEM_CACHE_TTL_SECONDS });
+  } catch (e) { console.error("Lỗi ghi item cache (album):", e.message); }
+
+  // B4: Trả về
+  itemFormat.favoriteItem = { id: favoriteId, createdAt };
+  return itemFormat;
+};
+
+// --- (MỚI) HÀM HELPER LẤY PLAYLIST (CÓ CACHE TỪNG ITEM) ---
+const getFormattedPlaylist = async (favorite) => {
+  const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
+  const cacheKey = `fav_item:playlist:${itemSpotifyId || itemId}`;
+
+  // B1: Kiểm tra Item Cache
+  try {
+    const cachedItem = await redisClient.get(cacheKey);
+    if (cachedItem) {
+      const parsedItem = JSON.parse(cachedItem);
+      parsedItem.favoriteItem = { id: favoriteId, createdAt };
+      return parsedItem;
+    }
+  } catch (e) { console.error("Lỗi đọc item cache (playlist):", e.message); }
+
+  // B2: Cache Miss
+  let playlist = null;
+  let owner = null;
+  if (itemSpotifyId) {
+    playlist = await spotify.findPlaylistById(itemSpotifyId);
+  } else {
+    playlist = await Playlist.findByPk(itemId, { include: [{ model: User }] });
+    owner = playlist?.User || null;
+  }
+
+  if (!playlist) return null;
+
+  const itemFormat = formatPlaylist(playlist, owner);
+
+  // B3: Lưu vào Item Cache
+  try {
+    await redisClient.set(cacheKey, JSON.stringify(itemFormat), { EX: ITEM_CACHE_TTL_SECONDS });
+  } catch (e) { console.error("Lỗi ghi item cache (playlist):", e.message); }
+
+  // B4: Trả về
+  itemFormat.favoriteItem = { id: favoriteId, createdAt };
+  return itemFormat;
+};
+
+
 
 const GetAll = async (req, res) => {
   try {
@@ -124,11 +263,220 @@ const GetByUserId = async (req, res) => {
   }
 };
 
+// const GetItemsGroupedByType = async (req, res) => {
+//   const userId = req.user.id;
+
+//   try {
+//     const favorites = await FavoriteItem.findAll({
+//       where: { userId },
+//       order: [['updatedAt', 'DESC']],
+//       limit: 50
+//     });
+
+//     if (favorites.length === 0) {
+//       return res.status(200).json({ message: 'Danh sách yêu thích trống', data: [] });
+//     }
+
+//     const itemIdsByType = { track: [], album: [], playlist: [] };
+
+//     for (const favorite of favorites) {
+//       const itemType = favorite.itemType;
+//       if (itemType) {
+//         itemIdsByType[itemType].push({
+//           id: favorite.id,
+//           itemId: favorite.itemId,
+//           itemSpotifyId: favorite.itemSpotifyId,
+//           createdAt: favorite.createdAt
+//         });
+//       }
+//     }
+
+//     const dataFormated = { tracks: [], albums: [], playlists: [] };
+
+//     if (itemIdsByType.track) {
+//       for (const item of itemIdsByType.track) {
+//         const spotifyId = item?.itemSpotifyId;
+//         const itemId = item?.itemId;
+//         const uniqueFavoriteId = item?.id;
+//         const createdAt = item?.createdAt;
+
+//         let album = null;
+//         let artist = [];
+//         let track = null;
+//         if (spotifyId) {
+//           track = await Track.findOne({
+//             where: { spotifyId },
+//             include: [
+//               { model: Album },
+//               { model: Artist, as: 'artists' }
+//             ]
+//           });
+
+//           const idTemp = track?.id || null;
+
+//           if (!track || !track.name) {
+//             track = await spotify.findTrackById(spotifyId);
+//             if (idTemp) {
+//               track.tempId = idTemp;
+//             }
+//           } else {
+//             album = track.Album;
+//             artist = [];
+//             for (const a of track.artists) {
+//               artist.push(a);
+//             }
+//           }
+//           const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+//           itemFormat.favoriteItem = {
+//             id: uniqueFavoriteId,
+//             createdAt: createdAt
+//           };
+//           dataFormated.tracks.push(itemFormat);
+//         } else {
+//           track = await Track.findByPk(itemId, {
+//             include: [
+//               { model: Album },
+//               { model: Artist, as: 'artists' }
+//             ]
+//           });
+
+//           album = track.Album;
+//           artist = [];
+//           for (const a of track.artists) {
+//             artist.push(a);
+//           }
+
+//           const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+//           itemFormat.favoriteItem = {
+//             id: uniqueFavoriteId,
+//             createdAt: createdAt
+//           };
+//           dataFormated.tracks.push(itemFormat);
+//         }
+//       }
+//     }
+
+//     if (itemIdsByType.album) {
+//       for (const item of itemIdsByType.album) {
+//         const spotifyId = item?.itemSpotifyId;
+//         const itemId = item?.itemId;
+//         const uniqueFavoriteId = item?.id;
+
+//         if (spotifyId) {
+//           const spotifyId = item.itemSpotifyId;
+//           const uniqueFavoriteId = item.id;
+//           const createdAt = item?.createdAt;
+
+//           const album = await spotify.findAlbumById(spotifyId);
+//           if (album) {
+//             const itemFormat = formatAlbum(album, null);
+//             itemFormat.favoriteItem = {
+//               id: uniqueFavoriteId,
+//               createdAt: createdAt
+//             };
+//             dataFormated.albums.push(itemFormat);
+//           }
+//         } else {
+//           const album = await Album.findByPk(itemId, {
+//             include: [
+//               { model: Artist, as: 'artists' }
+//             ]
+//           });
+
+//           if (album) {
+//             const itemFormat = formatAlbum(album, null);
+//             itemFormat.favoriteItem = {
+//               id: uniqueFavoriteId,
+//               createdAt: createdAt
+//             };
+//             dataFormated.albums.push(itemFormat);
+//           }
+//         }
+//       }
+//     }
+
+//     if (itemIdsByType.playlist) {
+//       for (const item of itemIdsByType.playlist) {
+//         const spotifyId = item?.itemSpotifyId;
+//         const itemId = item?.itemId;
+//         const uniqueFavoriteId = item?.id;
+//         const createdAt = item?.createdAt;
+//         if (spotifyId) {
+//           const playlist = await spotify.findPlaylistById(spotifyId);
+//           if (playlist) {
+//             const itemFormat = formatPlaylist(playlist, null);
+//             itemFormat.favoriteItem = {
+//               id: uniqueFavoriteId,
+//               createdAt: createdAt
+//             };
+//             dataFormated.playlists.push(itemFormat);
+//           }
+//         } else {
+//           const playlist = await Playlist.findByPk(itemId, { include: [{ model: User }] });
+//           if (playlist) {
+//             const itemFormat = formatPlaylist(playlist, playlist.User);
+//             itemFormat.favoriteItem = {
+//               id: uniqueFavoriteId,
+//               createdAt: createdAt
+//             };
+//             dataFormated.playlists.push(itemFormat);
+//           }
+//         }
+//       }
+//     }
+
+//     const trackMap = new Map(dataFormated.tracks.map(t => [t.favoriteItem.id, t]));
+//     const albumMap = new Map(dataFormated.albums.map(a => [a.favoriteItem.id, a]));
+//     const playlistMap = new Map(dataFormated.playlists.map(a => [a.favoriteItem.id, a]));
+
+//     const combinedHistory = favorites.map(favorites => {
+//       let itemDetail = null;
+//       const id = favorites.id;
+
+//       if (favorites.itemType === 'track') {
+//         itemDetail = trackMap.get(id);
+//       } else if (favorites.itemType === 'album') {
+//         itemDetail = albumMap.get(id);
+//       } else if (favorites.itemType === 'playlist') {
+//         itemDetail = playlistMap.get(id);
+//       }
+
+//       if (itemDetail) {
+//         return {
+//           ...favorites.toJSON(),
+//           item: itemDetail
+//         };
+//       }
+//       return null;
+//     }).filter(item => item !== null);
+
+//     return res.status(200).json({
+//       message: 'Danh sách yêu thích retrieved successfully',
+//       data: combinedHistory,
+//       success: true
+//     });
+
+//   } catch (error) {
+//     console.error("Error retrieving grouped history:", error);
+//     return res.status(500).json({ message: 'Internal server error.' });
+//   }
+// }
+
+
 const GetItemsGroupedByType = async (req, res) => {
   const userId = req.user.id;
-
+  // --- (CẬP NHẬT) Logic Đọc Cache (Lớp 1: Group Cache) ---
+  const cacheKey = `favorites:grouped:${userId}`;
   try {
-    // === BƯỚC 1: Lấy các bản ghi yêu thích thô ===
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (LỚP 1 - GROUP): GetItemsGroupedByType');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (LỚP 1 - GROUP): GetItemsGroupedByType');
+    // --- (HẾT) Logic Đọc Cache ---
+
+    // --- (CẬP NHẬT) Logic Build Lại (Sử dụng Lớp 2: Item Cache) ---
     const favorites = await FavoriteItem.findAll({
       where: { userId },
       order: [['updatedAt', 'DESC']],
@@ -139,184 +487,66 @@ const GetItemsGroupedByType = async (req, res) => {
       return res.status(200).json({ message: 'Danh sách yêu thích trống', data: [] });
     }
 
-    const itemIdsByType = { track: [], album: [], playlist: [] };
+    // Phân loại task
+    const trackTasks = [];
+    const albumTasks = [];
+    const playlistTasks = [];
 
     for (const favorite of favorites) {
-      const itemType = favorite.itemType;
-      if (itemType) {
-        itemIdsByType[itemType].push({
-          id: favorite.id,
-          itemId: favorite.itemId,
-          itemSpotifyId: favorite.itemSpotifyId,
-          createdAt: favorite.createdAt
-        });
+      if (favorite.itemType === 'track') {
+        trackTasks.push(getFormattedTrack(favorite));
+      } else if (favorite.itemType === 'album') {
+        albumTasks.push(getFormattedAlbum(favorite));
+      } else if (favorite.itemType === 'playlist') {
+        playlistTasks.push(getFormattedPlaylist(favorite));
       }
     }
 
-    const dataFormated = { tracks: [], albums: [], playlists: [] };
+    // Thực thi song song
+    const [tracks, albums, playlists] = await Promise.all([
+      Promise.all(trackTasks),
+      Promise.all(albumTasks),
+      Promise.all(playlistTasks),
+    ]);
 
-    if (itemIdsByType.track) {
-      for (const item of itemIdsByType.track) {
-        const spotifyId = item?.itemSpotifyId;
-        const itemId = item?.itemId;
-        const uniqueFavoriteId = item?.id;
-        const createdAt = item?.createdAt;
+    // Lọc bỏ các kết quả null (nếu có lỗi)
+    const dataFormated = {
+      tracks: tracks.filter(Boolean),
+      albums: albums.filter(Boolean),
+      playlists: playlists.filter(Boolean)
+    };
 
-        let album = null;
-        let artist = [];
-        let track = null;
-        if (spotifyId) {
-          track = await Track.findOne({
-            where: { spotifyId },
-            include: [
-              { model: Album },
-              { model: Artist, as: 'artists' }
-            ]
-          });
+    // Tạo Map để sắp xếp lại (vì Promise.all không giữ thứ tự gốc)
+    const itemMap = new Map();
+    [...dataFormated.tracks, ...dataFormated.albums, ...dataFormated.playlists].forEach(item => {
+      itemMap.set(item.favoriteItem.id, item);
+    });
 
-          const idTemp = track?.id || null;
-
-          if (!track || !track.name) {
-            track = await spotify.findTrackById(spotifyId);
-            if (idTemp) {
-              track.tempId = idTemp;
-            }
-          } else {
-            album = track.Album;
-            artist = [];
-            for (const a of track.artists) {
-              artist.push(a);
-            }
-          }
-          const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
-          itemFormat.favoriteItem = {
-            id: uniqueFavoriteId,
-            createdAt: createdAt
+    // Sắp xếp lại theo thứ tự 'favorites' ban đầu (đã order 'updatedAt')
+    const combinedHistory = favorites
+      .map(favorite => {
+        const itemDetail = itemMap.get(favorite.id);
+        if (itemDetail) {
+          return {
+            ...favorite.toJSON(),
+            item: itemDetail
           };
-          dataFormated.tracks.push(itemFormat);
-        } else {
-          track = await Track.findByPk(itemId, {
-            include: [
-              { model: Album },
-              { model: Artist, as: 'artists' }
-            ]
-          });
-
-          album = track.Album;
-          artist = [];
-          for (const a of track.artists) {
-            artist.push(a);
-          }
-
-          const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
-          itemFormat.favoriteItem = {
-            id: uniqueFavoriteId,
-            createdAt: createdAt
-          };
-          dataFormated.tracks.push(itemFormat);
         }
-      }
-    }
+        return null;
+      })
+      .filter(item => item !== null);
 
-    if (itemIdsByType.album) {
-      for (const item of itemIdsByType.album) {
-        const spotifyId = item?.itemSpotifyId;
-        const itemId = item?.itemId;
-        const uniqueFavoriteId = item?.id;
-
-        if (spotifyId) {
-          const spotifyId = item.itemSpotifyId;
-          const uniqueFavoriteId = item.id;
-          const createdAt = item?.createdAt;
-
-          const album = await spotify.findAlbumById(spotifyId);
-          if (album) {
-            const itemFormat = formatAlbum(album, null);
-            itemFormat.favoriteItem = {
-              id: uniqueFavoriteId,
-              createdAt: createdAt
-            };
-            dataFormated.albums.push(itemFormat);
-          }
-        } else {
-          const album = await Album.findByPk(itemId, {
-            include: [
-              { model: Artist, as: 'artists' }
-            ]
-          });
-
-          if (album) {
-            const itemFormat = formatAlbum(album, null);
-            itemFormat.favoriteItem = {
-              id: uniqueFavoriteId,
-              createdAt: createdAt
-            };
-            dataFormated.albums.push(itemFormat);
-          }
-        }
-      }
-    }
-
-    if (itemIdsByType.playlist) {
-      for (const item of itemIdsByType.playlist) {
-        const spotifyId = item?.itemSpotifyId;
-        const itemId = item?.itemId;
-        const uniqueFavoriteId = item?.id;
-        const createdAt = item?.createdAt;
-        if (spotifyId) {
-          const playlist = await spotify.findPlaylistById(spotifyId);
-          if (playlist) {
-            const itemFormat = formatPlaylist(playlist, null);
-            itemFormat.favoriteItem = {
-              id: uniqueFavoriteId,
-              createdAt: createdAt
-            };
-            dataFormated.playlists.push(itemFormat);
-          }
-        } else {
-          const playlist = await Playlist.findByPk(itemId, { include: [{ model: User }] });
-          if (playlist) {
-            const itemFormat = formatPlaylist(playlist, playlist.User);
-            itemFormat.favoriteItem = {
-              id: uniqueFavoriteId,
-              createdAt: createdAt
-            };
-            dataFormated.playlists.push(itemFormat);
-          }
-        }
-      }
-    }
-
-    const trackMap = new Map(dataFormated.tracks.map(t => [t.favoriteItem.id, t]));
-    const albumMap = new Map(dataFormated.albums.map(a => [a.favoriteItem.id, a]));
-    const playlistMap = new Map(dataFormated.playlists.map(a => [a.favoriteItem.id, a]));
-
-    const combinedHistory = favorites.map(favorites => {
-      let itemDetail = null;
-      const id = favorites.id;
-
-      if (favorites.itemType === 'track') {
-        itemDetail = trackMap.get(id);
-      } else if (favorites.itemType === 'album') {
-        itemDetail = albumMap.get(id);
-      } else if (favorites.itemType === 'playlist') {
-        itemDetail = playlistMap.get(id);
-      }
-
-      if (itemDetail) {
-        return {
-          ...favorites.toJSON(),
-          item: itemDetail
-        };
-      }
-      return null;
-    }).filter(item => item !== null);
-
-    return res.status(200).json({
+    // --- (CẬP NHẬT) Logic Viết Cache (Lớp 1: Group Cache) ---
+    const responseData = {
       message: 'Danh sách yêu thích retrieved successfully',
       data: combinedHistory,
       success: true
-    });
+    };
+    // Cache lại kết quả tổng hợp
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    // --- (HẾT) Logic Viết Cache ---
+
+    return res.status(200).json(responseData);
 
   } catch (error) {
     console.error("Error retrieving grouped history:", error);
@@ -324,10 +554,62 @@ const GetItemsGroupedByType = async (req, res) => {
   }
 }
 
-const GetPlaylistFavorite = async (req, res) => {
-  try {
-    const dataFormated = [];
 
+// const GetPlaylistFavorite = async (req, res) => {
+//   try {
+//     const dataFormated = [];
+
+//     const favorites = await FavoriteItem.findAll({
+//       where: { userId: req.user.id, itemType: 'playlist' }
+//     });
+
+//     if (!favorites || favorites.length === 0) {
+//       return res.status(200).json({ message: 'Không tìm thấy mục yêu thích của người dùng này', success: true, data: [] });
+//     }
+
+//     for (const favorite of favorites) {
+//       if (favorite?.itemSpotifyId) {
+//         const playlist = await spotify.findPlaylistById(favorite.itemSpotifyId);
+//         if (playlist) {
+//           const playlistFormat = formatPlaylist(playlist, null);
+//           dataFormated.push(playlistFormat);
+//         }
+//       } else if (favorite?.itemId) {
+//         const playlist = await Playlist.findByPk(favorite.itemId, {
+//           include: [{ model: User }]
+//         });
+//         if (playlist) {
+//           const playlistFormat = formatPlaylist(playlist, playlist.User);
+//           dataFormated.push(playlistFormat);
+//         }
+//       }
+//     }
+
+//     return res.status(200).json({
+//       message: 'Danh sách yêu thích retrieved successfully',
+//       success: true,
+//       data: dataFormated
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// };
+
+const GetPlaylistFavorite = async (req, res) => {
+  const userId = req.user.id;
+  // --- (CẬP NHẬT) Logic Đọc Cache (Lớp 1: Group Cache) ---
+  const cacheKey = `favorites:playlists:${userId}`;
+
+  try {
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (LỚP 1 - GROUP): GetPlaylistFavorite');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (LỚP 1 - GROUP): GetPlaylistFavorite');
+    // --- (HẾT) Logic Đọc Cache ---
+
+    // --- (CẬP NHẬT) Logic Build Lại (Sử dụng Lớp 2: Item Cache) ---
     const favorites = await FavoriteItem.findAll({
       where: { userId: req.user.id, itemType: 'playlist' }
     });
@@ -336,29 +618,23 @@ const GetPlaylistFavorite = async (req, res) => {
       return res.status(200).json({ message: 'Không tìm thấy mục yêu thích của người dùng này', success: true, data: [] });
     }
 
-    for (const favorite of favorites) {
-      if (favorite?.itemSpotifyId) {
-        const playlist = await spotify.findPlaylistById(favorite.itemSpotifyId);
-        if (playlist) {
-          const playlistFormat = formatPlaylist(playlist, null);
-          dataFormated.push(playlistFormat);
-        }
-      } else if (favorite?.itemId) {
-        const playlist = await Playlist.findByPk(favorite.itemId, {
-          include: [{ model: User }]
-        });
-        if (playlist) {
-          const playlistFormat = formatPlaylist(playlist, playlist.User);
-          dataFormated.push(playlistFormat);
-        }
-      }
-    }
+    // Tạo tasks
+    const tasks = favorites.map(fav => getFormattedPlaylist(fav));
+    // Thực thi song song
+    const results = await Promise.all(tasks);
+    // Lọc bỏ null và chỉ lấy phần 'item'
+    const dataFormated = results.filter(Boolean).map(favItem => favItem.item);
 
-    return res.status(200).json({
+    // --- (CẬP NHẬT) Logic Viết Cache (Lớp 1: Group Cache) ---
+    const responseData = {
       message: 'Danh sách yêu thích retrieved successfully',
       success: true,
       data: dataFormated
-    });
+    };
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    // --- (HẾT) Logic Viết Cache ---
+
+    return res.status(200).json(responseData);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -385,16 +661,13 @@ const CreateOne = async (req, res) => {
     });
 
     if (!favorite) {
-      console.log('error')
       return res.status(500).json({ message: 'Thêm vào mục yêu thích thất bại' });
     }
 
     switch (itemType) {
       case 'track':
-        console.log('track')
         artist = [];
         if (itemSpotifyId) {
-          console.log('first')
           track = await Track.findOne({
             where: { spotifyId: itemSpotifyId },
             include: [
@@ -406,13 +679,11 @@ const CreateOne = async (req, res) => {
           const idTemp = track?.id || null;
 
           if (!track || !track.name) {
-            console.log('ýe')
             track = await spotify.findTrackById(itemSpotifyId);
             if (idTemp) {
               track.tempId = idTemp;
             }
           } else {
-            console.log('temp')
             if (!track.Album) {
               console.log('teadsga')
               album = null;
@@ -421,7 +692,6 @@ const CreateOne = async (req, res) => {
                 album = formatAlbum(albumSpotify, null);
               }
             } else {
-              console.log('chae')
               album = track.Album ? track.Album.toJSON() : null;
             }
             if (!track.artists || track.artists.length === 0) {
@@ -500,7 +770,13 @@ const CreateOne = async (req, res) => {
         return res.status(400).json({ message: 'Loại mục yêu thích không hợp lệ' });
     }
 
-    console.log('data format', dataFormated);
+    const cacheKeyGrouped = `favorites:grouped:${req.user.id}`;
+    const cacheKeyPlaylists = `favorites:playlists:${req.user.id}`;
+    await redisClient.del(cacheKeyGrouped);
+    if (itemType === 'playlist') {
+      await redisClient.del(cacheKeyPlaylists);
+    }
+    console.log(`CACHE INVALIDATED (GROUP) for user: ${req.user.id}`);
 
     return res.status(201).json({
       message: 'Favorite created successfully',
@@ -512,11 +788,60 @@ const CreateOne = async (req, res) => {
   }
 };
 
+// const DeleteOne = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const row = await FavoriteItem.destroy({ where: { id } });
+//     console.log(row);
+//     return res.status(201).json({ message: 'Đã xóa khỏi mục yêu thích', success: true });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// };
+
 const DeleteOne = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
   try {
-    const { id } = req.params;
-    const row = await FavoriteItem.destroy({ where: { id } });
-    console.log(row);
+    const favorite = await FavoriteItem.findOne({ where: { id, userId } });
+
+    if (!favorite) {
+      return res.status(404).json({ message: 'Không tìm thấy mục yêu thích', success: false });
+    }
+
+    // Lấy thông tin để Hủy Item Cache (Lớp 2)
+    const { itemType, itemId, itemSpotifyId } = favorite;
+
+    // Tiến hành xóa
+    await favorite.destroy();
+
+    // --- (CẬP NHẬT) Logic Hủy Cache (Cả 2 Lớp) ---
+    // 1. Hủy Group Cache (Lớp 1)
+    const cacheKeyGrouped = `favorites:grouped:${userId}`;
+    const cacheKeyPlaylists = `favorites:playlists:${userId}`;
+    await redisClient.del(cacheKeyGrouped);
+    if (itemType === 'playlist') {
+      await redisClient.del(cacheKeyPlaylists);
+    }
+    console.log(`CACHE INVALIDATED (GROUP) for user: ${userId}`);
+
+    // 2. Hủy Item Cache (Lớp 2)
+    let itemCacheKey = null;
+    if (itemType === 'track') {
+      itemCacheKey = `fav_item:track:${itemSpotifyId || itemId}`;
+    } else if (itemType === 'album') {
+      itemCacheKey = `fav_item:album:${itemSpotifyId || itemId}`;
+    } else if (itemType === 'playlist') {
+      itemCacheKey = `fav_item:playlist:${itemSpotifyId || itemId}`;
+    }
+
+    if (itemCacheKey) {
+      await redisClient.del(itemCacheKey);
+      console.log(`CACHE INVALIDATED (ITEM) for: ${itemCacheKey}`);
+    }
+    // --- (HẾT) Logic Hủy Cache ---
+
     return res.status(201).json({ message: 'Đã xóa khỏi mục yêu thích', success: true });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

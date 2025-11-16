@@ -109,6 +109,7 @@ const protectedRoutes = [
   "conversations",
   "upload", // Upload hình ảnh, file
   "tracks", // Xem bài hát (public), upload bài hát (private)
+  "recommendations"
 ];
 const publicRoutes = ["auth", "users", "posts", "music", "comments"]; // posts được xử lý riêng
 

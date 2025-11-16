@@ -7,8 +7,14 @@ export const SaveToListeningHistory = async (payload) => {
     const response = await axiosClient.post(`/histories/listening`, payload);
     return response.data;
   } catch (error) {
-    console.log(error.message);
-    throw error;
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 }
 

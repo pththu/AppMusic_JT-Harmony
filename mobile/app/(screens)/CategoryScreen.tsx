@@ -19,9 +19,6 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { GetCategoryContent } from "@/services/searchService";
 import { usePlayerStore } from "@/store/playerStore";
 import { useArtistStore } from "@/store/artistStore";
-import { pl } from "date-fns/locale";
-import { set } from "date-fns";
-import { SaveToListeningHistory } from "@/services/historiesService";
 import { useHistoriesStore } from "@/store/historiesStore";
 
 // Component hiển thị Playlist/Track/Album
@@ -169,37 +166,13 @@ export default function CategoryScreen() {
     setCurrentTrack(item);
     playPlaylist([item], 0);
     setQueue([]);
-    // await saveTrackToListeningHistory(item);
   };
 
-  // const saveTrackToListeningHistory = async (track) => {
-  //   if (!track) return;
-  //   if (track) {
-  //     const payload = {
-  //       itemType: 'track',
-  //       itemId: track?.id,
-  //       itemSpotifyId: track?.spotifyId,
-  //       durationListened: playbackPosition || 0
-  //     };
-
-  //     const response = await SaveToListeningHistory(payload);
-  //     if (response.success) {
-  //       if (response.updated) {
-  //         console.log('Cập nhật lịch sử nghe track from category thành công:', response.data);
-  //       } else {
-  //         console.log('Tạo mới lịch sử nghe track from category thành công:', response.data);
-  //         addListenHistory(response.data);
-  //       }
-  //     }
-  //   }
-  // }
-  // THÊM MỚI: Handler cho Album
   const handleAlbumPress = (item) => {
     setCurrentAlbum(item);
     navigate("AlbumScreen", { album: JSON.stringify(item) });
   };
 
-  // Render states (Cập nhật Tiếng Việt)
   const renderLoading = () => (
     <View className="flex-1 items-center justify-center">
       <ActivityIndicator size="large" color={isDark ? "#FFF" : "#000"} />

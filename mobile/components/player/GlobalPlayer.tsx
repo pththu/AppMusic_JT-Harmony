@@ -22,9 +22,11 @@ export default function GlobalPlayer() {
   const repeatMode = usePlayerStore((state) => state.repeatMode);
   const isLastIndex = usePlayerStore((state) => state.isLastIndex);
   const seekTrigger = usePlayerStore((state) => state.seekTrigger);
+  const duration = usePlayerStore((state) => state.duration);
   const targetSeekMs = usePlayerStore((state) => state.targetSeekMs); // Bình luận theo mốc thời gian
   const uiOverlayOpen = usePlayerStore((state) => state.uiOverlayOpen); // tránh giật khi mở TrackCommentsModal
   const incrementGuestSongPlayCount = useAuthStore((state) => state.incrementGuestSongPlayCount);
+  const setShowLoginWall = useAuthStore((state) => state.setShowLoginWall);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const setPlaybackPosition = usePlayerStore((state) => state.setPlaybackPosition);
@@ -44,7 +46,7 @@ export default function GlobalPlayer() {
 
   const isVisible = !!currentTrack && !isAuthScreen;
 
-  const saveTrackToListeningHistory = async (track, duration) => {
+  const saveTrackToListeningHistory = (track, duration) => {
     if (isGuest) {
       console.log("Guest user - not saving listening history.");
       return;
@@ -62,19 +64,19 @@ export default function GlobalPlayer() {
         durationListened: duration
       };
 
-      const response = await SaveToListeningHistory(payload);
-
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe track from global thành công:', response.data.id);
+      SaveToListeningHistory(payload).then((response) => {
+        if (response.success) {
+          if (response.updated) {
+            console.log('Cập nhật lịch sử nghe track from global thành công:', response.data.id);
+          } else {
+            console.log('Tạo mới lịch sử nghe track from global thành công:', response.data.id);
+            addListenHistory(response.data);
+          }
         } else {
-          console.log('Tạo mới lịch sử nghe track from global thành công:', response.data.id);
-          addListenHistory(response.data);
+          console.error('Lưu lịch sử thất bại, reset cờ.');
+          historySavedRef.current = null;
         }
-      } else {
-        console.error('Lưu lịch sử thất bại, reset cờ.');
-        historySavedRef.current = null;
-      }
+      });
     } else {
       console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
     }
@@ -92,13 +94,21 @@ export default function GlobalPlayer() {
       };
       console.log(`SAVING HISTORY: ${track.name} at ${duration}s`);
       try {
-        const response = SaveToListeningHistory({
+        SaveToListeningHistory({
           itemType: 'track',
           itemId: track?.id,
           itemSpotifyId: track?.spotifyId,
           durationListened: duration
+        }).then((response) => {
+          if (response.success) {
+            if (response.updated) {
+              console.log('Cập nhật lịch sử nghe track thành công:', response.data);
+            } else {
+              console.log('Tạo mới lịch sử nghe track thành công:', response.data);
+              addListenHistory(response.data);
+            }
+          }
         })
-        console.log(response)
       } catch (err) {
         console.error("SaveToListeningHistory failed:", err)
       }
@@ -117,8 +127,8 @@ export default function GlobalPlayer() {
     const latestState = usePlayerStore.getState();
     if (state === "ended") {
       try {
-        const duration = await playerRef.current?.getDuration(); // Lấy tổng thời lượng bài hát
-        handleSaveHistory(latestState.currentTrack, duration || latestState.playbackPosition); // Lưu lại trước khi chuyển bài
+        const durationPlayer = await playerRef.current?.getDuration(); // Lấy tổng thời lượng bài hát
+        handleSaveHistory(latestState.currentTrack, durationPlayer || latestState.playbackPosition); // Lưu lại trước khi chuyển bài
       } catch (e) {
         console.log("Lỗi khi lấy duration lúc 'ended'", e);
         handleSaveHistory(latestState.currentTrack, latestState.playbackPosition); // Fallback: lưu vị trí cuối cùng biết được
@@ -139,7 +149,7 @@ export default function GlobalPlayer() {
     else if (state === "paused") {
       try {
         const currentTime = await playerRef.current?.getCurrentTime();
-        if (currentTime) {
+        if (currentTime && typeof currentTime === 'number') {
           latestState.setPlaybackPosition(currentTime);
           handleSaveHistory(latestState.currentTrack, currentTime);
         }
@@ -166,14 +176,14 @@ export default function GlobalPlayer() {
       if (intervalId) {
         clearInterval(intervalId);
       }
-    }
+    };
 
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
       }
     };
-  }, [isPlaying, uiOverlayOpen, setPlaybackPosition]);
+  }, [isPlaying, uiOverlayOpen]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", async (nextAppState) => {
@@ -210,20 +220,19 @@ export default function GlobalPlayer() {
       if (!trackForThisEffect.videoId) {
         console.log(`Đang tìm video id cho: ${trackForThisEffect.name}`);
         try {
-          const response = await GetVideoId(trackForThisEffect.spotifyId);
+          const response = await GetVideoId(trackForThisEffect?.spotifyId);
           if (response.success) {
             const updatedTrack = {
               ...trackForThisEffect,
-              videoId: response.data
+              videoId: response.data.videoId,
+              duration: response.data.duration
             };
             updateCurrentTrack(updatedTrack);
-            setVideoIdTemp(response.data);
+            setDuration(response.data.duration || 0);
           }
         } catch (err) {
           console.log(err);
         }
-      } else {
-        setVideoIdTemp(trackForThisEffect.videoId);
       }
     };
 
@@ -240,6 +249,7 @@ export default function GlobalPlayer() {
 
   }, [currentTrack?.spotifyId]);
 
+  // Khi đổi bài, xử lý tạm dừng và phát lại sau delay
   useEffect(() => {
     if (!currentTrack) return;
 
@@ -247,58 +257,55 @@ export default function GlobalPlayer() {
     setIsPlaying(false);
     let timeoutId = null;
 
-    if (isGuest) {
-      // --- Logic cho Khách ---
-      if (guestSongPlayCount < GUEST_SONG_PLAY_LIMIT) {
-        // 1. Khách còn lượt
-        console.log(
-          `Khách: còn lượt (${guestSongPlayCount + 1
-          }/${GUEST_SONG_PLAY_LIMIT}). Đang phát...`
-        );
-        // Đếm lượt này
-        incrementGuestSongPlayCount();
+    if (currentTrack?.videoId && duration) {
+      setTimeout(() => {
+        // --- Logic cho Khách ---
+        if (isGuest) {
+          console.log('logic guest')
+          if (guestSongPlayCount < GUEST_SONG_PLAY_LIMIT) {
+            console.log(
+              `Khách: còn lượt (${guestSongPlayCount + 1
+              }/${GUEST_SONG_PLAY_LIMIT}). Đang phát...`
+            );
 
-        // Phát nhạc như bình thường
-        timeoutId = setTimeout(async () => {
-          try {
-            if (playerRef.current && playbackPosition > 0) {
-              await playerRef.current.seekTo(playbackPosition, true);
+            incrementGuestSongPlayCount();
+            timeoutId = setTimeout(async () => {
+              try {
+                if (playerRef.current && playbackPosition > 0) {
+                  await playerRef.current.seekTo(playbackPosition, true);
+                }
+                setIsPlaying(true);
+              } catch (err) {
+                console.log("Delayed play error (Guest)", err);
+              }
+            }, 2000);
+          } else {
+            setShowLoginWall(true);
+            console.log("Khách: Đã hết lượt. Kích hoạt Login Wall.");
+          }
+        } else {
+          // --- Logic cho User đã đăng nhập ---
+          console.log("User: Đã đăng nhập. Đang phát...");
+          timeoutId = setTimeout(async () => {
+            try {
+              if (playerRef.current && playbackPosition > 0) {
+                await playerRef.current.seekTo(playbackPosition, true);
+              }
+              setIsPlaying(true);
+            } catch (err) {
+              console.log("Delayed play error (User)", err);
             }
-            setIsPlaying(true);
-          } catch (err) {
-            console.log("Delayed play error (Guest)", err);
-          }
-        }, 1800);
-      } else {
-        // 2. Khách đã hết lượt
-        console.log("Khách: Đã hết lượt. Kích hoạt Login Wall.");
-        // Không làm gì cả (player vẫn bị pause)
-      }
-    } else {
-      // --- Logic cho User đã đăng nhập ---
-      console.log("User: Đã đăng nhập. Đang phát...");
-      // Phát nhạc như bình thường
-      timeoutId = setTimeout(async () => {
-        try {
-          if (playerRef.current && playbackPosition > 0) {
-            await playerRef.current.seekTo(playbackPosition, true);
-          }
-          setIsPlaying(true);
-        } catch (err) {
-          console.log("Delayed play error (User)", err);
+          }, 2000);
         }
-      }, 1800);
+      }, 1000)
     }
 
-    // Cleanup
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
     };
-  }, [
-    currentTrack?.spotifyId,
-  ]);
+  }, [currentTrack?.spotifyId, currentTrack?.videoId]);
 
   useEffect(() => {
     if (seekTrigger && playerRef.current) {
@@ -339,7 +346,7 @@ export default function GlobalPlayer() {
     <YoutubePlayer
       ref={playerRef}
       height={0}
-      videoId={currentTrack?.videoId || videoIdTemp}
+      videoId={currentTrack?.videoId}
       play={isPlaying}
       onChangeState={onPlayerStateChange}
       onReady={onPlayerReady}

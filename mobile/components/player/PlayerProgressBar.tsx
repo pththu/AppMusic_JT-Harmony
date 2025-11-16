@@ -22,7 +22,7 @@ export default function PlayerProgressBar() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const playbackPosition = usePlayerStore((state) => state.playbackPosition);
   const duration = usePlayerStore((state) => state.duration);
-  const [durationTrack, setDurationTrack] = useState(duration || currentTrack?.duration/1000 || 0);
+  const [durationTrack, setDurationTrack] = useState(duration / 1000 || currentTrack?.duration / 1000 || 0);
 
   useEffect(() => {
     if (durationTrack > 0) {

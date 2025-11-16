@@ -43,9 +43,8 @@ const ListeningHistory = sequelize.define(
     tableName: 'listening_histories',
     timestamps: true,
     indexes: [
-      {
-        fields: ['id', 'user_id']
-      }
+      { fields: ['id', 'user_id'] },
+      { unique: true, fields: ['user_id', 'item_spotify_id'], }
     ]
   }
 )

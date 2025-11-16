@@ -111,6 +111,7 @@ export default function PlaylistScreen() {
   const [newImage, setNewImage] = useState(null);
   const [newIsPublic, setNewIsPublic] = useState(true);
   const imageDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
+  
 
   const headerTitleOpacity = scrollY.interpolate({
     inputRange: [HEADER_SCROLL_THRESHOLD, HEADER_SCROLL_THRESHOLD + 30],
@@ -124,7 +125,7 @@ export default function PlaylistScreen() {
     extrapolate: 'clamp',
   });
 
-  const savePlaylistToListeningHistory = async () => {
+  const savePlaylistToListeningHistory = () => {
     if (!currentPlaylist) return;
     if (isGuest) return;
     const payload = {
@@ -133,15 +134,16 @@ export default function PlaylistScreen() {
       itemSpotifyId: currentPlaylist?.spotifyId,
       durationListened: 0
     };
-    const response = await SaveToListeningHistory(payload);
-    if (response.success) {
-      if (response.updated) {
-        console.log('Cập nhật lịch sử nghe playlist thành công:', response.data);
-      } else {
-        console.log('Tạo mới lịch sử nghe playlist thành công:', response.data);
-        addListenHistory(response.data);
+    SaveToListeningHistory(payload).then((response) => {
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe playlist thành công:', response.data);
+        } else {
+          console.log('Tạo mới lịch sử nghe playlist thành công:', response.data);
+          addListenHistory(response.data);
+        }
       }
-    }
+    });
   }
 
   const requestPermissions = async () => {
@@ -749,7 +751,7 @@ export default function PlaylistScreen() {
     <SongItem
       item={item}
       key={index}
-      image={item?.imageUrl || ''}
+      image={item?.imageUrl || null}
       onPress={() => handlePlayTrack(item, index)}
       onOptionsPress={() => handleSongOptionsPress(item)}
     />

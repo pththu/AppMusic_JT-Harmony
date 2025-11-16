@@ -126,7 +126,6 @@ const GetListeningHistoriesByUserId = async (req, res) => {
       const itemType = history.itemType;
       switch (itemType) {
         case 'track':
-          console.log('track')
           const track = await spotify.findTrackById(history.itemSpotifyId);
           itemFormatted = formatTrack(track);
           dataFormated.push({
@@ -135,7 +134,6 @@ const GetListeningHistoriesByUserId = async (req, res) => {
           })
           break;
         case 'album':
-          console.log('album')
           const album = await spotify.findAlbumById(history.itemSpotifyId);
           itemFormatted = formatAlbum(album);
           dataFormated.push({
@@ -144,7 +142,6 @@ const GetListeningHistoriesByUserId = async (req, res) => {
           })
           break;
         case 'artist':
-          console.log('artist')
           const artist = await spotify.findArtistById(history.itemSpotifyId);
           itemFormatted = formatArtist(artist);
           dataFormated.push({
@@ -153,7 +150,6 @@ const GetListeningHistoriesByUserId = async (req, res) => {
           })
           break;
         case 'playlist':
-          console.log('playlist')
           const playlist = await spotify.findPlaylistById(history.itemSpotifyId);
           itemFormatted = formatPlaylist(playlist);
           dataFormated.push({

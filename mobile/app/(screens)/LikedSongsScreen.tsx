@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Modal
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useTheme } from '@/components/ThemeContext';
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
 import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
@@ -24,8 +24,6 @@ import { useRouter } from "expo-router";
 import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
 import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
 import { useFavoritesStore } from "@/store/favoritesStore";
-import { Modal } from "react-native";
-import { SaveToListeningHistory } from "@/services/historiesService";
 import { useHistoriesStore } from "@/store/historiesStore";
 
 export default function LikedSongsScreen() {
@@ -64,28 +62,6 @@ export default function LikedSongsScreen() {
   const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
 
-  // const saveTrackToListeningHistory = async (track) => {
-  //   if (!track) return;
-  //   if (track) {
-  //     const payload = {
-  //       itemType: 'track',
-  //       itemId: track?.id,
-  //       itemSpotifyId: track?.spotifyId,
-  //       durationListened: playbackPosition || 0
-  //     };
-
-  //     const response = await SaveToListeningHistory(payload);
-  //     if (response.success) {
-  //       if (response.updated) {
-  //         console.log('Cập nhật lịch sử nghe track from like thành công:', response.data);
-  //       } else {
-  //         console.log('Tạo mới lịch sử nghe track from like thành công:', response.data);
-  //         addListenHistory(response.data);
-  //       }
-  //     }
-  //   }
-  // }
-
   const handleSongAddToPlaylist = () => {
     setSongModalVisible(false);
     setAddTrackToPlaylistModalVisible(true);
@@ -108,7 +84,6 @@ export default function LikedSongsScreen() {
 
     setCurrentTrack(track);
     setQueue(queueData);
-    // await saveTrackToListeningHistory(track);
   };
 
   const handlePlayLikedSongs = async () => {
@@ -121,7 +96,6 @@ export default function LikedSongsScreen() {
     const queueData = filteredTracks.slice(1);
     setCurrentTrack(filteredTracks[0]);
     setQueue(queueData);
-    // await saveTrackToListeningHistory(filteredTracks[0]);
   };
 
   const handleToggleShuffle = () => {

@@ -123,7 +123,7 @@ export default function HomeScreen() {
     await savePlaylistToListeningHistory();
   };
 
-  const savePlaylistToListeningHistory = async () => {
+  const savePlaylistToListeningHistory = () => {
     if (!currentPlaylist) return;
     const payload = {
       itemType: 'playlist',
@@ -131,15 +131,16 @@ export default function HomeScreen() {
       itemSpotifyId: currentPlaylist?.spotifyId,
       durationListened: 0
     };
-    const response = await SaveToListeningHistory(payload);
-    if (response.success) {
-      if (response.updated) {
-        console.log('Cập nhật lịch sử nghe playlist from home thành công:', response.data);
-      } else {
-        console.log('Tạo mới lịch sử nghe playlist from home thành công:', response.data);
-        addListenHistory(response.data);
+    SaveToListeningHistory(payload).then((response) => {
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe playlist thành công:', response.data);
+        } else {
+          console.log('Tạo mới lịch sử nghe playlist thành công:', response.data);
+          addListenHistory(response.data);
+        }
       }
-    }
+    });
   }
 
   useEffect(() => {

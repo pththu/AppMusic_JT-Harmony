@@ -78,7 +78,7 @@ const AlbumScreen = () => {
   const translateY = useRef(new Animated.Value(20)).current;
   const iconColor = colorScheme === 'light' ? '#000' : '#fff';
 
-  const saveAlbumToListeningHistory = async () => {
+  const saveAlbumToListeningHistory = () => {
     if (isGuest) return;
     if (!currentAlbum) return;
     const payload = {
@@ -89,15 +89,16 @@ const AlbumScreen = () => {
     };
 
     console.log('payload Ui: ', payload)
-    const response = await SaveToListeningHistory(payload);
-    if (response.success) {
-      if (response.updated) {
-        console.log('Cập nhật lịch sử nghe album thành công:', response.data);
-      } else {
-        console.log('Tạo mới lịch sử nghe album thành công:', response.data);
-        addListenHistory(response.data);
+    SaveToListeningHistory(payload).then((response) => {
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe album thành công:', response.data);
+        } else {
+          console.log('Tạo mới lịch sử nghe album thành công:', response.data);
+          addListenHistory(response.data);
+        }
       }
-    }
+    });
   }
 
   const requestPermissions = async () => {

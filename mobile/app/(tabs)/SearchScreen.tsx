@@ -373,35 +373,6 @@ export default function SearchScreen() {
     }
   };
 
-  const saveTrackToListeningHistory = async (track, duration) => {
-    if (!track) return;
-    if (isGuest) return;
-    if (duration > 15) {
-      const payload = {
-        itemType: 'track',
-        itemId: track?.id,
-        itemSpotifyId: track?.spotifyId,
-        durationListened: duration
-      };
-
-      const response = await SaveToListeningHistory(payload);
-
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe track from search thành công:', response.data.id);
-        } else {
-          console.log('Tạo mới lịch sử nghe track from search thành công:', response.data.id);
-          addListenHistory(response.data);
-        }
-      } else {
-        console.error('Lưu lịch sử thất bại, reset cờ.');
-        historySavedRef.current = null;
-      }
-    } else {
-      console.log(`Bài hát ${track.name} chưa được nghe đủ 15s (duration: ${duration}ms), không lưu lịch sử.`);
-    }
-  }
-
   const handleItemPress = useCallback((item) => {
     const itemType = item.type || "Track";
 
@@ -478,20 +449,6 @@ export default function SearchScreen() {
     }
   }, [user?.id, isLoggedIn]);
 
-  useEffect(() => {
-    historySavedRef.current = null;
-  }, [currentTrack?.spotifyId]);
-
-  useEffect(() => {
-    const trackId = currentTrack?.spotifyId || currentTrack?.id;
-    if (trackId && playbackPosition > 15 && historySavedRef.current !== trackId
-    ) {
-      historySavedRef.current = trackId;
-      console.log(`Bài hát ${currentTrack.name} đã qua 15s. Đang lưu lịch sử...`);
-      saveTrackToListeningHistory(currentTrack, playbackPosition);
-    }
-  }, [playbackPosition, currentTrack?.spotifyId]);
-
   const renderSearchItem = ({ item, isSuggestion = false }) => {
     let iconName = "musical-notes";
     if (item.type === "Album") iconName = "disc";
@@ -563,6 +520,8 @@ export default function SearchScreen() {
     else if (itemType === "Artist") iconName = "person";
     else if (itemType === "Playlist") iconName = "list";
     else if (itemType === "User") iconName = "people-circle";
+
+    console.log(item)
 
     return (
       <TouchableOpacity
@@ -640,6 +599,7 @@ export default function SearchScreen() {
         ...searchResults.playlists.map((p) => ({ ...p, type: "Playlist" })),
         ...searchResults.albums.map((a) => ({ ...a, type: "Album" })),
         ...searchResults.artists.map((a) => ({ ...a, type: "Artist" })),
+        ...searchResults.users.map((u) => ({ ...u, type: "User" })),
       ];
     } else {
       const key = activeFilter.toLowerCase() + "s";
@@ -815,7 +775,7 @@ export default function SearchScreen() {
                             resultCount > 0 ? (
                               <View className="px-3 pb-14">
                                 {flattenedResults.map((item, index) => (
-                                  <View key={`${item.type}-${item.id || index}`}>
+                                  <View key={`${item.type}-${item.id}-${index}`}>
                                     {renderResultItem({ item })}
                                     {index < flattenedResults.length - 1 && (
                                       <View

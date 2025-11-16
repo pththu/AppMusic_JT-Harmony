@@ -91,7 +91,7 @@ export default function ArtistScreen() {
     screen: true,
   });
 
-  const saveArtistToListeningHistory = async () => {
+  const saveArtistToListeningHistory = () => {
     if (isGuest) return;
     const payload = {
       itemType: 'artist',
@@ -99,15 +99,16 @@ export default function ArtistScreen() {
       itemSpotifyId: currentArtist?.spotifyId,
       durationListened: 0
     }
-    const response = await SaveToListeningHistory(payload);
-    if (response.success) {
-      if (response.updated) {
-        console.log('Cập nhật lịch sử nghe artist thành công:', response.data);
-      } else {
-        console.log('Tạo mới lịch sử nghe artist thành công:', response.data);
-        addListenHistory(response.data);
+    SaveToListeningHistory(payload).then((response) => {
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe artist thành công:', response.data);
+        } else {
+          console.log('Tạo mới lịch sử nghe artist thành công:', response.data);
+          addListenHistory(response.data);
+        }
       }
-    }
+    })
   }
 
   const handleSongAddToPlaylist = () => {
@@ -275,7 +276,7 @@ export default function ArtistScreen() {
     setCurrentTrack(popularTracks[0]);
     setQueue(queueData);
 
-    await saveArtistToListeningHistory();
+    saveArtistToListeningHistory();
   }
 
   const handleToggleShuffle = () => {
@@ -464,6 +465,7 @@ export default function ArtistScreen() {
 
   const renderSongItem = ({ item, index }) => (
     <SongItem
+      key={item.id || item.spotifyId}
       item={item}
       image={item.imageUrl || ''}
       onPress={() => handlePlayTrack(item)}
@@ -473,6 +475,7 @@ export default function ArtistScreen() {
 
   const renderAlbumItem = ({ item }) => (
     <TouchableOpacity
+      key={item.id || item.spotifyId}
       className="mr-4 w-36"
       onPress={() => {
         setCurrentAlbum(item);
@@ -499,7 +502,9 @@ export default function ArtistScreen() {
     <ScrollView className="flex-1 bg-white dark:bg-[#0E0C1F]">
       {isLoading.following && (
         <View className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/50 justify-center items-center">
-          <ActivityIndicator size="large" color="#22c55e" />
+          <View className='mt-10'>
+            <ActivityIndicator size="large" color="#22c55e" />
+          </View>
         </View>
       )}
 
@@ -564,12 +569,16 @@ export default function ArtistScreen() {
             <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
           </View>
         ) : (
-          <FlatList
-            data={isShowingAllTracks ? popularTracks : popularTracks.slice(0, 5)}
-            keyExtractor={(item) => item.spotifyId || item.id.toString()}
-            renderItem={renderSongItem}
-            scrollEnabled={false}
-          />
+          <ScrollView className="mb-4">
+            {(isShowingAllTracks ? popularTracks : popularTracks.slice(0, 5)).map((item, index) => {
+              return (
+                <View key={item.id || item.spotifyId}>
+                  {renderSongItem({ item, index })}
+                </View>
+              )
+            })}
+
+          </ScrollView>
         )}
 
         {/* Danh sách Album */}
@@ -585,13 +594,15 @@ export default function ArtistScreen() {
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
             </View>
           ) : (
-            <FlatList
-              data={albums}
-              renderItem={renderAlbumItem}
-              keyExtractor={(item) => item.spotifyId}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-            />
+            <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="pb-4">
+              {albums.map((item) => {
+                return (
+                  <View key={item.spotifyId}>
+                    {renderAlbumItem({ item })}
+                  </View>
+                )
+              })}
+            </ScrollView>
           )}
         </View>
       </View>
