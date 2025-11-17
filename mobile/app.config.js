@@ -13,6 +13,7 @@ export default ({ config }) => ({
     FACEBOOK_APP_ID: process.env.FACEBOOK_APP_ID || "",
     FACEBOOK_CLIENT_TOKEN: process.env.FACEBOOK_CLIENT_TOKEN || "",
     FACEBOOK_DISPLAY_NAME: process.env.FACEBOOK_DISPLAY_NAME || "",
+    SOCKET_SERVER_URL: process.env.SOCKET_SERVER_URL || "",
   },
   plugins: [
     [

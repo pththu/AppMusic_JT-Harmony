@@ -6,7 +6,6 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
@@ -35,6 +34,7 @@ import * as ImagePicker from "expo-image-picker";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
 import MessageOptionsModal from "@/components/modals/MessageOptionsModal";
 import ChatOptionsModal from "@/components/modals/ChatOptionsModal";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Định nghĩa Route Params
 type RootStackParamList = {

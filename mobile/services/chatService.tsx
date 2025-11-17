@@ -50,6 +50,7 @@ export const connectSocket = (): Socket => {
 
   //  Lấy token và tạo kết nối nếu chưa có
   const token = useAuthStore.getState().token; // Chỉ lấy token tại thời điểm này
+  console.log('token', token)
 
   // Nếu token chưa có, bạn có thể cân nhắc ném lỗi hoặc trả về null (dựa trên luồng logic app)
   if (!token) {

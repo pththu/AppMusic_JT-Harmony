@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Modal
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useTheme } from '@/components/ThemeContext';
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
 import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
@@ -24,7 +24,7 @@ import { useRouter } from "expo-router";
 import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
 import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
 import { useFavoritesStore } from "@/store/favoritesStore";
-import { Modal } from "react-native";
+import { useHistoriesStore } from "@/store/historiesStore";
 
 export default function LikedSongsScreen() {
   const colorScheme = useColorScheme();
@@ -36,11 +36,13 @@ export default function LikedSongsScreen() {
   const listTrack = usePlayerStore((state) => state.listTrack);
   const isShuffled = usePlayerStore((state) => state.isShuffled);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
@@ -70,7 +72,7 @@ export default function LikedSongsScreen() {
     setArtistModalVisible(false);
   };
 
-  const handlePlayTrack = (track,) => {
+  const handlePlayTrack = async (track,) => {
     const playIndex = filteredTracks.findIndex(t =>
       (t.spotifyId && t.spotifyId === track.spotifyId) ||
       (t.id && t.id === track.id)
@@ -84,7 +86,7 @@ export default function LikedSongsScreen() {
     setQueue(queueData);
   };
 
-  const handlePlayLikedSongs = () => {
+  const handlePlayLikedSongs = async () => {
     if (!filteredTracks || filteredTracks.length === 0) {
       warning('Không có bài hát nào để phát!');
       return;

@@ -8,6 +8,7 @@ const { sequelize, User } = require("./models");
 const { API_PREFIX } = require("./configs/constants");
 const { authenticateToken, authorizeRole } = require("./middlewares/authentication");
 const seedDatabase = require("./utils/seeder");
+const { connectRedis } = require('./configs/redis');
 
 const dotenv = require("dotenv");
 const { Server } = require("socket.io");
@@ -25,10 +26,10 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
-      "http://localhost:3000",
       "http://localhost:3001",
-      "http://192.168.1.12:3000",
       "exp://192.168.1.12:8081",
+      "exp://192.168.1.14:8081",
+      "exp://10.172.55.251:8081",
       "http://192.168.1.22:3000",
       "exp://192.168.1.22:8081",
     ],
@@ -44,6 +45,7 @@ const io = new Server(server, {
 io.use(async (socket, next) => {
   // Lấy token từ handshake query (hoặc header, tùy cách client gửi)
   const token = socket.handshake.auth.token;
+  console.log('token', token)
 
   if (!token) {
     return next(new Error("Authentication error: Token not provided"));
@@ -51,9 +53,8 @@ io.use(async (socket, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-
-    // 1. Kiểm tra User tồn tại
     const user = await User.findByPk(decoded.id);
+    console.log('user', user)
     if (!user) {
       return next(new Error("Authentication error: User not found"));
     }
@@ -71,21 +72,13 @@ io.use(async (socket, next) => {
   }
 });
 
-// Khởi tạo các sự kiện chat sau khi xác thực
 chatEvents(io);
 
-// ==========================================================
-// CẤU HÌNH EXPRESS MIDDLEWARE
-// ==========================================================
 app.set("trust proxy", true);
-
-// Middleware CORS cho Express
 app.use(
   cors({
     origin: [
-      "http://localhost:3000",
       "http://localhost:3001",
-      "http://192.168.1.12:3000"
       "http://192.168.1.22:3000",
     ],
     credentials: true,
@@ -104,42 +97,28 @@ app.use(
 );
 
 // --- KHAI BÁO ROUTES Ở PHẠM VI TOÀN CỤC ---
-
-// Danh sách các route yêu cầu xác thực và không yêu cầu xác thực
 const protectedRoutes = [
   'favorites', // Yêu thích
   'histories', // Lịch sử nghe nhạc
   'notifications', // Thông báo
   'playlists', // Playlist cá nhân
-  'comments', // Comment (cần đăng nhập mới comment được)
   'follows', // Theo dõi người dùng, nghệ sĩ
   'genres', // Xem thể loại nhạc
   'artists', // Xem thông tin nghệ sĩ
   'albums', // Xem album
-  // 'search', // Tìm kiếm công khai
-  // 'recommend', // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
   "conversations",
   "upload", // Upload hình ảnh, file
-  "music",
   "tracks", // Xem bài hát (public), upload bài hát (private)
-  // 'recommend',    // Gợi ý (có thể cá nhân hóa nếu đăng nhập)
+  "recommendations"
 ];
-// const protectedRoutes = ['albums', 'songs', 'playlists', 'genres', 'follows', 'notifications', 'recommendations', 'history', 'downloads', 'conversations'];
-const publicRoutes = ["auth", "users", "posts"]; // posts được xử lý riêng
+const publicRoutes = ["auth", "users", "posts", "music", "comments"]; // posts được xử lý riêng
 
 // 1. Xử lý các route yêu cầu authentication bắt buộc
-// Setup public routes
 publicRoutes.forEach((route) => {
   app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
 });
 
-// 2. TẠO NGOẠI LỆ CHO GET /posts (LOAD FEED CÔNG KHAI)
-// Dòng này đảm bảo chỉ request GET /posts được xử lý mà không cần Token
-app.get(`${API_PREFIX}/posts`, require("./routes/postsRoute"));
-
-// 3. Setup protected routes với authentication bắt buộc
 protectedRoutes.forEach((route) => {
-  // Các route này cần authenticateToken toàn cục
   app.use(
     `${API_PREFIX}/${route}`,
     authenticateToken,
@@ -147,14 +126,11 @@ protectedRoutes.forEach((route) => {
   );
 });
 
-// 2. Xử lý các route public/ đặc biệt
-publicRoutes.forEach((route) => {
-  // Posts cần xử lý đặc biệt vì nó chứa cả public (GET /) và private (POST, PUT, DELETE, GET /mine)
-  // Chúng ta sẽ gọi router trực tiếp mà không có middleware toàn cục nào
-  app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
-});
+// // 2. Xử lý các route public/ đặc biệt
+// publicRoutes.forEach((route) => {
+//   app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
+// });
 
-// 4. Admin metrics routes
 app.use(
   `${API_PREFIX}/admin/metrics`,
   authenticateToken,
@@ -171,6 +147,8 @@ async function startServer() {
     // console.log('✅ Database synchronized successfully')
     // await seedDatabase();
 
+    await connectRedis();
+
     server.listen(process.env.PORT || 3001, () => {
       console.log(`🚀 Server is running on port ${process.env.PORT || 3001}`);
     });
@@ -180,5 +158,4 @@ async function startServer() {
   }
 }
 
-// Gọi hàm khởi động server
 startServer();

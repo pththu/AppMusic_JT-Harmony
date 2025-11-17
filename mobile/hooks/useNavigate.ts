@@ -32,6 +32,7 @@ const routeMap: Record<any, any> = {
   AllSongsScreen: '(screens)/AllSongsScreen',
   QueueScreen: '(screens)/QueueScreen',
   SongScreen: '(screens)/SongScreen',
+  ListenHistoryScreen: '(screens)/ListenHistoryScreen',
 
   Setting: '(screens)/SettingScreen',
   ChangePassword: '(screens)/ChangePasswordScreen',

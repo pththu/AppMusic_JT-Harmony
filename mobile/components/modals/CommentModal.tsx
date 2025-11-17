@@ -17,6 +17,8 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { toggleCommentLike, Comment } from "../../services/socialApi";
+import useAuthStore from "@/store/authStore";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 const formatTimeAgo = (dateString: string): string => {
   const commentDate = new Date(dateString);
@@ -78,6 +80,9 @@ const CommentModal: React.FC<CommentModalProps> = ({
   setQuote,
 }) => {
   const colorScheme = useColorScheme();
+  const { info } = useCustomAlert();
+  const isGuest = useAuthStore((state) => state.isGuest);
+  const setShowLoginWall = useAuthStore((state) => state.setShowLoginWall);
 
   const [isSending, setIsSending] = useState(false); // Trạng thái gửi bình luận
   const [isKeyboardVisible, setKeyboardVisible] = useState(false); // Trạng thái bàn phím
@@ -106,6 +111,10 @@ const CommentModal: React.FC<CommentModalProps> = ({
 
   // Xử lý thêm bình luận
   const handleAddComment = async () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng tính năng này.");
+      return;
+    }
     if (newComment.trim()) {
       try {
         setIsSending(true);
@@ -151,7 +160,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
   };
 
   // Tính tổng số bình luận bao gồm cả replies
-  const totalCommentCount = comments.reduce((total, comment) => {
+  const totalCommentCount = comments?.reduce((total, comment) => {
     let count = 1;
     count += comment.Replies ? comment.Replies.length : 0;
     return total + count;

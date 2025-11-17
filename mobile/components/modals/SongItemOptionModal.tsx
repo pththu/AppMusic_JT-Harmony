@@ -64,7 +64,6 @@ const SongItemOptionModal = ({
     try {
       console.log('un')
       setIsLoading(true);
-      console.log(favoriteItems)
       const favoriteItem = favoriteItems.find(
         (item) => item?.itemType === 'track' && (item?.itemId === track?.id || item?.itemSpotifyId === track?.spotifyId)
       );
@@ -112,7 +111,7 @@ const SongItemOptionModal = ({
   };
 
   useEffect(() => {
-    console.log('current', track);
+    // console.log('current', track);
     if (favoriteItems) {
       const isFavorite = favoriteItems.some(
         (item) => item?.itemType === 'track' && (item?.itemSpotifyId === track?.spotifyId || (track?.id !== null && item?.itemId === track?.id))

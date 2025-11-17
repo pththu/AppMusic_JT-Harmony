@@ -77,12 +77,12 @@ export default function AllSongsScreen() {
   const { theme } = useTheme();
   const primaryIconColor = theme === 'dark' ? 'white' : 'black';
 
-  const renderItem = ({ item }: any) => (
+  const renderItem = ({ item }) => (
     <SongItem
-      title={item.title}
-      subtitle={item.album}
-      image={item.image}
+      item={item}
+      image={item?.imageUrl}
       onOptionsPress={() => { }}
+      onPress={() => { }}
     />
   );
 

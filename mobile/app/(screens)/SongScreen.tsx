@@ -19,20 +19,17 @@ import ArtistsSection from "@/components/artists/ArtistsSection";
 import { useNavigate } from "@/hooks/useNavigate";
 import { usePlayerStore } from "@/store/playerStore";
 import { router } from "expo-router";
-import { useTheme } from "@/components/ThemeContext";
 import { albumData, trackData } from "@/constants/data";
-import { SafeAreaView } from "react-native-safe-area-context";
 import SongItem from "@/components/items/SongItem";
 import TextTicker from "react-native-text-ticker";
-import { is } from "date-fns/locale";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { ShareTrack } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
 import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
-import { opacity } from "react-native-reanimated/lib/typescript/Colors";
-import { fetchCoversBySongId } from "@/services/coverApi";
+import { fetchCoversBySongId } from "@/services/coverService";
 import CoverItem from "@/components/items/CoverItem";
+import PlayerProgressBar from "@/components/player/PlayerProgressBar";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -43,11 +40,11 @@ export default function SongScreen() {
   const colorScheme = useColorScheme();
 
   const user = useAuthStore((state) => state.user);
-  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
+  // const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const currentIndex = usePlayerStore((state) => state.currentIndex);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const duration = usePlayerStore((state) => state.duration);
+  // const duration = usePlayerStore((state) => state.duration);
   const isShuffled = usePlayerStore((state) => state.isShuffled);
   const queue = usePlayerStore((state) => state.queue);
   const repeatMode = usePlayerStore((state) => state.repeatMode);
@@ -57,9 +54,11 @@ export default function SongScreen() {
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setPlaybackPosition = usePlayerStore((state) => state.setPlaybackPosition);
   const setRepeatMode = usePlayerStore((state) => state.setRepeatMode);
+  const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const playNext = usePlayerStore((state) => state.playNext);
   const playPrevious = usePlayerStore((state) => state.playPrevious);
+  const playTrackFromQueue = usePlayerStore((state) => state.playTrackFromQueue);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
   const removeTrackFromQueue = usePlayerStore((state) => state.removeTrackFromQueue);
@@ -68,12 +67,11 @@ export default function SongScreen() {
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
   const secondaryIconColor = colorScheme === 'dark' ? '#888' : 'gray';
 
-  const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [isRepeatOne, setIsRepeatOne] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  // const [progress, setProgress] = useState(0);
   const [trackCommentsVisible, setTrackCommentsVisible] = useState(false);
   const [defaultTimecodeMs, setDefaultTimecodeMs] = useState<number | null>(null);
 
@@ -88,18 +86,18 @@ export default function SongScreen() {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
-  const handleCommentAtCurrentTime = () => {
-    const timecodeMs = Math.max(0, Math.floor((playbackPosition || 0) * 1000));
-    setDefaultTimecodeMs(timecodeMs);
-    setTrackCommentsVisible(true);
-  };
+  // const handleCommentAtCurrentTime = () => {
+  //   const timecodeMs = Math.max(0, Math.floor((playbackPosition || 0) * 1000));
+  //   setDefaultTimecodeMs(timecodeMs);
+  //   setTrackCommentsVisible(true);
+  // };
 
   // State cho covers
   const [covers, setCovers] = useState<any[]>([]);
   const [loadingCovers, setLoadingCovers] = useState(false);
 
   // Load covers khi component mount
-  React.useEffect(() => {
+  useEffect(() => {
     const loadCovers = async () => {
       if (currentTrack?.id) {
         setLoadingCovers(true);
@@ -123,10 +121,11 @@ export default function SongScreen() {
 
   const handleSelectTrack = (track) => {
     setCurrentTrack(track);
-    navigate('SongScreen');
+    // navigate('SongScreen');
   }
 
   const handlePlayPrevious = () => {
+    console.log('preve')
     if (!currentTrack) return;
     if (currentIndex === 0) {
       setPlaybackPosition(0);
@@ -135,18 +134,18 @@ export default function SongScreen() {
   }
 
   const handlePlayNext = () => {
+    console.log('next')
     playNext();
   }
 
   const handleShufflePlay = () => {
-    console.log('handleShufflePlay: ', isShuffle)
-
-    if (isShuffle) {
+    console.log('handleShufflePlay: ', isShuffled)
+    if (isShuffled) {
       unShuffleQueue();
     } else {
       shuffleQueue();
     }
-    setIsShuffle(!isShuffle);
+    setIsShuffled(!isShuffled);
   };
 
   const handleRepeat = () => {
@@ -230,7 +229,7 @@ export default function SongScreen() {
     try {
       console.log('un')
       setIsLoading(true);
-      console.log(favoriteItems)
+      // console.log(favoriteItems)
       const favoriteItem = favoriteItems.find(
         (item) => item?.itemType === 'track' && (item?.itemId === track?.id || item?.itemSpotifyId === track?.spotifyId)
       );
@@ -249,6 +248,8 @@ export default function SongScreen() {
     } catch (err) {
       console.log(err);
       error('Lỗi khi xóa bài hát khỏi mục yêu thích.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -263,24 +264,25 @@ export default function SongScreen() {
       });
       if (response.success) {
         setIsFavorite(true);
-        setIsLoading(false);
-        console.log('response.data ui', response.data)
+        // console.log('response.data ui', response.data)
         addFavoriteItem(response.data[0]);
       }
     } catch (err) {
       console.log(err)
       error('Lỗi khi thêm bài hát vào mục yêu thích.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (duration > 0) {
-      const percentage = (playbackPosition / duration) * 100;
-      setProgress(percentage);
-    } else {
-      setProgress(0);
-    }
-  }, [playbackPosition, duration]);
+  // useEffect(() => {
+  //   if (duration > 0) {
+  //     const percentage = (playbackPosition / duration) * 100;
+  //     setProgress(percentage);
+  //   } else {
+  //     setProgress(0);
+  //   }
+  // }, [playbackPosition, duration]);
 
   useEffect(() => {
     if (repeatMode === 'none') {
@@ -296,7 +298,7 @@ export default function SongScreen() {
   }, [repeatMode])
 
   useEffect(() => {
-    console.log('current', currentTrack)
+    // console.log('current', currentTrack)
     if (favoriteItems) {
       const isFavorite = favoriteItems.some(
         (item) => item?.itemType === 'track' && (item?.itemSpotifyId === currentTrack?.spotifyId || (currentTrack?.id !== null && item?.itemId === currentTrack?.id))
@@ -305,7 +307,6 @@ export default function SongScreen() {
     }
   }, []);
 
-  // ???
   const handleViewAllCovers = () => {
     // Navigate to SocialScreen with covers filter
     navigate("SocialScreen", { filter: "covers", songId: currentTrack.id });
@@ -397,14 +398,14 @@ export default function SongScreen() {
 
       {/* Controls */}
       <View className="flex-row justify-between items-center mb-3 px-6">
-        <TouchableOpacity onPress={handleShufflePlay} className="p-2">
+        <TouchableOpacity onPress={handleShufflePlay} className="p-4">
           <Icon name="shuffle" size={24} color={isShuffled ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handlePlayPrevious} className="p-2">
+        <TouchableOpacity onPress={handlePlayPrevious} className="p-4">
           <Icon name="skip-previous" size={30} color={primaryIconColor} />
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-white rounded-full p-2 shadow-lg"
+          className="bg-white rounded-full p-4 shadow-lg"
           onPress={togglePlayPause}
         >
           <Icon
@@ -413,16 +414,16 @@ export default function SongScreen() {
             color={'black'}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handlePlayNext} className="p-2">
+        <TouchableOpacity onPress={handlePlayNext} className="p-4">
           <Icon name="skip-next" size={30} color={primaryIconColor} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleRepeat} className="p-2">
+        <TouchableOpacity onPress={handleRepeat} className="p-4">
           <Icon name={isRepeatOne ? 'repeat-one' : 'repeat'} size={24} color={isRepeat ? '#22c55e' : secondaryIconColor} />
         </TouchableOpacity>
       </View>
 
       {/* Progress Bar */}
-      <View className="flex-row items-center px-3 mb-3">
+      {/* <View className="flex-row items-center px-3 mb-3">
         <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs w-8 text-center`}>
           {formatTime(playbackPosition)}
         </Text>
@@ -435,24 +436,25 @@ export default function SongScreen() {
         <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-800'} text-xs w-8 text-center`}>
           {formatTime(duration)}
         </Text>
-      </View>
+      </View> */}
+      <PlayerProgressBar />
 
       {/* Comment at current time */}
-      <View className="items-end px-3 mb-4">
+      {/* <View className="items-end px-3 mb-4">
         <TouchableOpacity onPress={handleCommentAtCurrentTime} className="px-3 py-1 rounded-full bg-indigo-500 flex-row items-center">
           <Icon name="comment" size={16} color="#fff" />
           <Text className="text-white font-semibold ml-2">Bình luận tại {formatTime(playbackPosition)}</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       {/* Track Comments Modal */}
-      <TrackCommentsModal
+      {/* <TrackCommentsModal
         visible={trackCommentsVisible}
         onClose={() => setTrackCommentsVisible(false)}
         trackId={currentTrack?.id}
         defaultTimecodeMs={defaultTimecodeMs}
         onUserPress={(userId) => navigate("ProfileSocialScreen", { userId })}
-      />
+      /> */}
 
       {/* Up Next Header */}
       <View className={`flex-row justify-between items-center mb-2`}>
@@ -501,10 +503,7 @@ export default function SongScreen() {
     <ScrollView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'}`}
     >
       {isLoading && (
-        <View className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/50 justify-center items-center"
-          style={{
-            height: screenHeight
-          }}
+        <View className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/50 justify-start items-center"
         >
           <ActivityIndicator size="large" color="#22c55e" />
         </View>

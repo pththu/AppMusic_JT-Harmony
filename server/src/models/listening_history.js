@@ -30,17 +30,21 @@ const ListeningHistory = sequelize.define(
       field: 'item_type'
     },
     durationListened: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DOUBLE,
       field: 'duration_listened'
+    },
+    playCount: {
+      type: DataTypes.INTEGER,
+      field: 'play_count',
+      defaultValue: 1
     }
   },
   {
     tableName: 'listening_histories',
     timestamps: true,
     indexes: [
-      {
-        fields: ['id', 'user_id']
-      }
+      { fields: ['id', 'user_id'] },
+      { unique: true, fields: ['user_id', 'item_spotify_id'], }
     ]
   }
 )

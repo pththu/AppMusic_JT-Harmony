@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { use } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -13,6 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigate } from "@/hooks/useNavigate";
+import useAuthStore from '@/store/authStore';
 
 interface NewPostItemProps {
     user: { id: number; avatarUrl?: string };
@@ -41,7 +42,7 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
 }) => {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
-    const navigation = useNavigation();
+    const isGuest = useAuthStore((state) => state.isGuest);
     const { navigate } = useNavigate();
 
     const canPost = (newPostText.trim() || selectedMediaAssets.length > 0) && !isUploading;
@@ -65,7 +66,7 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                         className="w-12 h-12 rounded-full mr-3 border-2 border-indigo-500"
                     />
                 </TouchableOpacity>
-                
+
 
                 <View className="flex-1">
                     {/* 1. INPUT NỘI DUNG */}
@@ -135,7 +136,7 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                         onPress={handleSelectMedia}
                         disabled={isUploading}
                         className="flex-row items-center p-2 rounded-full mr-3"
-                        style={{ backgroundColor: isUploading ? '#374151' : '#4F46E5' }} 
+                        style={{ backgroundColor: isUploading ? '#374151' : '#4F46E5' }}
                     >
                         {isUploading ? (
                             <ActivityIndicator size="small" color="#4F46E5" />
@@ -157,10 +158,9 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                 {/* 4. NÚT ĐĂNG BÀI (CALLS addPost) */}
                 <TouchableOpacity
                     onPress={addPost}
-                    disabled={!canPost}
+                    disabled={!canPost || isGuest}
                     className={`ml-auto px-6 py-2 rounded-full shadow-md 
-                        ${canPost ? "bg-green-600 shadow-green-700" : "bg-gray-400"
-                        }`}
+                        ${isGuest ? "bg-gray-400" : (canPost ? "bg-green-600 shadow-green-700" : "bg-gray-400")}`}
                 >
                     <Text className="font-bold text-white text-base">Đăng</Text>
                 </TouchableOpacity>

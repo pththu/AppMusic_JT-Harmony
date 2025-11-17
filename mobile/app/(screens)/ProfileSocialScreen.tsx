@@ -28,7 +28,7 @@ import {
   Post as PostType,
   Comment,
 } from "../../services/socialApi";
-import { fetchCoversByUserId, Cover } from "../../services/coverApi";
+import { fetchCoversByUserId, Cover } from "../../services/coverService";
 import useAuthStore from "@/store/authStore";
 import PostItem from "../../components/items/PostItem";
 import CoverItem from "../../components/items/CoverItem";

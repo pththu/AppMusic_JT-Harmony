@@ -18,13 +18,15 @@ import Icon from "react-native-vector-icons/Feather";
 import { togglePostLike, reportPost, updatePost, hidePost } from "../../services/socialApi";
 import PostOptionsModal from "../modals/PostOptionsModal";
 import ReportReasonModal from "../modals/ReportReasonModal";
+import useAuthStore from "@/store/authStore";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 // Lấy kích thước màn hình để tính toán chiều rộng ảnh
 const { width: screenWidth } = Dimensions.get('window');
 // Kích thước cố định cho ảnh trong Post (Đảm bảo ảnh không tràn màn hình)
 const IMAGE_WIDTH = screenWidth - 32; // Giả định padding ngang tổng cộng là 32 (p-4 * 2)
 // Chiều cao tương đối cho ảnh (ví dụ: tỷ lệ 4:3)
-const IMAGE_HEIGHT = IMAGE_WIDTH * 0.75; 
+const IMAGE_HEIGHT = IMAGE_WIDTH * 0.75;
 
 
 // --- HÀM TIỆN ÍCH: formatTimeAgo (Được giữ lại) ---
@@ -50,7 +52,6 @@ const formatTimeAgo = (dateString: string): string => {
     return 'vừa xong';
 };
 
-// --- ĐỊNH NGHĨA INTERFACE CHO POSTITEM PROPS  ---
 interface PostItemProps {
     id: number;
     userId: number;
@@ -73,14 +74,12 @@ interface PostItemProps {
     onHidePost: (postId: number) => void;
     onRefresh?: () => void;
 
-    // Additional options for user's own posts
     onEdit?: () => void;
     onDelete?: () => void;
     isUserPost?: boolean;
 }
 
-// --- COMPONENT POSTITEM  ---
-const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để gán type
+const PostItem: React.FC<PostItemProps> = ({
     id: postId,
     userId,
     User,
@@ -104,25 +103,20 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
     isUserPost,
 }) => {
     const colorScheme = useColorScheme();
+    const { info, success, error, warning } = useCustomAlert();
+    const isGuest = useAuthStore((state) => state.isGuest);
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [currentLikeCount, setCurrentLikeCount] = useState(heartCount);
 
-    // Theo dõi chỉ số ảnh hiện tại cho Indicator
-    const [activeIndex, setActiveIndex] = useState(0);
-
-    // State cho modal options
-    const [optionsModalVisible, setOptionsModalVisible] = useState(false);
-
-    // State cho report modal
-    const [reportModalVisible, setReportModalVisible] = useState(false);
-
-    // State cho ẩn bài viết tạm thời với undo
-    const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(0); // Theo dõi chỉ số ảnh hiện tại cho Indicator
+    const [optionsModalVisible, setOptionsModalVisible] = useState(false); // State cho modal options 
+    const [reportModalVisible, setReportModalVisible] = useState(false);    // State cho report modal
+    const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false); // State cho ẩn bài viết tạm thời với undo
     const [undoTimer, setUndoTimer] = useState<number | null>(null);
-
     // State cho inline editing
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(content);
+    const likeIconColor = isLiked ? '#ef4444' : (colorScheme === 'dark' ? '#a1a1aa' : '#000000');
 
     // Đồng bộ editContent khi content prop thay đổi
     useEffect(() => {
@@ -140,6 +134,10 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
 
     // Xử lý nút Tim
     const handleLike = async () => {
+        if (isGuest) {
+            info("Hãy đăng nhập để sử dụng tính năng này.");
+            return;
+        }
         if (!postId) return;
 
         const prevIsLiked = isLiked;
@@ -149,7 +147,7 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
 
         setIsLiked(newIsLikedOptimistic);
         setCurrentLikeCount((prevCount) => prevCount + likeChangeOptimistic);
-        
+
         try {
             const result = await togglePostLike(postId.toString());
             if ('isLiked' in result && 'heartCount' in result) {
@@ -162,17 +160,13 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
             } else {
                 throw new Error('Invalid response');
             }
-        } catch (error) {
-            console.error('Lỗi khi thích/bỏ thích bài đăng:', error);
-            Alert.alert('Lỗi', 'Không thể cập nhật trạng thái thích.');
+        } catch (err) {
+            console.error('Lỗi khi thích/bỏ thích bài đăng:', err);
+            error("Không thể cập nhật trạng thái thích.");
             setIsLiked(prevIsLiked);
             setCurrentLikeCount(prevLikeCount);
         }
     };
-
-    const likeIconColor = isLiked 
-        ? '#ef4444'
-        : (colorScheme === 'dark' ? '#a1a1aa' : '#000000');
 
     // Xử lý nút Bình luận 
     const handleComment = () => {
@@ -183,6 +177,10 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
 
     // Xử lý nút Chia sẻ
     const handleShare = async () => {
+        if (isGuest) {
+            info("Hãy đăng nhập để sử dụng tính năng này.");
+            return;
+        }
         try {
             let shareMessage = `${User?.fullName}: `;
 
@@ -218,9 +216,9 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
             } else if (result.action === Share.dismissedAction) {
                 // Dismissed
             }
-        } catch (error) {
-            console.error('Lỗi khi chia sẻ:', error);
-            Alert.alert('Lỗi', 'Không thể chia sẻ bài viết.');
+        } catch (err) {
+            console.error('Lỗi khi chia sẻ:', err);
+            error("Không thể chia sẻ bài viết.");
         }
     };
 
@@ -234,27 +232,40 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
 
     // Hàm xử lý báo cáo
     const handleReport = () => {
+        if (isGuest) {
+            info("Hãy đăng nhập để sử dụng tính năng này.");
+            return;
+        }
         setOptionsModalVisible(false);
         setReportModalVisible(true);
     };
 
     // Hàm xử lý gửi báo cáo cuối cùng
     const handleFinalReport = async (postId: number, reason: string) => {
+        if (isGuest) {
+            info("Hãy đăng nhập để sử dụng tính năng này.");
+            return;
+        }
         try {
             const result = await reportPost(postId.toString(), reason);
             if ('message' in result) {
-                Alert.alert("Thành công", result.message);
+                success(result.message);
             } else {
-                Alert.alert("Lỗi", "Có lỗi xảy ra khi báo cáo.");
+                error("Có lỗi xảy ra khi báo cáo.");
             }
-        } catch (error) {
-            console.error('Lỗi khi gửi báo cáo:', error);
-            Alert.alert("Lỗi", "Không thể gửi báo cáo. Vui lòng thử lại.");
+        } catch (err) {
+            console.error('Lỗi khi gửi báo cáo:', err);
+            error("Không thể gửi báo cáo. Vui lòng thử lại.");
+
         }
     };
 
     // Hàm xử lý ẩn bài viết với undo
     const handleHide = async () => {
+        if (isGuest) {
+            info("Hãy đăng nhập để sử dụng tính năng này.");
+            return;
+        }
         setIsTemporarilyHidden(true);
         // Đặt timer để ẩn vĩnh viễn sau 10 giây
         const timer = setTimeout(async () => {
@@ -274,6 +285,10 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
 
     // Hàm hoàn tác ẩn bài viết
     const handleUndoHide = () => {
+        if (isGuest) {
+            info("Hãy đăng nhập để sử dụng tính năng này.");
+            return;
+        }
         if (undoTimer) {
             clearTimeout(undoTimer);
             setUndoTimer(null);
@@ -289,8 +304,12 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
 
     // Hàm lưu chỉnh sửa
     const handleSaveEdit = async () => {
+        if (isGuest) {
+            info("Hãy đăng nhập để sử dụng tính năng này.");
+            return;
+        }
         if (!editContent.trim()) {
-            Alert.alert('Lỗi', 'Nội dung không được để trống.');
+            error('Nội dung không được để trống.');
             return;
         }
         try {
@@ -303,7 +322,8 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                     onPostUpdate('content', editContent);
                 }
                 setIsEditing(false);
-                Alert.alert('Thành công', 'Bài viết đã được cập nhật.');
+                success('Bài viết đã được cập nhật.');
+
                 // Trigger refresh to update UI
                 if (onRefresh) {
                     onRefresh();
@@ -311,7 +331,8 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
             }
         } catch (error) {
             console.error('Lỗi khi cập nhật bài viết:', error);
-            Alert.alert('Lỗi', 'Không thể cập nhật bài viết. Vui lòng thử lại.');
+            error('Không thể cập nhật bài viết. Vui lòng thử lại.');
+
         }
     };
 
@@ -342,7 +363,6 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
         );
     }
 
-    // --- PHẦN RENDER LOGIC ---
     return (
         <View className="bg-white dark:bg-[#171431] p-4 mb-3 rounded-xl shadow-md shadow-gray-400 dark:shadow-black">
             {/* Header  */}
@@ -412,7 +432,7 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         className="rounded-xl overflow-hidden"
-                        style={{ height: IMAGE_HEIGHT }} 
+                        style={{ height: IMAGE_HEIGHT }}
                     >
                         {images.map((imgUrl, index) => (
                             <Image
@@ -433,11 +453,10 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                             {images.map((_, index) => (
                                 <View
                                     key={index}
-                                    className={`w-2 h-2 rounded-full mx-1 ${
-                                        index === activeIndex 
-                                            ? 'bg-indigo-500' 
-                                            : colorScheme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'
-                                    }`}
+                                    className={`w-2 h-2 rounded-full mx-1 ${index === activeIndex
+                                        ? 'bg-indigo-500'
+                                        : colorScheme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'
+                                        }`}
                                 />
                             ))}
                         </View>
@@ -468,8 +487,8 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                         disabled={currentLikeCount === 0} // Chỉ cho phép nhấn nếu có lượt thích
                         className="p-1 -ml-1"
                     >
-                        <Text className="text-xs text-gray-500 dark:text-gray-400 font-bold"> 
-                            {currentLikeCount} Thích 
+                        <Text className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+                            {currentLikeCount} Thích
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -484,7 +503,7 @@ const PostItem: React.FC<PostItemProps> = ({ // React.FC<PostItemProps> để g�
                     <Text className="text-xs text-gray-500 dark:text-gray-400">
                         {shareCount} Chia sẻ
                     </Text>
-                </View>               
+                </View>
             </View>
 
             {/* Interaction Buttons */}

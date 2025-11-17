@@ -31,7 +31,7 @@ export interface Cover {
  * Lấy danh sách covers theo song ID
  * Endpoint: GET /api/v1/posts/covers/song/:songId
  */
-export const fetchCoversBySongId = async (songId: number): Promise<Cover[]> => {
+export const fetchCoversBySongId = async (songId) => {
   try {
     const response = await api.get(`/posts/covers/song/${songId}`);
     return response.data as Cover[];
@@ -45,13 +45,19 @@ export const fetchCoversBySongId = async (songId: number): Promise<Cover[]> => {
  * Lấy danh sách top covers
  * Endpoint: GET /api/v1/posts/covers/top
  */
-export const fetchTopCovers = async (): Promise<Cover[]> => {
+export const fetchTopCovers = async () => {
   try {
     const response = await api.get("/posts/covers/top");
-    return response.data as Cover[];
+    return response.data.data as Cover[];
   } catch (error) {
-    console.error("Lỗi khi tải top covers:", error);
-    throw error;
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 };
 
@@ -99,7 +105,7 @@ export const createNewCover = async (
   content: string,
   fileUrls: string[] | null = null,
   originalSongId: number
-): Promise<Cover | { message: string; status: string }> => {
+) => {
   try {
     console.log("Gửi request tạo cover với dữ liệu:", {
       content,
@@ -114,14 +120,15 @@ export const createNewCover = async (
       originalSongId,
     });
     console.log("Response từ server:", response.data);
-    return response.data.post as Cover;
+    return response.data.data as Cover;
   } catch (error) {
-    console.error("Lỗi khi tạo cover:", error);
-    console.error("Chi tiết lỗi:", error.response?.data || error.message);
-    const errorMessage =
-      error.response?.data?.error ||
-      error.response?.data?.message ||
-      "Không thể tạo cover.";
-    return { message: errorMessage, status: "error" };
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 };

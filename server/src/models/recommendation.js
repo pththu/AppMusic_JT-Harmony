@@ -1,39 +1,42 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
-    // const { sequelize } = require('../configs/database');
-
 
 const Recommendation = sequelize.define(
-    'Recommendation', {
+    'Recommendation',
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            allowNull: false,
+            primaryKey: true
+        },
         userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            primaryKey: true,
             field: 'user_id'
         },
-        songId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            primaryKey: true,
-            field: 'song_id'
+        query: {
+            type: DataTypes.TEXT,
+            field: 'query'
         },
-        score: {
+        type: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            field: 'type'
+        },
+        reason: {
+            type: DataTypes.STRING,
+        },
+        confidence: {
             type: DataTypes.FLOAT,
-            allowNull: false
-        },
-        isClicked: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            field: 'is_clicked'
-        },
-        generatedAt: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            field: 'generated_at'
         }
-    }, {
+    },
+    {
         tableName: 'recommendations',
-        timestamps: true
+        timestamps: true,
+        indexes: [
+            { fields: ['user_id'] }
+        ]
     }
 )
 

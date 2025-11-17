@@ -146,15 +146,37 @@ export const createTrackComment = async (
 /** Lấy danh sách tất cả bài đăng mới nhất
  * Endpoint: GET /api/v1/posts
  */
-export const fetchPosts = async (): Promise<Post[]> => {
+export const fetchPosts = async () => {
   try {
     const response = await api.get("/posts");
-    return response.data as Post[];
+    return response.data.data as Post[];
   } catch (error) {
-    console.error("Lỗi khi tải bài đăng:", error);
-    throw error;
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 };
+
+export const fetchPostsForGuest = async () => {
+  try {
+    const response = await axiosClient.get('/posts/post-for-guests');
+    return response.data.data as Post[];
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
 
 /**
  * Lấy danh sách Bài đăng theo User ID từ server.
@@ -204,7 +226,7 @@ export const createNewPost = async (
       fileUrls, // Backend sẽ nhận Array<string> và chuyển thành chuỗi JSON
       songId,
     });
-    const newPostResponse = response.data.post;
+    const newPostResponse = response.data.data;
     return newPostResponse as Post;
   } catch (error) {
     console.error("Lỗi tạo bài đăng:", error);
@@ -240,19 +262,23 @@ export const togglePostLike = async (
  * Trường parentId để trả lời comment khác
  * userId: user.id Server nên tự lấy từ token, nhưng gửi thêm để đồng bộ
  */
-export const fetchCommentsByPostId = async (
-  postId: string
-): Promise<Comment[]> => {
+export const fetchCommentsByPostId = async (postId: string) => {
   try {
     const response = await api.get(`/comments/byPost/${postId}`);
-    const data = response.data;
+    const data = response.data.data;
     if (!Array.isArray(data)) {
       return [];
     }
     return data.map(mapCommentData) as Comment[];
   } catch (error) {
-    console.error("Lỗi khi tải bình luận:", error);
-    return [];
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 };
 

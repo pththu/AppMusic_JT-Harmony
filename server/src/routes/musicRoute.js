@@ -17,7 +17,6 @@ router.get('/album/:spotifyId/tracks', musicController.getTracksFromAlbum);
 
 router.get('/artist/:artistId/top-tracks', musicController.getTopTrackFromArtist);
 router.get('/artist/:artistId/albums', musicController.getAlbumsFromArtist);
-router.post('/artist/:artistId/tracks')
 
 router.post('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
 router.post('/playlist-for-you', musicController.getPlaylistsForYou);
@@ -39,7 +38,7 @@ router.get('/tracks', musicController.getTracks);
 // === YOUTUBE ROUTE ===
 
 // Ví dụ: GET /api/music/youtube/search?song=Shape%20of%20You&artist=Ed%20Sheeran
-router.post('/search-video', musicController.findYoutubeVideo);
+// router.post('/search-video', musicController.findYoutubeVideo);
 
 router.delete('/playlist/:playlistId/remove-track/:playlistTrackId', musicController.removeTrackFromPlaylist);
 

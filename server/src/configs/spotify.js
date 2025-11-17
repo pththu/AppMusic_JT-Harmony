@@ -6,9 +6,68 @@ const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
 
+const CATEGORY_SEARCH_STRATEGIES = {
+  'K-POP': {
+    // K-POP không phải official genre, search by text
+    useGenreFilter: false,
+    searchQueries: ['k-pop', 'kpop', 'korean pop'],
+    genreFilters: ['k-rap', 'korean r&b', 'korean indie'], // Related genres
+  },
+  'J-POP': {
+    // J-POP là official genre, dùng genre filter
+    useGenreFilter: true,
+    searchQueries: ['j-pop', 'jpop'],
+    genreFilters: ['j-pop', 'japanese pop', 'j-rock'],
+  },
+  'V-POP': {
+    useGenreFilter: false,
+    searchQueries: ['v-pop', 'vpop', 'vietnamese pop'],
+    genreFilters: ['vietnamese pop'],
+  },
+  'POP': {
+    useGenreFilter: true,
+    searchQueries: ['pop'],
+    genreFilters: ['pop', 'dance pop', 'indie pop'],
+  },
+  'HIP-HOP': {
+    useGenreFilter: true,
+    searchQueries: ['hip hop', 'hip-hop'],
+    genreFilters: ['hip hop', 'rap', 'trap'],
+  },
+  'INDIE': {
+    useGenreFilter: true,
+    searchQueries: ['indie'],
+    genreFilters: ['indie', 'indie rock', 'indie pop'],
+  },
+  'JAZZ': {
+    useGenreFilter: true,
+    searchQueries: ['jazz'],
+    genreFilters: ['jazz', 'smooth jazz', 'contemporary jazz'],
+  },
+  'RAP': {
+    useGenreFilter: true,
+    searchQueries: ['rap', 'k-rap', 'hip hop', 'j-rap', 'v-rap'],
+    genreFilters: ['rap', 'hip hop', 'trap', 'k-rap', 'japanese hip hop', 'vietnamese hip hop'],
+  },
+  'DANCE': {
+    useGenreFilter: true,
+    searchQueries: ['dance', 'edm'],
+    genreFilters: ['dance', 'edm', 'house'],
+  },
+  'ROCK': {
+    useGenreFilter: true,
+    searchQueries: ['rock'],
+    genreFilters: ['rock', 'classic rock', 'alternative rock'],
+  },
+  'C-POP': {
+    useGenreFilter: false,
+    searchQueries: ['c-pop', 'chinese pop', 'mandopop', 'c-rap'],
+    genreFilters: ['chinese pop', 'mandopop', 'chinese rock'],
+  },
+};
+
 let accessToken = null;
 
-/** Lấy Access Token từ Spotify để xác thực các yêu cầu API. */
 const getAccessToken = async () => {
   try {
     const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
@@ -28,11 +87,9 @@ const getAccessToken = async () => {
   }
 };
 
-/* Lấy token lần đầu và tự động làm mới sau mỗi 55 phút và Làm mới trước khi hết hạn */
-getAccessToken();
+getAccessToken(); /* Lấy token lần đầu và tự động làm mới sau mỗi 55 phút và Làm mới trước khi hết hạn */
 setInterval(getAccessToken, 1000 * 60 * 55);
 
-/* Hàm trợ giúp để thực hiện một yêu cầu GET đã được xác thực tới Spotify API */
 const spotifyApiRequest = async (endpoint, params = {}) => {
   if (!accessToken) {
     throw new Error('Spotify access token is not available.');
@@ -55,13 +112,6 @@ const findArtistById = async (artistId) => await spotifyApiRequest(`/artists/${a
 const findAlbumById = async (albumId) => await spotifyApiRequest(`/albums/${albumId}`);
 const findPlaylistById = async (playlistId) => await spotifyApiRequest(`/playlists/${playlistId}`);
 
-/**
- * Tìm kiếm bài hát hoặc nhiều bài hát trên Spotify
- * @param {*} query: string
- * @param {*} type: string
- * @param {*} limit: number | null
- * @returns list bài hát đã được format
- */
 const searchTracks = async (query, type, limit = null) => {
   try {
     const tracksData = await spotifyApiRequest('/search', {
@@ -76,92 +126,54 @@ const searchTracks = async (query, type, limit = null) => {
   }
 };
 
-const searchPlaylists = async (searchParams, limit) => {
-  const { name, artist } = searchParams;
-  let queryParts = [];
-  if (name) queryParts.push(`playlist:${name}`);
-  if (artist) {
-    if (Array.isArray(artist)) {
-      artist.forEach(art => queryParts.push(`artist:${art}`));
-    } else {
-      queryParts.push(`artist:${artist}`);
-    }
-  }
-
-  const query = queryParts.join(' ');
-
-  let allPlaylists = [];
-  let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=playlist&limit=50`; // Bắt đầu với URL đầu tiên
-
+const searchPlaylists = async (query, limit = null) => {
   try {
-    while (nextUrl) {
-      const response = await axios.get(nextUrl, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
+    const playlistsData = await spotifyApiRequest('/search', {
+      q: query,
+      type: 'playlist',
+      ...(limit ? { limit: limit } : {})
+    });
 
-      const playlistsPage = response.data.playlists;
-      const validItems = playlistsPage.items.filter(Boolean);
-      allPlaylists = allPlaylists.concat(validItems);
-      nextUrl = playlistsPage.next;
-      if (allPlaylists.length >= 3) {
-        break;
-      }
-    }
+    const validItems = playlistsData.playlists.items.filter(item => {
+      const invalidNames = ["Object Object", "[object Object]"];
+      if (!item || !item.name) return false;
+      const lowerCaseName = String(item.name).toLowerCase();
+      return !invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
+    });
+    return validItems;
 
-    return shuffle(allPlaylists).slice(0, 15).map((playlist) => playlist);
   } catch (error) {
-    console.error(`Lỗi khi tìm kiếm playlist trên Spotify:`, error.response ? error.response.data : error.message);
+    console.log('error seach spotify: ', error.message);
     throw error;
   }
 }
 
-const searchAlbums = async (searchParams) => {
-  const { name, artist } = searchParams;
-  let queryParts = [];
-  if (name) queryParts.push(`album:${name}`);
-  if (artist) queryParts.push(`artist:${artist}`);
-
-  const query = queryParts.join(' ');
-
-  let allAlbums = [];
-  let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=album&limit=25`; // Bắt đầu với URL đầu tiên
-
+const searchAlbums = async (query, limit = 15) => {
   try {
-    while (nextUrl) {
-      const response = await axios.get(nextUrl, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-
-      const albumPage = response.data.albums;
-      const validItems = albumPage.items.filter(Boolean);
-      allAlbums = allAlbums.concat(validItems);
-      nextUrl = albumPage.next;
-      if (allAlbums.length >= 3) {
-        break;
-      }
-    }
-
-    return shuffle(allAlbums).slice(0, 15).map((album) => album);
+    const albumsData = await spotifyApiRequest('/search', {
+      q: query,
+      type: 'album',
+      limit: limit
+    });
+    const validItems = albumsData.albums.items.filter(item => {
+      const invalidNames = ["Object Object", "[object Object]"];
+      if (!item || !item.name) return false;
+      const lowerCaseName = String(item.name).toLowerCase();
+      return !invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
+    });
+    return validItems;
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm album trên Spotify:`, error.response ? error.response.data : error.message);
     throw error;
   }
 };
 
-
 const searchArtists = async (query) => {
   try {
     let allArtists = [];
-    // Chỉ lấy 5 item/query để tăng độ đa dạng khi gọi nhiều lần
-    let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=5`;
+    let nextUrl = `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=50`;
 
-    // Chỉ lấy trang đầu tiên (limit=5)
-    // Bạn có thể bỏ vòng lặp `while` nếu muốn
-    if (nextUrl) {
+    while (nextUrl) {
       const response = await axios.get(nextUrl, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -169,17 +181,23 @@ const searchArtists = async (query) => {
       });
 
       const artistPage = response.data.artists;
-      if (artistPage && artistPage.items) {
-        // Logic lọc tên rác của bạn
-        const validItems = artistPage.items.filter(item => {
-          const invalidNames = ["Object Object", "[object Object]"];
-          if (!item || !item.name) return false;
-          const lowerCaseName = String(item.name).toLowerCase();
-          return !invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
-        });
-        allArtists = allArtists.concat(validItems);
-      }
+      const validItems = artistPage.items.filter(item => {
+        const invalidNames = ["Object Object", "[object Object]"];
+        if (!item) return false;
+
+        const itemName = item.name;
+        if (!itemName) return false;
+
+        const lowerCaseName = String(itemName).toLowerCase();
+        const isInvalid = invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
+
+        return !isInvalid;
+      });
+
+      allArtists = allArtists.concat(validItems);
+      nextUrl = artistPage.next;
     }
+
 
     // Trả về kết quả thô cho query này
     return allArtists;
@@ -189,6 +207,110 @@ const searchArtists = async (query) => {
     return [];
   }
 }
+
+const searchArtistsAdvanced = async (category, limit = 50) => {
+  try {
+    const categoryUpper = category.toUpperCase();
+    const strategy = CATEGORY_SEARCH_STRATEGIES[categoryUpper];
+
+    if (!strategy) {
+      // Fallback: search as text
+      return await searchArtists(category);
+    }
+
+    let allArtists = [];
+    const seenIds = new Set();
+
+    // Strategy 1: Genre filter (nếu supported)
+    if (strategy.useGenreFilter) {
+      for (const genreFilter of strategy.genreFilters) {
+        try {
+          const query = `genre:"${genreFilter}"`;
+          console.log(`Searching with genre filter: ${query}`);
+
+          const response = await axios.get(
+            `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(query)}&type=artist&limit=${limit}`,
+            {
+              headers: { 'Authorization': `Bearer ${accessToken}` }
+            }
+          );
+
+          const artists = response.data.artists.items.filter(item => {
+            if (!item || !item.id || seenIds.has(item.id)) return false;
+
+            // Validate artist
+            const invalidNames = ["Object Object", "[object Object]"];
+            if (invalidNames.some(inv => String(item.name).includes(inv))) return false;
+
+            seenIds.add(item.id);
+            return true;
+          });
+
+          allArtists.push(...artists);
+        } catch (err) {
+          console.error(`Genre filter failed for "${genreFilter}":`, err.message);
+        }
+      }
+    }
+
+    // Strategy 2: Text search (always do this for more results)
+    for (const searchQuery of strategy.searchQueries) {
+      try {
+        console.log(`Searching with text: ${searchQuery}`);
+
+        const response = await axios.get(
+          `${SPOTIFY_API_URL}/search?q=${encodeURIComponent(searchQuery)}&type=artist&limit=${limit}`,
+          {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          }
+        );
+
+        const artists = response.data.artists.items.filter(item => {
+          if (!item || !item.id || seenIds.has(item.id)) return false;
+
+          // Validate artist
+          const invalidNames = ["Object Object", "[object Object]"];
+          if (invalidNames.some(inv => String(item.name).includes(inv))) return false;
+
+          seenIds.add(item.id);
+          return true;
+        });
+
+        allArtists.push(...artists);
+      } catch (err) {
+        console.error(`Text search failed for "${searchQuery}":`, err.message);
+      }
+    }
+
+    // Strategy 3: Filter by genre match (post-processing)
+    const filteredArtists = allArtists.filter(artist => {
+      if (!artist.genres || artist.genres.length === 0) return true; // Keep if no genre info
+
+      // Check if any artist genre matches our category
+      return artist.genres.some(g => {
+        const genreLower = g.toLowerCase();
+        return strategy.searchQueries.some(q =>
+          genreLower.includes(q.toLowerCase())
+        ) || strategy.genreFilters.some(gf =>
+          genreLower.includes(gf.toLowerCase())
+        );
+      });
+    });
+
+    console.log(`Found ${allArtists.length} total, ${filteredArtists.length} after filtering`);
+
+    // Sort by popularity
+    return filteredArtists.sort((a, b) =>
+      (b.popularity || 0) - (a.popularity || 0)
+    ).slice(0, limit);
+
+  } catch (error) {
+    console.error(`Error in searchArtistsAdvanced:`, error.message);
+    return [];
+  }
+};
+
+
 
 const getPlaylistTracks = async (playlistId) => {
   let allTracks = [];
@@ -283,5 +405,6 @@ module.exports = {
   findPlaylistById,
   findTrackById,
   findArtistById,
-
+  searchArtistsAdvanced,
+  CATEGORY_SEARCH_STRATEGIES,
 };

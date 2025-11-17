@@ -21,11 +21,6 @@ const FollowUser = sequelize.define(
       allowNull: false,
       field: 'followee_id'
     },
-    followedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      field: 'followed_at',
-    }
   },
   {
     tableName: 'follow_users',

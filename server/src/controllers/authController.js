@@ -241,9 +241,9 @@ exports.loginWithFacebook = async (req, res) => {
   try {
 
     const profile = req.body;
-    console.log('profile from facebook', profile);
+    // console.log('profile from facebook', profile);
     const existingUser = await User.findOne({ where: { facebookId: profile?.userID } });
-    console.log('existingUser', existingUser);
+    // console.log('existingUser', existingUser);
 
     if (existingUser) {
       if (existingUser.status === 'locked' || existingUser.status === 'banned') {
