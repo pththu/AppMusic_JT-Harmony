@@ -118,7 +118,6 @@ export default function ProfileScreen() {
         return;
       }
       const response = await Logout();
-      console.log(response)
       if (loginType === "google") {
         await GoogleSignin.signOut();
       }

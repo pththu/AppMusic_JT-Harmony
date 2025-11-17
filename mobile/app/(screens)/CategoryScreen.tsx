@@ -20,6 +20,7 @@ import { GetCategoryContent } from "@/services/searchService";
 import { usePlayerStore } from "@/store/playerStore";
 import { useArtistStore } from "@/store/artistStore";
 import { useHistoriesStore } from "@/store/historiesStore";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 // Component hiển thị Playlist/Track/Album
 const ContentItem = ({ item, onPress }) => {
@@ -88,6 +89,7 @@ export default function CategoryScreen() {
   const { navigate } = useNavigate();
   const { info } = useCustomAlert();
 
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
@@ -222,7 +224,9 @@ export default function CategoryScreen() {
     categoryData.albums.length > 0; // <-- THÊM MỚI
 
   return (
-    <SafeAreaView className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
+    <SafeAreaView className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}
+      style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
+    >
       {/* Header (Thay đổi thiết kế) */}
       <View className="flex-row items-center justify-between px-3 py-2 h-14">
         <TouchableOpacity onPress={() => router.back()} className="p-2 z-10">

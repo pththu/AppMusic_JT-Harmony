@@ -32,6 +32,36 @@ import { useArtistStore } from "@/store/artistStore";
 import { GetArtistFollowed } from "@/services/followService";
 import { GetListeningHistory, GetSearchHistory, SaveToListeningHistory } from "@/services/historiesService";
 import { useHistoriesStore } from "@/store/historiesStore";
+import { GetRecommendationsByUser } from "@/services/recommendationService";
+import { SearchTracks } from "@/services/searchService";
+import { is, pl } from "date-fns/locale";
+
+async function processInBatches(items, limit, fn) {
+  let results = [];
+  for (let i = 0; i < items.length; i += limit) {
+    const batch = items.slice(i, i + limit);
+    // Chạy song song các item trong batch này
+    const batchResults = await Promise.all(batch.map(fn));
+    results = [...results, ...batchResults];
+    // Nghỉ nhẹ 500ms giữa các batch để server "thở" (nếu cần)
+    await new Promise(r => setTimeout(r, 500));
+  }
+  return results;
+}
+
+const ArtistItemHome = ({ name, image, onPress }) => {
+
+  const colorScheme = useColorScheme();
+  const imageDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1763270755/kltn/JT_Harmony_aoi1iv.png';
+  return (
+    <TouchableOpacity className="items-center mr-4 mb-4" onPress={onPress}>
+      <Image source={{ uri: image || imageDefault }} className="w-32 h-32 rounded-full mb-1 border-2 border-green-400" />
+      <Text className={`text-${colorScheme === "dark" ? "white" : "black"} text-sm text-center w-16`} numberOfLines={1}>
+        {name}
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
 export default function HomeScreen() {
 
@@ -60,7 +90,31 @@ export default function HomeScreen() {
   const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
   const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
+  const activity = [
+    { value: 'workout', label: 'Tập luyện' },
+    { value: 'relax', label: 'Thư giãn' },
+    { value: 'party', label: 'Tiệc tùng' },
+    { value: 'focus', label: 'Tập trung' },
+    { value: 'sleep', label: 'Ngủ' },
+    { value: 'commute', label: 'Đi lại' },
+    { value: 'study', label: 'Học tập' },
+    { value: 'driving', label: 'Lái xe' },
+    { value: 'gaming', label: 'Chơi game' },
+    { value: 'yoga', label: 'Yoga' },
+    { value: 'meditation', label: 'Thiền' },
+    { value: 'cooking', label: 'Nấu ăn' },
+    { value: 'running', label: 'Chạy bộ' },
+    { value: 'walking', label: 'Đi bộ' },
+  ]
 
+  const shuffleData = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+
+    return array;
+  }
   const [hasNotification] = useState(true);
 
   const historySavedRef = useRef(null);
@@ -70,12 +124,12 @@ export default function HomeScreen() {
   const iconColor = theme === 'light' ? '#000' : '#fff';
 
   const [queryParam, setQueryParam] = useState({
-    playlistForYou: ["Chill Hits", "kpop", "tình yêu", "thời thanh xuân"],
-    albumForYou: ["BTS", "Love Yourself", "buitruonglinh"],
+    playlistForYou: ["Nhạc trẻ phổ biến", "2025", "Đang hot", "Mới"],
+    albumForYou: ["Yêu", "buitruonglinh", "Taylor Swift", "Ed Sheeran"],
     playlistTrending: ["Vietnam đang hot", "Thịnh Hành", "Viral 2025"],
     albumTrending: ["Adele", "Ed Sheeran", "mtp"],
     artistNames: ["BTS", "buitruonglinh", "Hoàng Dũng", "Taylor Swift"],
-    genres: ["k-pop", "rock", "hip hop"],
+    genres: ["pop", "v-pop", "hip hop"],
   });
   const [dataForYou, setDataForYou] = useState({
     playlistsForYou: [],
@@ -84,12 +138,37 @@ export default function HomeScreen() {
     albumsTrending: [],
     artistsForYou: [],
   });
+  const [queryRecommendations, setQueryRecommendations] = useState({
+    baseOnHistory: [],
+    baseOnMoods: [],
+    baseOnActivities: [],
+    baseOnTimeOfDay: [],
+    baseOnFavoriteItems: [],
+    baseOnGenres: [],
+    baseOnFollowedArtists: [],
+  });
+  const [dataRecommendations, setDataRecommendations] = useState({
+    baseOnHistory: [],
+    baseOnMoods: [],
+    baseOnActivities: [],
+    baseOnTimeOfDay: [],
+    baseOnFavoriteItems: [],
+    baseOnGenres: [],
+    baseOnFollowedArtists: [],
+  });
   const [isLoading, setIsLoading] = useState({
     playlistForYou: true,
     albumsForYou: true,
     playlistTrending: true,
     albumsTrending: true,
     artistsForYou: true,
+    baseOnHistory: true,
+    baseOnMoods: true,
+    baseOnActivities: true,
+    baseOnTimeOfDay: true,
+    baseOnFavoriteItems: true,
+    baseOnGenres: true,
+    baseOnFollowedArtists: true,
   });
 
   const handleSelectPlaylist = (playlist) => {
@@ -108,6 +187,8 @@ export default function HomeScreen() {
   }
 
   const handlePlayPlaylist = async () => {
+
+    await fetchTracks(currentPlaylist);
     console.log('handlePlay')
     if (!listTrack || listTrack.length === 0) {
       warning('Playlist không có bài hát để phát!');
@@ -184,6 +265,7 @@ export default function HomeScreen() {
   const fetchAlbumsForYou = async () => {
     try {
       const response = await GetAlbumsForYou(queryParam.albumForYou);
+
       if (response.success) {
         setDataForYou((prev) => ({
           ...prev,
@@ -321,6 +403,114 @@ export default function HomeScreen() {
     }
   };
 
+  const fetchQueryRecommendations = async () => {
+    try {
+      const response = await GetRecommendationsByUser();
+      if (response.success) {
+        const data = response.data;
+        const newQueryData = {
+          baseOnHistory: [],
+          baseOnMoods: [],
+          baseOnActivities: [],
+          baseOnTimeOfDay: [],
+          baseOnFavoriteItems: [],
+          baseOnGenres: [],
+          baseOnFollowedArtists: [],
+        };
+
+        for (let item of data) {
+          const payload = { query: item.query, type: item.type };
+          switch (item.reason) {
+            case 'history': newQueryData.baseOnHistory.push(payload); break;
+            case 'genres': newQueryData.baseOnGenres.push(payload); break;
+            case 'favorites': newQueryData.baseOnFavoriteItems.push(payload); break;
+            case 'timeOfDay': newQueryData.baseOnTimeOfDay.push(payload); break;
+            case 'activity': newQueryData.baseOnActivities.push(payload); break;
+            case 'followedArtists': newQueryData.baseOnFollowedArtists.push(payload); break;
+            case 'mood': newQueryData.baseOnMoods.push(payload); break;
+          }
+        }
+        setQueryRecommendations(newQueryData);
+        return newQueryData;
+      }
+      return null;
+    } catch (error) {
+      console.log('Error fetching recommendations: ', error);
+      return null;
+    }
+  }
+
+  const fetchGenericRecommendation = async (dataItems, keyStateName) => {
+    if (!dataItems || dataItems.length === 0) {
+      setIsLoading(prev => ({ ...prev, [keyStateName]: false }));
+      return;
+    }
+
+    let groups = { artistNames: [], playlistNames: [], albumNames: [], genres: [], trackName: null };
+    for (let item of dataItems) {
+      const itemType = item.type;
+      switch (itemType) {
+        case 'playlist': groups.playlistNames.push(item.query); break;
+        case 'album': groups.albumNames.push(item.query); break;
+        case 'artist': groups.artistNames.push(item.query); break;
+        case 'track': groups.trackName = item.query; break;
+        case 'genre': groups.genres.push(item.query); break;
+      }
+    }
+
+    try {
+      const [resPlaylist, resAlbum, resArtist, resTrack] = await Promise.all([
+        groups.playlistNames.length > 0 ? GetPlaylistsForYou(groups.playlistNames) : null,
+        groups.albumNames.length > 0 ? GetAlbumsForYou(groups.albumNames) : null,
+        groups.artistNames.length > 0 ? GetArtistsForYou({ artistNames: groups.artistNames, genres: groups.genres }) : null,
+        groups.trackName ? SearchTracks({ trackName: groups.trackName, limit: 5 }) : null,
+      ]);
+
+      let result = [];
+      if (resPlaylist?.success) result = [...result, ...resPlaylist.data];
+      if (resAlbum?.success) result = [...result, ...resAlbum.data];
+      if (resArtist?.success) result = [...result, ...resArtist.data];
+      if (resTrack?.success) {
+        const tracks = resTrack.data.map((track) => ({ ...track, type: 'track' }));
+        result = [...result, ...tracks];
+      }
+
+      // console.log('result', result)
+      if (result.length > 0) {
+        setDataRecommendations(prev => ({
+          ...prev,
+          [keyStateName]: shuffleData(result)
+        }));
+        setIsLoading(prev => ({ ...prev, [keyStateName]: false }));
+      }
+    } catch (e) {
+      console.log(`Error fetching ${keyStateName}`, e);
+    }
+  }
+
+  const fetchDataRecommendations = async (inputData) => {
+    if (!inputData) return;
+
+    fetchGenericRecommendation(inputData.baseOnHistory, 'baseOnHistory').then(() =>
+      setTimeout(() => {
+        fetchGenericRecommendation(inputData.baseOnActivities, 'baseOnActivities')
+      }, 500)
+    )
+
+    const queue = [
+      { data: inputData.baseOnMoods, key: 'baseOnMoods' },
+      { data: inputData.baseOnTimeOfDay, key: 'baseOnTimeOfDay' },
+      { data: inputData.baseOnFavoriteItems, key: 'baseOnFavoriteItems' },
+      { data: inputData.baseOnGenres, key: 'baseOnGenres' },
+      { data: inputData.baseOnFollowedArtists, key: 'baseOnFollowedArtists' },
+    ]
+
+    for (const item of queue) {
+      await new Promise(r => setTimeout(r, 800)); // Delay nhỏ để né 429
+      fetchGenericRecommendation(item.data, item.key); // Không cần await nếu muốn chạy ngầm hoàn toàn
+    }
+  }
+
   useEffect(() => {
     fetchPlaylistsForYou()
     fetchAlbumsForYou()
@@ -330,19 +520,18 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn && user) {
+    if (isLoggedIn && user?.id) {
       fetchMyPlaylists();
       fetchHistory();
       fetchFavoritesItem();
       fetchArtistFollowed();
+      fetchQueryRecommendations().then((dataInput) => {
+        if (dataInput) {
+          fetchDataRecommendations(dataInput);
+        }
+      });
     }
-  }, [user, isLoggedIn]);
-
-  useEffect(() => {
-    if (dataForYou.playlistsForYou[0]) {
-      fetchTracks(dataForYou.playlistsForYou[0]);
-    }
-  }, [dataForYou.playlistsForYou[0]]);
+  }, [isLoggedIn, user?.id]);
 
   return (
     <SafeAreaView
@@ -399,62 +588,95 @@ export default function HomeScreen() {
 
         {/* Recently Played Horizontal List */}
         <View className="mb-6">
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-              Danh sách phát đề xuất cho bạn
-            </Text>
-          </View>
           {isLoading.playlistForYou ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
             </View>
           ) : (
-            <FlatList
-              horizontal
-              data={dataForYou.playlistsForYou.filter((_, index) => index !== 0)}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <PlaylistItem
-                  item={item}
-                  totalTrack={item.totalTracks || 0}
-                  onPress={() => handleSelectPlaylist(item)}
-                />
-              )}
-              showsHorizontalScrollIndicator={false}
-            />
+            <>
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                  Danh sách phát phổ biến
+                </Text>
+              </View>
+              <FlatList
+                horizontal
+                initialNumToRender={5}
+                data={dataForYou.playlistsForYou.filter((_, index) => index !== 0)}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <PlaylistItem
+                    item={item}
+                    totalTrack={item.totalTracks || 0}
+                    onPress={() => handleSelectPlaylist(item)}
+                  />
+                )}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
           )}
         </View>
 
         <View className="mb-6">
-          <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-            Album chọn lọc dành cho bạn
-          </Text>
+          {isLoading.artistsForYou ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22c55e" />
+              <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
+            </View>
+          ) : (
+            <>
+              <Text className={`text-lg font-bold mb-4 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Nghệ sĩ bạn phù hợp với bạn
+              </Text>
+              <FlatList
+                data={dataForYou.artistsForYou}
+                horizontal
+                initialNumToRender={5}
+                keyExtractor={(item, index) => index.toString()}
+                showsHorizontalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <ArtistItem
+                    name={item.name}
+                    image={item?.imageUrl || item?.imgUrl}
+                    onPress={() => handleSelectArtist(item)}
+                  />
+                )}
+              />
+            </>
+          )}
+        </View>
+        <View className="mb-6">
           {isLoading.albumsForYou ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
             </View>
           ) : (
-            <FlatList
-              horizontal
-              data={dataForYou.albumsForYou.filter((_, index) => index !== 0)}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <AlbumItem
-                  title={item.name}
-                  image={item.imageUrl}
-                  onPress={() => handleSelectAlbum(item)}
-                />
-              )}
-              showsHorizontalScrollIndicator={false}
-            />
+            <>
+              <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Album chọn lọc dành cho bạn
+              </Text>
+              <FlatList
+                horizontal
+                data={dataForYou.albumsForYou.filter((_, index) => index !== 0)}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <AlbumItem
+                    title={item.name}
+                    image={item.imageUrl}
+                    onPress={() => handleSelectAlbum(item)}
+                  />
+                )}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
           )}
         </View>
 
         <View className="mb-6">
           <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-            Danh sách phát thịnh hành
+            Dựa trên lịch sử nghe của bạn
           </Text>
           {isLoading.playlistTrending ? (
             <View className="flex-1 justify-center items-center">
@@ -464,69 +686,340 @@ export default function HomeScreen() {
           ) : (
             <FlatList
               horizontal
-              data={dataForYou.playlistsTrending.filter((_, index) => index !== 0)}
+              initialNumToRender={5}
+              data={dataRecommendations.baseOnHistory}
               keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <PlaylistItem
-                  item={item}
-                  totalTrack={item.totalTracks || 0}
-                  onPress={() => handleSelectPlaylist(item)}
-                />
-              )}
+              renderItem={({ item }) => {
+                if (item.type === 'playlist') {
+                  return (
+                    <PlaylistItem
+                      item={item}
+                      totalTrack={item.totalTracks || 0}
+                      onPress={() => handleSelectPlaylist(item)}
+                    />
+                  );
+                } else if (item.type === 'album') {
+                  return (
+                    <AlbumItem
+                      title={item.name}
+                      image={item.imageUrl}
+                      onPress={() => handleSelectAlbum(item)}
+                    />
+                  );
+                } else if (item.type === 'artist') {
+                  return (
+                    <ArtistItemHome
+                      name={item.name}
+                      image={item?.imageUrl || item?.imgUrl}
+                      onPress={() => handleSelectArtist(item)}
+                    />
+                  );
+                }
+              }}
               showsHorizontalScrollIndicator={false}
             />
           )}
         </View>
 
         <View className="mb-6">
-          <Text className={`text-lg font-bold mb-4 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-            Nghệ sĩ bạn phù hợp với bạn
-          </Text>
-          {isLoading.artistsForYou ? (
+          {isLoading.playlistTrending ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
             </View>
           ) : (
-            <FlatList
-              data={dataForYou.artistsForYou}
-              horizontal
-              keyExtractor={(item, index) => index.toString()}
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <ArtistItem
-                  name={item.name}
-                  image={item?.imageUrl || item?.imgUrl}
-                  onPress={() => handleSelectArtist(item)}
-                />
-              )}
-            />
+            <>
+              <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Phù hợp với hoạt động {activity.filter(act => act.value === 'study')[0]?.label}
+              </Text>
+              <FlatList
+                horizontal
+                initialNumToRender={5}
+                data={dataRecommendations.baseOnActivities}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => {
+                  if (item.type === 'playlist') {
+                    return (
+                      <PlaylistItem
+                        item={item}
+                        totalTrack={item.totalTracks || 0}
+                        onPress={() => handleSelectPlaylist(item)}
+                      />
+                    );
+                  } else if (item.type === 'album') {
+                    return (
+                      <AlbumItem
+                        title={item.name}
+                        image={item.imageUrl}
+                        onPress={() => handleSelectAlbum(item)}
+                      />
+                    );
+                  } else if (item.type === 'artist') {
+                    return (
+                      <ArtistItemHome
+                        name={item.name}
+                        image={item?.imageUrl || item?.imgUrl}
+                        onPress={() => handleSelectArtist(item)}
+                      />
+                    );
+                  }
+                }}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
           )}
         </View>
 
         <View className="mb-6">
-          <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-            Album phổ biến
-          </Text>
+          {isLoading.playlistTrending ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22c55e" />
+              <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
+            </View>
+          ) : (
+            <>
+              <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Dựa trên tâm trạng của bạn
+              </Text>
+              <FlatList
+                horizontal
+                initialNumToRender={5}
+                data={dataRecommendations.baseOnMoods}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => {
+                  if (item.type === 'playlist') {
+                    return (
+                      <PlaylistItem
+                        item={item}
+                        totalTrack={item.totalTracks || 0}
+                        onPress={() => handleSelectPlaylist(item)}
+                      />
+                    );
+                  } else if (item.type === 'album') {
+                    return (
+                      <AlbumItem
+                        title={item.name}
+                        image={item.imageUrl}
+                        onPress={() => handleSelectAlbum(item)}
+                      />
+                    );
+                  } else if (item.type === 'artist') {
+                    return (
+                      <ArtistItemHome
+                        name={item.name}
+                        image={item?.imageUrl || item?.imgUrl}
+                        onPress={() => handleSelectArtist(item)}
+                      />
+                    );
+                  }
+                }}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
+          )}
+        </View>
+
+        <View className="mb-6">
+          {isLoading.playlistTrending ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22c55e" />
+              <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
+            </View>
+          ) : (
+            <>
+              <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Có thể bạn sẽ thích
+              </Text>
+              <FlatList
+                horizontal
+                initialNumToRender={5}
+                data={dataRecommendations.baseOnFavoriteItems}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => {
+                  if (item.type === 'playlist') {
+                    return (
+                      <PlaylistItem
+                        item={item}
+                        totalTrack={item.totalTracks || 0}
+                        onPress={() => handleSelectPlaylist(item)}
+                      />
+                    );
+                  } else if (item.type === 'album') {
+                    return (
+                      <AlbumItem
+                        title={item.name}
+                        image={item.imageUrl}
+                        onPress={() => handleSelectAlbum(item)}
+                      />
+                    );
+                  } else if (item.type === 'artist') {
+                    return (
+                      <ArtistItemHome
+                        name={item.name}
+                        image={item?.imageUrl || item?.imgUrl}
+                        onPress={() => handleSelectArtist(item)}
+                      />
+                    );
+                  }
+                }}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
+          )}
+        </View>
+
+        <View className="mb-6">
+          {isLoading.playlistTrending ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22c55e" />
+              <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
+            </View>
+          ) : (
+            <>
+              <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Danh sách phát thịnh hành
+              </Text>
+              <FlatList
+                horizontal
+                initialNumToRender={5}
+                data={dataForYou.playlistsTrending.filter((_, index) => index !== 0)}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <PlaylistItem
+                    item={item}
+                    totalTrack={item.totalTracks || 0}
+                    onPress={() => handleSelectPlaylist(item)}
+                  />
+                )}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
+          )}
+        </View>
+
+        <View className="mb-6">
+          {isLoading.playlistTrending ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22c55e" />
+              <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
+            </View>
+          ) : (
+            <>
+              <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Thích hợp nghe vào khung giờ này
+              </Text>
+              <FlatList
+                horizontal
+                initialNumToRender={5}
+                data={dataRecommendations.baseOnTimeOfDay}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => {
+                  if (item.type === 'playlist') {
+                    return (
+                      <PlaylistItem
+                        item={item}
+                        totalTrack={item.totalTracks || 0}
+                        onPress={() => handleSelectPlaylist(item)}
+                      />
+                    );
+                  } else if (item.type === 'album') {
+                    return (
+                      <AlbumItem
+                        title={item.name}
+                        image={item.imageUrl}
+                        onPress={() => handleSelectAlbum(item)}
+                      />
+                    );
+                  } else if (item.type === 'artist') {
+                    return (
+                      <ArtistItemHome
+                        name={item.name}
+                        image={item?.imageUrl || item?.imgUrl}
+                        onPress={() => handleSelectArtist(item)}
+                      />
+                    );
+                  }
+                }}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
+          )}
+        </View>
+
+        <View className="mb-6">
           {isLoading.albumsTrending ? (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#22c55e" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
             </View>
           ) : (
-            <FlatList
-              horizontal
-              data={dataForYou.albumsTrending.filter((_, index) => index !== 0)}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <AlbumItem
-                  title={item.name}
-                  image={item.imageUrl}
-                  onPress={() => handleSelectAlbum(item)}
-                />
-              )}
-              showsHorizontalScrollIndicator={false}
-            />
+            <>
+              <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Album phổ biến
+              </Text>
+              <FlatList
+                horizontal
+                initialNumToRender={5}
+                data={dataForYou.albumsTrending.filter((_, index) => index !== 0)}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <AlbumItem
+                    title={item.name}
+                    image={item.imageUrl}
+                    onPress={() => handleSelectAlbum(item)}
+                  />
+                )}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
+          )}
+        </View>
+        <View className="mb-6">
+          {isLoading.playlistTrending ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22c55e" />
+              <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải ...</Text>
+            </View>
+          ) : (
+            <>
+              <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
+                Đề xuất dựa trên những nghệ sĩ bạn theo dõi
+              </Text>
+              <FlatList
+                horizontal
+                initialNumToRender={5}
+                data={dataRecommendations.baseOnFollowedArtists}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => {
+                  if (item.type === 'playlist') {
+                    return (
+                      <PlaylistItem
+                        item={item}
+                        totalTrack={item.totalTracks || 0}
+                        onPress={() => handleSelectPlaylist(item)}
+                      />
+                    );
+                  } else if (item.type === 'album') {
+                    return (
+                      <AlbumItem
+                        title={item.name}
+                        image={item.imageUrl}
+                        onPress={() => handleSelectAlbum(item)}
+                      />
+                    );
+                  } else if (item.type === 'artist') {
+                    return (
+                      <ArtistItemHome
+                        name={item.name}
+                        image={item?.imageUrl || item?.imgUrl}
+                        onPress={() => handleSelectArtist(item)}
+                      />
+                    );
+                  }
+                }}
+                showsHorizontalScrollIndicator={false}
+              />
+            </>
           )}
         </View>
       </ScrollView>

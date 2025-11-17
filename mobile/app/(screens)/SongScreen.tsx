@@ -229,7 +229,7 @@ export default function SongScreen() {
     try {
       console.log('un')
       setIsLoading(true);
-      console.log(favoriteItems)
+      // console.log(favoriteItems)
       const favoriteItem = favoriteItems.find(
         (item) => item?.itemType === 'track' && (item?.itemId === track?.id || item?.itemSpotifyId === track?.spotifyId)
       );
@@ -264,7 +264,7 @@ export default function SongScreen() {
       });
       if (response.success) {
         setIsFavorite(true);
-        console.log('response.data ui', response.data)
+        // console.log('response.data ui', response.data)
         addFavoriteItem(response.data[0]);
       }
     } catch (err) {

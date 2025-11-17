@@ -17,18 +17,13 @@ import { useNavigate } from '@/hooks/useNavigate';
 import SongItem from '@/components/items/SongItem';
 import AlbumItem from '@/components/items/AlbumItem';
 import PlaylistItem from '@/components/items/PlaylistItem';
-// Chúng ta sẽ tự định nghĩa ArtistItem theo style bạn yêu cầu
-// import ArtistItem from '@/components/artists/ArtistItem'; 
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
-// --- Components ---
-
-// Component nút Tab
 const TabButton = ({ title, active, onPress }) => (
   <TouchableOpacity
     onPress={onPress}
     className={`flex-1 items-center py-3 border-b-2 ${active
-      ? 'border-green-500' // Bạn có thể đổi màu này
+      ? 'border-green-500' 
       : 'border-transparent'
       }`}
   >
@@ -41,7 +36,6 @@ const TabButton = ({ title, active, onPress }) => (
   </TouchableOpacity>
 );
 
-// Component Artist Item (Style: Avatar + Tên ngang hàng)
 const HistoryArtistItem = ({ item, onPress }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -58,8 +52,6 @@ const HistoryArtistItem = ({ item, onPress }) => (
     </Text>
   </TouchableOpacity>
 );
-
-// --- Main Screen Component ---
 
 export default function ListenHistoryScreen() {
   const router = useRouter();
@@ -139,6 +131,7 @@ export default function ListenHistoryScreen() {
         onPress={() => handlePlayTrack(item.item, index)}
         onOptionsPress={() => { }}
         isHistoryItem={true}
+        updateAt={new Date(item.updatedAt)}
       />
     </View>
   );

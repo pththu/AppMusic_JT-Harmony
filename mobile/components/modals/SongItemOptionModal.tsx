@@ -64,7 +64,6 @@ const SongItemOptionModal = ({
     try {
       console.log('un')
       setIsLoading(true);
-      console.log(favoriteItems)
       const favoriteItem = favoriteItems.find(
         (item) => item?.itemType === 'track' && (item?.itemId === track?.id || item?.itemSpotifyId === track?.spotifyId)
       );

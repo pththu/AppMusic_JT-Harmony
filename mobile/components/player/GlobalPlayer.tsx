@@ -127,8 +127,8 @@ export default function GlobalPlayer() {
     const latestState = usePlayerStore.getState();
     if (state === "ended") {
       try {
-        const durationPlayer = await playerRef.current?.getDuration(); // Lấy tổng thời lượng bài hát
-        handleSaveHistory(latestState.currentTrack, durationPlayer || latestState.playbackPosition); // Lưu lại trước khi chuyển bài
+        // const durationPlayer = await playerRef.current?.getDuration(); // Lấy tổng thời lượng bài hát
+        handleSaveHistory(latestState.currentTrack, currentTrack?.duration || latestState.playbackPosition); // Lưu lại trước khi chuyển bài
       } catch (e) {
         console.log("Lỗi khi lấy duration lúc 'ended'", e);
         handleSaveHistory(latestState.currentTrack, latestState.playbackPosition); // Fallback: lưu vị trí cuối cùng biết được
@@ -138,13 +138,14 @@ export default function GlobalPlayer() {
         playerRef.current?.seekTo(0, true);
         return;
       } else if (repeatMode === "none") {
-        latestState.playNext();
+        playNext();
         if (isLastIndex) {
           togglePlayPause();
         }
       } else if (repeatMode === "all") {
-        latestState.playNext();
+        playNext();
       }
+      setIsPlaying(true);
     }
     else if (state === "paused") {
       try {
@@ -253,7 +254,6 @@ export default function GlobalPlayer() {
   useEffect(() => {
     if (!currentTrack) return;
 
-    // Luôn tạm dừng player khi đổi bài mới
     setIsPlaying(false);
     let timeoutId = null;
 
@@ -339,7 +339,6 @@ export default function GlobalPlayer() {
   }, [playbackPosition, currentTrack?.spotifyId]);
 
   if (!currentTrack) return null;
-
   if (!isVisible) return null;
 
   return (

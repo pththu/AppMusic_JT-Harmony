@@ -17,7 +17,6 @@ router.get('/album/:spotifyId/tracks', musicController.getTracksFromAlbum);
 
 router.get('/artist/:artistId/top-tracks', musicController.getTopTrackFromArtist);
 router.get('/artist/:artistId/albums', musicController.getAlbumsFromArtist);
-router.post('/artist/:artistId/tracks')
 
 router.post('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
 router.post('/playlist-for-you', musicController.getPlaylistsForYou);

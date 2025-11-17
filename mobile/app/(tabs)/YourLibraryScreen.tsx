@@ -89,16 +89,7 @@ export default function YourLibraryScreen() {
   }, [listenHistory]);
 
   const handleSelectSong = (track, index) => {
-    // const playlistWithVideoId = trackData.map((item) => ({
-    //   ...item,
-    //   videoId: item.videoId || "5BdSZkY6F4M",
-    //   artists: item.artists,
-    //   imageUrl:
-    //     item.imageUrl ||
-    //     albumData.find((album) => album.name === item.album)?.imageUrl ||
-    //     "",
-    // }));
-    // playPlaylist(playlistWithVideoId, index);
+
   };
 
   const handleSelectAlbum = (album) => {
@@ -116,48 +107,7 @@ export default function YourLibraryScreen() {
     navigate("PlaylistScreen");
   };
 
-  const renderRecentlyPlayedItem = ({ item, index }) => {
-    const itemType = item.itemType; // track - album - playlist - artist
-    console.log('item', item.itemType, item.item.name)
 
-    switch (itemType) {
-      case 'track':
-        return (
-          <SongItem
-            item={item.item}
-            image={item.item?.imageUrl || ""}
-            onPress={() => handleSelectSong(item, index)}
-            onOptionsPress={() => { }}
-          />
-        );
-      case 'album':
-        return (
-          <AlbumItem
-            title={item.item.name}
-            image={item.item?.imageUrl || ""}
-            onPress={() => handleSelectAlbum(item.item)}
-          />
-        )
-      case 'playlist':
-        return (
-          <PlaylistItem
-            item={item.item}
-            totalTrack={item.item.totalTracks || 0}
-            onPress={() => handleSelectPlaylist(item.item)}
-          />
-        )
-      case 'artist':
-        return (
-          <ArtistItem
-            name={item.name}
-            image={item?.imageUrl || item?.imgUrl}
-            onPress={() => handleSelectArtist(item)}
-          />
-        )
-      default:
-        return null;
-    }
-  };
 
   return (
     <SafeAreaView
@@ -217,6 +167,7 @@ export default function YourLibraryScreen() {
                           onPress={() => handleSelectSong(item, index)}
                           onOptionsPress={() => { }}
                           isHistoryItem={true}
+                          updateAt={new Date(item.updatedAt)}
                         />
                       ))}
                     </View>

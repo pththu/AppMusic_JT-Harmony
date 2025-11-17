@@ -148,9 +148,7 @@ export const createTrackComment = async (
  */
 export const fetchPosts = async () => {
   try {
-    console.log(1)
     const response = await api.get("/posts");
-    console.log('123:', response)
     return response.data.data as Post[];
   } catch (error) {
     if (error.response) {

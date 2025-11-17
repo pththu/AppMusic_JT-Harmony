@@ -1,14 +1,38 @@
 // controllers/musicController.js
-const { TOP_50_PLAYLIST_ID } = require('../configs/constants');
 const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
 const { Playlist, Track, Album, Artist, PlaylistTrack, User, Genres } = require('../models');
 const Op = require('sequelize').Op;
 const { get } = require("../routes/musicRoute");
 const { redisClient } = require('../configs/redis');
+const Bottleneck = require('bottleneck');
 
 const DEFAULT_TTL_SECONDS = 3600 * 2; // 2 giờ (cho dữ liệu Spotify ít đổi)
 const SHORT_TTL_SECONDS = 1800;
+
+const limiter = new Bottleneck({
+  minTime: 500,
+  maxConcurrent: 1 // Chỉ chạy 1 request cùng lúc để an toàn tuyệt đối
+});
+
+// Wrapper có Log chi tiết để bắt bệnh
+const callSpotify = async (fn) => {
+  return limiter.schedule(async () => {
+    try {
+      return await fn();
+    } catch (error) {
+      // Log chi tiết lỗi từ Spotify trả về để xem nó là 429 thật hay do thiếu tham số
+      if (error.body) {
+        console.error("🔥 Spotify Error Body:", JSON.stringify(error.body));
+      }
+      if (error.statusCode === 429) {
+        const retryAfter = error.headers?.['retry-after'] || 1;
+        console.warn(`⚠️ Gặp lỗi 429. Spotify bắt đợi: ${retryAfter}s`);
+      }
+      throw error;
+    }
+  });
+}
 
 const shuffle = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -101,7 +125,7 @@ const findSpotifyPlaylist = async (req, res) => {
     if (!query) {
       return res.status(400).json({ error: "Query parameter is required" });
     }
-    const data = await spotify.searchPlaylists(query);
+    const data = await callSpotify(() => spotify.searchPlaylists(query));
     res.json(data);
   } catch (error) {
     res
@@ -258,7 +282,7 @@ const searchTracks = async (req, res) => {
     if ((limit && dataFormated.length < limit) || dataFormated.length < 30) {
       let spotifyData = [];
       if (spotifyQueryString.length > 0) {
-        spotifyData = await spotify.searchTracks(spotifyQueryString, type || 'track', Number.parseInt(limit) || null);
+        spotifyData = await callSpotify(() => spotify.searchTracks(spotifyQueryString, type || 'track', Number.parseInt(limit) || null));
       }
       spotifyData.map(track => dataFormated.push(formatTrack(track, null, null, null)));
     }
@@ -306,7 +330,7 @@ const searchPlaylists = async (req, res) => {
       });
     }
 
-    data = await spotify.searchPlaylists(name);
+    data = await callSpotify(() => spotify.searchPlaylists(name));;
     data.map(item => dataFormated.push(formatPlaylist(item, null)));
 
     return res.status(200).json({
@@ -353,7 +377,7 @@ const searchAlbums = async (req, res) => {
       });
     }
 
-    data = await spotify.searchAlbums(name);
+    data = await callSpotify(() => spotify.searchAlbums(name));
     data.map(item => {
       const itemFormat = formatAlbum(item, []);
       dataFormated.push(itemFormat);
@@ -403,7 +427,7 @@ const searchArtists = async (req, res) => {
         success: true
       });
     }
-    data = await spotify.searchArtists(name);
+    data = await callSpotify(() => spotify.searchArtists(name));
     data.map(item => { dataFormated.push(formatArtist(item, null)) });
     return res.status(200).json({
       message: 'Artist search successful',
@@ -459,7 +483,7 @@ const getTracksFromPlaylist = async (req, res) => {
 
             const idTemp = track?.id || null;
             if (!track || !track?.name) {
-              track = await spotify.findTrackById(spotifyId);
+              track = await callSpotify(() => spotify.findTrackById(spotifyId));
               if (idTemp) {
                 track.tempId = idTemp;
               }
@@ -481,7 +505,7 @@ const getTracksFromPlaylist = async (req, res) => {
         }
       }
     } else if (type === 'api') {
-      data = await spotify.getPlaylistTracks(playlistId);
+      data = await callSpotify(() => spotify.getPlaylistTracks(playlistId));
       data.map((track) => {
         const itemFormat = formatTrack(track, null, null, null);
         itemFormat.playlistTrack = null;
@@ -529,7 +553,7 @@ const getTracksFromAlbum = async (req, res) => {
       return res.status(400).json({ error: 'spotifyId parameter is required' });
     }
 
-    const data = await spotify.getAlbumTracks(spotifyId);
+    const data = await callSpotify(() => spotify.getAlbumTracks(spotifyId));
 
     if (!data || data.length === 0) {
       return res.status(200).json({ message: 'Không tìm thấy bài hát nào trong album này', success: false });
@@ -537,10 +561,10 @@ const getTracksFromAlbum = async (req, res) => {
 
     for (const track of data) {
       const artists = [];
-      for (const a of track.artists) {
-        const artist = await spotify.findArtistById(a.id);
-        artists.push(formatArtist(artist, null));
-      }
+      // for (const a of track.artists) {
+      //   const artist = await callSpotify(() => spotify.findArtistById(a.id));
+      //   artists.push(formatArtist(artist, null));
+      // }
       const itemFormat = formatTrack(track, artists, null, null);
       dataFormated.push(itemFormat);
     }
@@ -583,7 +607,7 @@ const getPlaylistsForYou = async (req, res) => {
     }
 
     for (const name of playlistName) {
-      const responsePlaylist = await spotify.searchPlaylists(name);
+      const responsePlaylist = await callSpotify(() => spotify.searchPlaylists(name));
       playlists.push(...responsePlaylist);
     }
 
@@ -632,7 +656,7 @@ const getAlbumsForYou = async (req, res) => {
     }
 
     for (const name of albumName) {
-      const responseAlbum = await spotify.searchAlbums(name);
+      const responseAlbum = await callSpotify(() => spotify.searchAlbums(name));
       albums.push(...responseAlbum);
     }
 
@@ -681,7 +705,7 @@ const getArtistsForYou = async (req, res) => {
     for (const name of artistNames) {
       const query = `artist: ${name}`;
       console.log("Đang tìm theo:", query);
-      const responseArtist = await spotify.searchArtists(query);
+      const responseArtist = await callSpotify(() => spotify.searchArtists(query));
       allResults.push(...responseArtist);
     }
 
@@ -936,7 +960,7 @@ const addTrackToPlaylistAfterConfirm = async (req, res) => {
     await redisClient.del(cacheKey);
     console.log(`CACHE INVALIDATED: ${cacheKey}`);
 
-    const track = await spotify.findTrackById(trackSpotifyId)
+    const track = await callSpotify(() => spotify.findTrackById(trackSpotifyId));
     return res.status(200).json({
       message: 'Thêm bài hát vào playlist thành công',
       data: formatTrack(track, null, null, null),
@@ -1036,7 +1060,7 @@ const findVideoIdForTrack = async (req, res) => {
       }
     } else {
       console.log(11)
-      track = await spotify.findTrackById(trackSpotifyId);
+      track = await callSpotify(() => spotify.findTrackById(trackSpotifyId));
       console.log(21)
       videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
       console.log(31)
@@ -1124,7 +1148,7 @@ const getTracks = async (req, res) => {
 const getTopTrackFromArtist = async (req, res) => {
   try {
     const { artistId } = req.params;
-    console.log('top: ', artistId)
+    console.log('artistId: ', artistId)
     if (!artistId) {
       return res.status(400).json({ message: "Artist ID is required", success: false });
     }
@@ -1137,7 +1161,7 @@ const getTopTrackFromArtist = async (req, res) => {
     }
     console.log('CACHE MISS (getTopTrackFromArtist)');
 
-    const tracks = await spotify.getArtistTopTracks(artistId);
+    const tracks = await callSpotify(() => spotify.getArtistTopTracks(artistId));
     if (!tracks || tracks.length === 0) {
       return res.status(200).json({
         message: 'No top tracks found for this artist',
@@ -1181,7 +1205,7 @@ const getAlbumsFromArtist = async (req, res) => {
     }
     console.log('CACHE MISS (getAlbumsFromArtist)');
 
-    const albums = await spotify.getArtistAlbums(artistId);
+    const albums = await callSpotify(() => spotify.getArtistAlbums(artistId));
     if (!albums || albums.length === 0) {
       return res.status(200).json({
         message: 'No albums found for this artist',
@@ -1225,7 +1249,7 @@ const getTracksFromArtist = async (req, res) => {
     console.log('CACHE MISS (getTracksFromArtist)');
 
     const spotifyQueryString = `artist:"${artistName}"`;
-    const spotifyData = await spotify.searchTracks(spotifyQueryString, 'track', 50);
+    const spotifyData = await callSpotify(() => spotify.searchTracks(spotifyQueryString, 'track', 50));
 
     if (!spotifyData || spotifyData.length === 0) {
       return res.status(200).json({
@@ -1291,11 +1315,12 @@ const searchAll = async (req, res) => {
           // Bổ sung từ Spotify nếu cần
           if (formatted.length < limit) {
             try {
-              const spotifyData = await spotify.searchTracks(
-                `track:"${query}"`,
-                'track',
-                limit - formatted.length
-              );
+              const spotifyData = await callSpotify(() =>
+                spotify.searchTracks(
+                  `track:"${query}"`,
+                  'track',
+                  limit - formatted.length
+                ));
               spotifyData.forEach(track => formatted.push(formatTrack(track, null, null, null)));
             } catch (err) {
               console.error('Spotify search tracks error:', err.message);
@@ -1321,7 +1346,7 @@ const searchAll = async (req, res) => {
           // Bổ sung từ Spotify
           if (formatted.length < limit) {
             try {
-              const spotifyPlaylists = await spotify.searchPlaylists({ name: query });
+              const spotifyPlaylists = await callSpotify(() => spotify.searchPlaylists({ name: query }));
               spotifyPlaylists.slice(0, limit - formatted.length).forEach(p =>
                 formatted.push(formatPlaylist(p, null))
               );
@@ -1348,7 +1373,7 @@ const searchAll = async (req, res) => {
           // Bổ sung từ Spotify
           if (formatted.length < limit) {
             try {
-              const spotifyAlbums = await spotify.searchAlbums({ name: query });
+              const spotifyAlbums = await callSpotify(() => spotify.searchAlbums({ name: query }));
               spotifyAlbums.slice(0, limit - formatted.length).forEach(a =>
                 formatted.push(formatAlbum(a, []))
               );
@@ -1375,7 +1400,7 @@ const searchAll = async (req, res) => {
           // Bổ sung từ Spotify
           if (formatted.length < limit) {
             try {
-              const spotifyArtists = await spotify.searchArtists(query);
+              const spotifyArtists = await callSpotify(() => spotify.searchArtists(query));
               spotifyArtists.slice(0, limit - formatted.length).forEach(a =>
                 formatted.push(formatArtist(a, null))
               );
@@ -1452,9 +1477,9 @@ const getSearchSuggestions = async (req, res) => {
     if (suggestions.size < 10) {
       try {
         const [spotifyTracks, spotifyArtists, spotifyAlbums] = await Promise.allSettled([
-          spotify.searchTracks(`track:"${query}"`, 'track', 5),
-          spotify.searchArtists(query),
-          spotify.searchAlbums({ name: query })
+          callSpotify(() => spotify.searchTracks(`track:"${query}"`, 'track', 5)),
+          callSpotify(() => spotify.searchArtists(query)),
+          callSpotify(() => spotify.searchAlbums({ name: query }))
         ]);
 
         // Thêm tracks từ Spotify
@@ -1536,12 +1561,13 @@ const getCategoryContent = async (req, res) => {
       let spotifyPlaylists = [];
       const playlistSearchTerms = CATEGORY_SEARCH_STRATEGIES_PLAYLISTS_NAME[categoryUpper] || [categoryUpper];
       for (const term of playlistSearchTerms) {
-        spotifyPlaylists.push(...await spotify.searchPlaylists(term, 15)); // tìm theo từng từ khóa
+        const result = await callSpotify(() => spotify.searchPlaylists(term, 15));
+        spotifyPlaylists.push(...result); // tìm theo từng từ khóa
       }
 
       const [spotifyArtists, spotifyAlbums] = await Promise.allSettled([
-        spotify.searchArtistsAdvanced(categoryUpper, 15),
-        spotify.searchAlbums(categoryUpper, 15)
+        callSpotify(() => spotify.searchArtistsAdvanced(categoryUpper, 15)),
+        callSpotify(() => spotify.searchAlbums(categoryUpper, 15))
       ]);
 
       let foundArtists = [];
@@ -1566,7 +1592,7 @@ const getCategoryContent = async (req, res) => {
       const formattedAlbums = spotifyAlbums.status === 'fulfilled' ?
         spotifyAlbums.value.map(al => formatAlbum(al, [])) : [];
       const trackPromises = formattedArtists.slice(0, 5).map(artist =>
-        artist.spotifyId ? spotify.getArtistTopTracks(artist.spotifyId) : Promise.resolve([])
+        artist.spotifyId ? callSpotify(() => spotify.getArtistTopTracks(artist.spotifyId)) : Promise.resolve([])
       );
       const trackResults = await Promise.allSettled(trackPromises);
 

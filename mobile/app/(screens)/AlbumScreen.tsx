@@ -88,7 +88,6 @@ const AlbumScreen = () => {
       durationListened: 0
     };
 
-    console.log('payload Ui: ', payload)
     SaveToListeningHistory(payload).then((response) => {
       if (response.success) {
         if (response.updated) {
@@ -122,7 +121,7 @@ const AlbumScreen = () => {
 
   const handleSongOptionsPress = (track) => {
     setSelectedTrack(track);
-    console.log('track', track);
+    // console.log('track', track);
     setModalTrackVisible(true); // Mở modal
   };
 
@@ -216,7 +215,7 @@ const AlbumScreen = () => {
         itemSpotifyId: album.spotifyId
       });
       if (response.success) {
-        console.log('response.data album:', response.data)
+        // console.log('response.data album:', response.data)
         setIsFavorite(true);
         setIsFavoriteLoading(false);
         addFavoriteItem(response.data[0]);
@@ -357,7 +356,7 @@ const AlbumScreen = () => {
       return;
     }
     try {
-      console.log('share: ', selectedTrack);
+      // console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
       let shareMessage = `${user?.fullName}: `;
 

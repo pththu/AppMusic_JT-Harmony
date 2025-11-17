@@ -108,15 +108,15 @@ export const usePlayerStore = create<PlayerState>()(
 
       // === BASIC ACTIONS ===
       setCurrentTrack: (track) => {
-        const { listTrack } = get();
-        const index = listTrack.findIndex(s => s?.id === track?.id) || -1;
+        const { playlistTracksPlaying } = get();
+        const index = playlistTracksPlaying.findIndex(s => s?.id === track?.id) || -1;
         set({
           currentTrack: track,
           currentIndex: index !== -1 ? index : -1,
           currentTime: 0,
           seekTrigger: Date.now(),
           playbackPosition: 0,
-          isLastIndex: index === listTrack?.length - 1,
+          isLastIndex: index === playlistTracksPlaying?.length - 1,
         });
       },
       setCurrentPlaylist: (playlist) => {
@@ -145,7 +145,6 @@ export const usePlayerStore = create<PlayerState>()(
       },
       addTrackToPlaylist: (track) => {
         const { listTrack } = get();
-        console.log('store: ', track);
         set({ listTrack: [...listTrack, track] });
       },
       updateCurrentTrack: (track) => {
@@ -176,7 +175,6 @@ export const usePlayerStore = create<PlayerState>()(
       updateTotalTracksInMyPlaylists: (playlistId, total) => {
         const { myPlaylists } = get();
         const updatedPlaylists = myPlaylists.map(p => {
-          console.log(p, playlistId);
           if (p?.id === playlistId) {
             return {
               ...p,

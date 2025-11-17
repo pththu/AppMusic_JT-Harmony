@@ -333,8 +333,8 @@ export default function AllPlaylistScreen() {
           trackIds.push(track.spotifyId);
         });
 
-        console.log(playlistIds)
-        console.log(trackIds)
+        // console.log(playlistIds)
+        // console.log(trackIds)
         if (trackIds.length > 0) {
           const addResponse = await AddTracksToPlaylists({
             playlistIds: playlistIds,
@@ -359,7 +359,7 @@ export default function AllPlaylistScreen() {
   }
 
   const handleUpdatePlaylist = async () => {
-    console.log('handleUpdatePlaylist')
+    // console.log('handleUpdatePlaylist')
     try {
       const payload = {
         id: selectedPlaylist.id,
@@ -387,8 +387,8 @@ export default function AllPlaylistScreen() {
   }
 
   const handleAddToAnotherPlaylist = async (playlistIds) => {
-    console.log('handleAddToAnotherPlaylist')
-    console.log(playlistIds);
+    // console.log('handleAddToAnotherPlaylist')
+    // // console.log(playlistIds);
     if (!playlistTracks || !playlistTracks.length) {
       warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
       return;
@@ -445,14 +445,14 @@ export default function AllPlaylistScreen() {
 
   const handleDelete = () => {
     if (!selectedPlaylist) return;
-    console.log('handleDeletePlaylist')
+    // console.log('handleDeletePlaylist')
     try {
       confirm(
         'Xác nhận xóa',
         'Bạn có chắc chắn muốn xóa playlist này?',
         async () => {
           const response = await DeletePlaylist(selectedPlaylist.id);
-          console.log('response úi', response);
+          // console.log('response úi', response);
           if (response.success) {
             removeFromMyPlaylists(selectedPlaylist.id);
             success('Đã xóa playlist thành công!');
@@ -610,7 +610,7 @@ export default function AllPlaylistScreen() {
       }
     }
     if (selectedPlaylist) {
-      console.log('getTracks');
+      // console.log('getTracks');
       fetchTracks();
     }
   }, [selectedPlaylist]);

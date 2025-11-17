@@ -3,7 +3,6 @@ import axiosClient from "@/config/axiosClient";
 // get
 export const GetPlaylistsForYou = async (payload) => {
   try {
-    console.log(`first`)
     const response = await axiosClient.post(`/music/playlist-for-you`, {
       playlistName: payload,
       limit: 3,
@@ -112,7 +111,6 @@ export const GetMyPlaylists = async () => {
 
 export const GetTracks = async (payload) => {
   try {
-    console.log('payload: ', payload);
     const response = await axiosClient.post(`/music//search-track`, payload);
     return response.data;
   } catch (error) {
@@ -141,12 +139,10 @@ export const GetVideoId = async (payload) => {
 // add
 export const AddTrackToPlaylist = async (payload) => {
   try {
-    console.log('payload 1 api: ', payload);
     const response = await axiosClient.post(`/music/playlist/${payload.playlistId}/add-track`, {
       trackId: payload.trackId,
       trackSpotifyId: payload.trackSpotifyId
     });
-    console.log('response add 1 api: ', response.data);
     return response.data;
   } catch (error) {
     console.log(error.message)
@@ -156,27 +152,22 @@ export const AddTrackToPlaylist = async (payload) => {
 
 export const AddTrackToPlaylistAfterConfirm = async (payload) => {
   try {
-    console.log('payload 2 api: ', payload);
     const response = await axiosClient.post(`/music/playlist/${payload.playlistId}/add-track-confirm`, {
       trackId: payload.trackId,
       trackSpotifyId: payload.trackSpotifyId
     });
-    console.log('response add 2 api: ', response.data);
     return response.data;
   } catch (error) {
-    console.log(error.data);
     throw error;
   }
 }
 
 export const AddTracksToPlaylists = async (payload) => {
   try {
-    console.log(payload);
     const response = await axiosClient.post(`/music/playlist/add-tracks`, {
       playlistIds: payload.playlistIds,
       trackIds: payload.trackSpotifyIds,
     })
-    console.log('response add multiple api: ', response.data);
     return response.data;
   } catch (error) {
     console.log(error.message);
@@ -279,12 +270,10 @@ export const ShareTrack = async (payload) => {
 
 export const ShareAlbum = async (payload) => {
   try {
-    console.log('payload', payload)
     const response = await axiosClient.post(`/albums/share`, {
       albumId: payload.albumId,
       albumSpotifyId: payload.albumSpotifyId
     });
-    console.log('res: ', response.data);
     return response.data;
   } catch (error) {
     console.log(error);
@@ -305,9 +294,7 @@ export const UpdatePlaylistPrivacy = async (payload) => {
 // delete
 export const DeletePlaylist = async (playlistId) => {
   try {
-    console.log("playlistId", playlistId);
     const response = await axiosClient.delete(`/playlists/${playlistId}`);
-    console.log("response", response.data);
     return response.data;
   } catch (error) {
     console.log(error.message);
@@ -318,7 +305,6 @@ export const DeletePlaylist = async (playlistId) => {
 export const RemoveTrackFromPlaylist = async (payload) => {
   try {
     const response = await axiosClient.delete(`/music/playlist/${payload.playlistId}/remove-track/${payload.playlistTrackId}`);
-    console.log('response remove track', response.data);
     return response.data;
   } catch (error) {
     console.log(error);

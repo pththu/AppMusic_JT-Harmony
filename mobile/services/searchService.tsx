@@ -14,7 +14,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  */
 export const SearchTracks = async (payload) => {
   try {
-    console.log('payload track', payload)
     const response = await axiosClient.post(`/music/search-track`, payload);
     return response.data;
   } catch (error: any) {
@@ -29,7 +28,6 @@ export const SearchTracks = async (payload) => {
  */
 export const SearchPlaylists = async (payload) => {
   try {
-    console.log('payload playlist', payload)
     const response = await axiosClient.post(`/music/search-playlist`, payload);
     return response.data;
   } catch (error: any) {
@@ -44,7 +42,6 @@ export const SearchPlaylists = async (payload) => {
  */
 export const SearchAlbums = async (payload) => {
   try {
-    console.log('payload album', payload)
     const response = await axiosClient.post(`/music/search-album`, payload);
     return response.data;
   } catch (error: any) {
@@ -59,7 +56,6 @@ export const SearchAlbums = async (payload) => {
  */
 export const SearchArtists = async (payload) => {
   try {
-    console.log('payload artist', payload)
     const response = await axiosClient.post(`/music/search-artist`, payload);
     return response.data;
   } catch (error: any) {
@@ -76,7 +72,6 @@ export const SearchArtists = async (payload) => {
 export const SearchUsers = async (payload) => {
   try {
     const response = await axiosClient.post(`/users/search-all`, payload);
-    console.log('response api search user: ', response.data);
     return response.data;
   } catch (error: any) {
     console.error("SearchUsers error:", error.message);
@@ -135,7 +130,6 @@ export const GetSearchSuggestions = async (query: string) => {
 export const SaveSearchHistory = async (query) => {
   try {
     const response = await axiosClient.post('/histories/search', { query });
-    console.log('response api save search: ', response.data);
     return response.data;
   } catch (error: any) {
     console.error("SaveSearchHistory error:", error.message);

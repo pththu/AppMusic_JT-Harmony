@@ -521,8 +521,6 @@ export default function SearchScreen() {
     else if (itemType === "Playlist") iconName = "list";
     else if (itemType === "User") iconName = "people-circle";
 
-    console.log(item)
-
     return (
       <TouchableOpacity
         onPress={() => handleItemPress(item)}

@@ -70,8 +70,8 @@ User.hasMany(Notification, { foreignKey: 'userId' });
 Notification.belongsTo(User, { foreignKey: 'userId' });
 
 // User - Recommendation
-User.hasMany(Recommendation, { foreignKey: 'userId' });
-Recommendation.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Recommendation, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
+Recommendation.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
 
 // Quan hệ Người dùng - Lượt thích Bình luận (User <-> CommentLike)
 User.hasMany(CommentLike, { foreignKey: 'userId', as: 'CommentLikes' });
