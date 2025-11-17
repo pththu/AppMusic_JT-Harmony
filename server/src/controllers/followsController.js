@@ -1,4 +1,3 @@
-const e = require('express');
 const { Follow, User, sequelize, FollowArtist, Artist } = require('../models');
 const Sequelize = require('sequelize'); // Import module gốc
 const spotify = require('../configs/spotify');
@@ -306,11 +305,14 @@ exports.getArtistFollowedByUser = async (req, res) => {
             const artist = await Artist.findByPk(follow.artistId);
             if (artist) {
                 dataFormated.push({
-                    ...follow.t,
+                    ...follow.toJSON(),
                     artist: formatArtist(artist)
                 });
             }
         }
+
+        console.log(dataFormated)
+
         return res.status(200).json({
             message: 'Followed artists retrieved successfully',
             data: dataFormated,
@@ -392,22 +394,25 @@ exports.createFollowArtist = async (req, res) => {
         let artist = await Artist.findByPk(artistId);
         if (artist) {
             artist.totalFollowers += 1;
-            await artist.save();
         }
         if (!artist || !artist.name) {
-            artist = await spotify.findArtistById(artistSpotifyId);
-            if (artist) {
-                artist = await Artist.update(
-                    { name: artist.name, imageUrl: artist.images?.[0]?.url || null },
-                    { where: { id: artistId } }
-                );
+            responseArtist = await spotify.findArtistById(artistSpotifyId);
+            if (responseArtist) {
+                artist.name = responseArtist.name;
+                artist.imageUrl = responseArtist.images?.[0]?.url || null;
             }
         }
+        await artist.save();
 
         console.log(10)
+        let dataFormated = {
+            ...row.toJSON(),
+            artist: formatArtist(artist, null)
+        };
+        console.log(dataFormated)
         return res.status(201).json({
             message: 'FollowArtist created successfully',
-            data: { ...row, artist: formatArtist(artist, null) },
+            data: dataFormated,
             success: true
         });
     } catch (error) {

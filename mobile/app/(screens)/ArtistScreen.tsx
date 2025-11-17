@@ -29,8 +29,7 @@ import AddTrackToPlaylistsModal from '@/components/modals/AddTrackToPlaylistsMod
 import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
 import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
 import ArtistOptionModal from '@/components/modals/ArtistOptionModal';
-import { FollowArtist, GetFollowersOfArtist, UnfollowArtist } from '@/services/followService';
-import { set } from 'date-fns';
+import { FollowArtist, GetFollowersOfArtist, ShareArtist, UnfollowArtist } from '@/services/followService';
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -56,17 +55,14 @@ export default function ArtistScreen() {
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
   const setIsFollowing = useArtistStore((state) => state.setIsFollowing);
-  const setFollowers = useArtistStore((state) => state.setFollowers);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
   const addArtistFollowed = useArtistStore((state) => state.addArtistFollowed);
   const removeArtistFollowed = useArtistStore((state) => state.removeArtistFollowed);
-  const addFollower = useArtistStore((state) => state.addFollower);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
-  const removeFollower = useArtistStore((state) => state.removeFollower);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
@@ -290,7 +286,7 @@ export default function ArtistScreen() {
   const handleUnfollow = async () => {
     try {
       setIsLoading((prev) => ({ ...prev, following: true }));
-      const followId = followers.find(f => f.followerId === user.id)?.id;
+      const followId = artistFollowed.find(f => f.artistSpotifyId === currentArtist.spotifyId)?.id;
       if (!followId) {
         error('Bạn chưa theo dõi nghệ sĩ này.');
         return;
@@ -313,7 +309,55 @@ export default function ArtistScreen() {
   }
 
   const handleShare = async () => {
+    try {
+      let shareMessage = `${user?.fullName}: `;
 
+      if (currentArtist?.name) {
+        shareMessage += `${currentArtist?.name}\n\n`;
+      } else {
+        shareMessage += `Bài đăng của ${user?.fullName}\n\n`;
+      }
+
+      // Thêm URL hình ảnh nếu có
+      if (currentArtist?.imageUrl) {
+        shareMessage += `${currentArtist?.imageUrl}\n\n`;
+      }
+
+      // Thêm liên kết đến bài viết
+      const postLink = `app://post/${currentArtist?.id}`; // Deep link giả định
+      shareMessage += `Xem bài viết: ${postLink}`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        // url: postLink,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log(result.activityType)
+        } else {
+          console.log('Chia sẻ thành công!');
+        }
+        // Update share count after successful share
+        const response = await ShareArtist({
+          artistId: currentArtist?.id,
+          artistSpotifyId: currentArtist?.spotifyId
+        })
+
+        if (response.success) {
+          currentArtist.id = response.data.artistId;
+          currentArtist.shareCount += 1;
+          setCurrentArtist(currentArtist);
+          success('Đã chia sẻ');
+          setArtistOptionModalVisible(false);
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // Dismissed
+      }
+    } catch (err) {
+      console.error('Lỗi khi chia sẻ:', err);
+      error('Lỗi khi chia sẻ thông tin nghệ sĩ. Vui lòng thử lại sau.');
+    }
   };
 
   const handleBlock = async () => {
@@ -358,7 +402,9 @@ export default function ArtistScreen() {
 
   useEffect(() => {
     setIsFollowing(false);
+    console.log(artistFollowed)
     const artist = artistFollowed.find(a => a.artistSpotifyId === currentArtist.spotifyId);
+    console.log(artist)
     if (artist) {
       setIsFollowing(true);
     }
@@ -546,7 +592,7 @@ export default function ArtistScreen() {
           setIsVisible={setArtistOptionModalVisible}
           data={currentArtist}
           isFollowing={isFollowing}
-          onFollow={handleFollow}
+          onFollow={isFollowing ? handleUnfollow : handleFollow}
           onShare={handleShare}
           onBlock={handleBlock}
         />

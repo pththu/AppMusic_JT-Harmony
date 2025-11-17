@@ -1,4 +1,3 @@
-import SocialScreen from "@/app/(tabs)/SocialScreen";
 import { useRouter } from "expo-router";
 
 const routeMap: Record<any, any> = {
@@ -20,6 +19,7 @@ const routeMap: Record<any, any> = {
   StreamingQuality: '(screens)/StreamingQualityScreen',
   MusicLanguage: '(screens)/MusicLanguageScreen',
 
+  CategoryScreen: '(screens)/CategoryScreen',
   AlbumScreen: '(screens)/AlbumScreen', // trang thông tin album
   ArtistScreen: '(screens)/ArtistScreen', // trang thông tin nghệ sĩ
   ArtistsFollowingScreen: '(screens)/ArtistsFollowingScreen', // danh sách nghệ sĩ đang theo dõi
