@@ -15,3 +15,35 @@ export const GetRecommendationsByUser = async () => {
     }
   }
 }
+
+export const GenerateFromActivity = async (payload) => {
+  try {
+    const response = await axiosClient.post('/recommendations/generate-from-activity', { activity: payload });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GenerateFromMood = async (payload) => {
+  try {
+    const response = await axiosClient.post('/recommendations/generate-from-mood', { mood: payload });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}

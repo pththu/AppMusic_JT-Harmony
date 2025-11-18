@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { gu } from 'date-fns/locale';
 
 interface AuthState {
   user: any | null;
@@ -33,7 +32,6 @@ const useAuthStore = create<AuthState>()(
       showLoginWall: false,
       guestSongPlayCount: 0,
 
-
       login: (user, loginType, token) => set({ user, loginType, token, isLoggedIn: true, isGuest: false }),
       logout: () =>
         set({
@@ -48,7 +46,6 @@ const useAuthStore = create<AuthState>()(
       updateUser: (user) => set({ user }),
       setShowLoginWall: (show) => set({ showLoginWall: show }),
       setGuestSongPlayCount: (count) => set({ guestSongPlayCount: count }),
-      // Cách tăng số lượt chơi nhạc của khách và kiểm tra để hiển thị Login Wall
       incrementGuestSongPlayCount: () => {
         const currentCount = useAuthStore.getState().guestSongPlayCount;
         const newCount = currentCount + 1;

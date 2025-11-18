@@ -28,8 +28,6 @@ export default function AuthScreen() {
   const { error: showAlertError, success: showAlertSuccess } = useCustomAlert();
 
   const handleLoginWithGoogle = async () => {
-    //  Đổi tên alert để tránh xung đột với biến 'error' trong khối catch
-
     const loginType = 'google';
 
     try {
@@ -53,9 +51,10 @@ export default function AuthScreen() {
       }
 
       if (response.success) {
+        console.log(response)
         login(response.user, loginType, response.user.accessToken);
         showAlertSuccess('Đăng nhập thành công');
-        navigate('Main');
+        // navigate('Main');
       }
 
     } catch (error) {

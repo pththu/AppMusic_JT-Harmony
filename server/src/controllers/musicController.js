@@ -722,14 +722,14 @@ const getArtistsForYou = async (req, res) => {
       }
     }
 
-    const finalData = shuffle(dataFormated).slice(0, 12);
+    const finalData = shuffle(dataFormated.slice(0, 12));
 
     const response = {
       message: 'Get artist for you successful',
       data: finalData,
       success: true
     };
-    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS * 12 });
 
     return res.status(200).json(response);
   } catch (error) {

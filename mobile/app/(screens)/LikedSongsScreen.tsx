@@ -109,7 +109,7 @@ export default function LikedSongsScreen() {
 
   const handleSongOptionsPress = (track) => {
     setSelectedTrack(track); // Lưu bài hát đã chọn
-    console.log('track', track);
+    // console.log('track', track);
     setSongModalVisible(true); // Mở modal
   };
 
@@ -120,7 +120,7 @@ export default function LikedSongsScreen() {
 
   const handleSongShare = async (track) => {
     try {
-      console.log('share: ', selectedTrack);
+      // console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
       let shareMessage = `${user?.fullName}: `;
 

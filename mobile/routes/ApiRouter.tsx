@@ -202,6 +202,38 @@ export const ChangeAvatar = async (payload) => {
   }
 };
 
+export const AddFavoriteGenres = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/users/add-favorite-genres`, { genres: payload });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const UpdateCompletedOnboarding = async () => {
+  try {
+    const response = await axiosClient.put(`/users/completed-onboarding`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+};
+
 export const UploadMultipleFile = async (payload) => {
   try {
     const assets = payload; // array of expo assets

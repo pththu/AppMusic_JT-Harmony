@@ -62,7 +62,7 @@ export default function LoginScreen() {
       }
       login(response.user, 'local', response.user?.accessToken);
       success("Thành Công", "Đăng nhập thành công!");
-      navigate("Main");
+      // navigate("Main");
     } catch (err) {
       const errorMessage =
         err.response?.data?.message ||

@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const cloudinary = require('../configs/cloudinary');
 
-exports.getAllUser = async (req, res) => {
+const GetAllUser = async (req, res) => {
     try {
         const rows = await User.findAll();
         res.json(rows);
@@ -13,7 +13,7 @@ exports.getAllUser = async (req, res) => {
     }
 };
 
-exports.getUserById = async (req, res) => {
+const GetUserById = async (req, res) => {
     try {
         const row = await User.findByPk(req.params.id);
         if (!row) return res.status(404).json({ error: 'User not found' });
@@ -24,7 +24,7 @@ exports.getUserById = async (req, res) => {
 };
 
 
-exports.search = async (req, res) => {
+const Search = async (req, res) => {
     try {
         const { id, username, email, fullName, gender, status } = req.body;
         const orConditions = [];
@@ -70,7 +70,7 @@ exports.search = async (req, res) => {
 }
 
 // không sử dụng
-exports.createUser = async (req, res) => {
+const CreateUser = async (req, res) => {
     try {
         const payload = { ...req.body };
         if (payload.password) {
@@ -83,7 +83,7 @@ exports.createUser = async (req, res) => {
     }
 };
 
-exports.updateInforUser = async (req, res) => {
+const UpdateInforUser = async (req, res) => {
     try {
         const payload = { ...req.body };
         const user = await User.findByPk(req.user.id);
@@ -119,7 +119,7 @@ exports.updateInforUser = async (req, res) => {
 };
 
 // Đổi mật khẩu sau khi đăng nhập
-exports.changePassword = async (req, res) => {
+const ChangePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -142,7 +142,7 @@ exports.changePassword = async (req, res) => {
     }
 };
 
-exports.deleteUser = async (req, res) => {
+const DeleteUser = async (req, res) => {
     try {
         const deleted = await User.destroy({ where: { id: req.params.id } });
         if (!deleted) return res.status(404).json({ error: 'User not found' });
@@ -152,7 +152,7 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
-exports.linkSocialAccount = async (req, res) => {
+const LinkSocialAccount = async (req, res) => {
     try {
         const { userInfor, provider } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -246,7 +246,7 @@ exports.linkSocialAccount = async (req, res) => {
     }
 };
 
-exports.selfLockAccount = async (req, res) => {
+const SelfLockAccount = async (req, res) => {
     try {
         const { password } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -266,7 +266,7 @@ exports.selfLockAccount = async (req, res) => {
     }
 };
 
-exports.mergeAccount = async (req, res) => {
+const MergeAccount = async (req, res) => {
     try {
         const { userId } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -298,7 +298,7 @@ exports.mergeAccount = async (req, res) => {
     }
 };
 
-exports.changeAvatar = async (req, res) => {
+const ChangeAvatar = async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -338,7 +338,7 @@ exports.changeAvatar = async (req, res) => {
     }
 };
 
-exports.getUserProfileSocial = async (req, res) => {
+const GetUserProfileSocial = async (req, res) => {
     const { userId } = req.params;
     const currentUserId = req.user.id; // ID của người dùng đang xem (từ authenticateToken)
 
@@ -451,7 +451,7 @@ exports.toggleFollow = async (req, res) => {
     // }
 };
 
-exports.searchUsers = async (req, res) => {
+const SearchUsers = async (req, res) => {
     try {
         const { q: query } = req.query;
 
@@ -485,4 +485,75 @@ exports.searchUsers = async (req, res) => {
             success: false
         });
     }
+}
+
+const AddFavoriteGenres = async (req, res) => {
+    try {
+        const { genres } = req.body;
+        const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
+        }
+
+        for (const genre of genres) {
+            if (user.favoritesGenres.some(g => g.toLowerCase() === genre.toLowerCase())) {
+                continue; // Bỏ qua thể loại đã tồn tại (không phân biệt chữ hoa/thường)
+            }
+            user.favoritesGenres = Array.from(new Set([...user.favoritesGenres, genre]));
+        }
+
+        await user.save();
+
+        return res.status(200).json({
+            message: 'Thêm thể loại yêu thích thành công',
+            success: true,
+            data: user
+        });
+    } catch (error) {
+        console.error('Add favorite genres error:', error);
+        res.status(500).json({
+            message: error.message || 'Failed to add favorite genres',
+            success: false
+        });
+    }
+};
+
+const UpdateCompletedOnboarding = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(200).json({ message: 'Không thể tìm thấy người dùng', success: false });
+        }
+        user.completedOnboarding = true;
+        await user.save();
+        return res.status(200).json({
+            message: 'Cập nhật trạng thái hoàn thành onboarding thành công',
+            success: true,
+            data: user
+        });
+    } catch (error) {
+        console.error('Update completed onboarding error:', error);
+        res.status(500).json({
+            message: error.message || 'Failed to update completed onboarding',
+            success: false
+        });
+    }
+};
+
+module.exports = {
+    GetAllUser,
+    GetUserById,
+    CreateUser,
+    AddFavoriteGenres,
+    Search,
+    LinkSocialAccount,
+    SelfLockAccount,
+    MergeAccount,
+    UpdateInforUser,
+    ChangePassword,
+    DeleteUser,
+    ChangeAvatar,
+    GetUserProfileSocial,
+    SearchUsers,
+    UpdateCompletedOnboarding
 }

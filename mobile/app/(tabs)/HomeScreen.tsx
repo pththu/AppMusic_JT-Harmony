@@ -34,20 +34,25 @@ import { GetListeningHistory, GetSearchHistory, SaveToListeningHistory } from "@
 import { useHistoriesStore } from "@/store/historiesStore";
 import { GetRecommendationsByUser } from "@/services/recommendationService";
 import { SearchTracks } from "@/services/searchService";
-import { is, pl } from "date-fns/locale";
+import { useBoardingStore } from "@/store/boardingStore";
 
-async function processInBatches(items, limit, fn) {
-  let results = [];
-  for (let i = 0; i < items.length; i += limit) {
-    const batch = items.slice(i, i + limit);
-    // Chạy song song các item trong batch này
-    const batchResults = await Promise.all(batch.map(fn));
-    results = [...results, ...batchResults];
-    // Nghỉ nhẹ 500ms giữa các batch để server "thở" (nếu cần)
-    await new Promise(r => setTimeout(r, 500));
-  }
-  return results;
-}
+
+const ACTIVITIES = [
+  { id: 'workout', label: 'Tập luyện', icon: 'barbell-outline' },
+  { id: 'study', label: 'Học tập', icon: 'school-outline' },
+  { id: 'commute', label: 'Di chuyển', icon: 'bus-outline' },
+  { id: 'sleep', label: 'Ngủ', icon: 'moon-outline' },
+  { id: 'party', label: 'Tiệc tùng', icon: 'musical-notes-outline' },
+  { id: 'gaming', label: 'Chơi game', icon: 'game-controller-outline' },
+  { id: 'relax', label: 'Thư giãn', icon: 'leaf-outline' },
+  { id: 'focus', label: 'Tập trung', icon: 'eye-outline' },
+  { id: 'running', label: 'Chạy bộ', icon: 'walk-outline' },
+  { id: 'yoga', label: 'Yoga', icon: 'body-outline' },
+  { id: 'cooking', label: 'Nấu ăn', icon: 'restaurant-outline' },
+  { id: 'reading', label: 'Đọc sách', icon: 'book-outline' },
+  { id: 'meditation', label: 'Thiền', icon: 'medkit-outline' },
+  { id: 'driving', label: 'Lái xe', icon: 'car-outline' },
+];
 
 const ArtistItemHome = ({ name, image, onPress }) => {
 
@@ -75,8 +80,9 @@ export default function HomeScreen() {
   const isGuest = useAuthStore((state) => state.isGuest);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
+  const selectedMood = useBoardingStore((state) => state.selectedMood);
+  const selectedActivity = useBoardingStore((state) => state.selectedActivity);
+  const recommendBasedOnActivity = useBoardingStore((state) => state.recommendBasedOnActivity);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
@@ -90,37 +96,9 @@ export default function HomeScreen() {
   const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
   const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
-  const activity = [
-    { value: 'workout', label: 'Tập luyện' },
-    { value: 'relax', label: 'Thư giãn' },
-    { value: 'party', label: 'Tiệc tùng' },
-    { value: 'focus', label: 'Tập trung' },
-    { value: 'sleep', label: 'Ngủ' },
-    { value: 'commute', label: 'Đi lại' },
-    { value: 'study', label: 'Học tập' },
-    { value: 'driving', label: 'Lái xe' },
-    { value: 'gaming', label: 'Chơi game' },
-    { value: 'yoga', label: 'Yoga' },
-    { value: 'meditation', label: 'Thiền' },
-    { value: 'cooking', label: 'Nấu ăn' },
-    { value: 'running', label: 'Chạy bộ' },
-    { value: 'walking', label: 'Đi bộ' },
-  ]
 
-  const shuffleData = (array) => {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-
-    return array;
-  }
-  const [hasNotification] = useState(true);
-
-  const historySavedRef = useRef(null);
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
-  const totalMarginBottom = isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0;
   const iconColor = theme === 'light' ? '#000' : '#fff';
 
   const [queryParam, setQueryParam] = useState({
@@ -170,6 +148,15 @@ export default function HomeScreen() {
     baseOnGenres: true,
     baseOnFollowedArtists: true,
   });
+
+  const shuffleData = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+  const [hasNotification] = useState(true);
 
   const handleSelectPlaylist = (playlist) => {
     setCurrentPlaylist(playlist);
@@ -491,11 +478,13 @@ export default function HomeScreen() {
   const fetchDataRecommendations = async (inputData) => {
     if (!inputData) return;
 
-    fetchGenericRecommendation(inputData.baseOnHistory, 'baseOnHistory').then(() =>
-      setTimeout(() => {
-        fetchGenericRecommendation(inputData.baseOnActivities, 'baseOnActivities')
-      }, 500)
-    )
+    fetchGenericRecommendation(recommendBasedOnActivity, 'baseOnActivities');
+
+    // fetchGenericRecommendation(inputData.baseOnHistory, 'baseOnHistory').then(() =>
+    //   setTimeout(() => {
+    //     fetchGenericRecommendation(inputData.baseOnActivities, 'baseOnActivities')
+    //   }, 500)
+    // )
 
     const queue = [
       { data: inputData.baseOnMoods, key: 'baseOnMoods' },
@@ -530,6 +519,7 @@ export default function HomeScreen() {
           fetchDataRecommendations(dataInput);
         }
       });
+      fetchGenericRecommendation(recommendBasedOnActivity, 'baseOnActivities');
     }
   }, [isLoggedIn, user?.id]);
 
@@ -730,7 +720,7 @@ export default function HomeScreen() {
           ) : (
             <>
               <Text className={`text-lg font-bold mb-2 ${colorScheme === "dark" ? "text-white" : "text-black"}`}>
-                Phù hợp với hoạt động {activity.filter(act => act.value === 'study')[0]?.label}
+                Phù hợp với hoạt động {selectedActivity?.label || ''}
               </Text>
               <FlatList
                 horizontal
