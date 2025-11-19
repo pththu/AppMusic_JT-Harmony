@@ -8,12 +8,14 @@ const routeMap: Record<any, any> = {
   ForgotPassword: '(auth)/ForgotPasswordScreen',
   ResetPassword: '(auth)/ResetPasswordScreen',
 
+  // tab
   Main: '(tabs)/HomeScreen',
   Profile: '(tabs)/ProfileScreen',
   Search: '(tabs)/SearchScreen',
   Library: '(tabs)/YourLibraryScreen',
   Social: '(tabs)/SocialScreen',
 
+  // screens
   EditProfile: '(screens)/EditProfileScreen',
   DownloadQuality: '(screens)/DownloadQualityScreen',
   StreamingQuality: '(screens)/StreamingQualityScreen',
@@ -33,13 +35,17 @@ const routeMap: Record<any, any> = {
   QueueScreen: '(screens)/QueueScreen',
   SongScreen: '(screens)/SongScreen',
   ListenHistoryScreen: '(screens)/ListenHistoryScreen',
-
   Setting: '(screens)/SettingScreen',
   ChangePassword: '(screens)/ChangePasswordScreen',
   UpdateEmail: '(screens)/UpdateEmailScreen',
-
   ProfileSocialScreen: '(screens)/ProfileSocialScreen',
-  ChatScreen: '(screens)/ChatScreen'
+  ChatScreen: '(screens)/ChatScreen',
+
+  // onboarding
+  Artists: '(onboarding)',
+  Activities: '(onboarding)/Activities',
+  Moods: '(onboarding)/Moods',
+  Genres: '(onboarding)/Genres',
 };
 
 export function useNavigate() {

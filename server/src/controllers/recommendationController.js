@@ -8,6 +8,30 @@ const MAX_RETRIES = 7; // Số lần thử lại tối đa cho các cuộc gọi
 const BASE_DELAY_MS = 1000;
 const DEFAULT_TTL_SECONDS = 3600 * 24; // 2 giờ
 
+// dd/MM/yyyy -> 31/12/2023
+const formatDate = (date) => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+// HH:mm -> 14:30
+const formatHour = (date) => {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+// sáng, trưa, chiều, tối, đêm
+const convertTimeOfDay = (date) => {
+  const hours = date.getHours();
+  if (hours >= 5 && hours < 10) return "sáng";
+  if (hours >= 10 && hours < 13) return "trưa";
+  if (hours >= 13 && hours < 17) return "chiều";
+  if (hours >= 17 && hours < 22) return "tối";
+  return "đêm";
+}
+
 /**
  * nhóm theo type và lấy theo ngày tạo gần nhất
  * type: playlist, artist, album, genre, track
@@ -270,6 +294,1083 @@ const generateMusicRecommendations = async (req, res) => {
 /**
  * Tạo đề xuất từ hoạt động của người dùng
  */
+const GenerateRecommendationsFromActivity = async (req, res) => {
+  try {
+    console.log("🎯 CREATE RECOMMENDATIONS FROM ACTIVITY:", req.body);
+    const { activity = "" } = req.body;
+
+    const userId = req.user.id;
+    const cacheKey = `recommendations-activity:${userId}:${activity}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (createRecommendationsFromActivity)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (createRecommendationsFromActivity)');
+
+    const userContext = `THÔNG TIN NGƯỜI DÙNG: Hoạt động hiện tại: ${activity || "Không xác định"}`.trim();
+    const prompt = `
+      Bạn là chuyên gia AI về âm nhạc, hiểu sâu về tất cả thể loại nhạc, nghệ sĩ Việt Nam và quốc tế.
+      ${userContext}
+      NHIỆM VỤ:
+      Dựa trên thông tin trên, hãy tạo 5 gợi ý tìm kiếm âm nhạc ĐA DẠNG và PHONG PHÚ phù hợp với hoạt động hiện tại của người dùng.
+      QUY TẮC:
+      1. Mỗi gợi ý phải khác biệt và không lặp lại.
+      2. Ưu tiên nghệ sĩ/bài hát có phong cách phù hợp với hoạt động người dùng đang làm.
+      3. Kết hợp cả nhạc mới (trending) và nhạc kinh điển
+      4. Ưu tiên các gợi ý có tính khám phá cao, giúp người dùng mở rộng sở thích âm nhạc
+      5. Đưa ra cả gợi ý bất ngờ nhưng vẫn phù hợp.
+      6. Lí do chỉ có 1 là activity.
+      7. Ưu tiên nhạc/nghệ sĩ Việt Nam.
+      
+      🔧 FORMAT OUTPUT:
+      Trả về ĐÚNG format JSON array sau (không thêm markdown, không giải thích):
+      [
+        {
+          "type": "playlist",
+          "query": "Chill Vibes 2024",
+          "reason": "activity",
+          "confidence": 0.95
+        },
+        {
+          "type": "artist",
+          "query": "Sơn Tùng M-TP",
+          "reason": "activity",
+          "confidence": 0.88
+        }
+      ]
+        📌 CÁC LOẠI TYPE:
+      - "playlist": Gợi ý playlist theo chủ đề
+      - "artist": Tên nghệ sĩ cụ thể
+      - "album": Tên album cụ thể
+      - "genre": Thể loại âm nhạc
+      - "track": Tên bài hát cụ thể
+      GIÁ TRỊ CỦA TRƯỜNG LÍ DO (REASON): activity
+      Confidence: điểm từ 0.0 đến 1.0 thể hiện mức độ phù hợp.
+      BẮT ĐẦU TẠO NGAY:
+    `.trim();
+
+    const { z, date } = require("zod");
+    const { zodToJsonSchema } = require("zod-to-json-schema");
+    const recommendationSchema = z.object({
+      type: z.enum(["playlist", "artist", "album", "genre", "track"]).describe("Loại gợi ý."),
+      query: z.string().describe("Truy vấn tìm kiếm"),
+      reason: z.string().describe("Lý do cho gợi ý này."),
+      confidence: z.number().min(0).max(1).describe("Điểm độ tin cậy từ 0.0 đến 1.0."),
+    });
+    const recommendationsSchema = z.array(recommendationSchema);
+    let response;
+    let lastError = null;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🎵 Gọi Gemini API (Lần thử ${attempt + 1}/${MAX_RETRIES})...`);
+        response = await genAI.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: zodToJsonSchema(recommendationsSchema),
+          },
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2000,
+          },
+        });
+
+        console.log("✅ API call thành công!");
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error; // Lưu lại lỗi
+        if (error.status === 503) {
+          console.warn(`Lần thử ${attempt + 1} thất bại (503 Overloaded).`);
+
+          if (attempt < MAX_RETRIES - 1) {
+            const delay = BASE_DELAY_MS * (2 ** attempt);
+            console.log(`...Chờ ${delay}ms trước khi thử lại...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        } else {
+          console.error("Lỗi API không thể thử lại:", error.message);
+          break; // thoát vòng lặp
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error("Tất cả các lần thử lại đều thất bại.");
+      return res.status(500).json({
+        error: "Không thể tạo gợi ý âm nhạc sau nhiều lần thử lại",
+        details: lastError.message
+      });
+    }
+
+    const responseText = response.candidates[0].content.parts[0].text;
+    let recommendations;
+    try {
+      recommendations = recommendationsSchema.parse(JSON.parse(responseText));
+    } catch (parseError) {
+      console.error("❌ JSON parse or validation error:", parseError);
+      return res.status(500).json({
+        success: false,
+        error: "Không thể parse hoặc validate kết quả từ AI",
+        rawResponse: responseText
+      });
+    }
+
+    const responseData = {
+      message: "Thành công",
+      success: true,
+      totalResults: recommendations.length,
+      data: recommendations,
+    };
+
+    // Cache kết quả
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    for (const rec of recommendations) {
+      await createRecommendation(rec, req.user.id);
+    }
+
+    res.status(200).json(responseData);
+
+  } catch (error) {
+    console.error("❌ Lỗi createRecommendationsFromActivity:", error);
+    res.status(500).json({
+      error: "Không thể tạo gợi ý từ hoạt động",
+      data: error.message
+    });
+  }
+}
+
+const GenerateRecommendationsFromMood = async (req, res) => {
+  try {
+    console.log("🎯 CREATE RECOMMENDATIONS FROM MOOD:", req.body);
+    const { mood = "" } = req.body;
+
+    const userId = req.user.id;
+    const cacheKey = `recommendations-mood:${userId}:${mood}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (createRecommendationsFromMood)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (createRecommendationsFromMood)');
+
+    const userContext = `THÔNG TIN NGƯỜI DÙNG: Tâm trạng hiện tại: ${mood || "Bình thường"}`.trim();
+    const prompt = `
+      Bạn là chuyên gia AI về âm nhạc và tâm trạng, hiểu sâu về tất cả thể loại nhạc, nghệ sĩ Việt Nam và quốc tế.
+      ${userContext}
+      NHIỆM VỤ:
+      Dựa trên thông tin trên, hãy tạo 5 gợi ý tìm kiếm âm nhạc ĐA DẠNG và PHONG PHÚ phù hợp với tâm trạng hiện tại của người dùng.
+      QUY TẮC:
+      1. Mỗi gợi ý phải khác biệt và không lặp lại.
+      2. Ưu tiên nghệ sĩ/bài hát có phong cách phù hợp với tâm trạng người dùng đang có.
+      3. Kết hợp cả nhạc mới (trending) và nhạc kinh điển
+      4. Ưu tiên các gợi ý có tính khám phá cao, giúp người dùng mở rộng sở thích âm nhạc
+      5. Đưa ra cả gợi ý bất ngờ nhưng vẫn phù hợp.
+      6. Lí do chỉ có 1 là mood.
+      7. Ưu tiên nhạc/nghệ sĩ Việt Nam.
+      
+      🔧 FORMAT OUTPUT:
+      Trả về ĐÚNG format JSON array sau (không thêm markdown, không giải thích):
+      [
+        {
+          "type": "playlist",
+          "query": "Chill Vibes 2024",
+          "reason": "mood",
+          "confidence": 0.95
+        },
+        {
+          "type": "artist",
+          "query": "Sơn Tùng M-TP",
+          "reason": "mood",
+          "confidence": 0.88
+        }
+      ]
+        📌 CÁC LOẠI TYPE:
+      - "playlist": Gợi ý playlist theo chủ đề
+      - "artist": Tên nghệ sĩ cụ thể
+      - "album": Tên album cụ thể
+      - "genre": Thể loại âm nhạc
+      - "track": Tên bài hát cụ thể
+      GIÁ TRỊ CỦA TRƯỜNG LÍ DO (REASON): mood
+      Confidence: điểm từ 0.0 đến 1.0 thể hiện mức độ phù hợp.
+      BẮT ĐẦU TẠO NGAY:
+    `.trim();
+
+    const { z, date } = require("zod");
+    const { zodToJsonSchema } = require("zod-to-json-schema");
+    const recommendationSchema = z.object({
+      type: z.enum(["playlist", "artist", "album", "genre", "track"]).describe("Loại gợi ý."),
+      query: z.string().describe("Truy vấn tìm kiếm"),
+      reason: z.string().describe("Lý do cho gợi ý này."),
+      confidence: z.number().min(0).max(1).describe("Điểm độ tin cậy từ 0.0 đến 1.0."),
+    });
+    const recommendationsSchema = z.array(recommendationSchema);
+    let response;
+    let lastError = null;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🎵 Gọi Gemini API (Lần thử ${attempt + 1}/${MAX_RETRIES})...`);
+        response = await genAI.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: zodToJsonSchema(recommendationsSchema),
+          },
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2000,
+          },
+        });
+
+        console.log("✅ API call thành công!");
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error; // Lưu lại lỗi
+        if (error.status === 503) {
+          console.warn(`Lần thử ${attempt + 1} thất bại (503 Overloaded).`);
+
+          if (attempt < MAX_RETRIES - 1) {
+            const delay = BASE_DELAY_MS * (2 ** attempt);
+            console.log(`...Chờ ${delay}ms trước khi thử lại...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        } else {
+          console.error("Lỗi API không thể thử lại:", error.message);
+          break; // thoát vòng lặp
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error("Tất cả các lần thử lại đều thất bại.");
+      return res.status(500).json({
+        error: "Không thể tạo gợi ý âm nhạc sau nhiều lần thử lại",
+        details: lastError.message
+      });
+    }
+
+    const responseText = response.candidates[0].content.parts[0].text;
+    let recommendations;
+    try {
+      recommendations = recommendationsSchema.parse(JSON.parse(responseText));
+    } catch (parseError) {
+      console.error("❌ JSON parse or validation error:", parseError);
+      return res.status(500).json({
+        success: false,
+        error: "Không thể parse hoặc validate kết quả từ AI",
+        rawResponse: responseText
+      });
+    }
+
+    const responseData = {
+      message: "Thành công",
+      success: true,
+      totalResults: recommendations.length,
+      data: recommendations,
+    };
+
+    // Cache kết quả
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    for (const rec of recommendations) {
+      await createRecommendation(rec, req.user.id);
+    }
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("❌ Lỗi createRecommendationsFromMood:", error);
+    res.status(500).json({
+      error: "Không thể tạo gợi ý từ tâm trạng",
+      data: error.message
+    });
+  }
+}
+
+const GenerateRecommendationsFromGenres = async (req, res) => {
+  try {
+    console.log("🎯 CREATE RECOMMENDATIONS FROM GENRES:", req.body);
+    const { genres = [] } = req.body;
+
+    const userId = req.user.id;
+    const cacheKey = `recommendations-genres:${userId}:${genres}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (createRecommendationsFromGenres)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (createRecommendationsFromGenres)');
+
+    const userContext = `THÔNG TIN NGƯỜI DÙNG: Thể loại nhạc hiện tại: ${genres.length > 0 ? genres.join(", ") : "V-POP"}`.trim();
+    const prompt = `
+      Bạn là chuyên gia AI về âm nhạc, hiểu sâu về tất cả thể loại nhạc, nghệ sĩ Việt Nam và quốc tế.
+      ${userContext}
+      NHIỆM VỤ:
+      Dựa trên thông tin trên, hãy tạo 5 gợi ý tìm kiếm âm nhạc ĐA DẠNG và PHONG PHÚ phù hợp với thể loại yêu thích của người dùng.
+      QUY TẮC:
+      1. Mỗi gợi ý phải khác biệt và không lặp lại.
+      2. Ưu tiên nghệ sĩ/bài hát có phong cách phù hợp với thể loại yêu thích của người dùng.
+      3. Kết hợp cả nhạc mới (trending) và nhạc kinh điển
+      4. Ưu tiên các gợi ý có tính khám phá cao, giúp người dùng mở rộng sở thích âm nhạc
+      5. Đưa ra cả gợi ý bất ngờ nhưng vẫn phù hợp.
+      6. Lí do chỉ có 1 là genres.
+      7. Ưu tiên nhạc/nghệ sĩ Việt Nam.
+      
+      🔧 FORMAT OUTPUT:
+      Trả về ĐÚNG format JSON array sau (không thêm markdown, không giải thích):
+      [
+        {
+          "type": "playlist",
+          "query": "Chill Vibes 2024",
+          "reason": "genres",
+          "confidence": 0.95
+        },
+        {
+          "type": "artist",
+          "query": "Sơn Tùng M-TP",
+          "reason": "genres",
+          "confidence": 0.88
+        }
+      ]
+        📌 CÁC LOẠI TYPE:
+      - "playlist": Gợi ý playlist theo chủ đề
+      - "artist": Tên nghệ sĩ cụ thể
+      - "album": Tên album cụ thể
+      - "genre": Thể loại âm nhạc
+      - "track": Tên bài hát cụ thể
+      GIÁ TRỊ CỦA TRƯỜNG LÍ DO (REASON): genres
+      Confidence: điểm từ 0.0 đến 1.0 thể hiện mức độ phù hợp.
+      BẮT ĐẦU TẠO NGAY:
+    `.trim();
+
+    const { z, date } = require("zod");
+    const { zodToJsonSchema } = require("zod-to-json-schema");
+    const recommendationSchema = z.object({
+      type: z.enum(["playlist", "artist", "album", "genre", "track"]).describe("Loại gợi ý."),
+      query: z.string().describe("Truy vấn tìm kiếm"),
+      reason: z.string().describe("Lý do cho gợi ý này."),
+      confidence: z.number().min(0).max(1).describe("Điểm độ tin cậy từ 0.0 đến 1.0."),
+    });
+    const recommendationsSchema = z.array(recommendationSchema);
+    let response;
+    let lastError = null;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🎵 Gọi Gemini API (Lần thử ${attempt + 1}/${MAX_RETRIES})...`);
+        response = await genAI.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: zodToJsonSchema(recommendationsSchema),
+          },
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2000,
+          },
+        });
+
+        console.log("✅ API call thành công!");
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error; // Lưu lại lỗi
+        if (error.status === 503) {
+          console.warn(`Lần thử ${attempt + 1} thất bại (503 Overloaded).`);
+
+          if (attempt < MAX_RETRIES - 1) {
+            const delay = BASE_DELAY_MS * (2 ** attempt);
+            console.log(`...Chờ ${delay}ms trước khi thử lại...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        } else {
+          console.error("Lỗi API không thể thử lại:", error.message);
+          break; // thoát vòng lặp
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error("Tất cả các lần thử lại đều thất bại.");
+      return res.status(500).json({
+        error: "Không thể tạo gợi ý âm nhạc sau nhiều lần thử lại",
+        details: lastError.message
+      });
+    }
+
+    const responseText = response.candidates[0].content.parts[0].text;
+    let recommendations;
+    try {
+      recommendations = recommendationsSchema.parse(JSON.parse(responseText));
+    } catch (parseError) {
+      console.error("❌ JSON parse or validation error:", parseError);
+      return res.status(500).json({
+        success: false,
+        error: "Không thể parse hoặc validate kết quả từ AI",
+        rawResponse: responseText
+      });
+    }
+
+    if (recommendations.length === 0) {
+      return res.status(200).json({
+        message: "Không có gợi ý phù hợp",
+        success: false,
+      });
+    }
+
+    const responseData = {
+      message: "Thành công",
+      success: true,
+      totalResults: recommendations.length,
+      data: recommendations,
+    };
+
+    // Cache kết quả
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    for (const rec of recommendations) {
+      await createRecommendation(rec, req.user.id);
+    }
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("❌ Lỗi createRecommendationsFromGenres:", error);
+    res.status(500).json({
+      error: "Không thể tạo gợi ý từ thể loại",
+      data: error.message
+    });
+  }
+}
+
+const GenerateRecommendationsFromFavorites = async (req, res) => {
+  try {
+    console.log("🎯 CREATE RECOMMENDATIONS FROM FAVORITES:");
+    const { favorites = [] } = req.body;
+
+    const userId = req.user.id;
+    const cacheKey = `recommendations-favorites:${userId}:${new Date().toDateString()}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (createRecommendationsFromFavorites)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (createRecommendationsFromFavorites)');
+
+    const formatFavorites = favorites.map((item) => {
+      return `${item.type} : ${item.name} - ${item.artists || item.description || ""}`;
+    }).join(", ");
+
+    console.log('formatFavorites', formatFavorites)
+
+    const userContext = `THÔNG TIN NGƯỜI DÙNG: Danh sách yêu thích của người dùng: ${favorites.length > 0 ? formatFavorites : "Chưa có danh sách yêu thích"}`.trim();
+    const prompt = `
+      Bạn là chuyên gia AI về âm nhạc và phân tích sở thích người dùng, hiểu sâu về tất cả thể loại nhạc, nghệ sĩ Việt Nam và quốc tế.
+      ${userContext}
+      NHIỆM VỤ:
+      Dựa trên thông tin trên, hãy tạo 5 gợi ý tìm kiếm âm nhạc ĐA DẠNG và PHONG PHÚ phù hợp với danh sách yêu thích của người dùng.
+      QUY TẮC:
+      1. Mỗi gợi ý phải khác biệt và không lặp lại.
+      2. Ưu tiên bài hát/ nghệ sĩ có phong cách hoặc quốc gia phù hợp với danh sách yêu thích của người dùng.
+      3. Kết hợp cả nhạc mới (trending) và nhạc kinh điển
+      4. Ưu tiên các gợi ý có tính khám phá cao, giúp người dùng mở rộng sở thích âm nhạc
+      5. Đưa ra cả gợi ý bất ngờ nhưng vẫn phù hợp.
+      6. Lí do chỉ có 1 là favorites.
+      7. Ưu tiên nhạc/ nghệ sĩ có cùng quốc gia với danh sách nghệ sĩ/ bài hát yêu thích của người dùng.
+      
+      🔧 FORMAT OUTPUT:
+      Trả về ĐÚNG format JSON array sau (không thêm markdown, không giải thích):
+      [
+        {
+          "type": "playlist",
+          "query": "Chill Vibes 2024",
+          "reason": "favorites",
+          "confidence": 0.95
+        },
+        {
+          "type": "artist",
+          "query": "Sơn Tùng M-TP",
+          "reason": "favorites",
+          "confidence": 0.88
+        }
+      ]
+        📌 CÁC LOẠI TYPE:
+      - "playlist": Gợi ý playlist theo chủ đề
+      - "artist": Tên nghệ sĩ cụ thể
+      - "album": Tên album cụ thể
+      - "genre": Thể loại âm nhạc
+      - "track": Tên bài hát cụ thể
+      GIÁ TRỊ CỦA TRƯỜNG LÍ DO (REASON): favorites
+      Confidence: điểm từ 0.0 đến 1.0 thể hiện mức độ phù hợp.
+      BẮT ĐẦU TẠO NGAY:
+    `.trim();
+
+    const { z, date } = require("zod");
+    const { zodToJsonSchema } = require("zod-to-json-schema");
+    const recommendationSchema = z.object({
+      type: z.enum(["playlist", "artist", "album", "genre", "track"]).describe("Loại gợi ý."),
+      query: z.string().describe("Truy vấn tìm kiếm"),
+      reason: z.string().describe("Lý do cho gợi ý này."),
+      confidence: z.number().min(0).max(1).describe("Điểm độ tin cậy từ 0.0 đến 1.0."),
+    });
+    const recommendationsSchema = z.array(recommendationSchema);
+    let response;
+    let lastError = null;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🎵 Gọi Gemini API (Lần thử ${attempt + 1}/${MAX_RETRIES})...`);
+        response = await genAI.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: zodToJsonSchema(recommendationsSchema),
+          },
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2000,
+          },
+        });
+
+        console.log("✅ API call thành công!");
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error; // Lưu lại lỗi
+        if (error.status === 503) {
+          console.warn(`Lần thử ${attempt + 1} thất bại (503 Overloaded).`);
+
+          if (attempt < MAX_RETRIES - 1) {
+            const delay = BASE_DELAY_MS * (2 ** attempt);
+            console.log(`...Chờ ${delay}ms trước khi thử lại...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        } else {
+          console.error("Lỗi API không thể thử lại:", error.message);
+          break; // thoát vòng lặp
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error("Tất cả các lần thử lại đều thất bại.");
+      return res.status(500).json({
+        error: "Không thể tạo gợi ý âm nhạc sau nhiều lần thử lại",
+        details: lastError.message
+      });
+    }
+
+    const responseText = response.candidates[0].content.parts[0].text;
+    let recommendations;
+    try {
+      recommendations = recommendationsSchema.parse(JSON.parse(responseText));
+    } catch (parseError) {
+      console.error("❌ JSON parse or validation error:", parseError);
+      return res.status(500).json({
+        success: false,
+        error: "Không thể parse hoặc validate kết quả từ AI",
+        rawResponse: responseText
+      });
+    }
+
+    if (recommendations.length === 0) {
+      return res.status(200).json({
+        message: "Không có gợi ý phù hợp",
+        success: false,
+      });
+    }
+
+    const responseData = {
+      message: "Thành công",
+      success: true,
+      totalResults: recommendations.length,
+      data: recommendations,
+    };
+
+    // Cache kết quả
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    for (const rec of recommendations) {
+      await createRecommendation(rec, req.user.id);
+    }
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("❌ Lỗi createRecommendationsFromFavorites:", error);
+    res.status(500).json({
+      error: "Không thể tạo gợi ý từ danh sách yêu thích",
+      data: error.message
+    });
+  }
+}
+
+const GenerateRecommendationsFromFollowedArtists = async (req, res) => {
+  try {
+    console.log("🎯 CREATE RECOMMENDATIONS FROM FOLLOWED ARTISTS:");
+    const { followedArtists = [] } = req.body;
+
+    const userId = req.user.id;
+    const cacheKey = `recommendations-followedArtists:${userId}:${new Date().toDateString()}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (createRecommendationsFromFollowedArtists)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (createRecommendationsFromFollowedArtists)');
+
+    const formatFollowedArtists = followedArtists.map((artist) => {
+      return `${artist} - Theo dõi lúc ${artist.followedAt || "không rõ"}`;
+    }).join(", ");
+
+    const userContext = `THÔNG TIN NGƯỜI DÙNG: Danh sách nghệ sĩ theo dõi của người dùng: ${followedArtists.length > 0 ? formatFollowedArtists : "Chưa có nghệ sĩ theo dõi"}`.trim();
+    const prompt = `
+      Bạn là chuyên gia AI về âm nhạc và phân tích sở thích người dùng, hiểu sâu về tất cả thể loại nhạc, nghệ sĩ trên toàn thế giới.
+      ${userContext}
+      NHIỆM VỤ:
+      Dựa trên thông tin trên, hãy tạo 5 gợi ý tìm kiếm âm nhạc ĐA DẠNG và PHONG PHÚ phù hợp với danh sách nghệ sĩ theo dõi của người dùng.
+      QUY TẮC:
+      1. Mỗi gợi ý phải khác biệt và không lặp lại.
+      2. Ưu tiên nghệ sĩ/bài hát có phong cách hoặc quốc gia phù hợp với danh sách nghệ sĩ theo dõi của người dùng.
+      3. Kết hợp cả nhạc mới (trending) và nhạc kinh điển
+      4. Ưu tiên các gợi ý có tính khám phá cao, giúp người dùng mở rộng sở thích âm nhạc
+      5. Đưa ra cả gợi ý bất ngờ nhưng vẫn phù hợp.
+      6. Lí do chỉ có 1 là followedArtists.
+      7. Ưu tiên liên quan đến nghệ sĩ mới theo dõi.
+      
+      🔧 FORMAT OUTPUT:
+      Trả về ĐÚNG format JSON array sau (không thêm markdown, không giải thích):
+      [
+        {
+          "type": "playlist",
+          "query": "Chill Vibes 2024",
+          "reason": "followedArtists",
+          "confidence": 0.95
+        },
+        {
+          "type": "artist",
+          "query": "Sơn Tùng M-TP",
+          "reason": "followedArtists",
+          "confidence": 0.88
+        }
+      ]
+        📌 CÁC LOẠI TYPE:
+      - "playlist": Gợi ý playlist theo chủ đề
+      - "artist": Tên nghệ sĩ cụ thể
+      - "album": Tên album cụ thể
+      - "genre": Thể loại âm nhạc
+      - "track": Tên bài hát cụ thể
+      GIÁ TRỊ CỦA TRƯỜNG LÍ DO (REASON): followedArtists
+      Confidence: điểm từ 0.0 đến 1.0 thể hiện mức độ phù hợp.
+      BẮT ĐẦU TẠO NGAY:
+    `.trim();
+
+    const { z, date } = require("zod");
+    const { zodToJsonSchema } = require("zod-to-json-schema");
+    const recommendationSchema = z.object({
+      type: z.enum(["playlist", "artist", "album", "genre", "track"]).describe("Loại gợi ý."),
+      query: z.string().describe("Truy vấn tìm kiếm"),
+      reason: z.string().describe("Lý do cho gợi ý này."),
+      confidence: z.number().min(0).max(1).describe("Điểm độ tin cậy từ 0.0 đến 1.0."),
+    });
+    const recommendationsSchema = z.array(recommendationSchema);
+    let response;
+    let lastError = null;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🎵 Gọi Gemini API (Lần thử ${attempt + 1}/${MAX_RETRIES})...`);
+        response = await genAI.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: zodToJsonSchema(recommendationsSchema),
+          },
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2000,
+          },
+        });
+
+        console.log("✅ API call thành công!");
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error; // Lưu lại lỗi
+        if (error.status === 503) {
+          console.warn(`Lần thử ${attempt + 1} thất bại (503 Overloaded).`);
+
+          if (attempt < MAX_RETRIES - 1) {
+            const delay = BASE_DELAY_MS * (2 ** attempt);
+            console.log(`...Chờ ${delay}ms trước khi thử lại...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        } else {
+          console.error("Lỗi API không thể thử lại:", error.message);
+          break; // thoát vòng lặp
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error("Tất cả các lần thử lại đều thất bại.");
+      return res.status(500).json({
+        error: "Không thể tạo gợi ý âm nhạc sau nhiều lần thử lại",
+        details: lastError.message
+      });
+    }
+
+    const responseText = response.candidates[0].content.parts[0].text;
+    let recommendations;
+    try {
+      recommendations = recommendationsSchema.parse(JSON.parse(responseText));
+    } catch (parseError) {
+      console.error("❌ JSON parse or validation error:", parseError);
+      return res.status(500).json({
+        success: false,
+        error: "Không thể parse hoặc validate kết quả từ AI",
+        rawResponse: responseText
+      });
+    }
+
+    if (recommendations.length === 0) {
+      return res.status(200).json({
+        message: "Không có gợi ý phù hợp",
+        success: false,
+      });
+    }
+
+    const responseData = {
+      message: "Thành công",
+      success: true,
+      totalResults: recommendations.length,
+      data: recommendations,
+    };
+
+    // Cache kết quả
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    for (const rec of recommendations) {
+      await createRecommendation(rec, req.user.id);
+    }
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("❌ Lỗi createRecommendationsFromFollowedArtists:", error);
+    res.status(500).json({
+      error: "Không thể tạo gợi ý từ danh sách nghệ sĩ theo dõi",
+      data: error.message
+    });
+  }
+}
+
+const GenerateRecommendationsFromHistories = async (req, res) => {
+  try {
+    console.log("🎯 CREATE RECOMMENDATIONS FROM HISTORIES:");
+    const { listeningHistory = [] } = req.body;
+
+    const userId = req.user.id;
+    const cacheKey = `recommendations-histories:${userId}:${new Date().toDateString()}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (createRecommendationsFromHistories)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (createRecommendationsFromHistories)');
+
+    const formatListeningHistory = listeningHistory.slice(0, 10).map((item) => {
+      return `${item.type} : ${item.name} - ${item.artists || item.description || ""} - thời lượng phát: ${item.durationListened || 0} - ${item.playCount || 0} lần phát`;
+    }).join("; ");
+
+    const userContext = `THÔNG TIN NGƯỜI DÙNG: Lịch sử nghe nhạc của người dùng: ${listeningHistory.length > 0 ? formatListeningHistory : "Chưa có lịch sử nghe"}`.trim();
+    const prompt = `
+      Bạn là chuyên gia AI về âm nhạc và phân tích sở thích người dùng, hiểu sâu về tất cả thể loại nhạc, nghệ sĩ trên toàn thế giới.
+      ${userContext}
+      NHIỆM VỤ:
+      Dựa trên thông tin trên, hãy tạo 5 gợi ý tìm kiếm âm nhạc ĐA DẠNG và PHONG PHÚ phù hợp với lịch sử nghe nhạc của người dùng.
+      QUY TẮC:
+      1. Mỗi gợi ý phải khác biệt và không lặp lại.
+      2. Ưu tiên nghệ sĩ/bài hát có phong cách hoặc quốc gia phù hợp với lịch sử nghe nhạc của người dùng.
+      3. Kết hợp cả nhạc mới (trending) và nhạc kinh điển
+      4. Ưu tiên các gợi ý có tính khám phá cao, giúp người dùng mở rộng sở thích âm nhạc
+      5. Đưa ra cả gợi ý bất ngờ nhưng vẫn phù hợp.
+      6. Lí do chỉ có 1 là history.
+      
+      🔧 FORMAT OUTPUT:
+      Trả về ĐÚNG format JSON array sau (không thêm markdown, không giải thích):
+      [
+        {
+          "type": "playlist",
+          "query": "Chill Vibes 2024",
+          "reason": "history",
+          "confidence": 0.95
+        },
+        {
+          "type": "artist",
+          "query": "Sơn Tùng M-TP",
+          "reason": "history",
+          "confidence": 0.88
+        }
+      ]
+        📌 CÁC LOẠI TYPE:
+      - "playlist": Gợi ý playlist theo chủ đề
+      - "artist": Tên nghệ sĩ cụ thể
+      - "album": Tên album cụ thể
+      - "genre": Thể loại âm nhạc
+      - "track": Tên bài hát cụ thể
+      GIÁ TRỊ CỦA TRƯỜNG LÍ DO (REASON): history
+      Confidence: điểm từ 0.0 đến 1.0 thể hiện mức độ phù hợp.
+      BẮT ĐẦU TẠO NGAY:
+    `.trim();
+
+    const { z, date } = require("zod");
+    const { zodToJsonSchema } = require("zod-to-json-schema");
+    const recommendationSchema = z.object({
+      type: z.enum(["playlist", "artist", "album", "genre", "track"]).describe("Loại gợi ý."),
+      query: z.string().describe("Truy vấn tìm kiếm"),
+      reason: z.string().describe("Lý do cho gợi ý này."),
+      confidence: z.number().min(0).max(1).describe("Điểm độ tin cậy từ 0.0 đến 1.0."),
+    });
+    const recommendationsSchema = z.array(recommendationSchema);
+    let response;
+    let lastError = null;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🎵 Gọi Gemini API (Lần thử ${attempt + 1}/${MAX_RETRIES})...`);
+        response = await genAI.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: zodToJsonSchema(recommendationsSchema),
+          },
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2000,
+          },
+        });
+
+        console.log("✅ API call thành công!");
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error; // Lưu lại lỗi
+        if (error.status === 503) {
+          console.warn(`Lần thử ${attempt + 1} thất bại (503 Overloaded).`);
+
+          if (attempt < MAX_RETRIES - 1) {
+            const delay = BASE_DELAY_MS * (2 ** attempt);
+            console.log(`...Chờ ${delay}ms trước khi thử lại...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        } else {
+          console.error("Lỗi API không thể thử lại:", error.message);
+          break; // thoát vòng lặp
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error("Tất cả các lần thử lại đều thất bại.");
+      return res.status(500).json({
+        error: "Không thể tạo gợi ý âm nhạc sau nhiều lần thử lại",
+        details: lastError.message
+      });
+    }
+
+    const responseText = response.candidates[0].content.parts[0].text;
+    let recommendations;
+    try {
+      recommendations = recommendationsSchema.parse(JSON.parse(responseText));
+    } catch (parseError) {
+      console.error("❌ JSON parse or validation error:", parseError);
+      return res.status(500).json({
+        success: false,
+        error: "Không thể parse hoặc validate kết quả từ AI",
+        rawResponse: responseText
+      });
+    }
+
+    if (recommendations.length === 0) {
+      return res.status(200).json({
+        message: "Không có gợi ý phù hợp",
+        success: false,
+      });
+    }
+
+    const responseData = {
+      message: "Thành công",
+      success: true,
+      totalResults: recommendations.length,
+      data: recommendations,
+    };
+
+    // Cache kết quả
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    for (const rec of recommendations) {
+      await createRecommendation(rec, req.user.id);
+    }
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("❌ Lỗi createRecommendationsFromHistory:", error);
+    res.status(500).json({
+      error: "Không thể tạo gợi ý từ lịch sử nghe nhạc",
+      data: error.message
+    });
+  }
+}
+
+const GenerateRecommendationsFromTimeOfDay = async (req, res) => {
+  try {
+    console.log("🎯 CREATE RECOMMENDATIONS FROM TIME OF DAY:");
+
+    const userId = req.user.id;
+    const timeOfDay = new Date();
+    const cacheKey = `recommendations-timeOfDay:${userId}:${timeOfDay.toDateString()}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (createRecommendationsFromTimeOfDay)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (createRecommendationsFromTimeOfDay)');
+
+    const prompt = `
+      Bạn là chuyên gia AI về âm nhạc, hiểu sâu về tất cả thể loại nhạc, nghệ sĩ trên toàn thế giới.
+      THÔNG TIN NGƯỜI DÙNG: Hiện tại là ${convertTimeOfDay(timeOfDay)}: ${timeOfDay.getHours()} giờ ${timeOfDay.getMinutes()} phút, ngày ${formatDate(timeOfDay)}.
+      NHIỆM VỤ:
+      Dựa trên thông tin trên, hãy tạo 5 gợi ý tìm kiếm âm nhạc ĐA DẠNG và PHONG PHÚ phù hợp với thời gian của người dùng.
+      QUY TẮC:
+      1. Mỗi gợi ý phải khác biệt và không lặp lại.
+      2. Ưu tiên nghệ sĩ/bài hát có phong cách hoặc quốc gia phù hợp với thời gian của người dùng.
+      3. Kết hợp cả nhạc mới (trending) và nhạc kinh điển
+      4. Ưu tiên các gợi ý có tính khám phá cao, giúp người dùng mở rộng sở thích âm nhạc
+      5. Đưa ra cả gợi ý bất ngờ nhưng vẫn phù hợp.
+      6. Lí do chỉ có 1 là timeOfDay.
+      
+      🔧 FORMAT OUTPUT:
+      Trả về ĐÚNG format JSON array sau (không thêm markdown, không giải thích):
+      [
+        {
+          "type": "playlist",
+          "query": "Chill Vibes 2024",
+          "reason": "timeOfDay",
+          "confidence": 0.95
+        },
+        {
+          "type": "artist",
+          "query": "Sơn Tùng M-TP",
+          "reason": "timeOfDay",
+          "confidence": 0.88
+        }
+      ]
+        📌 CÁC LOẠI TYPE:
+      - "playlist": Gợi ý playlist theo chủ đề
+      - "artist": Tên nghệ sĩ cụ thể
+      - "album": Tên album cụ thể
+      - "genre": Thể loại âm nhạc
+      - "track": Tên bài hát cụ thể
+      GIÁ TRỊ CỦA TRƯỜNG LÍ DO (REASON): timeOfDay
+      Confidence: điểm từ 0.0 đến 1.0 thể hiện mức độ phù hợp.
+      BẮT ĐẦU TẠO NGAY:
+    `.trim();
+
+    const { z, date } = require("zod");
+    const { zodToJsonSchema } = require("zod-to-json-schema");
+    const recommendationSchema = z.object({
+      type: z.enum(["playlist", "artist", "album", "genre", "track"]).describe("Loại gợi ý."),
+      query: z.string().describe("Truy vấn tìm kiếm"),
+      reason: z.string().describe("Lý do cho gợi ý này."),
+      confidence: z.number().min(0).max(1).describe("Điểm độ tin cậy từ 0.0 đến 1.0."),
+    });
+    const recommendationsSchema = z.array(recommendationSchema);
+    let response;
+    let lastError = null;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🎵 Gọi Gemini API (Lần thử ${attempt + 1}/${MAX_RETRIES})...`);
+        response = await genAI.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: zodToJsonSchema(recommendationsSchema),
+          },
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2000,
+          },
+        });
+
+        console.log("✅ API call thành công!");
+        lastError = null;
+        break;
+      } catch (error) {
+        lastError = error; // Lưu lại lỗi
+        if (error.status === 503) {
+          console.warn(`Lần thử ${attempt + 1} thất bại (503 Overloaded).`);
+
+          if (attempt < MAX_RETRIES - 1) {
+            const delay = BASE_DELAY_MS * (2 ** attempt);
+            console.log(`...Chờ ${delay}ms trước khi thử lại...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        } else {
+          console.error("Lỗi API không thể thử lại:", error.message);
+          break; // thoát vòng lặp
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error("Tất cả các lần thử lại đều thất bại.");
+      return res.status(500).json({
+        error: "Không thể tạo gợi ý âm nhạc sau nhiều lần thử lại",
+        details: lastError.message
+      });
+    }
+
+    const responseText = response.candidates[0].content.parts[0].text;
+    let recommendations;
+    try {
+      recommendations = recommendationsSchema.parse(JSON.parse(responseText));
+    } catch (parseError) {
+      console.error("❌ JSON parse or validation error:", parseError);
+      return res.status(500).json({
+        success: false,
+        error: "Không thể parse hoặc validate kết quả từ AI",
+        rawResponse: responseText
+      });
+    }
+
+    if (recommendations.length === 0) {
+      return res.status(200).json({
+        message: "Không có gợi ý phù hợp",
+        success: false,
+      });
+    }
+
+    const responseData = {
+      message: "Thành công",
+      success: true,
+      totalResults: recommendations.length,
+      data: recommendations,
+    };
+
+    // Cache kết quả
+    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
+    for (const rec of recommendations) {
+      await createRecommendation(rec, req.user.id);
+    }
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("❌ Lỗi createRecommendationsFromTimeOfDay:", error);
+    res.status(500).json({
+      error: "Không thể tạo gợi ý từ thời gian trong ngày",
+      data: error.message
+    });
+  }
+}
+
+
 
 // ===========================================
 // 2. PHÂN TÍCH TÂM TRẠNG/NĂNG LƯỢNG BÀI HÁT
@@ -642,4 +1743,11 @@ module.exports = {
   analyzeSongMood,
   autoTagSong,
   musicChatbot,
+  GenerateRecommendationsFromActivity,
+  GenerateRecommendationsFromMood,
+  GenerateRecommendationsFromFavorites,
+  GenerateRecommendationsFromFollowedArtists,
+  GenerateRecommendationsFromHistories,
+  GenerateRecommendationsFromTimeOfDay,
+  GenerateRecommendationsFromGenres,
 };

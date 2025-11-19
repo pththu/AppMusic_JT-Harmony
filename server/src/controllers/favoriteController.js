@@ -84,7 +84,7 @@ const formatArtist = (artist, genres) => {
 
 const getFormattedTrack = async (favorite) => {
   const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
-  const cacheKey = `fav_item:track:${itemSpotifyId || itemId}`;
+  const cacheKey = `fav_item:track:${itemSpotifyId}`;
 
   // B1: Kiểm tra Item Cache
   try {
@@ -144,7 +144,7 @@ const getFormattedTrack = async (favorite) => {
 // --- (MỚI) HÀM HELPER LẤY ALBUM (CÓ CACHE TỪNG ITEM) ---
 const getFormattedAlbum = async (favorite) => {
   const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
-  const cacheKey = `fav_item:album:${itemSpotifyId || itemId}`;
+  const cacheKey = `fav_item:album:${itemSpotifyId}`;
 
   // B1: Kiểm tra Item Cache
   try {
@@ -181,7 +181,7 @@ const getFormattedAlbum = async (favorite) => {
 // --- (MỚI) HÀM HELPER LẤY PLAYLIST (CÓ CACHE TỪNG ITEM) ---
 const getFormattedPlaylist = async (favorite) => {
   const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
-  const cacheKey = `fav_item:playlist:${itemSpotifyId || itemId}`;
+  const cacheKey = `fav_item:playlist:${itemSpotifyId}`;
 
   // B1: Kiểm tra Item Cache
   try {
@@ -788,62 +788,70 @@ const CreateOne = async (req, res) => {
   }
 };
 
-// const DeleteOne = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const row = await FavoriteItem.destroy({ where: { id } });
-//     console.log(row);
-//     return res.status(201).json({ message: 'Đã xóa khỏi mục yêu thích', success: true });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Server error', error: error.message });
-//   }
-// };
-
 const DeleteOne = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
 
   try {
-    const favorite = await FavoriteItem.findOne({ where: { id, userId } });
+    const favorite = await FavoriteItem.findOne({ where: { id } });
 
+    console.log(1)
     if (!favorite) {
+      console.log(2)
       return res.status(404).json({ message: 'Không tìm thấy mục yêu thích', success: false });
     }
 
+    console.log(3)
     // Lấy thông tin để Hủy Item Cache (Lớp 2)
     const { itemType, itemId, itemSpotifyId } = favorite;
 
-    // Tiến hành xóa
-    await favorite.destroy();
+    const row = await FavoriteItem.destroy({ where: { id } });
+    if (!row) {
+      console.log(4)
+      return res.status(500).json({ message: 'Xóa mục yêu thích thất bại', success: false });
+    }
 
+    console.log(5)
     // --- (CẬP NHẬT) Logic Hủy Cache (Cả 2 Lớp) ---
     // 1. Hủy Group Cache (Lớp 1)
     const cacheKeyGrouped = `favorites:grouped:${userId}`;
     const cacheKeyPlaylists = `favorites:playlists:${userId}`;
+    console.log(6)
     await redisClient.del(cacheKeyGrouped);
+    console.log(7)
     if (itemType === 'playlist') {
+      console.log(8)
       await redisClient.del(cacheKeyPlaylists);
     }
+    console.log(9)
     console.log(`CACHE INVALIDATED (GROUP) for user: ${userId}`);
 
+    console.log(10)
     // 2. Hủy Item Cache (Lớp 2)
     let itemCacheKey = null;
     if (itemType === 'track') {
-      itemCacheKey = `fav_item:track:${itemSpotifyId || itemId}`;
+      console.log(11)
+      itemCacheKey = `fav_item:track:${itemSpotifyId}`;
     } else if (itemType === 'album') {
-      itemCacheKey = `fav_item:album:${itemSpotifyId || itemId}`;
+      console.log(12)
+      itemCacheKey = `fav_item:album:${itemSpotifyId}`;
     } else if (itemType === 'playlist') {
-      itemCacheKey = `fav_item:playlist:${itemSpotifyId || itemId}`;
+      console.log(13)
+      itemCacheKey = `fav_item:playlist:${itemSpotifyId}`;
     }
 
+    console.log(14)
     if (itemCacheKey) {
+      console.log(15)
       await redisClient.del(itemCacheKey);
       console.log(`CACHE INVALIDATED (ITEM) for: ${itemCacheKey}`);
     }
     // --- (HẾT) Logic Hủy Cache ---
 
+    console.log(16)
     return res.status(201).json({ message: 'Đã xóa khỏi mục yêu thích', success: true });
   } catch (error) {
+    console.log(17)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

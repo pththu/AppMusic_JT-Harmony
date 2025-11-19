@@ -120,6 +120,18 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
       field: 'last_login'
+    },
+    completedOnboarding: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: false,
+      field: 'completed_onboarding'
+    },
+    favoritesGenres: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: true,
+      defaultValue: [],
+      field: 'favorites_genres'
     }
   },
   {

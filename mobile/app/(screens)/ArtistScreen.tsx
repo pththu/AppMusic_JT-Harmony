@@ -123,7 +123,7 @@ export default function ArtistScreen() {
 
   const handleSongOptionsPress = (track) => {
     setSelectedTrack(track); // Lưu bài hát đã chọn
-    console.log('track', track);
+    // console.log('track', track);
     setSongModalVisible(true); // Mở modal
   };
 
@@ -143,7 +143,7 @@ export default function ArtistScreen() {
     }
 
     try {
-      console.log('share: ', selectedTrack);
+      // console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
       let shareMessage = `${user?.fullName}: `;
 
@@ -187,7 +187,7 @@ export default function ArtistScreen() {
         // Dismissed
       }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       error('Lỗi khi chia sẻ bài hát.');
     }
     setSongModalVisible(false);
@@ -244,7 +244,7 @@ export default function ArtistScreen() {
         success('Đã thêm bài hát vào playlist thành công!');
       }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát.');
     } finally {
       setAddTrackToPlaylistModalVisible(false);
@@ -320,7 +320,7 @@ export default function ArtistScreen() {
         setIsFollowing(true);
       }
     } catch (err) {
-      console.log(err.message);
+      // console.log(err.message);
       error('Lỗi khi theo dõi nghệ sĩ. Vui lòng thử lại sau.');
     } finally {
       setIsLoading((prev) => ({ ...prev, following: false }));
@@ -345,7 +345,7 @@ export default function ArtistScreen() {
         removeArtistFollowed(followId);
       }
     } catch (err) {
-      console.log(err.message)
+      // console.log(err.message)
       error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau.');
     } finally {
       setIsLoading((prev) => ({ ...prev, following: false }));

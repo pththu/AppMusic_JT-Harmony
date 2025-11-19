@@ -264,7 +264,7 @@ export default function SongScreen() {
       });
       if (response.success) {
         setIsFavorite(true);
-        // console.log('response.data ui', response.data)
+        console.log('response.data ui', response.data)
         addFavoriteItem(response.data[0]);
       }
     } catch (err) {
@@ -422,21 +422,6 @@ export default function SongScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Progress Bar */}
-      {/* <View className="flex-row items-center px-3 mb-3">
-        <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-xs w-8 text-center`}>
-          {formatTime(playbackPosition)}
-        </Text>
-        <View className={`flex-1 h-1 ${colorScheme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} rounded-sm mx-2`}>
-          <View
-            className={`h-1 ${colorScheme === 'dark' ? 'bg-green-700' : 'bg-green-500'} rounded-sm`}
-            style={{ width: `${progress}%` }}
-          />
-        </View>
-        <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-800'} text-xs w-8 text-center`}>
-          {formatTime(duration)}
-        </Text>
-      </View> */}
       <PlayerProgressBar />
 
       {/* Comment at current time */}

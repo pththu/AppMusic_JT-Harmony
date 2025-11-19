@@ -29,6 +29,7 @@ import { useFavoritesStore } from "@/store/favoritesStore";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { useHistoriesStore } from "@/store/historiesStore";
 import { useArtistStore } from "@/store/artistStore";
+import { useBoardingStore } from "@/store/boardingStore";
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
@@ -49,6 +50,7 @@ export default function ProfileScreen() {
   const clearListenHistory = useHistoriesStore((state) => state.clearListenHistory);
   const clearSearchHistory = useHistoriesStore((state) => state.clearSearchHistory);
   const clearArtistStore = useArtistStore((state) => state.clearArtistStore);
+  const clearBoardingStore = useBoardingStore((state) => state.clearBoardingStore);
   const logout = useAuthStore((state) => state.logout);
 
   const [selectedImage, setSelectedImage] = useState(null);
@@ -133,6 +135,7 @@ export default function ProfileScreen() {
       clearArtistStore();
       clearSearchHistory();
       clearListenHistory();
+      clearBoardingStore();
       setIsGuest(true);
       setShowLoginWall(false);
       setGuestSongPlayCount(0);

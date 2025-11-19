@@ -23,7 +23,7 @@ export default function QueueScreen() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const clearQueue = usePlayerStore((state) => state.clearQueue);
   const removeTrackFromQueue = usePlayerStore((state) => state.removeTrackFromQueue);
-  console.log('queue', queue);
+  // console.log('queue', queue);
 
   const [autoRecommendations, setAutoRecommendations] = useState(true);
   const colorScheme = useColorScheme();

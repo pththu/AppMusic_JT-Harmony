@@ -152,7 +152,7 @@ export default function ArtistsFollowingScreen() {
         error(response.message || 'Hủy theo dõi thất bại.');
       }
     } catch (err) {
-      console.log(err.message);
+      // console.log(err.message);
       error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau.');
     } finally {
       setIsLoading(false);

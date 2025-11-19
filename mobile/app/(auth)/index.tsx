@@ -11,6 +11,7 @@ import { useCustomAlert } from '@/hooks/useCustomAlert';
 import useAuthStore from '@/store/authStore';
 import { Settings, LoginManager, Profile, AccessToken } from 'react-native-fbsdk-next';
 import { Pressable } from 'react-native';
+import { useBoardingStore } from '@/store/boardingStore';
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
@@ -25,11 +26,10 @@ export default function AuthScreen() {
   const colorScheme = useColorScheme();
   const login = useAuthStore(state => state.login);
   const setIsGuest = useAuthStore(state => state.setIsGuest);
+  const setWhenLogin = useBoardingStore(state => state.setWhenLogin);
   const { error: showAlertError, success: showAlertSuccess } = useCustomAlert();
 
   const handleLoginWithGoogle = async () => {
-    //  Đổi tên alert để tránh xung đột với biến 'error' trong khối catch
-
     const loginType = 'google';
 
     try {
@@ -53,9 +53,11 @@ export default function AuthScreen() {
       }
 
       if (response.success) {
+        console.log(response)
         login(response.user, loginType, response.user.accessToken);
+        setWhenLogin();
         showAlertSuccess('Đăng nhập thành công');
-        navigate('Main');
+        // navigate('Main');
       }
 
     } catch (error) {
@@ -99,6 +101,7 @@ export default function AuthScreen() {
             }
             success('Đăng nhập thành công');
             login(response.user, loginType, response.user.accessToken);
+            setWhenLogin();
             navigate('Main');
           }
         }, 1000);

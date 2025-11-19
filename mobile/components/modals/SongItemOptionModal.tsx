@@ -68,6 +68,8 @@ const SongItemOptionModal = ({
         (item) => item?.itemType === 'track' && (item?.itemId === track?.id || item?.itemSpotifyId === track?.spotifyId)
       );
 
+      console.log('favoriteItem: ', favoriteItem.id)
+
       if (!favoriteItem) {
         error('Bài hát không có trong mục yêu thích.');
         return;
@@ -76,14 +78,14 @@ const SongItemOptionModal = ({
       const response = await RemoveFavoriteItem(favoriteItem.id);
       if (response.success) {
         removeFavoriteItem(favoriteItem);
-        setIsFavorite(false);
-        setIsLoading(false);
       }
     } catch (err) {
       console.log(err);
       error('Lỗi khi xóa bài hát khỏi mục yêu thích.');
     } finally {
       setIsVisible(false);
+      setIsFavorite(false);
+      setIsLoading(false);
     }
   };
 
@@ -96,9 +98,11 @@ const SongItemOptionModal = ({
         itemId: track.id,
         itemSpotifyId: track.spotifyId
       });
+      console.log(1111)
       if (response.success) {
         setIsFavorite(true);
         setIsLoading(false);
+        console.log(1234)
         console.log('response.data ui', response.data)
         addFavoriteItem(response.data[0]);
       }
@@ -111,7 +115,6 @@ const SongItemOptionModal = ({
   };
 
   useEffect(() => {
-    // console.log('current', track);
     if (favoriteItems) {
       const isFavorite = favoriteItems.some(
         (item) => item?.itemType === 'track' && (item?.itemSpotifyId === track?.spotifyId || (track?.id !== null && item?.itemId === track?.id))
