@@ -77,7 +77,6 @@ export default function GenresScreen() {
     const genresSelected = selected.map(i => i.name);
     setSelectedGenres(genresSelected);
     const res = await AddFavoriteGenres(genresSelected);
-    console.log(res)
     user.favoritesGenres = res.data.favoritesGenres;
     updateUser(user);
     navigate('Moods');

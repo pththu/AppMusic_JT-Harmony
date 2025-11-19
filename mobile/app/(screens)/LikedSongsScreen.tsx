@@ -25,6 +25,7 @@ import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsMod
 import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { useHistoriesStore } from "@/store/historiesStore";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 export default function LikedSongsScreen() {
   const colorScheme = useColorScheme();
@@ -37,6 +38,7 @@ export default function LikedSongsScreen() {
   const isShuffled = usePlayerStore((state) => state.isShuffled);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const playbackPosition = usePlayerStore((state) => state.playbackPosition)
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setQueue = usePlayerStore((state) => state.setQueue);
@@ -109,7 +111,7 @@ export default function LikedSongsScreen() {
 
   const handleSongOptionsPress = (track) => {
     setSelectedTrack(track); // Lưu bài hát đã chọn
-    // console.log('track', track);
+    console.log('track', track);
     setSongModalVisible(true); // Mở modal
   };
 
@@ -237,10 +239,10 @@ export default function LikedSongsScreen() {
         case 'name_desc':
           return (b.name || '').localeCompare(a.name || ''); // Z-A
         case 'date_asc':
-          return +new Date(a?.favoriteItem?.createdAt || 0) - +new Date(b?.favoriteItem?.createdAt || 0); // Cũ nhất
+          return new Date(a?.createdAt).getTime() - new Date(b?.createdAt).getTime(); // Cũ nhất
         case 'date_desc':
         default:
-          return +new Date(b?.favoriteItem?.createdAt || 0) - +new Date(a?.favoriteItem?.createdAt || 0); // Mới nhất
+          return new Date(b?.createdAt).getTime() - new Date(a?.createdAt).getTime(); // Mới nhất
       }
     });
     return sortableList;
@@ -300,7 +302,9 @@ export default function LikedSongsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
+    <View className={`flex-1 px-4 pt-4 bg-white dark:bg-black`}
+    // style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
+    >
       <View className="flex-row items-start mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="arrow-back" size={24} color={primaryIconColor} />
@@ -354,6 +358,8 @@ export default function LikedSongsScreen() {
 
       <FlatList
         data={filteredTracks} // Dùng danh sách đã lọc
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
         keyExtractor={(item) => item?.favoriteItem.id?.toString()}
         renderItem={({ item, index }) => (
           renderRecentlyPlayedItem({ item, index })

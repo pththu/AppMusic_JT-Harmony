@@ -47,25 +47,23 @@ export default function ActivitiesScreen() {
     const payload = selected?.label || '';
     GenerateFromActivity(payload).then(response => {
       if (response.success) {
-        console.log('actv', response.recommendations)
-        setRecommendBasedOnActivity(response.recommendations);
+        setRecommendBasedOnActivity(response.data);
       }
     });
+
+    if (selectedMood) {
+      GenerateFromMood(selectedMood.label).then(response => {
+        if (response.success) {
+          setRecommendBasedOnMood(response.data);
+        }
+      });
+    }
 
     UpdateCompletedOnboarding();
     user.completedOnboarding = true;
     updateUser(user);
     navigate('Main');
   };
-
-  if (selectedMood) {
-    GenerateFromMood(selectedMood.label).then(response => {
-      if (response.success) {
-        console.log('mood', response.recommendations)
-        setRecommendBasedOnMood(response.recommendations);
-      }
-    });
-  }
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black">

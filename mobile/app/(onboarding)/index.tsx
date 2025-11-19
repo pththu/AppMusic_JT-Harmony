@@ -9,6 +9,7 @@ import { useNavigate } from '@/hooks/useNavigate';
 import { useArtistStore } from '@/store/artistStore';
 import useAuthStore from '@/store/authStore';
 import { UpdateCompletedOnboarding } from '@/routes/ApiRouter';
+import { artistData } from '@/constants/data';
 
 export default function ArtistScreen() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function ArtistScreen() {
   const artistNames = ["BTS", "buitruonglinh", "Hoàng Dũng", "Taylor Swift", "Sơn Tùng M-TP", "Đen Vâu", "Justin Bieber", "Mono", "Charlie Puth", "HIEUTHUHAI", "Chillies", "Binz"];
   const [artists, setArtists] = useState([]);
 
-  const toggleSelection = (id: string) => {
+  const toggleSelection = (id) => {
     setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
@@ -49,21 +50,6 @@ export default function ArtistScreen() {
     }
   };
 
-  const fetchArtistData = async () => {
-    try {
-      const response = await GetArtistsForYou({ artistNames: artistNames });
-      if (response.success) {
-        setArtists(response.data);
-      }
-    } catch (error) {
-      console.log('Error fetching artists: ', error);
-    }
-  }
-
-  useEffect(() => {
-    fetchArtistData();
-  }, []);
-
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black">
       <View className="flex-1 px-5 pt-4">
@@ -80,9 +66,9 @@ export default function ArtistScreen() {
         </View>
 
         <FlatList
-          data={artists}
+          data={artistData}
           numColumns={3}
-          keyExtractor={(item, index) => item.id + '-' + index + '-' + item.spotifyId}
+          keyExtractor={(item, index) => item.spotifyId + '-' + index}
           showsVerticalScrollIndicator={false}
           columnWrapperStyle={{ justifyContent: 'space-between' }}
           renderItem={({ item }) => {

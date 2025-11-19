@@ -712,7 +712,7 @@ const getArtistsForYou = async (req, res) => {
     for (const genre of genres) {
       const query = `genre:${genre}`;
       console.log("Đang tìm theo:", query);
-      const responseGenre = await spotify.searchArtists(query);
+      const responseGenre = await callSpotify(() => spotify.searchArtists(query));
       allResults.push(...responseGenre);
     }
 
@@ -742,6 +742,7 @@ const getArtistsForYou = async (req, res) => {
 const getMyPlaylists = async (req, res) => {
   try {
 
+    console.log('user id: ', req.user.id)
     const cacheKey = `user:${req.user.id}:playlists`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -1047,7 +1048,7 @@ const findVideoIdForTrack = async (req, res) => {
           await track.save();
         }
       } else if (!track.videoId) {
-        videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
+        videoData = await youtube.searchVideo(track?.name, track.artists[0]?.name || '');
         videoId = videoData.videoId;
         track.videoId = videoId;
         if (videoId) {

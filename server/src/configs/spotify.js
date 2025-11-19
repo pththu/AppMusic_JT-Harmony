@@ -1,69 +1,29 @@
 require('dotenv').config();
 const axios = require('axios');
 const { response } = require('express');
+const { CATEGORY_SEARCH_STRATEGIES, INVALID_NAMES, BAD_WORDS } = require('./constants');
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 const SPOTIFY_API_URL = 'https://api.spotify.com/v1';
 
-const CATEGORY_SEARCH_STRATEGIES = {
-  'K-POP': {
-    // K-POP không phải official genre, search by text
-    useGenreFilter: false,
-    searchQueries: ['k-pop', 'kpop', 'korean pop'],
-    genreFilters: ['k-rap', 'korean r&b', 'korean indie'], // Related genres
-  },
-  'J-POP': {
-    // J-POP là official genre, dùng genre filter
-    useGenreFilter: true,
-    searchQueries: ['j-pop', 'jpop'],
-    genreFilters: ['j-pop', 'japanese pop', 'j-rock'],
-  },
-  'V-POP': {
-    useGenreFilter: false,
-    searchQueries: ['v-pop', 'vpop', 'vietnamese pop'],
-    genreFilters: ['vietnamese pop'],
-  },
-  'POP': {
-    useGenreFilter: true,
-    searchQueries: ['pop'],
-    genreFilters: ['pop', 'dance pop', 'indie pop'],
-  },
-  'HIP-HOP': {
-    useGenreFilter: true,
-    searchQueries: ['hip hop', 'hip-hop'],
-    genreFilters: ['hip hop', 'rap', 'trap'],
-  },
-  'INDIE': {
-    useGenreFilter: true,
-    searchQueries: ['indie'],
-    genreFilters: ['indie', 'indie rock', 'indie pop'],
-  },
-  'JAZZ': {
-    useGenreFilter: true,
-    searchQueries: ['jazz'],
-    genreFilters: ['jazz', 'smooth jazz', 'contemporary jazz'],
-  },
-  'RAP': {
-    useGenreFilter: true,
-    searchQueries: ['rap', 'k-rap', 'hip hop', 'j-rap', 'v-rap'],
-    genreFilters: ['rap', 'hip hop', 'trap', 'k-rap', 'japanese hip hop', 'vietnamese hip hop'],
-  },
-  'DANCE': {
-    useGenreFilter: true,
-    searchQueries: ['dance', 'edm'],
-    genreFilters: ['dance', 'edm', 'house'],
-  },
-  'ROCK': {
-    useGenreFilter: true,
-    searchQueries: ['rock'],
-    genreFilters: ['rock', 'classic rock', 'alternative rock'],
-  },
-  'C-POP': {
-    useGenreFilter: false,
-    searchQueries: ['c-pop', 'chinese pop', 'mandopop', 'c-rap'],
-    genreFilters: ['chinese pop', 'mandopop', 'chinese rock'],
-  },
+
+/**
+ * Kiểm tra xem chuỗi có chứa các từ cấm hoặc tên không hợp lệ không.
+ * @param {string} name - Tên của mục (Track, Album,...)
+ * @returns {boolean} True nếu chứa từ cấm hoặc tên không hợp lệ.
+ */
+const isBadWordFound = (name) => {
+  if (!name) return true;
+  const lowerCaseName = String(name).toLowerCase();
+
+  // 1. Lọc tên không hợp lệ
+  if (INVALID_NAMES.some(invalid => lowerCaseName.includes(invalid.toLowerCase()))) {
+    return true;
+  }
+
+  // 2. Lọc từ cấm (bad words)
+  return BAD_WORDS.some(word => lowerCaseName.includes(word.toLowerCase()));
 };
 
 let accessToken = null;
@@ -107,10 +67,36 @@ const spotifyApiRequest = async (endpoint, params = {}) => {
   }
 };
 
-const findTrackById = async (trackId) => await spotifyApiRequest(`/tracks/${trackId}`);
-const findArtistById = async (artistId) => await spotifyApiRequest(`/artists/${artistId}`);
-const findAlbumById = async (albumId) => await spotifyApiRequest(`/albums/${albumId}`);
-const findPlaylistById = async (playlistId) => await spotifyApiRequest(`/playlists/${playlistId}`);
+const findTrackById = async (trackId) => {
+  const data = await spotifyApiRequest(`/tracks/${trackId}`);
+  
+  if (isBadWordFound(data?.name)) {
+    return null;
+  }
+  return data;
+};
+
+const findArtistById = async (artistId) => {
+  const data = await spotifyApiRequest(`/artists/${artistId}`);
+  if (isBadWordFound(data?.name)) {
+    return null;
+  }
+  return data;
+};
+const findAlbumById = async (albumId) => {
+  const data = await spotifyApiRequest(`/albums/${albumId}`);
+  if (isBadWordFound(data?.name)) {
+    return null;
+  }
+  return data;
+};
+const findPlaylistById = async (playlistId) => {
+  const data = await spotifyApiRequest(`/playlists/${playlistId}`);
+  if (isBadWordFound(data?.name) || isBadWordFound(data?.description)) {
+    return null;
+  }
+  return data;
+};
 
 const searchTracks = async (query, type, limit = null) => {
   try {
@@ -119,7 +105,8 @@ const searchTracks = async (query, type, limit = null) => {
       type: type,
       ...(limit ? { limit: limit } : {})
     });
-    return tracksData.tracks.items;
+    const validItems = tracksData.tracks.items.filter(item => !isBadWordFound(item?.name));
+    return validItems;
   } catch (error) {
     console.error(`Error searching Spotify:`, error.response ? error.response.data : error.message);
     throw error;
@@ -135,13 +122,9 @@ const searchPlaylists = async (query, limit = null) => {
     });
 
     const validItems = playlistsData.playlists.items.filter(item => {
-      const invalidNames = ["Object Object", "[object Object]"];
-      if (!item || !item.name) return false;
-      const lowerCaseName = String(item.name).toLowerCase();
-      return !invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
+      return !isBadWordFound(item?.name) && !isBadWordFound(item?.description);
     });
     return validItems;
-
   } catch (error) {
     console.log('error seach spotify: ', error.message);
     throw error;
@@ -155,12 +138,7 @@ const searchAlbums = async (query, limit = 15) => {
       type: 'album',
       limit: limit
     });
-    const validItems = albumsData.albums.items.filter(item => {
-      const invalidNames = ["Object Object", "[object Object]"];
-      if (!item || !item.name) return false;
-      const lowerCaseName = String(item.name).toLowerCase();
-      return !invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
-    });
+    const validItems = albumsData.albums.items.filter(item => !isBadWordFound(item?.name));
     return validItems;
   } catch (error) {
     console.error(`Lỗi khi tìm kiếm album trên Spotify:`, error.response ? error.response.data : error.message);
@@ -181,25 +159,11 @@ const searchArtists = async (query) => {
       });
 
       const artistPage = response.data.artists;
-      const validItems = artistPage.items.filter(item => {
-        const invalidNames = ["Object Object", "[object Object]"];
-        if (!item) return false;
-
-        const itemName = item.name;
-        if (!itemName) return false;
-
-        const lowerCaseName = String(itemName).toLowerCase();
-        const isInvalid = invalidNames.some(invalid => lowerCaseName.includes(invalid.toLowerCase()));
-
-        return !isInvalid;
-      });
-
+      const validItems = artistPage.items.filter(item => !isBadWordFound(item?.name));
       allArtists = allArtists.concat(validItems);
       nextUrl = artistPage.next;
     }
 
-
-    // Trả về kết quả thô cho query này
     return allArtists;
 
   } catch (error) {
@@ -214,14 +178,22 @@ const searchArtistsAdvanced = async (category, limit = 50) => {
     const strategy = CATEGORY_SEARCH_STRATEGIES[categoryUpper];
 
     if (!strategy) {
-      // Fallback: search as text
       return await searchArtists(category);
     }
 
     let allArtists = [];
     const seenIds = new Set();
 
-    // Strategy 1: Genre filter (nếu supported)
+    const filterAndAddArtists = (artists) => {
+      const filtered = artists.filter(item => {
+        if (!item || !item.id || seenIds.has(item.id)) return false;
+        if (isBadWordFound(item.name)) return false; // Lọc tên nghệ sĩ
+        seenIds.add(item.id);
+        return true;
+      });
+      allArtists.push(...filtered);
+    };
+
     if (strategy.useGenreFilter) {
       for (const genreFilter of strategy.genreFilters) {
         try {
@@ -234,19 +206,7 @@ const searchArtistsAdvanced = async (category, limit = 50) => {
               headers: { 'Authorization': `Bearer ${accessToken}` }
             }
           );
-
-          const artists = response.data.artists.items.filter(item => {
-            if (!item || !item.id || seenIds.has(item.id)) return false;
-
-            // Validate artist
-            const invalidNames = ["Object Object", "[object Object]"];
-            if (invalidNames.some(inv => String(item.name).includes(inv))) return false;
-
-            seenIds.add(item.id);
-            return true;
-          });
-
-          allArtists.push(...artists);
+          filterAndAddArtists(response.data.artists.items);
         } catch (err) {
           console.error(`Genre filter failed for "${genreFilter}":`, err.message);
         }
@@ -264,19 +224,7 @@ const searchArtistsAdvanced = async (category, limit = 50) => {
             headers: { 'Authorization': `Bearer ${accessToken}` }
           }
         );
-
-        const artists = response.data.artists.items.filter(item => {
-          if (!item || !item.id || seenIds.has(item.id)) return false;
-
-          // Validate artist
-          const invalidNames = ["Object Object", "[object Object]"];
-          if (invalidNames.some(inv => String(item.name).includes(inv))) return false;
-
-          seenIds.add(item.id);
-          return true;
-        });
-
-        allArtists.push(...artists);
+        filterAndAddArtists(response.data.artists.items);
       } catch (err) {
         console.error(`Text search failed for "${searchQuery}":`, err.message);
       }
@@ -284,9 +232,7 @@ const searchArtistsAdvanced = async (category, limit = 50) => {
 
     // Strategy 3: Filter by genre match (post-processing)
     const filteredArtists = allArtists.filter(artist => {
-      if (!artist.genres || artist.genres.length === 0) return true; // Keep if no genre info
-
-      // Check if any artist genre matches our category
+      if (!artist.genres || artist.genres.length === 0) return true;
       return artist.genres.some(g => {
         const genreLower = g.toLowerCase();
         return strategy.searchQueries.some(q =>
@@ -297,9 +243,6 @@ const searchArtistsAdvanced = async (category, limit = 50) => {
       });
     });
 
-    console.log(`Found ${allArtists.length} total, ${filteredArtists.length} after filtering`);
-
-    // Sort by popularity
     return filteredArtists.sort((a, b) =>
       (b.popularity || 0) - (a.popularity || 0)
     ).slice(0, limit);
@@ -310,8 +253,6 @@ const searchArtistsAdvanced = async (category, limit = 50) => {
   }
 };
 
-
-
 const getPlaylistTracks = async (playlistId) => {
   let allTracks = [];
   let nextUrl = `/playlists/${playlistId}/tracks?limit=100`;
@@ -320,7 +261,7 @@ const getPlaylistTracks = async (playlistId) => {
       const tracksPage = await spotifyApiRequest(nextUrl);
 
       const validTracks = tracksPage.items
-        .filter(item => item && item.track && item.track.name)
+        .filter(item => item && item.track && !isBadWordFound(item.track.name))
         .map(item => item.track);
 
       allTracks = allTracks.concat(validTracks);
@@ -337,7 +278,7 @@ const getPlaylistTracks = async (playlistId) => {
 const getAlbumTracks = async (albumId) => {
   try {
     const tracksData = await spotifyApiRequest(`/albums/${albumId}/tracks`);
-    return tracksData.items.map(item => item);
+    return tracksData.items.filter(item => !isBadWordFound(item.name));
   } catch (error) {
     console.error(`Error getting album tracks from Spotify:`, error.response ? error.response.data : error.message);
     throw error;
@@ -347,7 +288,7 @@ const getAlbumTracks = async (albumId) => {
 const getArtistTopTracks = async (artistId) => {
   try {
     const response = await spotifyApiRequest(`/artists/${artistId}/top-tracks`, { market: 'VN' });
-    return response.tracks;
+    return response.tracks.filter(track => !isBadWordFound(track.name));
   } catch (error) {
     console.error(`Error getting top tracks for artist ${artistId}:`, error.response ? error.response.data : error.message);
     throw error;
@@ -359,13 +300,13 @@ const getArtistAlbums = async (artistId) => {
   let nextUrl = `/artists/${artistId}/albums?include_groups=album,single&limit=50`;
 
   try {
-    // Lấy tối đa 2 trang (100 item) để đảm bảo
     for (let i = 0; i < 2; i++) {
       if (!nextUrl) break;
       const response = await spotifyApiRequest(nextUrl);
 
       if (response.items && response.items) {
-        allAlbums = allAlbums.concat(response.items);
+        const validAlbums = response.items.filter(album => !isBadWordFound(album.name));
+        allAlbums = allAlbums.concat(validAlbums);
       }
       nextUrl = response.next ? response.next.replace('https://api.spotify.com/v1', '') : null;
     }
@@ -377,20 +318,6 @@ const getArtistAlbums = async (artistId) => {
   }
 };
 
-const shuffle = (array) => {
-  let currentIndex = array.length;
-  let randomIndex;
-
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]
-    ];
-  }
-  return array;
-}
 
 module.exports = {
   searchTracks,
@@ -406,5 +333,4 @@ module.exports = {
   findTrackById,
   findArtistById,
   searchArtistsAdvanced,
-  CATEGORY_SEARCH_STRATEGIES,
 };

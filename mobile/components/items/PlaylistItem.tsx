@@ -10,8 +10,8 @@ export default function PlaylistItem({ item, totalTrack, onPress = () => { }, on
 
   const formatTitle = (title: string) => {
     const maxLength = 20;
-    if (title.length > maxLength) {
-      return title.substring(0, maxLength - 3) + '...';
+    if (title?.length > maxLength) {
+      return title?.substring(0, maxLength - 3) + '...';
     }
     return title;
   };

@@ -3,6 +3,31 @@ const SearchHistory = require('../models/search_history');
 const Op = require('sequelize').Op;
 const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
+const Bottleneck = require('bottleneck');
+
+const limiter = new Bottleneck({
+  minTime: 500,
+  maxConcurrent: 1 // Chỉ chạy 1 request cùng lúc để an toàn tuyệt đối
+});
+
+// Wrapper có Log chi tiết để bắt bệnh
+const callSpotify = async (fn) => {
+  return limiter.schedule(async () => {
+    try {
+      return await fn();
+    } catch (error) {
+      // Log chi tiết lỗi từ Spotify trả về để xem nó là 429 thật hay do thiếu tham số
+      if (error.body) {
+        console.error("🔥 Spotify Error Body:", JSON.stringify(error.body));
+      }
+      if (error.statusCode === 429) {
+        const retryAfter = error.headers?.['retry-after'] || 1;
+        console.warn(`⚠️ Gặp lỗi 429. Spotify bắt đợi: ${retryAfter}s`);
+      }
+      throw error;
+    }
+  });
+}
 
 const formatTrack = (track, artist, album, videoId) => {
   return {
@@ -126,7 +151,10 @@ const GetListeningHistoriesByUserId = async (req, res) => {
       const itemType = history.itemType;
       switch (itemType) {
         case 'track':
-          const track = await spotify.findTrackById(history.itemSpotifyId);
+          const track = await callSpotify(() => spotify.findTrackById(history.itemSpotifyId));
+          if (!track) {
+            break;
+          }
           itemFormatted = formatTrack(track);
           dataFormated.push({
             ...history.toJSON(),
@@ -134,7 +162,10 @@ const GetListeningHistoriesByUserId = async (req, res) => {
           })
           break;
         case 'album':
-          const album = await spotify.findAlbumById(history.itemSpotifyId);
+          const album = await callSpotify(() => spotify.findAlbumById(history.itemSpotifyId));
+          if (!album) {
+            break;
+          }
           itemFormatted = formatAlbum(album);
           dataFormated.push({
             ...history.toJSON(),
@@ -142,7 +173,10 @@ const GetListeningHistoriesByUserId = async (req, res) => {
           })
           break;
         case 'artist':
-          const artist = await spotify.findArtistById(history.itemSpotifyId);
+          const artist = await callSpotify(() => spotify.findArtistById(history.itemSpotifyId));
+          if (!artist) {
+            break;
+          }
           itemFormatted = formatArtist(artist);
           dataFormated.push({
             ...history.toJSON(),
@@ -150,7 +184,10 @@ const GetListeningHistoriesByUserId = async (req, res) => {
           })
           break;
         case 'playlist':
-          const playlist = await spotify.findPlaylistById(history.itemSpotifyId);
+          const playlist = await callSpotify(() => spotify.findPlaylistById(history.itemSpotifyId));
+          if (!playlist) {
+            break;
+          }
           itemFormatted = formatPlaylist(playlist);
           dataFormated.push({
             ...history.toJSON(),
@@ -178,19 +215,14 @@ const CreateOneListeningHistory = async (req, res) => {
 
     console.log(req.body)
     if (!itemType || !(itemId || itemSpotifyId)) {
+      console.log(1)
       return res.status(400).json({ message: 'Thiếu thông tin lịch sử nghe' });
     }
 
+    console.log(2)
     let existingHistory;
-    if (itemId) {
-      existingHistory = await ListeningHistory.findOne({
-        where: {
-          userId: req.user.id,
-          itemType,
-          itemId: itemId
-        }
-      });
-    } else if (itemSpotifyId) {
+    if (itemSpotifyId) {
+      console.log(7)
       existingHistory = await ListeningHistory.findOne({
         where: {
           userId: req.user.id,
@@ -198,14 +230,29 @@ const CreateOneListeningHistory = async (req, res) => {
           itemSpotifyId: itemSpotifyId
         }
       });
+      console.log(8)
+    } else if (itemId) {
+      console.log(5)
+      existingHistory = await ListeningHistory.findOne({
+        where: {
+          userId: req.user.id,
+          itemType,
+          itemId: itemId
+        }
+      });
+      console.log(6)
     }
 
+    console.log(9)
     if (existingHistory) {
+      console.log(1000000)
       if (existingHistory.itemType === 'track') {
+        console.log(11)
         existingHistory.durationListened = durationListened;
         existingHistory.playCount += 1;
         existingHistory.updatedAt = new Date();
         await existingHistory.save();
+        console.log(12)
         return res.status(200).json({
           message: 'Listening history updated successfully',
           data: existingHistory,
@@ -213,6 +260,7 @@ const CreateOneListeningHistory = async (req, res) => {
           updated: true
         });
       } else {
+        console.log(13)
         return res.status(200).json({
           message: 'Listening history already exists',
           data: existingHistory,
@@ -222,6 +270,7 @@ const CreateOneListeningHistory = async (req, res) => {
       }
     }
 
+    console.log(14)
     const history = await ListeningHistory.create({
       userId: req.user.id,
       itemType,
@@ -230,31 +279,56 @@ const CreateOneListeningHistory = async (req, res) => {
       ... (durationListened !== undefined ? { durationListened } : {})
     });
 
+    console.log(15)
     switch (itemType) {
       case 'track':
+        console.log(16)
         console.log('track')
-        const track = await spotify.findTrackById(history.itemSpotifyId);
+        const track = await callSpotify(() => spotify.findTrackById(history.itemSpotifyId));
+        if (!track) {
+          console.log(171)
+          break;
+        }
+        console.log(17)
         itemFormatted = formatTrack(track);
         break;
       case 'album':
+        console.log(18)
         console.log('album')
-        const album = await spotify.findAlbumById(history.itemSpotifyId);
+        const album = await callSpotify(() => spotify.findAlbumById(history.itemSpotifyId));
+        if (!album) {
+          console.log(19)
+          break;
+        }
+        console.log(20)
         itemFormatted = formatAlbum(album);
         break;
       case 'artist':
         console.log('artist')
-        const artist = await spotify.findArtistById(history.itemSpotifyId);
+        console.log(21)
+        const artist = await callSpotify(() => spotify.findArtistById(history.itemSpotifyId));
+        if (!artist) {
+          console.log(22)
+          break;
+        }
         itemFormatted = formatArtist(artist);
         break;
       case 'playlist':
         console.log('playlist')
-        const playlist = await spotify.findPlaylistById(history.itemSpotifyId);
+        console.log(23)
+        const playlist = await callSpotify(() => spotify.findPlaylistById(history.itemSpotifyId));
+        if (!playlist) {
+          console.log(24)
+          break;
+        }
         itemFormatted = formatPlaylist(playlist);
         break;
       default:
+        console.log(25)
         console.log(`Loại mục không xác định: ${itemType}`);
     }
 
+    console.log(26)
     res.status(201).json({
       message: 'Listening history created successfully',
       data: {

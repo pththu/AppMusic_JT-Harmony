@@ -3,7 +3,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const SaveToListeningHistory = async (payload) => {
   try {
-    console.log('payload save to listening history', payload)
     const response = await axiosClient.post(`/histories/listening`, payload);
     return response.data;
   } catch (error) {

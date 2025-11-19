@@ -215,6 +215,8 @@ export default function AllPlaylistScreen() {
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
   const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
 
+  console.log(myPlaylists)
+
   const [activeTab, setActiveTab] = useState("myPlaylists");
   const [favoritePlaylists, setFavoritePlaylists] = useState([]);
   const [favoriteAlbums, setFavoriteAlbums] = useState([]);

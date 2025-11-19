@@ -62,7 +62,7 @@ export default function SettingScreen() {
           const profile = await Profile.getCurrentProfile();
           if (profile) {
             const response = await LinkSocialAccount({ userInfor: profile, provider: 'facebook' });
-            console.log('response link facebook', response);
+            // console.log('response link facebook', response);
             if (!response.success) {
               if (!response.userId) {
                 error("Liên kết thất bại", response.message);
