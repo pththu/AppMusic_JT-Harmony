@@ -1,14 +1,69 @@
 import { Redirect, Tabs } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 
 import TabBar from "@/components/tabBar/TabBar";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/colors";
 import useAuthStore from "@/store/authStore";
+import { fetchUnreadNotificationCount } from "@/services/notificationService";
+import {
+  connectNotificationSocket,
+  disconnectNotificationSocket,
+  subscribeToNotificationEvents,
+} from "@/services/notificationSocket";
+import { useNotificationStore } from "@/store/notificationStore";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
+  const incrementUnreadCount = useNotificationStore(
+    (state) => state.incrementUnreadCount,
+  );
+  const prependNotification = useNotificationStore(
+    (state) => state.prependNotification,
+  );
+  const clearNotifications = useNotificationStore(
+    (state) => state.clearNotifications,
+  );
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      clearNotifications();
+      disconnectNotificationSocket();
+      return;
+    }
+
+    let isMounted = true;
+
+    (async () => {
+      try {
+        const count = await fetchUnreadNotificationCount();
+        if (isMounted) {
+          setUnreadCount(count);
+        }
+      } catch (error) {
+        console.warn("Failed to fetch unread notifications", error);
+      }
+    })();
+
+    connectNotificationSocket();
+    const unsubscribe = subscribeToNotificationEvents((notification) => {
+      prependNotification(notification);
+      incrementUnreadCount();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [
+    isLoggedIn,
+    setUnreadCount,
+    incrementUnreadCount,
+    prependNotification,
+    clearNotifications,
+  ]);
 
   if (!isLoggedIn) {
     return <Redirect href="/(auth)" />;

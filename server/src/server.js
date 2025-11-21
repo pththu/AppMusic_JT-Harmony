@@ -13,6 +13,7 @@ const dotenv = require("dotenv");
 const { Server } = require("socket.io");
 
 const chatEvents = require("./sockets/chatEvents");
+const notificationEvents = require("./sockets/notificationEvents");
 
 dotenv.config();
 
@@ -27,10 +28,10 @@ const io = new Server(server, {
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
-      "http://192.168.1.12:3000",
-      "exp://192.168.1.12:8081",
-      "http://192.168.1.22:3000",
-      "exp://192.168.1.22:8081",
+      "http://192.168.32.101:3000",
+      "exp://192.168.32.101:8081",
+      "http://192.168.32.101:3000",
+      "exp://192.168.32.101:8081",
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -73,6 +74,7 @@ io.use(async (socket, next) => {
 
 // Khởi tạo các sự kiện chat sau khi xác thực
 chatEvents(io);
+notificationEvents(io);
 
 // ==========================================================
 // CẤU HÌNH EXPRESS MIDDLEWARE
@@ -85,8 +87,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
-      "http://192.168.1.12:3000"
-      "http://192.168.1.22:3000",
+      "http://192.168.32.101:3000",
     ],
     credentials: true,
   })

@@ -87,15 +87,11 @@ const CommentModal: React.FC<CommentModalProps> = ({
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
-      () => {
-        setKeyboardVisible(true);
-      }
+      () => {}
     );
     const keyboardDidHideListener = Keyboard.addListener(
       "keyboardDidHide",
-      () => {
-        setKeyboardVisible(false);
-      }
+      () => {}
     );
 
     return () => {
@@ -274,7 +270,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="fade" transparent>
       <TouchableWithoutFeedback onPress={onClose}>
         <KeyboardAvoidingView
           style={{
@@ -287,7 +283,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
         >
           <TouchableWithoutFeedback>
             <View
-              className={`rounded-t-3xl p-4 ${isKeyboardVisible ? "h-1/2" : "h-4/5"} ${colorScheme === "dark" ? "bg-[#171431]" : "bg-white"}`}
+              className={`rounded-t-3xl p-4 flex-[0.85] ${colorScheme === "dark" ? "bg-[#171431]" : "bg-white"}`}
             >
               {/* Header */}
               <View className="flex-row justify-between items-center mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
@@ -308,6 +304,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
               <FlatList
                 data={comments}
                 keyExtractor={(item) => item.id}
+                keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => {
                   const isExpanded = expandedReplies[item.id];
                   const visibleReplies = item.Replies

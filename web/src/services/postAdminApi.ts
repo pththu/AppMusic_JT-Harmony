@@ -6,9 +6,21 @@ export interface AdminPost {
   content?: string;
   fileUrl?: string[];
   heartCount: number;
+  likeCount?: number;
   shareCount: number;
   uploadedAt: string;
   commentCount: number;
+  songId?: number | null;
+  isCover?: boolean;
+  originalSongId?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
+  User?: {
+    id: number;
+    username: string;
+    fullName?: string;
+    avatarUrl?: string;
+  };
 }
 
 export interface UpdatePostPayload {
@@ -30,6 +42,12 @@ export interface PostLikeUser {
 export async function fetchPostsAdmin(params?: { q?: string; userId?: number; isCover?: boolean; dateFrom?: string; dateTo?: string; limit?: number; offset?: number }) {
   const res = await axiosClient.get("/posts/admin", { params });
   return res.data as AdminPost[];
+}
+
+// Fetch single post for admin detail page
+export async function getPostAdmin(id: number) {
+  const res = await axiosClient.get(`/posts/${id}`);
+  return res.data as AdminPost;
 }
 
 export async function updatePostAdmin(id: number, payload: UpdatePostPayload) {

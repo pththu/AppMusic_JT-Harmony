@@ -47,7 +47,7 @@ import { getUserById, mockUsers, mockTracks, getCommentsByPostId } from "@/lib/m
 export default function PostsPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<(AdminPost | any)[]>([]);
-  const [sortKey, setSortKey] = useState<"createdAt" | "heartCount" | "commentCount">("createdAt");
+  const [sortKey, setSortKey] = useState<"createdAt" | "likeCount" | "commentCount">("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [visibleCols, setVisibleCols] = useState({
@@ -151,6 +151,7 @@ export default function PostsPage() {
       content: formData.content,
       fileUrl: formData.fileUrl || undefined,
       heartCount: 0,
+      likeCount: 0,
       shareCount: 0,
       uploadedAt: new Date().toISOString(),
       commentCount: 0,
@@ -233,9 +234,9 @@ export default function PostsPage() {
     if (sortKey === "createdAt") {
       av = new Date(a.createdAt).getTime();
       bv = new Date(b.createdAt).getTime();
-    } else if (sortKey === "heartCount") {
-      av = a.heartCount ?? 0;
-      bv = b.heartCount ?? 0;
+    } else if (sortKey === "likeCount") {
+      av = (a.likeCount ?? a.heartCount) ?? 0;
+      bv = (b.likeCount ?? b.heartCount) ?? 0;
     } else {
       av = a.commentCount ?? 0;
       bv = b.commentCount ?? 0;
@@ -245,7 +246,7 @@ export default function PostsPage() {
     return sortDir === "asc" ? res : -res;
   });
 
-  const handleSort = (key: "createdAt" | "heartCount" | "commentCount") => {
+  const handleSort = (key: "createdAt" | "likeCount" | "commentCount") => {
     setSortKey((prevKey) => {
       if (prevKey === key) {
         setSortDir((prevDir) => (prevDir === "asc" ? "desc" : "asc"));
@@ -593,7 +594,7 @@ export default function PostsPage() {
               {visibleCols.likes && (
                 <TableHead
                   className="cursor-pointer select-none"
-                  onClick={() => handleSort("heartCount")}
+                  onClick={() => handleSort("likeCount")}
                 >
                   Lượt Thích
                 </TableHead>
@@ -683,7 +684,7 @@ export default function PostsPage() {
                     <TableCell>
                       <div className="flex items-center space-x-1">
                         <Heart className="h-4 w-4 text-red-500" />
-                        <span className="text-sm">{post.heartCount}</span>
+                        <span className="text-sm">{post.likeCount ?? post.heartCount ?? 0}</span>
                       </div>
                     </TableCell>
                   )}

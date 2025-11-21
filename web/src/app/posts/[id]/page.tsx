@@ -1,37 +1,104 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Heart, MessageSquare, Play, Share } from "lucide-react";
+import { ArrowLeft, Heart, MessageSquare, Share } from "lucide-react";
 import { Button, Badge } from "@/components/ui";
-import {
-  mockPosts,
-  mockUsers,
-  mockTracks,
-  mockLikes,
-  getUserById,
-  getCommentsByPostId,
-  type Post,
-} from "@/lib/mock-data";
+import { getPostAdmin, getPostLikesAdmin, type AdminPost, type PostLikeUser } from "@/services/postAdminApi";
+import { fetchAllComments, type AdminComment } from "@/services/commentAdminApi";
+
+interface LikeItem {
+  id: number;
+  userId: number;
+  postId: number;
+  likedAt: string;
+  User?: PostLikeUser;
+}
 
 export default function PostDetailPage() {
   const params = useParams();
   const postId = parseInt(params.id as string);
 
-  const post = mockPosts.find((p) => p.id === postId);
-  if (!post) {
+  const [post, setPost] = useState<AdminPost | null>(null);
+  const [likes, setLikes] = useState<LikeItem[]>([]);
+  const [comments, setComments] = useState<AdminComment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isNaN(postId)) return;
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [postRes, likesRes, commentsRes] = await Promise.all([
+          getPostAdmin(postId),
+          getPostLikesAdmin(postId, {}),
+          fetchAllComments({ postId }),
+        ]);
+
+        if (cancelled) return;
+
+        setPost(postRes);
+
+        const normalizedLikes: LikeItem[] = Array.isArray(likesRes)
+          ? (likesRes as any[]).map((item: any, idx) => ({
+              id: item.id ?? idx,
+              userId: item.userId ?? item.User?.id,
+              postId: postId,
+              likedAt: item.likedAt || item.liked_at || new Date().toISOString(),
+              User: item.User,
+            }))
+          : [];
+        setLikes(normalizedLikes);
+
+        setComments(Array.isArray(commentsRes) ? commentsRes : []);
+      } catch (e: any) {
+        console.error("Failed to load post detail:", e);
+        if (!cancelled) {
+          setError("Không tải được dữ liệu bài đăng.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [postId]);
+
+  if (isNaN(postId)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">Bài đăng không tồn tại.</p>
+        <p className="text-gray-500">ID bài đăng không hợp lệ.</p>
       </div>
     );
   }
 
-  const author = getUserById(post.userId);
-  const comments = getCommentsByPostId(post.id);
-  const track = post.songId
-    ? mockTracks.find((t) => t.id === post.songId)
-    : null;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">Đang tải dữ liệu bài đăng...</p>
+      </div>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">{error || "Bài đăng không tồn tại."}</p>
+      </div>
+    );
+  }
+
+  const author = post.User;
+  const likeCount = post.likeCount ?? post.heartCount ?? likes.length;
+  const commentCount = post.commentCount ?? comments.length;
 
   return (
     <div className="space-y-6">
@@ -66,7 +133,7 @@ export default function PostDetailPage() {
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-2">
               <span className="font-medium text-gray-900">
-                {author?.fullName || author?.username}
+                {author?.fullName || author?.username || `User #${post.userId}`}
               </span>
               <span className="text-sm text-gray-500">@{author?.username}</span>
               <Badge variant={post.isCover ? "secondary" : "default"}>
@@ -74,33 +141,27 @@ export default function PostDetailPage() {
               </Badge>
             </div>
             <p className="text-gray-900 mb-4">{post.content}</p>
-            {post.fileUrl && (
+            {Array.isArray(post.fileUrl) && post.fileUrl.length > 0 && (
               <div className="mb-4">
                 <audio controls className="w-full">
-                  <source src={post.fileUrl} type="audio/mpeg" />
+                  <source src={post.fileUrl[0]} type="audio/mpeg" />
                   Trình duyệt của bạn không hỗ trợ thẻ audio.
                 </audio>
-              </div>
-            )}
-            {track && (
-              <div className="flex items-center space-x-2 mb-4">
-                <Play className="h-4 w-4 text-green-500" />
-                <span className="text-sm text-gray-600">
-                  Bài hát: {track.title}
-                </span>
               </div>
             )}
             <div className="flex items-center space-x-4 text-sm text-gray-500">
               <div className="flex items-center space-x-1">
                 <Heart className="h-4 w-4" />
-                <span>{post.heartCount}</span>
+                <span>{likeCount}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <MessageSquare className="h-4 w-4" />
-                <span>{post.commentCount}</span>
+                <span>{commentCount}</span>
               </div>
               <span>
-                {format(new Date(post.createdAt), "MMM dd, yyyy 'at' HH:mm")}
+                {post.createdAt
+                  ? format(new Date(post.createdAt), "MMM dd, yyyy 'at' HH:mm")
+                  : ""}
               </span>
             </div>
           </div>
@@ -110,13 +171,11 @@ export default function PostDetailPage() {
       {/* Likes Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold mb-4">
-          Likes ({mockLikes.filter((like) => like.postId === post.id).length})
+          Likes ({likes.length})
         </h2>
         <div className="space-y-4">
-          {mockLikes
-            .filter((like) => like.postId === post.id)
-            .map((like) => {
-              const likeUser = getUserById(like.userId);
+          {likes.map((like) => {
+              const likeUser = like.User;
               return (
                 <div key={like.id} className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
@@ -128,13 +187,13 @@ export default function PostDetailPage() {
                       />
                     ) : (
                       <span className="text-xs font-medium text-gray-600">
-                        {likeUser?.username.charAt(0).toUpperCase()}
+                        {likeUser?.username?.charAt(0).toUpperCase()}
                       </span>
                     )}
                   </div>
                   <div className="flex-1">
                     <span className="font-medium text-sm text-gray-900">
-                      {likeUser?.fullName || likeUser?.username}
+                      {likeUser?.fullName || likeUser?.username || `User #${like.userId}`}
                     </span>
                     <span className="text-xs text-gray-500 ml-2">
                       @{likeUser?.username}
@@ -170,26 +229,27 @@ export default function PostDetailPage() {
           </h2>
           <div className="space-y-4">
             {comments.map((comment) => {
-              const commentAuthor = getUserById(comment.userId);
+              const c: any = comment as any;
+              const author = c.User as { avatarUrl?: string; username?: string; fullName?: string } | undefined;
               return (
                 <div key={comment.id} className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    {commentAuthor?.avatarUrl ? (
+                    {author?.avatarUrl ? (
                       <img
-                        src={commentAuthor.avatarUrl}
-                        alt={commentAuthor.username}
+                        src={author.avatarUrl}
+                        alt={author.username}
                         className="w-8 h-8 rounded-full"
                       />
                     ) : (
                       <span className="text-xs font-medium text-gray-600">
-                        {commentAuthor?.username.charAt(0).toUpperCase()}
+                        {author?.username?.charAt(0).toUpperCase() || `U${comment.userId}`}
                       </span>
                     )}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
                       <span className="font-medium text-sm text-gray-900">
-                        {commentAuthor?.fullName || commentAuthor?.username}
+                        {author?.fullName || author?.username || `User #${comment.userId}`}
                       </span>
                       <span className="text-xs text-gray-500">
                         {format(

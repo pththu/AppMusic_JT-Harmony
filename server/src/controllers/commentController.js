@@ -1,5 +1,6 @@
 const { Post, User, Comment, CommentLike, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const { createNotification } = require('../utils/notificationHelper');
 
 exports.getAllComment = async(req, res) => {
     try {
@@ -212,9 +213,6 @@ exports.createComment = async(req, res) => {
     try {
         const payload = {...req.body };
 
-        console.log(req.body)
-
-        console.log(payload)
         if (!payload) {
             return res.status(400).json({ error: 'Payload not specified' });
         }
@@ -232,10 +230,38 @@ exports.createComment = async(req, res) => {
             return res.status(400).json({ error: 'Content and file not specified' });
         }
 
+        let targetPost = null;
+        if (payload.postId) {
+            targetPost = await Post.findByPk(payload.postId);
+            if (!targetPost) {
+                return res.status(404).json({ error: 'Post not found' });
+            }
+        }
+
         const row = await Comment.create(payload);
+
+        if (targetPost && targetPost.userId && targetPost.userId !== payload.userId) {
+            const actorName =
+                (req.user && (req.user.fullName || req.user.username)) ||
+                'Một người dùng';
+            await createNotification({
+                userId: targetPost.userId,
+                actorId: payload.userId,
+                postId: targetPost.id,
+                type: 'comment',
+                message: `${actorName} đã bình luận về bài viết của bạn`,
+                metadata: {
+                    postId: targetPost.id,
+                    commentId: row.id,
+                    contentSnippet: payload.content ? payload.content.slice(0, 120) : '',
+                },
+            });
+        }
+
         res.status(201).json(row);
 
     } catch (err) {
+        console.error('Error creating comment:', err);
         res.status(500).json({ error: err.message });
     }
 };

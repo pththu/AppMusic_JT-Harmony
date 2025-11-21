@@ -10,6 +10,7 @@ import {
   View,
   useColorScheme,
   TextInput,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
@@ -22,6 +23,7 @@ import {
   toggleCommentLike,
   updatePost,
   deletePost,
+  sharePost,
 } from "../../services/socialApi";
 import useAuthStore from "@/store/authStore";
 import * as ImagePicker from "expo-image-picker";
@@ -73,6 +75,10 @@ const SocialScreen = () => {
 
   // State cho Upload Cover Modal
   const [uploadCoverModalVisible, setUploadCoverModalVisible] = useState(false);
+  const [reShareModalVisible, setReShareModalVisible] = useState(false);
+  const [reShareTargetPost, setReShareTargetPost] = useState<any | null>(null);
+  const [reShareCaption, setReShareCaption] = useState("");
+  const [isSharing, setIsSharing] = useState(false);
 
   // console.log("User: ", user);
 
@@ -117,12 +123,24 @@ const SocialScreen = () => {
       : apiPost.fileUrl
         ? [apiPost.fileUrl]
         : [],
-    musicLink: apiPost.songId ? `Song ID: ${apiPost.songId}` : "",
+    // Thông tin bài hát hiển thị trong PostItem
+    musicLink:
+      apiPost.OriginalSong && apiPost.OriginalSong.name
+        ? `${apiPost.OriginalSong.name}${
+            Array.isArray(apiPost.OriginalSong.artists) &&
+            apiPost.OriginalSong.artists.length > 0
+              ? " - " + apiPost.OriginalSong.artists.map((a: any) => a.name).join(", ")
+              : ""
+          }`
+        : apiPost.songId
+        ? `Bài hát ID: ${apiPost.songId}`
+        : "",
     isOnline: false,
     comments: [],
     isCover: apiPost.isCover || false,
     originalSongId: apiPost.originalSongId,
     OriginalSong: apiPost.OriginalSong,
+    originalPost: apiPost.OriginalPost,
   });
 
   // Hàm xử lý khi nhấn vào user avatar
@@ -418,7 +436,7 @@ const SocialScreen = () => {
 
     if (!selectedPostId || !text.trim() || !currentUser) return;
 
-    // Khởi tạo một đối tượng comment tạm thời để hiển thị ngay lập tức
+    // Khởi tạo một đối tượng comment tạm thởi để hiển thị ngay lập tức
     const optimisticComment = {
       id: Date.now().toString(),
       userId: currentUser.id,
@@ -492,7 +510,7 @@ const SocialScreen = () => {
         prevPosts.map((post) => {
           if (post.id === selectedPostId) {
             let updatedComments = [...(post.comments || [])];
-            // Tìm và thay thế comment tạm thời bằng comment chính thức
+            // Tìm và thay thế comment tạm thởi bằng comment chính thức
             const updateCommentArray = (arr) =>
               arr.map((c) => {
                 if (c.id === optimisticComment.id) {
@@ -521,7 +539,7 @@ const SocialScreen = () => {
       console.error("Lỗi khi gửi bình luận:", error);
       Alert.alert("Lỗi", "Gửi bình luận thất bại. Đã hoàn tác.");
 
-      // ROLLBACK nếu API thất bại (Xóa comment tạm thời khỏi UI)
+      // ROLLBACK nếu API thất bại (Xóa comment tạm thởi khỏi UI)
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
           if (post.id === selectedPostId) {
@@ -656,7 +674,7 @@ const SocialScreen = () => {
     const newIsLikedOptimistic = !prevIsLiked;
     const likeChangeOptimistic = newIsLikedOptimistic ? 1 : -1;
 
-    // 1. Optimistic Update: Cập nhật UI tạm thời cho comment cha
+    // 1. Optimistic Update: Cập nhật UI tạm thởi cho comment cha
     setPosts((prevPosts) =>
       prevPosts.map((p) => {
         if (p.id === postId) {
@@ -733,9 +751,60 @@ const SocialScreen = () => {
     }
   };
 
-  // Hàm xử lý khi nhấn chia sẻ bài viết
-  const handleShare = () => {
-    Alert.alert("Chia sẻ", "Chức năng chia sẻ sẽ được triển khai sau.");
+  // Hàm xử lý khi nhấn chia sẻ bài viết (re-share nội bộ)
+  const handleShare = async () => {
+    if (!reShareTargetPost) return;
+    try {
+      setIsSharing(true);
+      const caption = reShareCaption.trim();
+      const result = await sharePost(String(reShareTargetPost.id), caption);
+
+      if ("message" in result) {
+        // Trường hợp lỗi từ API
+        if (result.status === "error") {
+          Alert.alert("Lỗi", result.message || "Không thể chia sẻ bài viết.");
+        }
+        return;
+      }
+
+      const { newPost, originalPost } = result;
+
+      // Thêm bài re-share mới vào đầu danh sách
+      const mappedNewPost = mapApiPostToLocal(newPost);
+      setPosts((prevPosts) => [mappedNewPost, ...prevPosts]);
+
+      // Cập nhật shareCount cho bài gốc nếu backend trả về
+      if (originalPost && originalPost.id) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === originalPost.id
+              ? { ...post, shareCount: originalPost.shareCount }
+              : post
+          ),
+        );
+      }
+      setReShareModalVisible(false);
+      setReShareCaption("");
+      setReShareTargetPost(null);
+    } catch (error) {
+      console.error("Lỗi khi chia sẻ bài đăng:", error);
+      Alert.alert("Lỗi", "Không thể chia sẻ bài viết.");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const openReShare = (post: any) => {
+    setReShareTargetPost(post);
+    setReShareCaption("");
+    setReShareModalVisible(true);
+  };
+
+  const closeReShareModal = () => {
+    if (isSharing) return;
+    setReShareModalVisible(false);
+    setReShareCaption("");
+    setReShareTargetPost(null);
   };
 
   // Mở modal like
@@ -889,7 +958,7 @@ const SocialScreen = () => {
                   onUserPress={handleUserPress}
                   onRefresh={onRefresh}
                   onCommentPress={() => openCommentModal(item.id)}
-                  onSharePress={handleShare}
+                  onSharePress={() => openReShare(item)}
                   onVoteCountPress={openLikeModal}
                   likeCount={item.heartCount}
                   commentCount={item.commentCount}
@@ -904,7 +973,7 @@ const SocialScreen = () => {
                     updatePostState(item.id, type, value)
                   }
                   onCommentPress={() => openCommentModal(item.id)}
-                  onSharePress={handleShare}
+                  onSharePress={() => openReShare(item)}
                   userId={item.userId || item.User?.id}
                   onUserPress={handleUserPress}
                   onLikeCountPress={openLikeModal}
@@ -941,6 +1010,71 @@ const SocialScreen = () => {
           )
         }
       />
+      <Modal
+        visible={reShareModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeReShareModal}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="w-11/12 bg-white dark:bg-gray-900 rounded-2xl p-4">
+            <Text className="text-lg font-bold mb-2 text-black dark:text-white">
+              Chia sẻ bài viết
+            </Text>
+            {reShareTargetPost && (
+              <View className="mb-3 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+                <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {reShareTargetPost.User?.fullName || reShareTargetPost.fullName}
+                </Text>
+                {reShareTargetPost.content ? (
+                  <Text
+                    className="text-sm text-gray-800 dark:text-gray-200"
+                    numberOfLines={3}
+                  >
+                    {reShareTargetPost.content}
+                  </Text>
+                ) : null}
+              </View>
+            )}
+
+            <TextInput
+              className="min-h-[80px] max-h-32 bg-gray-100 dark:bg-gray-800 rounded-xl px-3 py-2 text-black dark:text-white mb-3"
+              placeholder="Thêm chú thích cho bài chia sẻ của bạn..."
+              placeholderTextColor={
+                colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
+              }
+              value={reShareCaption}
+              onChangeText={setReShareCaption}
+              editable={!isSharing}
+              multiline
+            />
+
+            <View className="flex-row justify-end mt-1">
+              <TouchableOpacity
+                onPress={closeReShareModal}
+                disabled={isSharing}
+                className="px-4 py-2 rounded-lg mr-2 bg-gray-300 dark:bg-gray-700"
+              >
+                <Text className="text-sm font-medium text-black dark:text-white">
+                  Hủy
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleShare}
+                disabled={isSharing}
+                className="px-4 py-2 rounded-lg bg-indigo-500 flex-row items-center justify-center"
+              >
+                {isSharing && (
+                  <ActivityIndicator size="small" color="#fff" className="mr-2" />
+                )}
+                <Text className="text-sm font-medium text-white">
+                  Đăng lại
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Comment Modal  */}
       <CommentModal

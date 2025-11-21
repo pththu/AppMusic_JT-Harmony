@@ -50,6 +50,18 @@ export interface Post {
     spotifyId: string;
     artists?: { id: number; name: string }[];
   };
+  originalPostId?: number;
+  OriginalPost?: {
+    id: number;
+    userId: number;
+    content: string;
+    fileUrl: string[] | string;
+    heartCount: number;
+    shareCount: number;
+    uploadedAt: string;
+    commentCount: number;
+    User: UserInfo;
+  };
 }
 
 export interface ProfileSocial {
@@ -193,7 +205,8 @@ export const fetchPostsByUserId = async (
 export const createNewPost = async (
   content: string,
   fileUrls: string[] | null = null,
-  songId: number | null = null
+  songId: number | null = null,
+  trackSpotifyId: string | null = null
 ): Promise<Post | { message: string; status: string }> => {
   try {
     if (!useAuthStore.getState().user)
@@ -203,6 +216,7 @@ export const createNewPost = async (
       content,
       fileUrls, // Backend sẽ nhận Array<string> và chuyển thành chuỗi JSON
       songId,
+      trackSpotifyId,
     });
     const newPostResponse = response.data.post;
     return newPostResponse as Post;
@@ -231,6 +245,37 @@ export const togglePostLike = async (
   } catch (error) {
     console.error("Lỗi khi cập nhật trạng thái thích bài đăng:", error);
     return { message: "Không thể cập nhật trạng thái thích.", status: "error" };
+  }
+};
+
+export const sharePost = async (
+  postId: string,
+  content: string
+): Promise<
+  | { newPost: Post; originalPost?: Post }
+  | { message: string; status: string }
+> => {
+  try {
+    if (!useAuthStore.getState().user)
+      return { message: "Chưa đăng nhập", status: "error" };
+
+    const response = await api.post(`/posts/${postId}/share`, {
+      content,
+    });
+
+    const data = response.data;
+
+    if (!data || !data.newPost) {
+      return { message: "Dữ liệu chia sẻ không hợp lệ.", status: "error" };
+    }
+
+    return {
+      newPost: data.newPost as Post,
+      originalPost: data.originalPost as Post | undefined,
+    };
+  } catch (error) {
+    console.error("Lỗi khi chia sẻ bài đăng:", error);
+    return { message: "Không thể chia sẻ bài đăng.", status: "error" };
   }
 };
 
