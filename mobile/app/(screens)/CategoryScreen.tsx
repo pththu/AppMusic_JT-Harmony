@@ -15,8 +15,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigate } from "@/hooks/useNavigate";
 import Icon from "react-native-vector-icons/Ionicons";
 import ArtistItem from "@/components/artists/ArtistItem";
-import { GetCategoryContent } from "@/services/musicService";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { GetCategoryContent } from "@/services/searchService";
+import { usePlayerStore } from "@/store/playerStore";
+import { useArtistStore } from "@/store/artistStore";
+import { useHistoriesStore } from "@/store/historiesStore";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 // Component hiển thị Playlist/Track/Album
 const ContentItem = ({ item, onPress }) => {
@@ -80,45 +84,49 @@ const ContentSection = ({ title, data, renderItem, keyExtractor }) => {
 
 export default function CategoryScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const { category } = useLocalSearchParams<{ category: string }>();
   const { navigate } = useNavigate();
   const { info } = useCustomAlert();
-  const colorScheme = useColorScheme();
+
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
+  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
+  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const setQueue = usePlayerStore((state) => state.setQueue);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
+  const playPlaylist = usePlayerStore((state) => state.playPlaylist);
+
   const isDark = colorScheme === "dark";
 
-  const { category } = useLocalSearchParams<{ category: string }>();
 
-  // State
   const [categoryData, setCategoryData] = useState({
     genre: null,
     playlists: [],
     artists: [],
     tracks: [],
-    albums: [], // <-- THÊM MỚI: Albums
+    albums: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- CÀI ĐẶT ANIMATION ---
   const scrollY = useRef(new Animated.Value(0)).current;
-  // Chiều cao gần đúng của tiêu đề lớn + margin/padding
   const LARGE_TITLE_HEIGHT = 60;
 
-  // Opacity cho tiêu đề nhỏ (trên header)
   const smallTitleOpacity = scrollY.interpolate({
     inputRange: [LARGE_TITLE_HEIGHT / 2, LARGE_TITLE_HEIGHT],
     outputRange: [0, 1],
     extrapolate: "clamp",
   });
 
-  // Opacity cho tiêu đề lớn (trong ScrollView)
   const largeTitleOpacity = scrollY.interpolate({
     inputRange: [0, LARGE_TITLE_HEIGHT / 2],
     outputRange: [1, 0],
     extrapolate: "clamp",
   });
-  // --- KẾT THÚC ANIMATION ---
 
-  // Fetch data
   useEffect(() => {
     if (!category) {
       setError("Không có thể loại nào được chọn");
@@ -149,20 +157,24 @@ export default function CategoryScreen() {
 
   // Navigation handlers
   const handlePlaylistPress = (item) => {
+    setCurrentPlaylist(item);
     navigate("PlaylistScreen", { playlist: JSON.stringify(item) });
   };
   const handleArtistPress = (item) => {
+    setCurrentArtist(item);
     navigate("ArtistScreen", { artist: JSON.stringify(item) });
   };
-  const handleTrackPress = (item) => {
-    navigate("SongScreen", { track: JSON.stringify(item) });
+  const handleTrackPress = async (item) => {
+    setCurrentTrack(item);
+    playPlaylist([item], 0);
+    setQueue([]);
   };
-  // THÊM MỚI: Handler cho Album
+
   const handleAlbumPress = (item) => {
+    setCurrentAlbum(item);
     navigate("AlbumScreen", { album: JSON.stringify(item) });
   };
 
-  // Render states (Cập nhật Tiếng Việt)
   const renderLoading = () => (
     <View className="flex-1 items-center justify-center">
       <ActivityIndicator size="large" color={isDark ? "#FFF" : "#000"} />
@@ -212,7 +224,9 @@ export default function CategoryScreen() {
     categoryData.albums.length > 0; // <-- THÊM MỚI
 
   return (
-    <SafeAreaView className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}>
+    <SafeAreaView className={`flex-1 ${isDark ? "bg-black" : "bg-white"}`}
+      style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
+    >
       {/* Header (Thay đổi thiết kế) */}
       <View className="flex-row items-center justify-between px-3 py-2 h-14">
         <TouchableOpacity onPress={() => router.back()} className="p-2 z-10">
@@ -308,7 +322,7 @@ export default function CategoryScreen() {
 
               {/* THÊM MỚI: Albums */}
               <ContentSection
-                title="Album Nổi Bật"
+                title="Album Đề xuất"
                 data={categoryData.albums}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (

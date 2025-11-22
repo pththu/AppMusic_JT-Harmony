@@ -1,6 +1,6 @@
 import { useNavigate } from '@/hooks/useNavigate';
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, useColorScheme, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -10,6 +10,8 @@ import { LoginWithFacebook, LoginWithGoogle } from '@/routes/ApiRouter';
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import useAuthStore from '@/store/authStore';
 import { Settings, LoginManager, Profile, AccessToken } from 'react-native-fbsdk-next';
+import { Pressable } from 'react-native';
+import { useBoardingStore } from '@/store/boardingStore';
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
@@ -23,47 +25,18 @@ export default function AuthScreen() {
   const { error, success } = useCustomAlert();
   const colorScheme = useColorScheme();
   const login = useAuthStore(state => state.login);
+  const setIsGuest = useAuthStore(state => state.setIsGuest);
+  const setWhenLogin = useBoardingStore(state => state.setWhenLogin);
   const { error: showAlertError, success: showAlertSuccess } = useCustomAlert();
 
-  // const handleLoginWithGoogle = async () => {
-  //   await GoogleSignin.hasPlayServices({
-  //     showPlayServicesUpdateDialog: true
-  //   });
-
-  //   const loginType = 'google';
-  //   try {
-  //     await GoogleSignin.hasPlayServices();
-  //     const userInfor = await GoogleSignin.signIn();
-  //     const response = await LoginWithGoogle(userInfor.data.user);
-  //     if (!response.success) {
-  //       error('Lỗi đăng nhập', `${response.message}`);
-  //       await GoogleSignin.signOut();
-  //       return;
-  //     }
-  //     if (response.success) {
-  //       login(response.user, loginType, response.user.accessToken);
-  //       success('Đăng nhập thành công', `${response.message}`);
-  //       navigate('Main');
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   const handleLoginWithGoogle = async () => {
-    //  Đổi tên alert để tránh xung đột với biến 'error' trong khối catch
-
     const loginType = 'google';
 
     try {
       await GoogleSignin.hasPlayServices();
       const userInfor = await GoogleSignin.signIn();
 
-      // console.log('Google Sign-In Success Object:', userInfor); 
-
       const profileToSend = userInfor.data?.user;
-
-      // console.log('Profile được trích xuất:', profileToSend);
 
       // Kiểm tra dữ liệu
       if (!profileToSend || !profileToSend.email || !profileToSend.id) {
@@ -80,22 +53,19 @@ export default function AuthScreen() {
       }
 
       if (response.success) {
+        console.log(response)
         login(response.user, loginType, response.user.accessToken);
+        setWhenLogin();
         showAlertSuccess('Đăng nhập thành công');
-        navigate('Main');
+        // navigate('Main');
       }
 
     } catch (error) {
-      // // Log lỗi chi tiết
-      // console.log('Lỗi trong handleLoginWithGoogle:', error);
-
-      // Chỉ hiển thị thông báo lỗi chung chung, trừ khi là lỗi đã được throw từ trên
       let errorMessage = 'Không thể đăng nhập với Google. Vui lòng thử lại.';
       if (error.message && error.message.includes('Google Profile')) {
         errorMessage = error.message;
       }
 
-      // Đảm bảo showAlertError là hàm trước khi gọi
       if (typeof showAlertError === 'function') {
         showAlertError('Lỗi đăng nhập', errorMessage);
       } else {
@@ -131,6 +101,7 @@ export default function AuthScreen() {
             }
             success('Đăng nhập thành công');
             login(response.user, loginType, response.user.accessToken);
+            setWhenLogin();
             navigate('Main');
           }
         }, 1000);
@@ -140,18 +111,27 @@ export default function AuthScreen() {
     }
   };
 
+  const goHome = () => {
+    setIsGuest(true);
+  }
+
   return (
     <SafeAreaView className={`flex-1 items-center justify-center px-6 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
-      <View className="flex-col items-center mb-6">
-        <Text className={`text-4xl font-extrabold ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"} mr-4`}>JT Harmony</Text>
-        <View className="flex-row mt-6 space-x-2">
-          <View className="w-4 h-4 rounded-full bg-green-600" />
-          <View className="w-4 h-4 rounded-full bg-green-700" />
-          <View className="w-4 h-4 rounded-full bg-green-800" />
-        </View>
+      <Pressable className="flex-row items-center mb-6"
+        onPress={() => goHome()}
+      >
+        <Image
+          source={require('@/assets/images/logo_final.png')}
+          className='w-40 h-40'
+        />
+      </Pressable>
+      <Text className={`text-4xl font-extrabold ${colorScheme === "dark" ? "text-white" : "text-[#0E0C1F]"} mr-4`}>JT Harmony</Text>
+      <View className='flex-row mb-40 mt-4'>
+        <View className="w-4 h-4 rounded-full bg-green-600" />
+        <View className="w-4 h-4 rounded-full bg-green-700" />
+        <View className="w-4 h-4 rounded-full bg-green-800" />
       </View>
-      <Text className="text-gray-400 mb-60">Just keep on vibin'</Text>
-      <View className="w-full mt-10">
+      <View className="w-full">
         <TouchableOpacity
           className={`${colorScheme === 'dark' ? 'bg-green-600' : 'bg-green-500'} rounded-full w-full py-4 mb-8 items-center flex-row justify-center`}
           onPress={() => navigate('Login')}

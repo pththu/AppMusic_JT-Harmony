@@ -27,6 +27,7 @@ const Track = require('./track');
 const Playlist = require('./playlist');
 const PlaylistTrack = require('./playlist_track');
 const ListeningHistory = require('./listening_history');
+const SearchHistory = require('./search_history');
 const FavoriteItem = require('./favorite_items')
 
 // ================= Associations ================= //
@@ -82,8 +83,8 @@ Post.hasMany(Notification, { foreignKey: 'postId', as: 'PostNotifications' });
 Notification.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
 
 // User - Recommendation
-User.hasMany(Recommendation, { foreignKey: 'userId' });
-Recommendation.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Recommendation, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
+Recommendation.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
 
 // Quan hệ Người dùng - Lượt thích Bình luận (User <-> CommentLike)
 User.hasMany(CommentLike, { foreignKey: 'userId', as: 'CommentLikes' });
@@ -187,6 +188,9 @@ FavoriteItem.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASC
 
 User.hasMany(ListeningHistory, { foreignKey: 'userId', as: 'ListeningHistories', onDelete: 'CASCADE', hooks: true });
 ListeningHistory.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
+
+User.hasMany(SearchHistory, { foreignKey: 'userId', as: 'SearchHistories', onDelete: 'CASCADE', hooks: true });
+SearchHistory.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
 
 // Like - User & Post
 Like.belongsTo(User, { foreignKey: 'userId', as: 'User' });

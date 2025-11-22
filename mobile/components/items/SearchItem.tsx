@@ -19,7 +19,7 @@ export default function SearchItem({ type, title, subtitle, onPress, onDelete }:
   return (
     <View className="flex-row justify-between items-center py-3">
       <TouchableOpacity className="flex-row items-center flex-1" onPress={onPress}>
-        <Icon name={iconName} size={18} color="#888" className="mr-3" />
+        <Icon name={iconName} size={18} color="#888" />
         <View>
           <Text className="text-white font-bold text-sm">{title}</Text>
           {subtitle ? (

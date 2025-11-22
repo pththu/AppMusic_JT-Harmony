@@ -15,7 +15,7 @@ export default function AlbumItem({ title, subtitle, image, onPress }: AlbumItem
 
   const formatTitle = (title: string) => {
     const maxLength = 20;
-    if (title.length > maxLength) {
+    if (title?.length > maxLength) {
       return title.substring(0, maxLength - 3) + '...';
     }
     return title;

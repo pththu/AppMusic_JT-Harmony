@@ -31,7 +31,7 @@ const Track = sequelize.define(
       field: 'external_url'
     },
     duration: {
-      type: DataTypes.INTEGER
+      type: DataTypes.DOUBLE
     },
     albumId: {
       type: DataTypes.INTEGER,

@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Modal
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useTheme } from '@/components/ThemeContext';
 import SongItem from "@/components/items/SongItem";
 import { usePlayerStore } from "@/store/playerStore";
 import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
@@ -24,7 +24,8 @@ import { useRouter } from "expo-router";
 import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
 import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
 import { useFavoritesStore } from "@/store/favoritesStore";
-import { Modal } from "react-native";
+import { useHistoriesStore } from "@/store/historiesStore";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 export default function LikedSongsScreen() {
   const colorScheme = useColorScheme();
@@ -36,11 +37,14 @@ export default function LikedSongsScreen() {
   const listTrack = usePlayerStore((state) => state.listTrack);
   const isShuffled = usePlayerStore((state) => state.isShuffled);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
+  const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
+  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
@@ -70,7 +74,7 @@ export default function LikedSongsScreen() {
     setArtistModalVisible(false);
   };
 
-  const handlePlayTrack = (track,) => {
+  const handlePlayTrack = async (track,) => {
     const playIndex = filteredTracks.findIndex(t =>
       (t.spotifyId && t.spotifyId === track.spotifyId) ||
       (t.id && t.id === track.id)
@@ -84,7 +88,7 @@ export default function LikedSongsScreen() {
     setQueue(queueData);
   };
 
-  const handlePlayLikedSongs = () => {
+  const handlePlayLikedSongs = async () => {
     if (!filteredTracks || filteredTracks.length === 0) {
       warning('Không có bài hát nào để phát!');
       return;
@@ -118,7 +122,7 @@ export default function LikedSongsScreen() {
 
   const handleSongShare = async (track) => {
     try {
-      console.log('share: ', selectedTrack);
+      // console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
       let shareMessage = `${user?.fullName}: `;
 
@@ -235,10 +239,10 @@ export default function LikedSongsScreen() {
         case 'name_desc':
           return (b.name || '').localeCompare(a.name || ''); // Z-A
         case 'date_asc':
-          return +new Date(a?.favoriteItem?.createdAt || 0) - +new Date(b?.favoriteItem?.createdAt || 0); // Cũ nhất
+          return new Date(a?.createdAt).getTime() - new Date(b?.createdAt).getTime(); // Cũ nhất
         case 'date_desc':
         default:
-          return +new Date(b?.favoriteItem?.createdAt || 0) - +new Date(a?.favoriteItem?.createdAt || 0); // Mới nhất
+          return new Date(b?.createdAt).getTime() - new Date(a?.createdAt).getTime(); // Mới nhất
       }
     });
     return sortableList;
@@ -298,7 +302,9 @@ export default function LikedSongsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white dark:bg-[#0E0C1F] px-4 pt-4">
+    <View className={`flex-1 px-4 pt-4 bg-white dark:bg-black`}
+    // style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
+    >
       <View className="flex-row items-start mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="arrow-back" size={24} color={primaryIconColor} />
@@ -352,6 +358,8 @@ export default function LikedSongsScreen() {
 
       <FlatList
         data={filteredTracks} // Dùng danh sách đã lọc
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
         keyExtractor={(item) => item?.favoriteItem.id?.toString()}
         renderItem={({ item, index }) => (
           renderRecentlyPlayedItem({ item, index })

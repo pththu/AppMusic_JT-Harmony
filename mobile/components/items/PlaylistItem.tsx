@@ -10,8 +10,8 @@ export default function PlaylistItem({ item, totalTrack, onPress = () => { }, on
 
   const formatTitle = (title: string) => {
     const maxLength = 20;
-    if (title.length > maxLength) {
-      return title.substring(0, maxLength - 3) + '...';
+    if (title?.length > maxLength) {
+      return title?.substring(0, maxLength - 3) + '...';
     }
     return title;
   };
@@ -19,16 +19,11 @@ export default function PlaylistItem({ item, totalTrack, onPress = () => { }, on
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="items-start py-3 active:opacity-75 mr-4"
+      className="mr-4"
     >
-      <Image
-        source={{ uri: item?.imageUrl }}
-        className="w-32 h-32 rounded-md shadow-md"
-      />
-      <View className="flex-1 justify-center">
-        <Text className={`text-sm mt-2 font-semibold ${colorScheme === 'dark' ? 'text-gray-400' : 'text-black'}`}>{formatTitle(item?.name)}</Text>
-        <Text className={`text-xs ${colorScheme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{totalTrack || '..'} bài hát</Text>
-      </View>
+      <Image source={{ uri: item?.imageUrl }} className="w-32 h-32 rounded-lg" />
+      <Text className={`mt-2 text-sm text-wrap font-bold ${colorScheme === "dark" ? "text-white" : "text-black"}`}>{formatTitle(item?.name)}</Text>
+      <Text className="text-gray-400 text-sm">{totalTrack || '..'} bài hát</Text>
     </TouchableOpacity>
   );
 }

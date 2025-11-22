@@ -65,8 +65,10 @@ export default function TabLayout() {
     clearNotifications,
   ]);
 
-  if (!isLoggedIn) {
-    return <Redirect href="/(auth)" />;
+  if (!isGuest) {
+    if (!isLoggedIn) {
+      return <Redirect href="/(auth)" />;
+    }
   }
 
   return (

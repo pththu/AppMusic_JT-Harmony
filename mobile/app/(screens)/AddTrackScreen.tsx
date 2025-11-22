@@ -17,6 +17,7 @@ import { usePlayerStore } from '@/store/playerStore';
 import { albumData } from '@/constants/data';
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { AddTrackToPlaylist, AddTrackToPlaylistAfterConfirm, GetTracks } from '@/services/musicService';
+import { SearchTracks } from '@/services/searchService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -83,7 +84,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
 
   const handleAddTrack = async (track) => {
     console.log(`Đã thêm bài hát: ${track.name}`);
-    console.log(track)
+    // console.log(track)
     try {
       const payload = {
         playlistId: currentPlaylist?.id,
@@ -92,7 +93,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
       }
 
       const response = await AddTrackToPlaylist(payload);
-      console.log('response', response)
+      // console.log('response', response)
       if (response.success) {
         const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
           setStateFunc(prevData => {
@@ -114,7 +115,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
             response.message,
             async () => {
               const confirmResponse = await AddTrackToPlaylistAfterConfirm(payload);
-              console.log('confirmResponse', confirmResponse)
+              // console.log('confirmResponse', confirmResponse)
               if (confirmResponse.success) {
                 const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
                   setStateFunc(prevData => {
@@ -168,9 +169,9 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
     const fetchData = async () => {
       setIsLoading(false);
       try {
-        const promiseRecent = GetTracks({ artist: query.artist, limit: 10 });
-        const promiseFavorite = GetTracks({ trackName: query.trackName, limit: 10 });
-        const promiseRecommend = GetTracks({ album: query.album, limit: 10 });
+        const promiseRecent = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
+        const promiseFavorite = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
+        const promiseRecommend = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
 
         const [responseRecent, responseFavorite, responseRecommend] = await Promise.all([
           promiseRecent,
@@ -188,7 +189,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
           setRecommendData(responseRecommend.data);
         }
       } catch (err) {
-        console.log(err.message);
+        // console.log(err.message);
         error('Lỗi', 'Có lỗi khi cập nhật dữ liệu');
       } finally {
         setIsLoading(false);

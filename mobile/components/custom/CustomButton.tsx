@@ -74,7 +74,7 @@ export default function CustomButton({
         <Icon
           name={iconName}
           size={iconSize}
-          color={colorScheme === 'dark' ? '#000' : '#fff'}
+          color={colorScheme === 'dark' ? '#fff' : '#fff'}
         />
       )}
       <Text className={`${textStyles} ${title && 'mx-2'}`}>{title}</Text>

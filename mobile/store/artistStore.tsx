@@ -62,6 +62,8 @@ export const useArtistStore = create<ArtistState>()(
         isFollowing: false,
         popularTracks: [],
         albums: [],
+        followers: [],
+        artistFollowed: [],
       }),
     }),
     {

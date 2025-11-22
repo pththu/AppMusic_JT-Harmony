@@ -1,9 +1,10 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
-    // const { sequelize } = require('../configs/database');
+// const { sequelize } = require('../configs/database');
 
 const SearchHistory = sequelize.define(
-    'SearchHistory', {
+    'SearchHistory',
+    {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -23,9 +24,15 @@ const SearchHistory = sequelize.define(
             allowNull: false,
             field: 'searched_at'
         }
-    }, {
+    },
+    {
         tableName: 'search_histories',
-        timestamps: true
+        timestamps: true,
+        indexes: [
+            {
+                fields: ['id', 'user_id']
+            }
+        ]
     }
 )
 

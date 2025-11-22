@@ -2,7 +2,7 @@ const { Post, User, Comment, CommentLike, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { createNotification } = require('../utils/notificationHelper');
 
-exports.getAllComment = async(req, res) => {
+exports.getAllComment = async (req, res) => {
     try {
         const rows = await Comment.findAll();
         res.json(rows);
@@ -13,107 +13,107 @@ exports.getAllComment = async(req, res) => {
 
 // LẤY COMMENT THEO trackId (THREAD THEO BÀI HÁT) KÈM likeCount VÀ isLiked
 exports.getCommentsByTrackId = async (req, res) => {
-  const userId = req.user.id;
-  try {
-    const { trackId } = req.params;
-    const { fromMs, toMs } = req.query;
+    const userId = req.user.id;
+    try {
+        const { trackId } = req.params;
+        const { fromMs, toMs } = req.query;
 
-    const whereParent = {
-      trackId: trackId,
-      parentId: null,
-    };
-    if (fromMs || toMs) {
-      whereParent.timecodeMs = {};
-      if (fromMs) whereParent.timecodeMs[Op.gte] = parseInt(fromMs, 10);
-      if (toMs) whereParent.timecodeMs[Op.lte] = parseInt(toMs, 10);
-    }
+        const whereParent = {
+            trackId: trackId,
+            parentId: null,
+        };
+        if (fromMs || toMs) {
+            whereParent.timecodeMs = {};
+            if (fromMs) whereParent.timecodeMs[Op.gte] = parseInt(fromMs, 10);
+            if (toMs) whereParent.timecodeMs[Op.lte] = parseInt(toMs, 10);
+        }
 
-    const rows = await Comment.findAll({
-      attributes: {
-        include: [
-          [
-            sequelize.literal(`(
+        const rows = await Comment.findAll({
+            attributes: {
+                include: [
+                    [
+                        sequelize.literal(`(
               SELECT COUNT(*)
               FROM comment_likes AS "CommentLikes"
               WHERE "CommentLikes"."comment_id" = "Comment"."id"
             )`),
-            'likeCount'
-          ]
-        ]
-      },
-      where: whereParent,
-      include: [
-        { model: User, as: 'User', attributes: ['id','username','avatarUrl','fullName'] },
-        { model: Comment, as: 'Replies', include: [ { model: User, as: 'User', attributes: ['id','username','avatarUrl','fullName'] } ] },
-        { model: CommentLike, as: 'Likes', where: { userId }, required: false, attributes: ['userId'] },
-      ],
-      order: [ ['commentedAt','ASC'], [sequelize.literal('"likeCount"'), 'DESC'] ],
-    });
+                        'likeCount'
+                    ]
+                ]
+            },
+            where: whereParent,
+            include: [
+                { model: User, as: 'User', attributes: ['id', 'username', 'avatarUrl', 'fullName'] },
+                { model: Comment, as: 'Replies', include: [{ model: User, as: 'User', attributes: ['id', 'username', 'avatarUrl', 'fullName'] }] },
+                { model: CommentLike, as: 'Likes', where: { userId }, required: false, attributes: ['userId'] },
+            ],
+            order: [['commentedAt', 'ASC'], [sequelize.literal('"likeCount"'), 'DESC']],
+        });
 
-    const processedRows = rows.map(c => {
-      const json = c.toJSON();
-      json.isLiked = json.Likes && json.Likes.length > 0;
-      delete json.Likes;
-      return json;
-    });
+        const processedRows = rows.map(c => {
+            const json = c.toJSON();
+            json.isLiked = json.Likes && json.Likes.length > 0;
+            delete json.Likes;
+            return json;
+        });
 
-    res.json(processedRows);
-  } catch (err) {
-    console.error('SERVER ERROR fetching comments by track:', err.message);
-    res.status(500).json({ error: 'Server error when fetching comments by track.', detail: err.message });
-  }
+        res.json(processedRows);
+    } catch (err) {
+        console.error('SERVER ERROR fetching comments by track:', err.message);
+        res.status(500).json({ error: 'Server error when fetching comments by track.', detail: err.message });
+    }
 }
 
 // --- ADMIN: DANH SÁCH BÌNH LUẬN VỚI FILTER/PAGINATION ---
 exports.getCommentsAdmin = async (req, res) => {
-  try {
-    const {
-      postId,
-      userId,
-      q,
-      dateFrom,
-      dateTo,
-      limit: limitStr,
-      offset: offsetStr,
-    } = req.query;
+    try {
+        const {
+            postId,
+            userId,
+            q,
+            dateFrom,
+            dateTo,
+            limit: limitStr,
+            offset: offsetStr,
+        } = req.query;
 
-    const limit = parseInt(limitStr, 10) || 50;
-    const offset = parseInt(offsetStr, 10) || 0;
+        const limit = parseInt(limitStr, 10) || 50;
+        const offset = parseInt(offsetStr, 10) || 0;
 
-    const where = {};
-    if (postId) where.postId = parseInt(postId, 10);
-    if (userId) where.userId = parseInt(userId, 10);
-    if (q) where.content = { [Op.iLike || Op.like]: `%${q}%` };
-    if (dateFrom || dateTo) {
-      where.commentedAt = {};
-      if (dateFrom) where.commentedAt[Op.gte] = new Date(`${dateFrom}T00:00:00`);
-      if (dateTo) {
-        const endExclusive = new Date(`${dateTo}T00:00:00`);
-        endExclusive.setDate(endExclusive.getDate() + 1);
-        where.commentedAt[Op.lt] = endExclusive;
-      }
+        const where = {};
+        if (postId) where.postId = parseInt(postId, 10);
+        if (userId) where.userId = parseInt(userId, 10);
+        if (q) where.content = { [Op.iLike || Op.like]: `%${q}%` };
+        if (dateFrom || dateTo) {
+            where.commentedAt = {};
+            if (dateFrom) where.commentedAt[Op.gte] = new Date(`${dateFrom}T00:00:00`);
+            if (dateTo) {
+                const endExclusive = new Date(`${dateTo}T00:00:00`);
+                endExclusive.setDate(endExclusive.getDate() + 1);
+                where.commentedAt[Op.lt] = endExclusive;
+            }
+        }
+
+        const rows = await Comment.findAll({
+            where,
+            include: [
+                { model: User, as: 'User', attributes: ['id', 'username', 'avatarUrl', 'fullName'] },
+                { model: Post, as: 'Post', attributes: ['id', 'userId', 'content', 'createdAt'] },
+            ],
+            order: [['commentedAt', 'DESC']],
+            limit,
+            offset,
+        });
+        res.status(200).json(rows);
+    } catch (err) {
+        console.error('Error fetching admin comments:', err);
+        res.status(500).json({ error: 'Failed to fetch comments.' });
     }
-
-    const rows = await Comment.findAll({
-      where,
-      include: [
-        { model: User, as: 'User', attributes: ['id','username','avatarUrl','fullName'] },
-        { model: Post, as: 'Post', attributes: ['id','userId','content','createdAt'] },
-      ],
-      order: [['commentedAt', 'DESC']],
-      limit,
-      offset,
-    });
-    res.status(200).json(rows);
-  } catch (err) {
-    console.error('Error fetching admin comments:', err);
-    res.status(500).json({ error: 'Failed to fetch comments.' });
-  }
 };
 
 // LẤY COMMENT THEO postId KÈM THEO SỐ LƯỢNG LIKE VÀ TRẠNG THÁI ISLIKED CỦA USER HIỆN TẠI
-exports.getCommentsByPostId = async(req, res) => {
-    const userId = req.user.id; // Lấy ID của người dùng hiện tại
+exports.getCommentsByPostId = async (req, res) => {
+    const userId = req.user ? req.user.id : null; // Lấy ID của người dùng hiện tại
     try {
         const { postId } = req.params;
         const { fromMs, toMs } = req.query;
@@ -189,7 +189,11 @@ exports.getCommentsByPostId = async(req, res) => {
             return commentJson;
         });
 
-        res.json(processedRows);
+        res.status(200).json({
+            message: 'Comments fetched successfully.',
+            data: processedRows,
+            success: true
+        })
     } catch (err) {
         //  IN LỖI CHI TIẾT RA CONSOLE SERVER
         console.error('LỖI SERVER KHI TẢI COMMENT (500):', err.message, err.stack);
@@ -197,8 +201,93 @@ exports.getCommentsByPostId = async(req, res) => {
     }
 };
 
+exports.getCommentsByPostIdForGuest = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { fromMs, toMs } = req.query;
+
+        const whereParent = {
+            postId: postId,
+            parentId: null
+        };
+        // Bộ lọc theo mốc thời gian nếu có
+        if (fromMs || toMs) {
+            whereParent.timecodeMs = {};
+            if (fromMs) whereParent.timecodeMs[Op.gte] = parseInt(fromMs, 10);
+            if (toMs) whereParent.timecodeMs[Op.lte] = parseInt(toMs, 10);
+        }
+
+        const rows = await Comment.findAll({
+            attributes: {
+                include: [
+                    // TÍNH TỔNG SỐ LIKE (Giữ nguyên, đây là public data)
+                    [
+                        sequelize.literal(`(
+                            SELECT COUNT(*)
+                            FROM comment_likes AS "CommentLikes"
+                            WHERE
+                                "CommentLikes"."comment_id" = "Comment"."id"
+                        )`),
+                        'likeCount' // Alias cho kết quả đếm
+                    ],
+                    // THÊM isLiked: false cho khách
+                    [
+                        sequelize.literal('false'),
+                        'isLiked'
+                    ]
+                ]
+            },
+            where: whereParent,
+            include: [{
+                model: User,
+                as: 'User',
+                attributes: ['id', 'username', 'avatarUrl']
+            }, {
+                model: Comment,
+                as: 'Replies',
+                include: [{
+                    model: User,
+                    as: 'User',
+                    attributes: ['id', 'username', 'avatarUrl']
+                }]
+            }
+            ],
+            order: [
+                ['commentedAt', 'ASC'],
+                [sequelize.literal('"likeCount"'), 'DESC'] // Sắp xếp theo like
+            ]
+        });
+
+        // XỬ LÝ DỮ LIỆU: Thêm trường isLiked: false cho Replies
+        const processedRows = rows.map(comment => {
+            const commentJson = comment.toJSON();
+
+
+            // Xử lý Replies (Bình luận con) - Thêm isLiked: false
+            commentJson.Replies = commentJson.Replies.map(reply => {
+                return {
+                    ...reply, // Giữ nguyên các trường của reply
+                    isLiked: false // Thêm isLiked: false cho khách
+                };
+            });
+
+            return commentJson;
+        });
+
+        res.status(200).json({
+            message: 'Comments fetched successfully for guest.',
+            data: processedRows,
+            success: true
+        })
+    } catch (err) {
+        // IN LỖI CHI TIẾT RA CONSOLE SERVER
+        console.error('LỖI SERVER KHI TẢI COMMENT (GUEST 500):', err.message, err.stack);
+        res.status(500).json({ error: 'Server error when fetching comments.', detail: err.message });
+    }
+};
+
 // LẤY COMMENT THEO ID
-exports.getCommentById = async(req, res) => {
+exports.getCommentById = async (req, res) => {
     try {
         const row = await Comment.findByPk(req.params.id);
         if (!row) return res.status(404).json({ error: 'Comment not found' });
@@ -209,9 +298,9 @@ exports.getCommentById = async(req, res) => {
 };
 
 // TẠO MỚI COMMENT
-exports.createComment = async(req, res) => {
+exports.createComment = async (req, res) => {
     try {
-        const payload = {...req.body };
+        const payload = { ...req.body };
 
         if (!payload) {
             return res.status(400).json({ error: 'Payload not specified' });
@@ -267,7 +356,7 @@ exports.createComment = async(req, res) => {
 };
 
 // CẬP NHẬT COMMENT
-exports.updateComment = async(req, res) => {
+exports.updateComment = async (req, res) => {
     try {
         const [updated] = await Comment.update(req.body, { where: { id: req.params.id } });
         if (!updated) return res.status(404).json({ error: 'Comment not found' });
@@ -279,7 +368,7 @@ exports.updateComment = async(req, res) => {
 };
 
 // XÓA COMMENT
-exports.deleteComment = async(req, res) => {
+exports.deleteComment = async (req, res) => {
     try {
         const deleted = await Comment.destroy({ where: { id: req.params.id } });
         if (!deleted) return res.status(404).json({ error: 'Comment not found' });
@@ -290,7 +379,7 @@ exports.deleteComment = async(req, res) => {
 };
 
 // THÍCH / BỎ THÍCH COMMENT
-exports.toggleCommentLike = async(req, res) => {
+exports.toggleCommentLike = async (req, res) => {
     const userId = req.user.id;
     const { commentId } = req.params;
 

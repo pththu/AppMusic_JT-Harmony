@@ -196,9 +196,10 @@ const SearchResultItem = ({ item, index, onPress, onPressOptions, primaryIconCol
 
 export default function AllPlaylistScreen() {
   const colorScheme = useColorScheme();
-  const { success, error, warning, confirm } = useCustomAlert();
+  const { success, error, warning, confirm, info} = useCustomAlert();
   const { navigate } = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const isGuest = useAuthStore((state) => state.isGuest);
   const myPlaylists = usePlayerStore((state) => state.myPlaylists);
   const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
@@ -213,6 +214,8 @@ export default function AllPlaylistScreen() {
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const removeFromMyPlaylists = usePlayerStore((state) => state.removeFromMyPlaylists);
   const removeFavoriteItem = useFavoritesStore((state) => state.removeFavoriteItem);
+
+  console.log(myPlaylists)
 
   const [activeTab, setActiveTab] = useState("myPlaylists");
   const [favoritePlaylists, setFavoritePlaylists] = useState([]);
@@ -332,8 +335,8 @@ export default function AllPlaylistScreen() {
           trackIds.push(track.spotifyId);
         });
 
-        console.log(playlistIds)
-        console.log(trackIds)
+        // console.log(playlistIds)
+        // console.log(trackIds)
         if (trackIds.length > 0) {
           const addResponse = await AddTracksToPlaylists({
             playlistIds: playlistIds,
@@ -358,7 +361,7 @@ export default function AllPlaylistScreen() {
   }
 
   const handleUpdatePlaylist = async () => {
-    console.log('handleUpdatePlaylist')
+    // console.log('handleUpdatePlaylist')
     try {
       const payload = {
         id: selectedPlaylist.id,
@@ -386,8 +389,8 @@ export default function AllPlaylistScreen() {
   }
 
   const handleAddToAnotherPlaylist = async (playlistIds) => {
-    console.log('handleAddToAnotherPlaylist')
-    console.log(playlistIds);
+    // console.log('handleAddToAnotherPlaylist')
+    // // console.log(playlistIds);
     if (!playlistTracks || !playlistTracks.length) {
       warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
       return;
@@ -444,14 +447,14 @@ export default function AllPlaylistScreen() {
 
   const handleDelete = () => {
     if (!selectedPlaylist) return;
-    console.log('handleDeletePlaylist')
+    // console.log('handleDeletePlaylist')
     try {
       confirm(
         'Xác nhận xóa',
         'Bạn có chắc chắn muốn xóa playlist này?',
         async () => {
           const response = await DeletePlaylist(selectedPlaylist.id);
-          console.log('response úi', response);
+          // console.log('response úi', response);
           if (response.success) {
             removeFromMyPlaylists(selectedPlaylist.id);
             success('Đã xóa playlist thành công!');
@@ -507,6 +510,10 @@ export default function AllPlaylistScreen() {
 
   const handleShare = async () => {
     if (!selectedPlaylist) return;
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng tính năng này.");
+      return;
+    }
     try {
       let shareMessage = `${user?.fullName}: `;
 
@@ -605,7 +612,7 @@ export default function AllPlaylistScreen() {
       }
     }
     if (selectedPlaylist) {
-      console.log('getTracks');
+      // console.log('getTracks');
       fetchTracks();
     }
   }, [selectedPlaylist]);
@@ -621,7 +628,7 @@ export default function AllPlaylistScreen() {
 
     myPlaylists.forEach(item => {
       const nameMatch = item.name?.toLowerCase().includes(normalizedQuery);
-      const ownerMatch = user.fullName?.toLowerCase().includes(normalizedQuery);
+      const ownerMatch = user?.fullName?.toLowerCase().includes(normalizedQuery);
 
       if (nameMatch || ownerMatch) {
         results.push({ ...item, resultType: 'myPlaylist' });
@@ -652,7 +659,7 @@ export default function AllPlaylistScreen() {
     });
 
     setSearchResults(results);
-  }, [searchQuery, myPlaylists, favoritePlaylists, favoriteAlbums, user.fullName]);
+  }, [searchQuery, myPlaylists, favoritePlaylists, favoriteAlbums, user?.fullName]);
 
   const filteredSearchResults = useMemo(() => {
     if (searchFilter === 'all') {
@@ -751,14 +758,16 @@ export default function AllPlaylistScreen() {
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <Icon name="arrow-back" size={24} color={primaryIconColor} />
         </TouchableOpacity>
-        <View>
-          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-semibold mb-1`}>
-            Mục yêu thích của tôi
-          </Text>
-          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
-            {user.fullName}
-          </Text>
-        </View>
+        {!isGuest && (
+          <View>
+            <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-semibold mb-1`}>
+              Mục yêu thích của tôi
+            </Text>
+            <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
+              {user?.fullName}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Thanh Search (CẬP NHẬT) */}

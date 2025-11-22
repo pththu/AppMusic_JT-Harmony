@@ -7,12 +7,14 @@ import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "react-native";
+import { useBoardingStore } from "@/store/boardingStore";
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error } = useCustomAlert();
   const { login } = useAuthStore();
+  const setWhenLogin = useBoardingStore(state => state.setWhenLogin);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,8 +63,9 @@ export default function LoginScreen() {
         return;
       }
       login(response.user, 'local', response.user?.accessToken);
+      setWhenLogin();
       success("Thành Công", "Đăng nhập thành công!");
-      navigate("Main");
+      // navigate("Main");
     } catch (err) {
       const errorMessage =
         err.response?.data?.message ||
