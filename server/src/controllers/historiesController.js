@@ -1,22 +1,24 @@
-const { ListeningHistory, User } = require('../models');
+const { ListeningHistory, User, Playlist } = require('../models');
 const SearchHistory = require('../models/search_history');
 const Op = require('sequelize').Op;
 const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
 const Bottleneck = require('bottleneck');
+const { redisClient } = require('../configs/redis');
+
+const DEFAULT_TTL_SECONDS = 3600 * 2; // 2 giờ (cho dữ liệu Spotify ít đổi)
+const SHORT_TTL_SECONDS = 1800;
 
 const limiter = new Bottleneck({
   minTime: 500,
   maxConcurrent: 1 // Chỉ chạy 1 request cùng lúc để an toàn tuyệt đối
 });
 
-// Wrapper có Log chi tiết để bắt bệnh
 const callSpotify = async (fn) => {
   return limiter.schedule(async () => {
     try {
       return await fn();
     } catch (error) {
-      // Log chi tiết lỗi từ Spotify trả về để xem nó là 429 thật hay do thiếu tham số
       if (error.body) {
         console.error("🔥 Spotify Error Body:", JSON.stringify(error.body));
       }
@@ -136,74 +138,109 @@ const GetListeningHistoryByPk = async (req, res) => {
 
 const GetListeningHistoriesByUserId = async (req, res) => {
   try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'Thiếu userId' });
+    }
+
+    const cacheKey = `user:${userId}:histories:listening`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getHistoriesListeningByUserId)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getHistoriesListeningByUserId)');
+
     let dataFormated = [];
     let itemFormatted = null;
     const histories = await ListeningHistory.findAll({
-      where: { userId: req.user.id },
+      where: { userId },
       order: [['updatedAt', 'DESC']],
       limit: 100
     });
     if (!histories || histories.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy lịch sử của người dùng này' });
+      return res.status(200).json({
+        message: 'Listening histories retrieved successfully',
+        data: [],
+        success: true
+      });
     }
 
     for (const history of histories) {
       const itemType = history.itemType;
-      switch (itemType) {
-        case 'track':
-          const track = await callSpotify(() => spotify.findTrackById(history.itemSpotifyId));
-          if (!track) {
+      if (history.itemSpotifyId) {
+        switch (itemType) {
+          case 'track':
+            const track = await callSpotify(() => spotify.findTrackById(history.itemSpotifyId));
+            if (!track) {
+              break;
+            }
+            itemFormatted = formatTrack(track);
+            dataFormated.push({
+              ...history.toJSON(),
+              item: itemFormatted
+            })
             break;
-          }
-          itemFormatted = formatTrack(track);
+          case 'album':
+            const album = await callSpotify(() => spotify.findAlbumById(history.itemSpotifyId));
+            if (!album) {
+              break;
+            }
+            itemFormatted = formatAlbum(album);
+            dataFormated.push({
+              ...history.toJSON(),
+              item: itemFormatted
+            })
+            break;
+          case 'artist':
+            const artist = await callSpotify(() => spotify.findArtistById(history.itemSpotifyId));
+            if (!artist) {
+              break;
+            }
+            itemFormatted = formatArtist(artist);
+            dataFormated.push({
+              ...history.toJSON(),
+              item: itemFormatted
+            })
+            break;
+          case 'playlist':
+            const playlist = await callSpotify(() => spotify.findPlaylistById(history.itemSpotifyId));
+            if (!playlist) {
+              break;
+            }
+            itemFormatted = formatPlaylist(playlist);
+            dataFormated.push({
+              ...history.toJSON(),
+              item: itemFormatted
+            })
+            break;
+          default:
+            console.log(`Loại mục không xác định: ${itemType}`);
+        }
+      } else {
+        if (itemType === 'playlist') {
+          const playlist = await Playlist.findByPk(history.itemId, {
+            include: [{ model: User }]
+          });
+          itemFormatted = formatPlaylist(playlist, playlist.User);
           dataFormated.push({
             ...history.toJSON(),
             item: itemFormatted
           })
-          break;
-        case 'album':
-          const album = await callSpotify(() => spotify.findAlbumById(history.itemSpotifyId));
-          if (!album) {
-            break;
-          }
-          itemFormatted = formatAlbum(album);
-          dataFormated.push({
-            ...history.toJSON(),
-            item: itemFormatted
-          })
-          break;
-        case 'artist':
-          const artist = await callSpotify(() => spotify.findArtistById(history.itemSpotifyId));
-          if (!artist) {
-            break;
-          }
-          itemFormatted = formatArtist(artist);
-          dataFormated.push({
-            ...history.toJSON(),
-            item: itemFormatted
-          })
-          break;
-        case 'playlist':
-          const playlist = await callSpotify(() => spotify.findPlaylistById(history.itemSpotifyId));
-          if (!playlist) {
-            break;
-          }
-          itemFormatted = formatPlaylist(playlist);
-          dataFormated.push({
-            ...history.toJSON(),
-            item: itemFormatted
-          })
-          break;
-        default:
-          console.log(`Loại mục không xác định: ${itemType}`);
+        }
       }
     }
 
-    res.status(200).json({
+    const response = {
       message: 'Listening histories retrieved successfully',
       data: dataFormated,
       success: true
-    });
+    }
+
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: SHORT_TTL_SECONDS });
+
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -384,7 +421,11 @@ const GetSearchHistoryByPk = async (req, res) => {
 const GetSearchHistoriesByUserId = async (req, res) => {
   try {
     // Sử dụng req.user.id từ middleware xác thực (authenticateToken)
-    const userId = req.user.id;
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'Thiếu userId' });
+    }
 
     const histories = await SearchHistory.findAll({
       where: { userId: userId },

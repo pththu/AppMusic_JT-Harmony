@@ -48,12 +48,12 @@ const formatTrack = (track, artist, album, videoId) => {
     spotifyId: track?.spotifyId || (!track?.spotifyId ? track.id : null) || null,
     videoId: videoId || null,
     name: track?.name || null,
-    artists: artist || [
+    artists: [
       ...track?.artists?.map(artist => ({
         spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
         name: artist?.name || null,
         imageUrl: artist?.images?.[0]?.uri || artist?.imageUrl || null
-      })) || [],
+      })) || artist || [],
     ],
     album: {
       spotifyId: track.album?.id || album?.spotifyId || null,
@@ -741,9 +741,12 @@ const getArtistsForYou = async (req, res) => {
 
 const getMyPlaylists = async (req, res) => {
   try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ error: "userId parameter is required" });
+    }
 
-    console.log('user id: ', req.user.id)
-    const cacheKey = `user:${req.user.id}:playlists`;
+    const cacheKey = `user:${userId}:playlists`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       console.log('CACHE HIT (getMyPlaylists)');
@@ -751,9 +754,10 @@ const getMyPlaylists = async (req, res) => {
     }
     console.log('CACHE MISS (getMyPlaylists)');
 
-    const user = await User.findByPk(req.user.id, {
+    const user = await User.findByPk(userId, {
       include: [{ model: Playlist }]
     })
+
     const dataFormated = [];
     if (!user) return res.status(404).json({ message: 'Người dùng không tìm thấy', success: false });
     for (const playlist of user.Playlists) {
@@ -1102,49 +1106,76 @@ const findVideoIdForTrack = async (req, res) => {
     res.status(500).json({ message: error.message || 'Failed to find video ID for track' });
   }
 }
-// đang test
+
 const getTracks = async (req, res) => {
   try {
-    const tracks = await Track.findAll({
-      include: [
-        {
-          model: Artist,
-          as: "artists",
-          attributes: ["id", "name", "spotifyId", "imageUrl"],
-          through: { attributes: [] },
-        },
-        {
-          model: Album,
-          attributes: ["id", "name", "imageUrl", "spotifyId"],
-        },
-      ],
-      order: [["createdAt", "DESC"]],
-    });
+    const { queries } = req.body;
+    if (!queries || !Array.isArray(queries) || queries.length === 0) {
+      return res.status(400).json({ message: "queries parameter is required and should be a non-empty array", success: false });
+    }
 
-    // Transform data to match mobile app expectations
-    const transformedTracks = tracks.map((track) => ({
-      id: track.id,
-      title: track.name,
-      artist:
-        track.artists && track.artists.length > 0
-          ? track.artists[0].name
-          : "Unknown Artist",
-      album: track.Album ? track.Album.name : null,
-      duration: track.duration,
-      spotifyId: track.spotifyId,
-      videoId: track.videoId,
-      imageUrl: track.Album ? track.Album.imageUrl : null,
-    }));
+    const dataFormated = [];
+    for (const query of queries) {
+      const spotifyQueryString = query;
+      let spotifyData = [];
+      if (spotifyQueryString.length > 0) {
+        spotifyData = await callSpotify(() => spotify.searchTracks(spotifyQueryString, 'track', Number.parseInt(5) || null));
+      }
+      spotifyData.map(track => dataFormated.push(formatTrack(track, null, null, null)));
+    }
+
 
     return res.status(200).json({
-      message: "Get tracks successful",
-      data: transformedTracks,
-      success: true,
+      message: 'Get tracks successful',
+      data: dataFormated.slice(0, 30),
+      success: true
     });
   } catch (error) {
     res.status(500).json({ message: error.message || "Failed to get tracks" });
   }
-};
+}
+
+const getTracksForCover = async (req, res) => {
+  try {
+    const cacheKey = `tracks:for-cover`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getTracksForCover)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getTracksForCover)');
+
+    const dataFormated = [];
+    const tracks = await Track.findAll({
+      limit: 100,
+      order: [['playCount', 'DESC']]
+    });
+
+    for (let track of tracks) {
+      const spotifyId = track?.spotifyId;
+      const idTemp = track?.id || null;
+      track = await callSpotify(() => spotify.findTrackById(spotifyId));
+      if (idTemp) {
+        track.tempId = idTemp;
+        track.playCount = playCount;
+      }
+      const itemFormat = formatTrack(track, null, null, track?.videoId || null);
+      dataFormated.push(itemFormat);
+    }
+
+    const response = {
+      message: 'Get tracks for cover successful',
+      data: dataFormated,
+      success: true
+    };
+
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+    return res.status(200).json(response);
+  } catch (error) {
+    console.log(11)
+    res.status(500).json({ message: error.message || "Failed to get tracks for cover" });
+  }
+}
 
 const getTopTrackFromArtist = async (req, res) => {
   try {
@@ -1652,6 +1683,7 @@ module.exports = {
   getArtistsForYou,
   getMyPlaylists,
   getTracks,
+  getTracksForCover,
   getTopTrackFromArtist,
   getAlbumsFromArtist,
   getTracksFromArtist,

@@ -172,7 +172,7 @@ const CoverItem: React.FC<CoverItemProps> = ({
               uri: User?.avatarUrl || "https://via.placeholder.com/150",
             }}
             // Tăng kích thước avatar
-            className="w-12 h-12 rounded-full border-2 border-indigo-500"
+            className="w-12 h-12 rounded-full border-2 border-emerald-400"
           />
         </TouchableOpacity>
 
@@ -186,7 +186,7 @@ const CoverItem: React.FC<CoverItemProps> = ({
         </View>
 
         {/* Cover tag */}
-        <View className="ml-2 bg-indigo-500 px-3 py-1 rounded-full">
+        <View className="ml-2 bg-emerald-500 px-3 py-1 rounded-full">
           <Text className="text-white text-xs font-bold uppercase">Cover</Text>
         </View>
       </View>
@@ -195,9 +195,9 @@ const CoverItem: React.FC<CoverItemProps> = ({
       {OriginalSong && (
         <TouchableOpacity
           onPress={handleSongPress}
-          className="mb-3 p-2 border-l-4 border-indigo-500 bg-gray-100 dark:bg-gray-700 rounded-md" // Hiệu ứng nổi bật
+          className="mb-3 p-2 border-l-4 border-emerald-500 bg-gray-100 dark:bg-gray-700 rounded-md" // Hiệu ứng nổi bật
         >
-          <Text className="text-sm font-semibold text-indigo-700 dark:text-indigo-400">
+          <Text className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
             {OriginalSong.name} -{" "}
             {OriginalSong.artists?.map((artist) => artist.name).join(", ")}
           </Text>

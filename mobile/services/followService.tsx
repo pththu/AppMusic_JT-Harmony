@@ -1,4 +1,4 @@
-import axiosClient from "@/config/axiosClient";
+import axiosClient, { axiosPublicClient } from "@/config/axiosClient";
 
 export const ShareArtist = async (payload) => {
   try {
@@ -48,12 +48,94 @@ export const GetFollowersOfArtist = async (payload) => {
   }
 }
 
-export const GetArtistFollowed = async () => {
+export const GetArtistFollowed = async (userId) => {
   try {
-    const response = await axiosClient.get(`/follows/mine/followed-artists`);
+    const response = await axiosPublicClient.get(`/follows/${userId}/followed-artists`);
     return response.data;
   } catch (error) {
     console.log(error.message);
     throw error;
+  }
+}
+
+// =================== User Follow ===================
+export const FollowUser = async (followeeId) => {
+  try {
+    const response = await axiosClient.post(`/follows/follow-user/${followeeId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const UnfollowUser = async (followId) => {
+  try {
+    const response = await axiosClient.delete(`/follows/unfollow-user/${followId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+
+// người theo dõi user
+export const GetFollowerOfUser = async (userId) => {
+  try {
+    const response = await axiosPublicClient.get(`/follows/${userId}/followers`);
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GetUserFollowedByUser = async (userId) => {
+  try {
+    const response = await axiosPublicClient.get(`/follows/${userId}/followed-users`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GetUserProfileSocial = async (userId) => {
+  try {
+    const response = await axiosPublicClient.get(`/follows/${userId}/profile-social`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 }

@@ -18,6 +18,7 @@ import { albumData } from '@/constants/data';
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { AddTrackToPlaylist, AddTrackToPlaylistAfterConfirm, GetTracks } from '@/services/musicService';
 import { SearchTracks } from '@/services/searchService';
+import { useFavoritesStore } from '@/store/favoritesStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -57,12 +58,14 @@ const TrackItem = React.memo(({ item, isDarkMode, onAdd }: { item: any; isDarkMo
 
 const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
 
+  const colorScheme = useColorScheme();
+  const { success, error, confirm, info } = useCustomAlert();
+  const favoritesItems = useFavoritesStore((state) => state.favoriteItems);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
   const updateTotalTracksInCurrentPlaylist = usePlayerStore((state) => state.updateTotalTracksInCurrentPlaylist);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const addTrackToPlaylist = usePlayerStore((state) => state.addTrackToPlaylist);
-  const colorScheme = useColorScheme();
-  const { success, error, confirm, info } = useCustomAlert();
+
   const bgColor = colorScheme === 'dark' ? '#121212' : 'white';
   const textColor = colorScheme === 'dark' ? 'white' : 'black';
   const iconColor = colorScheme === 'dark' ? 'white' : 'black';
@@ -72,9 +75,9 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
     trackName: ["save me", "we are"],
     album: ["jack in the box", "golden"]
   }
-  const [recentData, setRecentData] = useState();
-  const [favoriteData, setFavoriteData] = useState();
-  const [recommendData, setRecommendData] = useState();
+  const [recentData, setRecentData] = useState([]);
+  const [favoriteData, setFavoriteData] = useState([]);
+  const [recommendData, setRecommendData] = useState([]);
   const [pageData, setPageData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -84,7 +87,6 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
 
   const handleAddTrack = async (track) => {
     console.log(`Đã thêm bài hát: ${track.name}`);
-    // console.log(track)
     try {
       const payload = {
         playlistId: currentPlaylist?.id,
@@ -93,7 +95,6 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
       }
 
       const response = await AddTrackToPlaylist(payload);
-      // console.log('response', response)
       if (response.success) {
         const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
           setStateFunc(prevData => {
@@ -165,37 +166,50 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
     );
   }, [searchQuery, pageData, isSearching]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(false);
-      try {
-        const promiseRecent = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
-        const promiseFavorite = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
-        const promiseRecommend = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
+  const fetchData = async () => {
+    console.log(9723573)
+    setIsLoading(true);
+    try {
+      const [responseRecent, responseRecommend] = await Promise.all([
+        GetTracks(query.trackName),
+        // GetTracks(query.artist),
+        GetTracks(query.album)
+      ]);
 
-        const [responseRecent, responseFavorite, responseRecommend] = await Promise.all([
-          promiseRecent,
-          promiseFavorite,
-          promiseRecommend
-        ]);
 
-        if (responseRecent.success) {
-          setRecentData(responseRecent.data);
-        }
-        if (responseFavorite.success) {
-          setFavoriteData(responseFavorite.data);
-        }
-        if (responseRecommend.success) {
-          setRecommendData(responseRecommend.data);
-        }
-      } catch (err) {
-        // console.log(err.message);
-        error('Lỗi', 'Có lỗi khi cập nhật dữ liệu');
-      } finally {
-        setIsLoading(false);
+      if (responseRecent.success) {
+        console.log('responseRecent.data', responseRecent.data);
+        setRecentData(responseRecent.data);
       }
-    };
+      if (responseRecommend.success) {
+        console.log('responseRecommend.data', responseRecommend.data)
+        setRecommendData(responseRecommend.data);
+      }
+    } catch (err) {
+      error('Lỗi', 'Có lỗi khi cập nhật dữ liệu: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchDataFavorite = async () => {
+    try {
+      if (favoritesItems.length > 0) {
+        for (const item of favoritesItems) {
+          if (item.itemType === 'track') {
+            const track = item.item;
+            setFavoriteData((prevData) => [...prevData, track]);
+          }
+        }
+      }
+    } catch (error) {
+      console.log('error fetch favorite data', error);
+    }
+  }
+
+  useEffect(() => {
     fetchData();
+    fetchDataFavorite();
   }, []);
 
   useEffect(() => {
@@ -307,39 +321,43 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
         {/* --- Phần chính: Slider (Nếu không tìm kiếm) hoặc Kết quả tìm kiếm --- */}
         {isSearching ? (
           renderSearchMode()
-        ) : isLoading ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#22c55e" />
-            <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải playlist...</Text>
-          </View>
         ) : (
           <>
-            <FlatList
-              ref={flatListRef}
-              data={pageData}
-              keyExtractor={(item, index) => item.title}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-              renderItem={renderSlide}
-              decelerationRate="fast"
-              snapToInterval={SCREEN_WIDTH}
-            />
-
-            <View className="flex-row justify-center py-3 absolute bottom-20 w-full">
-              {pageData?.map((_, index) => (
-                <View
-                  key={index}
-                  className="w-2 h-2 rounded-full mx-1"
-                  style={{
-                    backgroundColor: activeIndex === index ? iconColor : 'gray',
-                    opacity: activeIndex === index ? 1 : 0.5,
-                  }}
+            {isLoading ? (
+              <View className="flex-1 justify-center items-center">
+                <ActivityIndicator size="large" color="#22c55e" />
+                <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải playlist...</Text>
+              </View>
+            ) : (
+              <>
+                <FlatList
+                  ref={flatListRef}
+                  data={pageData}
+                  keyExtractor={(item, index) => item.title}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
+                  renderItem={renderSlide}
+                  decelerationRate="fast"
+                  snapToInterval={SCREEN_WIDTH}
                 />
-              ))}
-            </View>
+
+                <View className="flex-row justify-center py-3 absolute bottom-20 w-full">
+                  {pageData?.map((_, index) => (
+                    <View
+                      key={index}
+                      className="w-2 h-2 rounded-full mx-1"
+                      style={{
+                        backgroundColor: activeIndex === index ? iconColor : 'gray',
+                        opacity: activeIndex === index ? 1 : 0.5,
+                      }}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
           </>
         )}
       </View>

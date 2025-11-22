@@ -1,8 +1,8 @@
-import axiosClient from "@/config/axiosClient";
+import axiosClient, { axiosPublicClient } from "@/config/axiosClient";
 
-export const GetFavoriteItemsGrouped = async () => {
+export const GetFavoriteItemsGrouped = async (userId) => {
   try {
-    const response = await axiosClient.get(`/favorites/grouped/items`);
+    const response = await axiosPublicClient.get(`/favorites/grouped/items/${userId}`);
     return response.data;
   } catch (error) {
     console.log(error);

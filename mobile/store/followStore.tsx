@@ -2,15 +2,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-interface ArtistState {
+interface FollowState {
   currentArtist: any | null;
   isFollowing: boolean;
   popularTracks: any[];
   albums: any[];
   followers: any[];
   artistFollowed: any[];
+  userFollowed: any[];
 
   setArtistFollowed: (artists: any[]) => void;
+  setUserFollowed: (users: any[]) => void;
   setIsFollowing: (following: boolean) => void;
   setCurrentArtist: (artist: any) => void;
   setPopularTracks: (tracks: any[]) => void;
@@ -21,10 +23,10 @@ interface ArtistState {
   toggleFollow: (boolean) => void;
   addFollower: (follower: any) => void;
   removeFollower: (followId: any) => void;
-  clearArtistStore: () => void;
+  clearFollowStore: () => void;
 }
 
-export const useArtistStore = create<ArtistState>()(
+export const useFollowStore = create<FollowState>()(
   persist(
     (set, get) => ({
       currentArtist: null,
@@ -33,7 +35,9 @@ export const useArtistStore = create<ArtistState>()(
       albums: [],
       artistFollowed: [],
       followers: [],
+      userFollowed: [],
 
+      setUserFollowed: (users) => set({ userFollowed: users }),
       setArtistFollowed: (artists) => set({ artistFollowed: artists }),
       addArtistFollowed: (artist) => {
         set((state) => ({
@@ -57,7 +61,7 @@ export const useArtistStore = create<ArtistState>()(
       removeFollower: (followId) => set((state) => ({
         followers: state.followers.filter(f => f.id !== followId),
       })),
-      clearArtistStore: () => set({
+      clearFollowStore: () => set({
         currentArtist: null,
         isFollowing: false,
         popularTracks: [],
@@ -67,12 +71,10 @@ export const useArtistStore = create<ArtistState>()(
       }),
     }),
     {
-      name: 'artist-storage',
+      name: 'follow-storage',
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
-        if (state) {
-          // Perform any necessary actions after rehydrating the state
-        }
+        console.log("Follow store rehydrated");
       }
     }
   )

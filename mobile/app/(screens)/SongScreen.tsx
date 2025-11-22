@@ -582,7 +582,7 @@ export default function SongScreen() {
               </View>
             ))
         }
-        <LyricsSection />
+        {/* <LyricsSection /> */}
       </View>
       <ArtistsSection artists={currentTrack.artists} onPress={() => { }} />
       {sharePostModalVisible && (

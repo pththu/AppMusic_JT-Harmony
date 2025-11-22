@@ -948,7 +948,7 @@ const SocialScreen = () => {
               <TouchableOpacity
                 onPress={() => setActiveTab("posts")}
                 className={`px-3 py-1 rounded-l-lg ${activeTab === "posts"
-                  ? "bg-indigo-500"
+                  ? "bg-emerald-700"
                   : "bg-gray-200 dark:bg-gray-700"
                   }`}
               >
@@ -964,7 +964,7 @@ const SocialScreen = () => {
               <TouchableOpacity
                 onPress={() => setActiveTab("covers")}
                 className={`px-3 py-1 rounded-r-lg ${activeTab === "covers"
-                  ? "bg-indigo-500"
+                  ? "bg-emerald-700"
                   : "bg-gray-200 dark:bg-gray-700"
                   }`}
               >

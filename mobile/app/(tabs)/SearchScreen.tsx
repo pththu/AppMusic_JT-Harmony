@@ -35,7 +35,7 @@ import {
 } from "@/services/searchService";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { usePlayerStore } from "@/store/playerStore";
-import { useArtistStore } from "@/store/artistStore";
+import { useFollowStore } from "@/store/followStore";
 import useAuthStore from "@/store/authStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { ClearSearchHistory, RemoveItemSearchHistory, SaveToListeningHistory } from "@/services/historiesService";
@@ -101,7 +101,7 @@ export default function SearchScreen() {
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
-  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);

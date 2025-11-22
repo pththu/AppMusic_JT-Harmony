@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useTheme } from '@/components/ThemeContext';
-import { useArtistStore } from "@/store/artistStore";
+import { useFollowStore } from "@/store/followStore";
 import { useNavigate } from "@/hooks/useNavigate";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { UnfollowArtist } from "@/services/followService";
@@ -81,9 +81,9 @@ export default function ArtistsFollowingScreen() {
   const { theme } = useTheme();
   const { error } = useCustomAlert();
 
-  const artistFollowed = useArtistStore((state) => state.artistFollowed);
-  const removeArtistFollowed = useArtistStore((state) => state.removeArtistFollowed);
-  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const artistFollowed = useFollowStore((state) => state.artistFollowed);
+  const removeArtistFollowed = useFollowStore((state) => state.removeArtistFollowed);
+  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
 
   const [isLoading, setIsLoading] = useState(false);
   const [searchText, setSearchText] = useState('');

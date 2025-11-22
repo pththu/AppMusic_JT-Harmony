@@ -62,11 +62,11 @@ export default function UsersModal({
                   Chọn người dùng
                 </Text>
                 <TouchableOpacity onPress={onOpenRestrictedModal} className="p-2">
-                  <Icon
+                  {/* <Icon
                     name="user-x"
                     size={24}
                     color={colorScheme === "dark" ? "white" : "black"}
-                  />
+                  /> */}
                 </TouchableOpacity>
               </View>
 
