@@ -18,7 +18,7 @@ import ArtistItem from "@/components/artists/ArtistItem";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { GetCategoryContent } from "@/services/searchService";
 import { usePlayerStore } from "@/store/playerStore";
-import { useArtistStore } from "@/store/artistStore";
+import { useFollowStore } from "@/store/followStore";
 import { useHistoriesStore } from "@/store/historiesStore";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
@@ -94,7 +94,7 @@ export default function CategoryScreen() {
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
-  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);

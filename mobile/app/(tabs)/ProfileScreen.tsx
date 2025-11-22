@@ -28,7 +28,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { useHistoriesStore } from "@/store/historiesStore";
-import { useArtistStore } from "@/store/artistStore";
+import { useFollowStore } from "@/store/followStore";
 import { useBoardingStore } from "@/store/boardingStore";
 
 export default function ProfileScreen() {
@@ -49,7 +49,7 @@ export default function ProfileScreen() {
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites);
   const clearListenHistory = useHistoriesStore((state) => state.clearListenHistory);
   const clearSearchHistory = useHistoriesStore((state) => state.clearSearchHistory);
-  const clearArtistStore = useArtistStore((state) => state.clearArtistStore);
+  const clearFollowStore = useFollowStore((state) => state.clearFollowStore);
   const clearBoardingStore = useBoardingStore((state) => state.clearBoardingStore);
   const logout = useAuthStore((state) => state.logout);
 
@@ -132,7 +132,7 @@ export default function ProfileScreen() {
       logout();
       clearPlayerStore();
       clearFavorites();
-      clearArtistStore();
+      clearFollowStore();
       clearSearchHistory();
       clearListenHistory();
       clearBoardingStore();

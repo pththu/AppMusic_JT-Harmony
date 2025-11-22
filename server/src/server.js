@@ -98,20 +98,26 @@ app.use(
 
 // --- KHAI BÁO ROUTES Ở PHẠM VI TOÀN CỤC ---
 const protectedRoutes = [
-  'favorites', // Yêu thích
-  'histories', // Lịch sử nghe nhạc
   'notifications', // Thông báo
-  'playlists', // Playlist cá nhân
-  'follows', // Theo dõi người dùng, nghệ sĩ
   'genres', // Xem thể loại nhạc
   'artists', // Xem thông tin nghệ sĩ
   'albums', // Xem album
   "conversations",
   "upload", // Upload hình ảnh, file
   "tracks", // Xem bài hát (public), upload bài hát (private)
-  "recommendations"
 ];
-const publicRoutes = ["auth", "users", "posts", "music", "comments"]; // posts được xử lý riêng
+const publicRoutes = [
+  "auth",
+  "users",
+  "posts",
+  'follows', // Theo dõi người dùng, nghệ sĩ
+  "music",
+  "comments",
+  'favorites', // Yêu thích
+  'histories', // Lịch sử nghe nhạc
+  'playlists', // Playlist cá nhân
+  "recommendations",
+];
 
 // 1. Xử lý các route yêu cầu authentication bắt buộc
 publicRoutes.forEach((route) => {

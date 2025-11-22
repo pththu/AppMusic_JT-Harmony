@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { GetArtistsForYou } from '@/services/musicService';
 import { FollowArtist } from '@/services/followService';
 import { useNavigate } from '@/hooks/useNavigate';
-import { useArtistStore } from '@/store/artistStore';
+import { useFollowStore } from '@/store/followStore';
 import useAuthStore from '@/store/authStore';
 import { UpdateCompletedOnboarding } from '@/routes/ApiRouter';
 import { artistData } from '@/constants/data';
@@ -15,7 +15,7 @@ export default function ArtistScreen() {
   const router = useRouter();
   const { navigate } = useNavigate();
   const user = useAuthStore(state => state.user);
-  const addArtistFollowed = useArtistStore(state => state.addArtistFollowed);
+  const addArtistFollowed = useFollowStore(state => state.addArtistFollowed);
   const updateUser = useAuthStore(state => state.updateUser);
   const [selected, setSelected] = useState<string[]>([]);
   const artistNames = ["BTS", "buitruonglinh", "Hoàng Dũng", "Taylor Swift", "Sơn Tùng M-TP", "Đen Vâu", "Justin Bieber", "Mono", "Charlie Puth", "HIEUTHUHAI", "Chillies", "Binz"];

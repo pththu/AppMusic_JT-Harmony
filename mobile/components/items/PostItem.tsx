@@ -373,7 +373,7 @@ const PostItem: React.FC<PostItemProps> = ({
                 >
                     <Image
                         source={{ uri: User?.avatarUrl || 'https://via.placeholder.com/150' }}
-                        className="w-10 h-10 rounded-full border-2 border-indigo-400"
+                        className="w-10 h-10 rounded-full border-2 border-emerald-400"
                     />
                 </TouchableOpacity>
 

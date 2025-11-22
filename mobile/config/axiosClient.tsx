@@ -35,4 +35,12 @@ axios.interceptors.response.use(function onFulfilled(response) {
   return Promise.reject(error);
 });
 
+const axiosPublicClient = axios.create({
+  baseURL: ENV.API_URL,
+  headers: {
+    'Content-Type': 'application/json;  charset=UTF-8'
+  },
+});
+
+export { axiosPublicClient };
 export default axiosClient;

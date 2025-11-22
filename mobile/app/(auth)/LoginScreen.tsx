@@ -3,11 +3,19 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
 import { Login } from "@/routes/ApiRouter";
 import useAuthStore from "@/store/authStore";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "react-native";
 import { useBoardingStore } from "@/store/boardingStore";
+import { GetListeningHistory, GetSearchHistory } from "@/services/historiesService";
+import { GetFavoriteItemsGrouped } from "@/services/favoritesService";
+import { GetArtistFollowed } from "@/services/followService";
+import { GetMyPlaylists } from "@/services/musicService";
+import { useHistoriesStore } from "@/store/historiesStore";
+import { useFavoritesStore } from "@/store/favoritesStore";
+import { usePlayerStore } from "@/store/playerStore";
+import { useFollowStore } from "@/store/followStore";
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
@@ -15,6 +23,11 @@ export default function LoginScreen() {
   const { success, error } = useCustomAlert();
   const { login } = useAuthStore();
   const setWhenLogin = useBoardingStore(state => state.setWhenLogin);
+  const setListenHistory = useHistoriesStore((state) => state.setListenHistory);
+  const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
+  const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
+  const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
+  const setArtistFollowed = useFollowStore((state) => state.setArtistFollowed);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,6 +62,58 @@ export default function LoginScreen() {
     return null;
   };
 
+  const fetchHistory = useCallback(async (userId) => {
+    const [responseListen, responseSearch] = await Promise.all([
+      GetListeningHistory(userId),
+      GetSearchHistory(userId)
+    ]);
+    if (responseSearch.success) {
+      setSearchHistory(responseSearch.data);
+    } else {
+      setSearchHistory([]);
+    }
+    if (responseListen.success) {
+      setListenHistory(responseListen.data);
+    } else {
+      setListenHistory([]);
+    }
+  }, []);
+
+  const fetchFavoritesItem = useCallback(async (userId) => {
+    try {
+      const response = await GetFavoriteItemsGrouped(userId);
+      if (response.success) {
+        setFavoriteItems(response.data);
+      }
+    } catch (error) {
+      console.log('errorr fetch favorites: ', error);
+    }
+  }, []);
+
+  const fetchArtistFollowed = useCallback(async (userId) => {
+    try {
+      const response = await GetArtistFollowed(userId);
+      if (response.success) {
+        setArtistFollowed(response.data);
+      }
+    } catch (error) {
+      console.log('error fetch follow artist', error);
+    }
+  }, []);
+
+  const fetchMyPlaylists = useCallback(async (userId) => {
+    try {
+      const response = await GetMyPlaylists(userId);
+      if (response.success) {
+        setMyPlaylists(response.data);
+      } else {
+        setMyPlaylists([]);
+      }
+    } catch (error) {
+      console.log("Lỗi khi lấy playlist của tôi:", error);
+    }
+  }, []);
+
   const handleLogin = async () => {
     const validationMessage = validateForm();
     if (validationMessage) {
@@ -62,8 +127,15 @@ export default function LoginScreen() {
         error("Lỗi Đăng Nhập", response.message || "Đăng nhập thất bại.");
         return;
       }
-      login(response.user, 'local', response.user?.accessToken);
+      const userId = response.user.id;
+      await Promise.all([
+        fetchHistory(userId),
+        fetchFavoritesItem(userId),
+        fetchArtistFollowed(userId),
+        fetchMyPlaylists(userId)
+      ])
       setWhenLogin();
+      login(response.user, 'local', response.user?.accessToken);
       success("Thành Công", "Đăng nhập thành công!");
       // navigate("Main");
     } catch (err) {

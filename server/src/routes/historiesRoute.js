@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const historyController = require('../controllers/historiesController');
+const { authenticateToken } = require('../middlewares/authentication');
+
+router.get('/search/user/:userId', historyController.GetSearchHistoriesByUserId);
+router.get('/listening/user/:userId', historyController.GetListeningHistoriesByUserId);
 
 // Listening History routes
 router.get('/listening-all', historyController.GetAllListeningHistories);
 router.get('/listening/:id', historyController.GetListeningHistoryByPk);
-router.get('/listening/user/me', historyController.GetListeningHistoriesByUserId);
-router.post('/listening', historyController.CreateOneListeningHistory);
-
+router.post('/listening', authenticateToken, historyController.CreateOneListeningHistory);
 
 // Search History routes
 router.get('/search-all', historyController.GetAllSearchHistories);
 router.get('/search/:id', historyController.GetSearchHistoryByPk);
-router.get('/search/user/me', historyController.GetSearchHistoriesByUserId);
-router.post('/search', historyController.CreateOneSearchHistory);
-router.delete('/search/:id', historyController.DeleteSearchHistoryByPk);
-router.delete('/search/user/me', historyController.DeleteAllSearchHistoriesByUserId);
+router.post('/search', authenticateToken, historyController.CreateOneSearchHistory);
+router.delete('/search/:id', authenticateToken, historyController.DeleteSearchHistoryByPk);
+router.delete('/search/user/me', authenticateToken, historyController.DeleteAllSearchHistoriesByUserId);
 
 module.exports = router;

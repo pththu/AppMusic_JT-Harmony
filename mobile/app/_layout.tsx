@@ -18,12 +18,13 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import MiniPlayer from "@/components/player/MiniPlayer";
 import GlobalPlayer from "@/components/player/GlobalPlayer";
 import { usePlayerStore } from "@/store/playerStore";
-import { useArtistStore } from "@/store/artistStore";
+import { useFollowStore } from "@/store/followStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { useHistoriesStore } from "@/store/historiesStore";
 
 import { useGuestTriggers } from "@/hooks/useGuestTriggers";
 import LoginWall from "@/components/guest/LoginWall";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -33,13 +34,13 @@ export default function RootLayout() {
 
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
-  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
   const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
-  const setArtistFollowed = useArtistStore((state) => state.setArtistFollowed);
+  const setArtistFollowed = useFollowStore((state) => state.setArtistFollowed);
   const setListenHistory = useHistoriesStore((state) => state.setListenHistory);
   const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
   const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
@@ -78,6 +79,10 @@ export default function RootLayout() {
   //   setArtistFollowed([]);
   //   setListenHistory([]);
   //   setSearchHistory([]);
+  //   const logout = async () => {
+  //     await GoogleSignin.signOut();
+  //   }
+  //   logout();
   // }, []);
 
   useGuestTriggers();

@@ -68,34 +68,45 @@ const spotifyApiRequest = async (endpoint, params = {}) => {
 };
 
 const findTrackById = async (trackId) => {
-  const data = await spotifyApiRequest(`/tracks/${trackId}`);
-  
-  if (isBadWordFound(data?.name)) {
-    return null;
+  try {
+    const data = await spotifyApiRequest(`/tracks/${trackId}`);
+    if (isBadWordFound(data?.name)) return null;
+    return data;
+  } catch (error) {
+    console.log('error find track', error)
+    throw error;
   }
-  return data;
 };
 
 const findArtistById = async (artistId) => {
-  const data = await spotifyApiRequest(`/artists/${artistId}`);
-  if (isBadWordFound(data?.name)) {
-    return null;
+  try {
+    const data = await spotifyApiRequest(`/artists/${artistId}`);
+    if (isBadWordFound(data?.name)) return null;
+    return data;
+  } catch (error) {
+    console.log('error find artist')
+    throw error;
   }
-  return data;
 };
 const findAlbumById = async (albumId) => {
-  const data = await spotifyApiRequest(`/albums/${albumId}`);
-  if (isBadWordFound(data?.name)) {
-    return null;
+  try {
+    const data = await spotifyApiRequest(`/albums/${albumId}`);
+    if (isBadWordFound(data?.name)) return null;
+    return data;
+  } catch (error) {
+    console.log('error find album')
+    throw error;
   }
-  return data;
 };
 const findPlaylistById = async (playlistId) => {
-  const data = await spotifyApiRequest(`/playlists/${playlistId}`);
-  if (isBadWordFound(data?.name) || isBadWordFound(data?.description)) {
-    return null;
+  try {
+    const data = await spotifyApiRequest(`/playlists/${playlistId}`);
+    if (isBadWordFound(data?.name) || isBadWordFound(data?.description)) return null;
+    return data;
+  } catch (error) {
+    console.log('error find playlist', error)
+    throw error;
   }
-  return data;
 };
 
 const searchTracks = async (query, type, limit = null) => {

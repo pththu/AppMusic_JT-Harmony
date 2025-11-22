@@ -1,5 +1,4 @@
 import axiosClient from "@/config/axiosClient";
-import { hi } from "date-fns/locale";
 
 export const GetRecommendationsByUser = async () => {
   try {
@@ -84,6 +83,7 @@ export const GenerateFromHistories = async (payload) => {
 export const GenerateFromFollowedArtists = async (payload) => {
   try {
     const response = await axiosClient.post('/recommendations/generate-from-followed-artists', { followedArtists: payload });
+    console.log(response.data)
     return response.data;
   } catch (error) {
     if (error.response) {

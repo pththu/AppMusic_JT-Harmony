@@ -155,6 +155,7 @@ exports.login = async (req, res) => {
 exports.loginWithGoogle = async (req, res) => {
   try {
     const userInfor = req.body;
+    console.log(req.body)
     const existingUser = await User.findOne({ where: { email: userInfor?.email } });
     if (existingUser) {
       if (existingUser.status === 'locked' || existingUser.status === 'banned') {

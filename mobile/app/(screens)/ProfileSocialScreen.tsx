@@ -6,10 +6,11 @@ import {
   Image,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
   useColorScheme,
   RefreshControl,
+  TouchableOpacity,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
@@ -32,35 +33,42 @@ import { fetchCoversByUserId, Cover } from "../../services/coverService";
 import useAuthStore from "@/store/authStore";
 import PostItem from "../../components/items/PostItem";
 import CoverItem from "../../components/items/CoverItem";
-import { useNavigate } from "@/hooks/useNavigate";
 import CommentModal from "../../components/modals/CommentModal";
 import FollowListModal from "../../components/modals/FollowListModal";
 import LikeModal from "../../components/modals/LikeModal";
 import CustomButton from "@/components/custom/CustomButton";
 import { createOrGetPrivateConversation } from "../../services/chatApi";
+import { useNavigate } from "@/hooks/useNavigate";
+import { useFollowStore } from "@/store/followStore";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { FollowUser, GetUserProfileSocial, UnfollowUser } from "@/services/followService";
+import { useLocalSearchParams } from "expo-router";
+import { set } from "date-fns";
 
 // Định nghĩa kiểu cho Route Params
-type RootStackParamList = {
-  ProfileSocial: { userId: number };
-};
-type ProfileSocialRouteProp = RouteProp<RootStackParamList, "ProfileSocial">;
+
 
 export default function ProfileSocialScreen() {
+  const params = useLocalSearchParams();
+  const userId = params.userId ? JSON.parse(params.userId as string) : "";
+  const { navigate, goBack } = useNavigate();
+  const { success, error, info, confirm } = useCustomAlert();
+
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
-  const route = useRoute<ProfileSocialRouteProp>();
-  const { userId } = route.params;
 
   const currentUser = useAuthStore((state) => state.user);
-  // console.log("Current User in ProfileSocialScreen:", currentUser);
+  const isFollowing = useFollowStore((state) => state.isFollowing);
+  const userFollowed = useFollowStore((state) => state.userFollowed);
+  const setIsFollowing = useFollowStore((state) => state.setIsFollowing);
+  const setUserFollowed = useFollowStore((state) => state.setUserFollowed);
   const currentUserId = currentUser?.id;
-  const { navigate, goBack } = useNavigate();
 
   // STATE CHÍNH
-  const [profile, setProfile] = useState<ProfileSocial | null>(null); // Thông tin profile
+  const [profile, setProfile] = useState(null); // Thông tin profile
   const [posts, setPosts] = useState<PostType[]>([]); // Danh sách bài đăng
   const [covers, setCovers] = useState<Cover[]>([]); // Danh sách covers
-  const [loading, setLoading] = useState(true); // Loading chính
+  const [loading, setLoading] = useState(false); // Loading chính
   const [activeTab, setActiveTab] = useState<"posts" | "covers">("posts"); // Tab active
 
   // STATES CHO COMMENT MODAL
@@ -75,15 +83,11 @@ export default function ProfileSocialScreen() {
 
   // STATES CHO FOLLOW MODAL
   const [followModalVisible, setFollowModalVisible] = useState(false); // Hiển thị modal follow
-  const [followListType, setFollowListType] = useState<
-    "followers" | "following"
-  >("followers"); // Loại danh sách hiển thị
+  const [followListType, setFollowListType] = useState<"followers" | "following">("followers"); // Loại danh sách hiển thị
 
   // STATES CHO LIKE MODAL
   const [likeModalVisible, setLikeModalVisible] = useState(false); // Hiển thị modal like
-  const [selectedPostIdForLikes, setSelectedPostIdForLikes] = useState<
-    string | null
-  >(null); // Post ID đang xem danh sách like
+  const [selectedPostIdForLikes, setSelectedPostIdForLikes] = useState<string | null>(null); // Post ID đang xem danh sách like
 
   // STATES CHO EDIT MODAL
   const [editModalVisible, setEditModalVisible] = useState(false); // Hiển thị modal edit
@@ -98,19 +102,20 @@ export default function ProfileSocialScreen() {
   // Hàm tải dữ liệu profile và bài đăng
   const loadData = useCallback(async () => {
     if (!userId) {
-      Alert.alert("Lỗi", "Không tìm thấy ID người dùng.");
+      error("Lỗi", "Không tìm thấy ID người dùng.");
       goBack();
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Tải Profile Social
-      const profileResponse = await fetchUserProfileSocial(userId);
-      if ("message" in profileResponse) {
-        throw new Error(String(profileResponse.message));
+      const profileResponse = await GetUserProfileSocial(userId);
+      console.log(profileResponse)
+      if (!profileResponse.success) {
+        error("Lỗi", profileResponse.message || "Không thể tải thông tin profile.");
       }
-      setProfile(profileResponse);
+
+      setProfile(profileResponse.data);
 
       // 2. Tải Bài đăng
       const postResponse = await fetchPostsByUserId(userId);
@@ -124,9 +129,17 @@ export default function ProfileSocialScreen() {
       // 3. Tải Covers riêng biệt
       const coversResponse = await fetchCoversByUserId(userId);
       setCovers(coversResponse);
-    } catch (error) {
-      console.error("Lỗi tải Profile Social:", error);
-      Alert.alert("Lỗi", "Không thể tải thông tin profile. Vui lòng thử lại.");
+
+      // 4. Kt theo dõi
+      for (const followedUser of userFollowed) {
+        if (followedUser.id === userId) {
+          setIsFollowing(true);
+          break;
+        }
+      }
+    } catch (err) {
+      console.error("Lỗi tải Profile Social:", err);
+      error("Lỗi", "Không thể tải thông tin profile. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -134,6 +147,7 @@ export default function ProfileSocialScreen() {
 
   useEffect(() => {
     loadData();
+
   }, [loadData]);
 
   // Hàm xử lý mở Chat
@@ -143,7 +157,7 @@ export default function ProfileSocialScreen() {
       // 1. Gọi API để tạo/lấy Conversation ID
       const result = await createOrGetPrivateConversation(userId);
       if ("status" in result && result.status === "error") {
-        Alert.alert("Lỗi", result.message);
+        error("Lỗi", result.message);
         return;
       }
       const { conversationId } = result as { conversationId: number };
@@ -158,10 +172,11 @@ export default function ProfileSocialScreen() {
           avatarUrl: profile.avatarUrl,
         },
       });
-    } catch (error) {
-      console.error("Lỗi khi mở chat:", error);
+    } catch (err) {
+      console.error("Lỗi khi mở chat:", err);
+      error("Lỗi", "Không thể mở chat. Vui lòng thử lại.");
     }
-  }, [userId, profile, navigation]);
+  }, [userId, profile, navigate]);
 
   // HÀM XỬ LÝ KHI NHẤN VÀO USER
   const handleUserPress = useCallback(
@@ -247,36 +262,56 @@ export default function ProfileSocialScreen() {
       // Cập nhật state với bài viết đã chỉnh sửa
       updatePostState(editingPost.id, "content", editContent);
       handleCloseEditModal();
-      Alert.alert("Thành công", "Bài viết đã được cập nhật.");
-    } catch (error) {
-      console.error("Lỗi khi cập nhật bài viết:", error);
-      Alert.alert("Lỗi", "Không thể cập nhật bài viết.");
+      success("Thành công", "Bài viết đã được cập nhật.");
+    } catch (err) {
+      console.error("Lỗi khi cập nhật bài viết:", err);
+      error("Lỗi", "Không thể cập nhật bài viết.");
     }
   }, [editingPost, editContent, updatePost]);
 
   // HÀM XỬ LÝ XÓA POST
   const handleDeletePress = useCallback(async (postId: string) => {
-    Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa bài viết này?", [
-      { text: "Hủy", style: "cancel" },
-      {
-        text: "Xóa",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const result = await deletePost(postId);
-            if ("message" in result) {
-              throw new Error(result.message);
-            }
-            // Xóa khỏi state local
-            setPosts((prev) => prev.filter((p) => p.id !== postId));
-            Alert.alert("Thành công", "Bài viết đã được xóa.");
-          } catch (error) {
-            console.error("Lỗi khi xóa bài viết:", error);
-            Alert.alert("Lỗi", "Không thể xóa bài viết.");
+    // Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa bài viết này?", [
+    //   { text: "Hủy", style: "cancel" },
+    //   {
+    //     text: "Xóa",
+    //     style: "destructive",
+    //     onPress: async () => {
+    //       try {
+    //         const result = await deletePost(postId);
+    //         if ("message" in result) {
+    //           throw new Error(result.message);
+    //         }
+    //         // Xóa khỏi state local
+    //         setPosts((prev) => prev.filter((p) => p.id !== postId));
+    //         Alert.alert("Thành công", "Bài viết đã được xóa.");
+    //       } catch (error) {
+    //         console.error("Lỗi khi xóa bài viết:", error);
+    //         Alert.alert("Lỗi", "Không thể xóa bài viết.");
+    //       }
+    //     },
+    //   },
+    // ]);
+    confirm(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa bài viết này?",
+      async () => {
+        try {
+          const result = await deletePost(postId);
+          if ("message" in result) {
+            throw new Error(result.message);
           }
-        },
+          // Xóa khỏi state local
+          setPosts((prev) => prev.filter((p) => p.id !== postId));
+          // Alert.alert("Thành công", "Bài viết đã được xóa.");
+          success("Thành công", "Bài viết đã được xóa.");
+        } catch (error) {
+          console.error("Lỗi khi xóa bài viết:", error);
+          // Alert.alert("Lỗi", "Không thể xóa bài viết.");
+          error("Lỗi", "Không thể xóa bài viết.");
+        }
       },
-    ]);
+    );
   }, []);
 
   // HÀM XỬ LÝ REFRESH
@@ -303,7 +338,8 @@ export default function ProfileSocialScreen() {
       setComments(fetchedComments);
     } catch (error) {
       console.error("Lỗi khi tải bình luận:", error);
-      Alert.alert("Lỗi", "Không thể tải bình luận.");
+      // Alert.alert("Lỗi", "Không thể tải bình luận.");
+      error("Lỗi", "Không thể tải bình luận.");
     }
   };
 
@@ -339,7 +375,8 @@ export default function ProfileSocialScreen() {
       );
     } catch (error) {
       console.error("Lỗi khi thêm bình luận:", error);
-      Alert.alert("Lỗi", "Không thể thêm bình luận.");
+      // Alert.alert("Lỗi", "Không thể thêm bình luận.");
+      error("Lỗi", "Không thể thêm bình luận.");
     }
   };
 
@@ -364,10 +401,10 @@ export default function ProfileSocialScreen() {
               comment.Replies = comment.Replies.map((reply) =>
                 reply.id === replyId
                   ? {
-                      ...reply,
-                      isLiked: result.isLiked,
-                      likeCount: result.likeCount,
-                    }
+                    ...reply,
+                    isLiked: result.isLiked,
+                    likeCount: result.likeCount,
+                  }
                   : reply
               );
             }
@@ -376,17 +413,17 @@ export default function ProfileSocialScreen() {
             // Cập nhật comment
             return comment.id === commentId
               ? {
-                  ...comment,
-                  isLiked: result.isLiked,
-                  likeCount: result.likeCount,
-                }
+                ...comment,
+                isLiked: result.isLiked,
+                likeCount: result.likeCount,
+              }
               : comment;
           }
         })
       );
-    } catch (error) {
-      console.error("Lỗi khi like bình luận:", error);
-      Alert.alert("Lỗi", "Không thể cập nhật trạng thái like.");
+    } catch (err) {
+      console.error("Lỗi khi like bình luận:", err);
+      error("Lỗi", "Không thể cập nhật trạng thái like.");
     }
   };
 
@@ -399,32 +436,33 @@ export default function ProfileSocialScreen() {
 
     setIsFollowingPending(true);
     try {
-      // Gọi API
-      const result = await toggleFollow(profile.id);
-      if ("message" in result) {
-        throw new Error(String(result.message));
-      }
-      const { isFollowing: newIsFollowing } = result;
-
-      // CẬP NHẬT TRẠNG THÁI PROFILE (FOLLOW COUNT & isFollowing)
-      setProfile((prev) => {
-        if (!prev) return null;
-
-        let newFollowerCount = prev.followerCount;
-        if (newIsFollowing) {
-          // Nếu đang Follow: tăng Follower Count
-          newFollowerCount += 1;
-        } else {
-          // Nếu Unfollow: giảm Follower Count (tối thiểu là 0)
-          newFollowerCount = Math.max(0, newFollowerCount - 1);
+      if (!isFollowing) {
+        console.log('follow')
+        const response = await FollowUser(profile.id);
+        console.log(response)
+        if (!response.success) {
+          throw new Error(response.message || "Lỗi khi theo dõi người dùng.");
         }
 
-        return {
-          ...prev,
-          isFollowing: newIsFollowing,
-          followerCount: newFollowerCount,
-        };
-      });
+        setIsFollowing(true);
+        setUserFollowed([...userFollowed, response.data]);
+        setProfile((prev) => ({ ...prev, followerCount: prev.followerCount + 1 }));
+      } else {
+        // GỌI API UNFOLLOW
+        console.log('un')
+        for (const followedUser of userFollowed) {
+          if (followedUser.followeeId === profile.id) {
+            const response = await UnfollowUser(followedUser.id);
+            if (!response.success) {
+              throw new Error(response.message || "Lỗi khi hủy theo dõi người dùng.");
+            }
+            setUserFollowed(userFollowed.filter(followedUser => followedUser.followeeId !== profile.id));
+            setProfile((prev) => ({ ...prev, followerCount: prev.followerCount - 1 }));
+            setIsFollowing(false);
+          }
+        }
+      }
+
     } catch (error) {
       console.error("Lỗi toggle follow:", error);
     } finally {
@@ -444,10 +482,8 @@ export default function ProfileSocialScreen() {
 
   const handleCloseFollowModal = () => {
     setFollowModalVisible(false);
-    // setFollowListType('followers');
   };
 
-  // Render Header Profile
   const renderProfileHeader = () => {
     if (!profile) return null;
 
@@ -464,7 +500,7 @@ export default function ProfileSocialScreen() {
               source={{
                 uri: profile.avatarUrl || "https://via.placeholder.com/150",
               }}
-              className="w-24 h-24 rounded-full mr-4 bg-gray-300 border-4  border-indigo-400 dark:border-[#0E0C1F]"
+              className="w-24 h-24 rounded-full mr-4 bg-gray-300 border-2  border-emerald-400 dark:border-[#0E0C1F]"
             />
 
             <View className="flex-1 justify-start pt-2">
@@ -495,52 +531,44 @@ export default function ProfileSocialScreen() {
         {/* KHỐI NÚT HÀNH ĐỘNG: Theo dõi & Nhắn tin/Chỉnh sửa  */}
         <View className="px-4 pb-4">
           {profile.id !== currentUserId ? (
-            // Nút dành cho người dùng khác
             <View className="flex-row w-full">
-              {/* Nút Follow/Unfollow */}
               <View className="flex-1">
                 <CustomButton
-                  onPress={handleToggleFollow}
-                  title={profile.isFollowing ? "Đang Theo Dõi" : "Theo Dõi"}
-                  variant={profile.isFollowing ? "outline" : "primary"}
-                  size="medium"
-                  className="w-full"
+                  title={isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+                  onPress={() => handleToggleFollow()}
+                  iconName={isFollowing ? 'checkmark' : 'add'}
                 />
               </View>
 
               {/* Nút Message/Chat */}
               <View style={{ width: "40%" }}>
-                <CustomButton
-                  onPress={handleChatPress}
-                  title="Nhắn tin"
-                  variant="primary"
-                  size="medium"
-                  className="w-full"
-                  // iconName="send"
-                />
+                <TouchableOpacity onPress={handleChatPress}
+                  className="border border-green-600 rounded-full py-2 px-4 items-center ml-3 active:opacity-70"
+                >
+                  <Text className="text-green-600 font-bold text-lg text-center">
+                    Nhắn tin
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           ) : (
-            <View className="flex-row w-full">
+            <View className="flex-row w-full gap-4">
               <View className="flex-1">
-                <CustomButton
-                  onPress={() => navigate("EditProfile")}
-                  title="Chỉnh sửa hồ sơ"
-                  variant="primary"
-                  size="medium"
-                  className="w-full"
-                />
+                <TouchableOpacity onPress={() => navigate("EditProfile")}
+                  className="border border-green-600 rounded-full py-2 px-4 items-center active:opacity-70"
+                >
+                  <Text className="text-green-600 font-bold text-lg text-center">
+                    Chỉnh sửa hồ sơ
+                  </Text>
+                </TouchableOpacity>
               </View>
               <View style={{ width: "50%" }}>
-                <CustomButton
-                  onPress={() =>
-                    (navigation as any).navigate("ConversationsScreen")
-                  }
-                  title="Danh sách trò chuyện"
-                  variant="primary"
-                  size="medium"
-                  className="w-full"
-                />
+                <TouchableOpacity onPress={() => (navigation as any).navigate("ConversationsScreen")}
+                  className="border border-green-600 rounded-full py-2 px-4 items-center active:opacity-70">
+                  <Text className="text-green-600 font-bold text-lg text-center">
+                    Danh sách trò chuyện
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -552,7 +580,7 @@ export default function ProfileSocialScreen() {
         >
           {/* Posts */}
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={() => { }}
             className="items-center p-1 active:opacity-70"
           >
             <Text className={`text-xl font-bold text-indigo-500 text-center`}>
@@ -562,7 +590,7 @@ export default function ProfileSocialScreen() {
           </TouchableOpacity>
           {/* Covers */}
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={() => { }}
             className="items-center p-1 active:opacity-70"
           >
             <Text className={`text-xl font-bold text-indigo-500 text-center`}>
@@ -602,36 +630,32 @@ export default function ProfileSocialScreen() {
           <View className="flex-row mb-4">
             <TouchableOpacity
               onPress={() => setActiveTab("posts")}
-              className={`px-4 py-2 rounded-full mr-2 ${
-                activeTab === "posts"
-                  ? "bg-indigo-500"
-                  : "bg-gray-200 dark:bg-gray-700"
-              }`}
+              className={`px-4 py-2 rounded-full mr-2 ${activeTab === "posts"
+                ? "bg-green-500"
+                : "bg-gray-200 dark:bg-gray-700"
+                }`}
             >
               <Text
-                className={`text-sm font-medium ${
-                  activeTab === "posts"
-                    ? "text-white"
-                    : "text-gray-600 dark:text-gray-400"
-                }`}
+                className={`text-sm font-medium ${activeTab === "posts"
+                  ? "text-white"
+                  : "text-gray-600 dark:text-gray-400"
+                  }`}
               >
                 Bài đăng ({posts.length})
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setActiveTab("covers")}
-              className={`px-4 py-2 rounded-full ${
-                activeTab === "covers"
-                  ? "bg-indigo-500"
-                  : "bg-gray-200 dark:bg-gray-700"
-              }`}
+              className={`px-4 py-2 rounded-full ${activeTab === "covers"
+                ? "bg-green-500"
+                : "bg-gray-200 dark:bg-gray-700"
+                }`}
             >
               <Text
-                className={`text-sm font-medium ${
-                  activeTab === "covers"
-                    ? "text-white"
-                    : "text-gray-600 dark:text-gray-400"
-                }`}
+                className={`text-sm font-medium ${activeTab === "covers"
+                  ? "text-white"
+                  : "text-gray-600 dark:text-gray-400"
+                  }`}
               >
                 Cover ({covers.length})
               </Text>
@@ -710,7 +734,6 @@ export default function ProfileSocialScreen() {
               <PostItem
                 {...post}
                 id={Number(post.id)}
-                // Gán các hàm xử lý
                 onPostUpdate={(type, value) =>
                   updatePostState(post.id, type, value)
                 }
@@ -726,7 +749,7 @@ export default function ProfileSocialScreen() {
                 onDelete={
                   isPostUser ? () => handleDeletePress(post.id) : undefined
                 }
-                onHidePost={() => {}}
+                onHidePost={() => { }}
                 isUserPost={isPostUser}
                 // Truyền images từ fileUrl
                 images={
@@ -815,7 +838,7 @@ export default function ProfileSocialScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSaveEdit}
-                className="px-4 py-2 bg-blue-500 rounded"
+                className="px-4 py-2 bg-emerald-500 rounded"
               >
                 <Text className="text-white">Lưu</Text>
               </TouchableOpacity>

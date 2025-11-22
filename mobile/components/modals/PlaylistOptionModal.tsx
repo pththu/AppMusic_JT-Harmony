@@ -52,8 +52,6 @@ const PlaylistOptionModal = ({
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const [actuallyVisible, setActuallyVisible] = useState(isVisible);
 
-  console.log('data', data)
-
   useEffect(() => {
     setActuallyVisible(true);
     Animated.parallel([

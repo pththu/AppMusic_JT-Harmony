@@ -272,9 +272,9 @@ const generateMusicRecommendations = async (req, res) => {
 
     // Cache kết quả
     await redisClient.set(cacheKey, JSON.stringify(recommendations), { EX: DEFAULT_TTL_SECONDS });
-    for (const rec of recommendations) {
-      await createRecommendation(rec, req.user.id);
-    }
+    // for (const rec of recommendations) {
+    //   await createRecommendation(rec, req.user.id);
+    // }
 
     res.status(200).json({
       message: "Thành công",
@@ -299,7 +299,12 @@ const GenerateRecommendationsFromActivity = async (req, res) => {
     console.log("🎯 CREATE RECOMMENDATIONS FROM ACTIVITY:", req.body);
     const { activity = "" } = req.body;
 
-    const userId = req.user.id;
+    let userId;
+    if (!req.user || !req.user.id) {
+      userId = "guest";
+    } else {
+      userId = req.user.id;
+    }
     const cacheKey = `recommendations-activity:${userId}:${activity}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -427,9 +432,9 @@ const GenerateRecommendationsFromActivity = async (req, res) => {
 
     // Cache kết quả
     await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
-    for (const rec of recommendations) {
-      await createRecommendation(rec, req.user.id);
-    }
+    // for (const rec of recommendations) {
+    //   await createRecommendation(rec, req.user.id);
+    // }
 
     res.status(200).json(responseData);
 
@@ -447,7 +452,12 @@ const GenerateRecommendationsFromMood = async (req, res) => {
     console.log("🎯 CREATE RECOMMENDATIONS FROM MOOD:", req.body);
     const { mood = "" } = req.body;
 
-    const userId = req.user.id;
+    let userId;
+    if (!req.user || !req.user.id) {
+      userId = "guest";
+    } else {
+      userId = req.user.id;
+    }
     const cacheKey = `recommendations-mood:${userId}:${mood}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -575,9 +585,9 @@ const GenerateRecommendationsFromMood = async (req, res) => {
 
     // Cache kết quả
     await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
-    for (const rec of recommendations) {
-      await createRecommendation(rec, req.user.id);
-    }
+    // for (const rec of recommendations) {
+    //   await createRecommendation(rec, req.user.id);
+    // }
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -729,9 +739,9 @@ const GenerateRecommendationsFromGenres = async (req, res) => {
 
     // Cache kết quả
     await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
-    for (const rec of recommendations) {
-      await createRecommendation(rec, req.user.id);
-    }
+    // for (const rec of recommendations) {
+    //   await createRecommendation(rec, req.user.id);
+    // }
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -889,9 +899,9 @@ const GenerateRecommendationsFromFavorites = async (req, res) => {
 
     // Cache kết quả
     await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
-    for (const rec of recommendations) {
-      await createRecommendation(rec, req.user.id);
-    }
+    // for (const rec of recommendations) {
+    //   await createRecommendation(rec, req.user.id);
+    // }
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -1047,9 +1057,9 @@ const GenerateRecommendationsFromFollowedArtists = async (req, res) => {
 
     // Cache kết quả
     await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
-    for (const rec of recommendations) {
-      await createRecommendation(rec, req.user.id);
-    }
+    // for (const rec of recommendations) {
+    //   await createRecommendation(rec, req.user.id);
+    // }
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -1204,9 +1214,9 @@ const GenerateRecommendationsFromHistories = async (req, res) => {
 
     // Cache kết quả
     await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
-    for (const rec of recommendations) {
-      await createRecommendation(rec, req.user.id);
-    }
+    // for (const rec of recommendations) {
+    //   await createRecommendation(rec, req.user.id);
+    // }
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -1222,7 +1232,12 @@ const GenerateRecommendationsFromTimeOfDay = async (req, res) => {
   try {
     console.log("🎯 CREATE RECOMMENDATIONS FROM TIME OF DAY:");
 
-    const userId = req.user.id;
+    let userId;
+    if (!req.user || !req.user.id) {
+      userId = "guest";
+    } else {
+      userId = req.user.id;
+    }
     const timeOfDay = new Date();
     const cacheKey = `recommendations-timeOfDay:${userId}:${timeOfDay.toDateString()}`;
     const cachedData = await redisClient.get(cacheKey);
@@ -1356,9 +1371,9 @@ const GenerateRecommendationsFromTimeOfDay = async (req, res) => {
 
     // Cache kết quả
     await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
-    for (const rec of recommendations) {
-      await createRecommendation(rec, req.user.id);
-    }
+    // for (const rec of recommendations) {
+    //   await createRecommendation(rec, req.user.id);
+    // }
 
     res.status(200).json(responseData);
   } catch (error) {

@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useHistoriesStore } from '@/store/historiesStore';
 import { usePlayerStore } from '@/store/playerStore';
-import { useArtistStore } from '@/store/artistStore';
+import { useFollowStore } from '@/store/followStore';
 import { useNavigate } from '@/hooks/useNavigate';
 import SongItem from '@/components/items/SongItem';
 import AlbumItem from '@/components/items/AlbumItem';
@@ -67,7 +67,7 @@ export default function ListenHistoryScreen() {
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
-  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
 
   const iconColor = colorScheme === 'dark' ? 'white' : 'black';

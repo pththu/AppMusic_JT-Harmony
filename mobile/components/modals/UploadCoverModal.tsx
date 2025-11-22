@@ -17,7 +17,7 @@ import Icon from "react-native-vector-icons/Feather";
 import * as ImagePicker from "expo-image-picker";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
 import { createNewCover } from "@/services/coverService";
-import { fetchTracks } from "@/services/musicService";
+import { GetTracksForCover } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
 import CustomButton from "@/components/custom/CustomButton";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
@@ -28,14 +28,6 @@ interface UploadCoverModalProps {
   onCoverPosted?: () => void; // Callback sau khi post thành công
 }
 
-// Interface chi tiết hơn cho Track
-interface Track {
-  id: number;
-  title: string;
-  artist: string;
-  // Thêm các trường khác nếu cần
-}
-
 const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
   visible,
   onClose,
@@ -43,11 +35,11 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
 }) => {
   const colorScheme = useColorScheme();
   const { error, info, warning, confirm, success } = useCustomAlert();
-  const [selectedSong, setSelectedSong] = useState<Track | null>(null);
+  const [selectedSong, setSelectedSong] = useState(null);
   const [coverText, setCoverText] = useState("");
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [tracks, setTracks] = useState<Track[]>([]);
+  const [tracks, setTracks] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSongSelector, setShowSongSelector] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -61,14 +53,18 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
 
   const loadTracks = async () => {
     try {
-      // Chỉ tải nếu danh sách bài hát chưa được tải hoặc đang tìm kiếm
       if (tracks.length === 0) {
-        const fetchedTracks = await fetchTracks(); // API fetch tracks
-        setTracks(Array.isArray(fetchedTracks) ? fetchedTracks : []);
+        const response = await GetTracksForCover();
+        if (response.success) {
+          for (let track of response.data) {
+            console.log(track.artists)
+          }
+          setTracks(response.data);
+        }
       }
-    } catch (error) {
-      console.error("Error loading tracks:", error);
-      Alert.alert("Lỗi", "Không thể tải danh sách bài hát.");
+    } catch (err) {
+      console.error("Error loading tracks:", err);
+      error("Không thể tải danh sách bài hát.");
       setTracks([]);
     }
   };
@@ -152,8 +148,8 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
 
   const filteredTracks = tracks.filter(
     (track) =>
-      track?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      track?.artist?.toLowerCase().includes(searchQuery.toLowerCase())
+      track?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      track?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderUploadForm = () => (
@@ -178,7 +174,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
           </Text>
           {selectedSong && (
             <Text className="text-sm text-black dark:text-white mt-1">
-              {`${selectedSong.title} - ${selectedSong.artist || "Unknown Artist"}`}
+              {`${selectedSong.name} - ${selectedSong.artists?.map(artist => artist.name).join(", ") || "Unknown Artist"}`}
             </Text>
           )}
         </View>
@@ -289,10 +285,10 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
             className="p-4 border-b border-gray-100 dark:border-gray-700 active:bg-gray-100 dark:active:bg-gray-700"
           >
             <Text className="text-black dark:text-white font-semibold text-base">
-              {item.title}
+              {item.name}
             </Text>
             <Text className="text-gray-500 dark:text-gray-400 text-sm">
-              {item.artist}
+              {item?.artists?.map((artist) => artist.name).join(", ") || "Unknown Artist"}
             </Text>
           </TouchableOpacity>
         )}
