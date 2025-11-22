@@ -750,7 +750,7 @@ export default function AllPlaylistScreen() {
 
   return (
     <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4`}
-      style={{ marginBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : tabBarHeight }}
+      style={{ marginBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
     >
       <View className="flex-row items-start mb-4">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">

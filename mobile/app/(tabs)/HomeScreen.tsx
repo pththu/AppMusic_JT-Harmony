@@ -38,6 +38,7 @@ import { SearchTracks } from "@/services/searchService";
 import { useBoardingStore } from "@/store/boardingStore";
 import MoodSelectionModal from "@/components/modals/MoodSelectionModal";
 import ActivitySelectionModal from "@/components/modals/ActivitySelectionModal";
+import { useNotificationStore } from "@/store/notificationStore";
 
 const ACTIVITIES = [
   { id: 'workout', label: 'Tập luyện', icon: 'barbell-outline' },
@@ -151,7 +152,6 @@ export default function HomeScreen() {
   const unreadNotificationCount = useNotificationStore((state) => state.unreadCount);
   const hasNotification = unreadNotificationCount > 0;
 
-  const [hasNotification] = useState(true);
   const [isMoodModalVisible, setMoodModalVisible] = useState(false);
   const [isActivityModalVisible, setActivityModalVisible] = useState(false);
 

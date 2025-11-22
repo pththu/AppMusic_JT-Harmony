@@ -5,6 +5,7 @@ const musicController = require('../controllers/musicController');
 const { authenticateToken } = require('../middlewares/authentication');
 
 // ====== PUBLIC ROUTES ======
+router.get('/track/:trackId', musicController.findTrackById);
 router.get('/search/playlists', musicController.findSpotifyPlaylist);
 router.get('/search-album/:albumId', musicController.findAlbumById);
 router.post('/playlist', musicController.findPlaylistById);

@@ -272,7 +272,7 @@ const MergeAccount = async (req, res) => {
         const user = await User.findByPk(req.user.id);
         const mergeUser = await User.findByPk(userId);
 
-        console.log('user', user.dataValues);
+        // console.log('user', user.dataValues);
         console.log('mergeUser', mergeUser.dataValues);
 
         if (!user || !mergeUser) {

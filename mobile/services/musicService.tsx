@@ -1,4 +1,5 @@
 import axiosClient, { axiosPublicClient } from "@/config/axiosClient";
+import { id } from "date-fns/locale";
 
 // get
 export const GetPlaylistsForYou = async (payload) => {
@@ -322,3 +323,20 @@ export const GetTracksForCover = async () => {
     throw error;
   }
 };
+
+export const FindTrackById = async (trackId) => {
+  try {
+    const response = await axiosPublicClient.get(`/music/track/${trackId}`);
+    console.log('response.data[0]', response.data);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}

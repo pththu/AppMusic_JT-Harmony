@@ -463,7 +463,7 @@ exports.sendOtpEmail = async (req, res) => {
     } else if (email) {
       user = await User.findOne({ where: { email: email.toLowerCase() } });
     }
-    console.log('user found', user);
+    // console.log('user found', user);
     if (!user) return res.status(404).json({ error: 'User not found' });
     const otp = Math.floor(100000 + Math.random() * 900000);
     const expireOtp = Date.now() + 10 * 60 * 1000; // 10 minutes

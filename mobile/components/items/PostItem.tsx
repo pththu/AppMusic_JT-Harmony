@@ -25,7 +25,7 @@ const { width: screenWidth } = Dimensions.get('window');
 // Kích thước cố định cho ảnh trong Post (Đảm bảo ảnh không tràn màn hình)
 const IMAGE_WIDTH = screenWidth - 32; // Giả định padding ngang tổng cộng là 32 (p-4 * 2)
 // Chiều cao tương đối cho ảnh (tỷ lệ 4:3)
-const IMAGE_HEIGHT = IMAGE_WIDTH * 0.75; 
+const IMAGE_HEIGHT = IMAGE_WIDTH * 0.75;
 
 
 // --- HÀM TIỆN ÍCH: formatTimeAgo ---
@@ -51,42 +51,42 @@ const formatTimeAgo = (dateString: string): string => {
     return 'vừa xong';
 };
 
-interface PostItemProps {
-    id: number;
-    userId: number;
-    User: { username: string; avatarUrl: string; fullName: string };
-    uploadedAt: string;
-    content: string;
-    images: string[];
-    musicLink: string | null;
-    heartCount: number;
-    commentCount: number;
-    shareCount: number;
-    isLiked: boolean;
+// interface PostItemProps {
+//     id: number;
+//     userId: number;
+//     User: { username: string; avatarUrl: string; fullName: string };
+//     uploadedAt: string;
+//     content: string;
+//     images: string[];
+//     musicLink: string | null;
+//     heartCount: number;
+//     commentCount: number;
+//     shareCount: number;
+//     isLiked: boolean;
 
-    originalPost?: {
-        id: number;
-        userId: number;
-        content: string;
-        fileUrl?: string[] | string;
-        User?: { username: string; avatarUrl: string; fullName: string };
-    };
+//     originalPost?: {
+//         id: number;
+//         userId: number;
+//         content: string;
+//         fileUrl?: string[] | string;
+//         User?: { username: string; avatarUrl: string; fullName: string };
+//     };
 
-    // Callbacks
-    onPostUpdate: (type: 'heartCount' | 'isLiked' | 'share' | 'content', value: any) => void;
-    onCommentPress: () => void;
-    onSharePress: (postId: number) => void;
-    onUserPress: (userId: number) => void;
-    onLikeCountPress: (postId: number) => void;
-    onHidePost: (postId: number) => void;
-    onRefresh?: () => void;
+//     // Callbacks
+//     onPostUpdate: (type: 'heartCount' | 'isLiked' | 'share' | 'content', value: any) => void;
+//     onCommentPress: () => void;
+//     onSharePress: (postId: number) => void;
+//     onUserPress: (userId: number) => void;
+//     onLikeCountPress: (postId: number) => void;
+//     onHidePost: (postId: number) => void;
+//     onRefresh?: () => void;
 
-    onEdit?: () => void;
-    onDelete?: () => void;
-    isUserPost?: boolean;
-}
+//     onEdit?: () => void;
+//     onDelete?: () => void;
+//     isUserPost?: boolean;
+// }
 
-const PostItem: React.FC<PostItemProps> = ({
+const PostItem = ({
     id: postId,
     userId,
     User,
@@ -203,7 +203,7 @@ const PostItem: React.FC<PostItemProps> = ({
 
     // Xử lý nút Chia sẻ
     const handleShare = () => {
-       if (isGuest) {
+        if (isGuest) {
             info("Hãy đăng nhập để sử dụng tính năng này.");
             return;
         }

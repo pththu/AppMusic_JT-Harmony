@@ -38,17 +38,20 @@ import UploadCoverModal from "../../components/modals/UploadCoverModal";
 import NewPostCreator from "../../components/items/NewPostItem";
 import { createNewCover, fetchTopCovers } from "../../services/coverService";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { FindTrackById } from "@/services/musicService";
+import { set } from "date-fns";
 
 const SocialScreen = () => {
   const colorScheme = useColorScheme();
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { navigate } = useNavigate();
+  const { info, success, error, warning, confirm } = useCustomAlert();
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
-  const { navigate } = useNavigate();
-  const { info, success, error, warning, confirm } = useCustomAlert();
 
+  const [trackItem, setTrackItem] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   // State cho New Post Creator
   const [newPostText, setNewPostText] = useState("");
   const [selectedMediaAssets, setSelectedMediaAssets] = useState<any[]>([]); //  Lưu trữ expo assets cho preview và upload
@@ -99,54 +102,132 @@ const SocialScreen = () => {
     return `${diffInDays} ngày`;
   };
 
+  // tìm theo id trong db
+  const findTrackById = async (trackId) => {
+    try {
+      const response = await FindTrackById(trackId);
+      if (response.success) {
+        setTrackItem(response.data);
+        return response.data;
+      } else {
+        setTrackItem(null);
+        return null;
+      }
+    } catch (error) {
+      console.log("Lỗi khi tìm bài hát theo ID:", error);
+    }
+  }
+
   // Hàm map dữ liệu bài đăng từ API về định dạng local
-  const mapApiPostToLocal = (apiPost: any) => ({
-    id: apiPost.id,
-    userId: apiPost.userId,
-    User: apiPost.User || {
-      id: apiPost.userId,
-      avatarUrl: "",
-      username: "Anonymous",
-      fullName: "Anonymous",
-    },
-    uploadedAt: apiPost.uploadedAt,
-    content: apiPost.content,
-    fileUrl: apiPost.fileUrl,
-    heartCount: apiPost.heartCount,
-    commentCount: apiPost.commentCount,
-    shareCount: apiPost.shareCount,
-    isLiked: apiPost.isLiked,
-    songId: apiPost.songId,
-    avatarUrl: apiPost.User?.avatarUrl || "",
-    username: apiPost.User?.username || "Anonymous",
-    fullName: apiPost.User?.fullName || "Anonymous",
-    groupName: "",
-    time: formatTime(apiPost.uploadedAt),
-    contentText: apiPost.content,
-    images: Array.isArray(apiPost.fileUrl)
-      ? apiPost.fileUrl
-      : apiPost.fileUrl
-        ? [apiPost.fileUrl]
-        : [],
-    // Thông tin bài hát hiển thị trong PostItem
-    musicLink:
-      apiPost.OriginalSong && apiPost.OriginalSong.name
-        ? `${apiPost.OriginalSong.name}${
-            Array.isArray(apiPost.OriginalSong.artists) &&
-            apiPost.OriginalSong.artists.length > 0
-              ? " - " + apiPost.OriginalSong.artists.map((a: any) => a.name).join(", ")
-              : ""
-          }`
-        : apiPost.songId
-        ? `Bài hát ID: ${apiPost.songId}`
-        : "",
-    isOnline: false,
-    comments: [],
-    isCover: apiPost.isCover || false,
-    originalSongId: apiPost.originalSongId,
-    OriginalSong: apiPost.OriginalSong,
-    originalPost: apiPost.OriginalPost,
-  });
+  // const mapApiPostToLocal = (apiPost) => ({
+  //   id: apiPost.id,
+  //   userId: apiPost.userId,
+  //   User: apiPost.User || {
+  //     id: apiPost.userId,
+  //     avatarUrl: "",
+  //     username: "Anonymous",
+  //     fullName: "Anonymous",
+  //   },
+  //   uploadedAt: apiPost.uploadedAt,
+  //   content: apiPost.content,
+  //   fileUrl: apiPost.fileUrl,
+  //   heartCount: apiPost.heartCount,
+  //   commentCount: apiPost.commentCount,
+  //   shareCount: apiPost.shareCount,
+  //   isLiked: apiPost.isLiked,
+  //   songId: apiPost.songId,
+  //   avatarUrl: apiPost.User?.avatarUrl || "",
+  //   username: apiPost.User?.username || "Anonymous",
+  //   fullName: apiPost.User?.fullName || "Anonymous",
+  //   groupName: "",
+  //   time: formatTime(apiPost.uploadedAt),
+  //   contentText: apiPost.content,
+  //   images: Array.isArray(apiPost.fileUrl)
+  //     ? apiPost.fileUrl
+  //     : apiPost.fileUrl
+  //       ? [apiPost.fileUrl]
+  //       : [],
+  //   // Thông tin bài hát hiển thị trong PostItem
+  //   musicLink:
+  //     apiPost.OriginalSong && apiPost.OriginalSong.name
+  //       ? `${apiPost.OriginalSong.name}${Array.isArray(apiPost.OriginalSong.artists) &&
+  //         apiPost.OriginalSong.artists.length > 0
+  //         ? " - " + apiPost.OriginalSong.artists.map((a) => a.name).join(", ")
+  //         : ""
+  //       }`
+  //       : apiPost.songId
+  //         ? `Bài hát: ${trackItem.name} - ${trackItem.artists.map((a) => a.name).join(", ")}`
+  //         : "",
+  //   isOnline: false,
+  //   comments: [],
+  //   isCover: apiPost.isCover || false,
+  //   originalSongId: apiPost.originalSongId,
+  //   OriginalSong: apiPost.OriginalSong,
+  //   originalPost: apiPost.OriginalPost,
+  // });
+
+  const mapApiPostToLocal = async (apiPost) => { // <-- THÊM ASYNC
+    let songNameAndArtists = "";
+    let trackData = apiPost.OriginalSong;
+
+    // 1. Ưu tiên dùng OriginalSong (nếu có)
+    if (apiPost.OriginalSong && apiPost.OriginalSong.name) {
+      const artists = Array.isArray(apiPost.OriginalSong.artists)
+        ? apiPost.OriginalSong.artists.map((a) => a.name).join(", ")
+        : "";
+      songNameAndArtists = `${apiPost.OriginalSong.name}${artists ? " - " + artists : ""}`;
+    }
+    // 2. Nếu không có OriginalSong nhưng có songId, phải gọi API để lấy
+    else if (apiPost.songId) {
+      // GỌI HÀM BẤT ĐỒNG BỘ
+      const fetchedTrack = await findTrackById(apiPost.songId);
+      if (fetchedTrack) {
+        trackData = fetchedTrack;
+        const artists = Array.isArray(fetchedTrack.artists)
+          ? fetchedTrack.artists.map((a) => a.name).join(", ")
+          : "";
+        songNameAndArtists = `Bài hát: ${fetchedTrack.name}${artists ? " - " + artists : ""}`;
+      }
+    }
+
+    return {
+      id: apiPost.id,
+      userId: apiPost.userId,
+      User: apiPost.User || {
+        id: apiPost.userId,
+        avatarUrl: "",
+        username: "Anonymous",
+        fullName: "Anonymous",
+      },
+      uploadedAt: apiPost.uploadedAt,
+      content: apiPost.content,
+      fileUrl: apiPost.fileUrl,
+      heartCount: apiPost.heartCount,
+      commentCount: apiPost.commentCount,
+      shareCount: apiPost.shareCount,
+      isLiked: apiPost.isLiked,
+      songId: apiPost.songId,
+      avatarUrl: apiPost.User?.avatarUrl || "",
+      username: apiPost.User?.username || "Anonymous",
+      fullName: apiPost.User?.fullName || "Anonymous",
+      groupName: "",
+      time: formatTime(apiPost.uploadedAt),
+      contentText: apiPost.content,
+      images: Array.isArray(apiPost.fileUrl)
+        ? apiPost.fileUrl
+        : apiPost.fileUrl
+          ? [apiPost.fileUrl]
+          : [],
+      // Cập nhật musicLink sử dụng kết quả đã xác định
+      musicLink: songNameAndArtists,
+      isOnline: false,
+      comments: [],
+      isCover: apiPost.isCover || false,
+      originalSongId: apiPost.originalSongId,
+      OriginalSong: trackData, // Cập nhật OriginalSong nếu tìm thấy
+      originalPost: apiPost.OriginalPost,
+    };
+  };
 
   // Hàm xử lý khi nhấn vào user avatar
   const handleUserPress = useCallback(
@@ -817,7 +898,10 @@ const SocialScreen = () => {
         error("Lỗi", apiPosts.message || "Không thể tải bài đăng từ server.");
         return;
       }
-      const mappedPosts = apiPosts.map(mapApiPostToLocal);
+      // const mappedPosts = apiPosts.map(mapApiPostToLocal);
+      const mappedPosts = await Promise.all(
+        apiPosts.map(mapApiPostToLocal) // Giả sử apiPosts chứa mảng bài đăng
+      );
       setPosts(mappedPosts);
     } catch (err) {
       console.error("Error fetching posts:", err);

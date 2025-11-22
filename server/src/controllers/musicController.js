@@ -1670,12 +1670,73 @@ const getCategoryContent = async (req, res) => {
   }
 };
 
+const findTrackById = async (req, res) => {
+  try {
+    const { trackId } = req.params;
+    if (!trackId) {
+      return res.status(400).json({ message: 'Track ID is required', success: false });
+    }
+
+    const cacheKey = `track:byid:${trackId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (FindTrackById)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (FindTrackById)');
+
+    let artist = [];
+    let album = null;
+
+
+    let track = await Track.findByPk(trackId,
+      {
+        include: [
+          { model: Artist, as: 'artists' },
+          { model: Album }
+        ]
+      }
+    );
+    if (!track) {
+      return res.status(404).json({ message: 'Track not found', success: false });
+    }
+
+    const idTemp = track?.id || null;
+    if (!track?.name) {
+      track = await callSpotify(() => spotify.findTrackById(track.spotifyId));
+      if (idTemp) {
+        track.tempId = idTemp;
+      }
+    } else {
+      album = track.Album;
+    }
+
+    artist = [];
+    for (const a of track?.artists) {
+      artist.push(formatArtist(a, null));
+    }
+    const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+
+    const response = {
+      message: 'Find track by id successful',
+      data: itemFormat,
+      success: true
+    };
+    console.log('response', response)
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS * 10 });
+    return res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to find track by id' });
+  }
+}
+
 module.exports = {
   findSpotifyPlaylist,
   findYoutubeVideo,
   findPlaylistById,
   findAlbumById,
   findVideoIdForTrack,
+  findTrackById,
   getTracksFromPlaylist,
   getTracksFromAlbum,
   getPlaylistsForYou,

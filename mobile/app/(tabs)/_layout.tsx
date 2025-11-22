@@ -16,6 +16,7 @@ import { useNotificationStore } from "@/store/notificationStore";
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isGuest = useAuthStore((state) => state.isGuest);
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
   const incrementUnreadCount = useNotificationStore(
     (state) => state.incrementUnreadCount,
