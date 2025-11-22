@@ -14,7 +14,6 @@ import {
   Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { playlistData } from "@/constants/data";
 import { useNavigate } from "@/hooks/useNavigate";
 import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
@@ -31,6 +30,8 @@ import PlaylistItemOptionModal from "@/components/modals/PlaylistItemOptionModal
 import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
 import { RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
+import { useMusicAction } from "@/hooks/useMusicAction";
+import { pl } from "date-fns/locale";
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -196,17 +197,12 @@ const SearchResultItem = ({ item, index, onPress, onPressOptions, primaryIconCol
 
 export default function AllPlaylistScreen() {
   const colorScheme = useColorScheme();
-  const { success, error, warning, confirm, info} = useCustomAlert();
-  const { navigate } = useNavigate();
+  const { success, error, warning, confirm, info } = useCustomAlert();
   const user = useAuthStore((state) => state.user);
   const isGuest = useAuthStore((state) => state.isGuest);
   const myPlaylists = usePlayerStore((state) => state.myPlaylists);
-  const tabBarHeight = usePlayerStore((state) => state.tabBarHeight);
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
-  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
-  const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
@@ -244,17 +240,11 @@ export default function AllPlaylistScreen() {
   const [newIsPublic, setNewIsPublic] = useState(true);
 
   const primaryIconColor = colorScheme === "dark" ? "white" : "black";
-  const playerPadding = currentTrack ? MINI_PLAYER_HEIGHT : 0;
 
-  const handleSelectPlaylist = (playlist) => {
-    setCurrentPlaylist(playlist);
-    navigate("PlaylistScreen", { playlist: JSON.stringify(playlist) })
-  };
-
-  const handleSelectAlbum = (album) => {
-    setCurrentAlbum(album);
-    navigate("AlbumScreen", { album: JSON.stringify(album) })
-  }
+  const {
+    handleSelectAlbum,
+    handleSelectPlaylist,
+  } = useMusicAction();
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -333,8 +323,6 @@ export default function AllPlaylistScreen() {
           trackIds.push(track.spotifyId);
         });
 
-        // console.log(playlistIds)
-        // console.log(trackIds)
         if (trackIds.length > 0) {
           const addResponse = await AddTracksToPlaylists({
             playlistIds: playlistIds,
@@ -387,8 +375,6 @@ export default function AllPlaylistScreen() {
   }
 
   const handleAddToAnotherPlaylist = async (playlistIds) => {
-    // console.log('handleAddToAnotherPlaylist')
-    // // console.log(playlistIds);
     if (!playlistTracks || !playlistTracks.length) {
       warning('Playlist không có bài hát để thêm vào danh sách phát khác!');
       return;
@@ -470,15 +456,38 @@ export default function AllPlaylistScreen() {
     setSelectedPlaylist(null);
   };
 
-  const handleAddToQueue = () => {
+  const handleAddToQueue = async () => {
     console.log('handleAddToQueue')
+
+    let playlistTracks = [];
+    const fetchTracks = async () => {
+      if (selectedPlaylist?.spotifyId) {
+        const response = await GetTracksByPlaylistId({
+          playlistId: selectedPlaylist?.spotifyId,
+          type: 'api'
+        });
+        if (response.success) {
+          playlistTracks = response.data;
+        }
+      } else {
+        const response = await GetTracksByPlaylistId({
+          playlistId: selectedPlaylist?.id,
+          type: 'local'
+        });
+        if (response.success) {
+          playlistTracks = response.data;
+        }
+      }
+    }
+
+    await fetchTracks();
+
     if (!playlistTracks || playlistTracks.length === 0) {
       warning('Playlist không có bài hát để thêm vào hàng đợi!');
       return;
     }
 
     addTrackToQueue(playlistTracks);
-    success(`Đã thêm ${playlistTracks.length} bài hát vào hàng đợi!`);
     setIsOptionModalVisible(false);
   };
 
@@ -566,7 +575,6 @@ export default function AllPlaylistScreen() {
     if (item.resultType === 'favAlbum') {
       handleSelectAlbum(item);
     } else {
-      // 'myPlaylist' or 'favPlaylist'
       handleSelectPlaylist(item);
     }
   };
@@ -610,10 +618,9 @@ export default function AllPlaylistScreen() {
       }
     }
     if (selectedPlaylist) {
-      // console.log('getTracks');
       fetchTracks();
     }
-  }, [selectedPlaylist]);
+  }, [selectedPlaylist?.id]);
 
   useEffect(() => {
     if (searchQuery === "") {
@@ -919,7 +926,7 @@ export default function AllPlaylistScreen() {
         <PlaylistItemOptionModal
           isVisible={isOptionModalVisible}
           onClose={handleCloseOptionsModal}
-          isMyPlaylist={selectedPlaylist.resultType === 'myPlaylist'}
+          isMyPlaylist={selectedPlaylist.resultType === 'myPlaylist' || (myPlaylists.some(pl => pl.id === selectedPlaylist.id))}
           playlistName={selectedPlaylist?.name}
           imageUrl={selectedPlaylist?.imageUrl}
           onEdit={handleEdit}

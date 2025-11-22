@@ -114,6 +114,7 @@ const protectedRoutes = [
   "tracks", // Xem bài hát (public), upload bài hát (private)
 ];
 const publicRoutes = [
+  'playlists', // Playlist cá nhân
   "auth",
   "users",
   "posts",
@@ -122,7 +123,6 @@ const publicRoutes = [
   "comments",
   'favorites', // Yêu thích
   'histories', // Lịch sử nghe nhạc
-  'playlists', // Playlist cá nhân
   "recommendations",
 ];
 

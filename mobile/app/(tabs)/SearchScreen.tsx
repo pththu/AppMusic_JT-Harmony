@@ -17,7 +17,7 @@ import { useNavigate } from "@/hooks/useNavigate";
 import ArtistItem from "@/components/artists/ArtistItem";
 import CustomButton from "@/components/custom/CustomButton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
+
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 import {
@@ -40,50 +40,12 @@ import useAuthStore from "@/store/authStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { ClearSearchHistory, RemoveItemSearchHistory, SaveToListeningHistory } from "@/services/historiesService";
 import { useHistoriesStore } from "@/store/historiesStore";
+import LocalCategoryItem from "@/components/items/LocalCategoryItem";
+import { BROWSE_CATEGORIES, FILTER_TYPES } from "@/constants/data";
 
 const ACTIVE_COLOR = "#22C55E";
 const SEARCH_HISTORY_KEY = "search_history";
 
-const browseCategories = [
-  { id: "3", name: "POP", color: "#4facfe", colorEnd: "#e0c3fc", icon: "heart" },
-  { id: "4", name: "K-POP", color: "#e8198b", colorEnd: "#f794a4", icon: "people" },
-  { id: "6", name: "V-POP", color: "#ff0844", colorEnd: "#f9d423", icon: "star" },
-  { id: "2", name: "C-POP", color: "#f5576c", colorEnd: "#fee140", icon: "snow" },
-  { id: "5", name: "J-POP", color: "#e8198b", colorEnd: "#efefef", icon: "disc" },
-  { id: "7", name: "RAP", color: "#c71d6f", colorEnd: "#96deda", icon: "mic" },
-  { id: "12", name: "ROCK", color: "#e8198b", colorEnd: "#FFBD71", icon: "mic" },
-  { id: "8", name: "HIP-HOP", color: "#2b5876", colorEnd: "#dad4ec", icon: "headset" },
-  { id: "9", name: "DANCE", color: "#009efd", colorEnd: "#38f9d7", icon: "body" },
-  { id: "10", name: "INDIE", color: "#a18cd1", colorEnd: "#FBC2EB", icon: "leaf" },
-  { id: "1", name: "TAMIL", color: "#eacda3", colorEnd: "#94B447", icon: "musical-notes" },
-  { id: "11", name: "JAZZ", color: "#FF7A7B", colorEnd: "#FFBD71", icon: "musical-note" },
-];
-
-const filterTypes = ["All", "Track", "Artist", "Album", "Playlist", "User"];
-
-const LocalCategoryItem = ({ name, color, colorEnd, icon, onPress }) => {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      className="flex-1 m-1.5"
-      style={{ aspectRatio: 1.6 }}
-    >
-      <LinearGradient
-        colors={[color, colorEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="flex-1 rounded-lg p-3 justify-between overflow-hidden"
-      >
-        <View className="self-start">
-          <Icon name={icon as any} size={28} color="#FFFFFF" />
-        </View>
-        <Text className="text-white font-bold text-base">
-          {name}
-        </Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-};
 
 export default function SearchScreen() {
   const { navigate } = useNavigate();
@@ -94,8 +56,6 @@ export default function SearchScreen() {
   const user = useAuthStore((state) => state.user);
   const isGuest = useAuthStore((state) => state.isGuest);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const searchHistory = useHistoriesStore((state) => state.searchHistory);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
@@ -103,10 +63,8 @@ export default function SearchScreen() {
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
   const setQueue = usePlayerStore((state) => state.setQueue);
-  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
 
-  const historySavedRef = useRef(null);
   const inputRef = useRef<TextInput>(null);
   const animation = useRef(new Animated.Value(0)).current;
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -169,8 +127,6 @@ export default function SearchScreen() {
 
   const handleSearchSubmit = async (query = searchText) => {
     if (!query.trim()) return;
-
-
     setSearchText(query);
     setIsSearching(true);
     setLoading(true);
@@ -673,7 +629,7 @@ export default function SearchScreen() {
           {isSearching && (
             <View className="mt-3 mx-3">
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="flex-row">
-                {filterTypes.map((item) => (
+                {FILTER_TYPES.map((item) => (
                   <TouchableOpacity
                     key={item}
                     onPress={() => handleFilterChange(item)}
@@ -834,8 +790,7 @@ export default function SearchScreen() {
                           paddingBottom: (isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0),
                         }}
                       >
-                        {browseCategories.map((item, index) => (
-                          // View này sẽ chiếm 50% chiều rộng
+                        {BROWSE_CATEGORIES.map((item, index) => (
                           <View key={item.id} style={{ width: '50%' }}>
                             <LocalCategoryItem
                               name={item.name}
