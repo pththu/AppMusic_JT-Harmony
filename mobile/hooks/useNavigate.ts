@@ -14,6 +14,7 @@ const routeMap: Record<any, any> = {
   Search: '(tabs)/SearchScreen',
   Library: '(tabs)/YourLibraryScreen',
   Social: '(tabs)/SocialScreen',
+  Activity: '(screens)/ActivityScreen',
 
   // screens
   EditProfile: '(screens)/EditProfileScreen',

@@ -30,6 +30,7 @@ import { GetFavoriteItemsGrouped } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { useArtistStore } from "@/store/artistStore";
 import { GetArtistFollowed } from "@/services/followService";
+import { useNotificationStore } from "@/store/notificationStore";
 import { GetListeningHistory, GetSearchHistory, SaveToListeningHistory } from "@/services/historiesService";
 import { useHistoriesStore } from "@/store/historiesStore";
 import { GenerateFromActivity, GenerateFromFavorites, GenerateFromFollowedArtists, GenerateFromHistories, GenerateFromMood, GenerateFromTimeOfDay, GetRecommendationsByUser } from "@/services/recommendationService";
@@ -150,6 +151,8 @@ export default function HomeScreen() {
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
   const iconColor = theme === 'light' ? '#000' : '#fff';
+  const unreadNotificationCount = useNotificationStore((state) => state.unreadCount);
+  const hasNotification = unreadNotificationCount > 0;
 
   const [hasNotification] = useState(true);
   const [isMoodModalVisible, setMoodModalVisible] = useState(false);
@@ -794,10 +797,14 @@ export default function HomeScreen() {
           Hi, {isGuest ? "Guest" : String(user?.fullName || user?.username)} 👋
         </Text>
         <View className="flex-row items-center">
-          <TouchableOpacity className="mr-4 relative">
+          <TouchableOpacity className="mr-4 relative" onPress={() => navigate('Activity')}>
             <Icon name="notifications-outline" size={28} color={iconColor} />
             {hasNotification && (
-              <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+              <View className="absolute -top-1 -right-1 min-w-[16px] px-1 h-4 bg-red-500 rounded-full items-center justify-center">
+                <Text className="text-[10px] text-white font-semibold">
+                  {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+                </Text>
+              </View>
             )}
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigate("Profile")}>

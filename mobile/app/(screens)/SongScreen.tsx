@@ -9,6 +9,9 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Modal,
+  TextInput,
+  Alert,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -24,6 +27,7 @@ import SongItem from "@/components/items/SongItem";
 import TextTicker from "react-native-text-ticker";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { ShareTrack } from "@/services/musicService";
+import { createNewPost } from "@/services/socialApi";
 import useAuthStore from "@/store/authStore";
 import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
@@ -74,6 +78,8 @@ export default function SongScreen() {
   // const [progress, setProgress] = useState(0);
   const [trackCommentsVisible, setTrackCommentsVisible] = useState(false);
   const [defaultTimecodeMs, setDefaultTimecodeMs] = useState<number | null>(null);
+  const [sharePostModalVisible, setSharePostModalVisible] = useState(false);
+  const [sharePostText, setSharePostText] = useState("");
 
   //get height window
 
@@ -86,11 +92,84 @@ export default function SongScreen() {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
-  // const handleCommentAtCurrentTime = () => {
-  //   const timecodeMs = Math.max(0, Math.floor((playbackPosition || 0) * 1000));
-  //   setDefaultTimecodeMs(timecodeMs);
-  //   setTrackCommentsVisible(true);
-  // };
+  const handleSharePress = () => {
+    if (!currentTrack) return;
+
+    Alert.alert(
+      "Chia sẻ",
+      "Bạn muốn chia sẻ như thế nào?",
+      [
+        {
+          text: "Chia sẻ ra ngoài",
+          onPress: () => handleShareTrack(currentTrack),
+        },
+        {
+          text: "Chia sẻ bài đăng",
+          onPress: () => {
+            if (!user) {
+              info("Thông báo", "Bạn cần đăng nhập để chia sẻ bài đăng.");
+              return;
+            }
+            setSharePostText("");
+            setSharePostModalVisible(true);
+          },
+        },
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+      ]
+    );
+  };
+
+  const handleSubmitSharePost = async () => {
+    if (!user) {
+      info("Thông báo", "Bạn cần đăng nhập để chia sẻ bài đăng.");
+      return;
+    }
+    if (!currentTrack) {
+      error("Lỗi", "Không xác định được bài hát để chia sẻ.");
+      return;
+    }
+
+    const content = sharePostText.trim();
+    if (!content) {
+      info("Thông báo", "Vui lòng nhập nội dung bài đăng.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const res = await createNewPost(
+        content,
+        null,
+        null,
+        currentTrack?.spotifyId || null
+      );
+      if ("message" in res) {
+        throw new Error(res.message);
+      }
+      success("Đã tạo bài đăng từ bài hát.");
+      setSharePostModalVisible(false);
+      setSharePostText("");
+    } catch (e) {
+      console.log(e);
+      error("Lỗi", "Không thể chia sẻ bài đăng.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCommentAtCurrentTime = () => {
+    if (!user) {
+      info("Thông báo", "Bạn cần đăng nhập để bình luận.");
+      return;
+    }
+
+    const timecodeMs = Math.max(0, Math.floor((playbackPosition || 0) * 1000));
+    setDefaultTimecodeMs(timecodeMs);
+    setTrackCommentsVisible(true);
+  };
 
   // State cho covers
   const [covers, setCovers] = useState<any[]>([]);
@@ -390,7 +469,7 @@ export default function SongScreen() {
           <TouchableOpacity className="mr-4 p-4" activeOpacity={0.5}>
             <Icon name="download" size={20} color={primaryIconColor} />
           </TouchableOpacity>
-          <TouchableOpacity className="p-4" onPress={() => handleShareTrack(currentTrack)} activeOpacity={0.5}>
+          <TouchableOpacity className="p-4" onPress={handleSharePress} activeOpacity={0.5}>
             <Icon name="share" size={20} color={primaryIconColor} />
           </TouchableOpacity>
         </View>
@@ -506,6 +585,47 @@ export default function SongScreen() {
         <LyricsSection />
       </View>
       <ArtistsSection artists={currentTrack.artists} onPress={() => { }} />
+      {sharePostModalVisible && (
+        <Modal visible transparent animationType="fade">
+          <View className="flex-1 bg-black/50 justify-center items-center px-6">
+            <View className={`w-full rounded-2xl p-4 ${colorScheme === 'dark' ? 'bg-[#171431]' : 'bg-white'}`}>
+              <Text className={`text-lg font-bold mb-3 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
+                Chia sẻ bài đăng từ bài hát
+              </Text>
+              <Text className={`mb-2 text-sm ${colorScheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                {currentTrack?.name} - {currentTrack?.artists?.map((a) => a.name).join(', ')}
+              </Text>
+              <TextInput
+                placeholder="Bạn muốn nói gì về bài hát này?"
+                placeholderTextColor={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                value={sharePostText}
+                onChangeText={setSharePostText}
+                className={`border rounded-lg px-3 py-2 text-base mb-3 ${colorScheme === 'dark' ? 'border-gray-600 bg-[#0E0C1F] text-white' : 'border-gray-300 bg-white text-black'}`}
+                multiline
+                style={{ maxHeight: 120, textAlignVertical: 'top' }}
+              />
+              <View className="flex-row justify-end mt-1">
+                <TouchableOpacity
+                  onPress={() => {
+                    setSharePostModalVisible(false);
+                    setSharePostText('');
+                  }}
+                  className="px-4 py-2 rounded-full mr-2 bg-gray-300"
+                >
+                  <Text className="text-sm font-semibold text-gray-800">Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSubmitSharePost}
+                  disabled={isLoading}
+                  className={`px-4 py-2 rounded-full ${isLoading ? 'bg-gray-400' : 'bg-green-600'}`}
+                >
+                  <Text className="text-sm font-semibold text-white">Chia sẻ</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </ScrollView>
     // </SafeAreaView>
   );

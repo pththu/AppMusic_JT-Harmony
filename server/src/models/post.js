@@ -46,6 +46,8 @@ const Post = sequelize.define(
             defaultValue: 0,
             field: 'comment_count'
         },
+        // songId: ID bài hát được gắn trực tiếp vào bài đăng thường (post chia sẻ bài hát)
+        // Dùng để biết bài đăng này liên quan đến bài hát nào (thống kê, lọc theo bài hát,...)
         songId: { // Liên kết đến bài hát nếu bài đăng chia sẻ bài hát
             type: DataTypes.INTEGER,
             allowNull: true,
@@ -57,10 +59,19 @@ const Post = sequelize.define(
             defaultValue: false,
             field: 'is_cover'
         },
+        // originalSongId: ID của bài hát gốc
+        // - Với cover (isCover = true): là bài hát gốc mà cover tham chiếu tới
+        // - Với bài đăng thường có gắn bài hát: dùng cùng ID để tạo quan hệ OriginalSong (Track)
+        //   giúp load đầy đủ thông tin bài hát (tên, nghệ sĩ) cho feed
         originalSongId: { // ID của bài hát gốc nếu là cover
             type: DataTypes.INTEGER,
             allowNull: true,
             field: 'original_song_id'
+        },
+        originalPostId: { // ID của bài đăng gốc nếu là re-share
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'original_post_id'
         }
     }, {
         tableName: 'posts',

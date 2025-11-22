@@ -3,11 +3,25 @@ import React, { useEffect } from 'react'
 import { icons } from '@/constants/icons';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
+interface TabBarButtonProps {
+  onPress: Function;
+  onLongPress: Function;
+  isFocused: boolean;
+  routeName: string;
+  color: string;
+  label: string;
+  badgeCount?: number;
+}
+
 const TabBarButton = ({
-  onPress, onLongPress, isFocused, routeName, color, label
-}: {
-  onPress: Function; onLongPress: Function; isFocused: boolean; routeName: string; color: string; label: string;
-}) => {
+  onPress,
+  onLongPress,
+  isFocused,
+  routeName,
+  color,
+  label,
+  badgeCount = 0,
+}: TabBarButtonProps) => {
 
   const scale = useSharedValue(0);
   useEffect(() => {
@@ -41,10 +55,17 @@ const TabBarButton = ({
       onLongPress={() => onLongPress()}
       className='flex-1 flex items-center justify-center p-2'
     >
-      <Animated.View style={animatedIconStyle}>
+      <Animated.View style={animatedIconStyle} className="relative">
         {icons[routeName]?.({
           color: isFocused ? '#22c55e' : 'gray'
         })}
+        {badgeCount > 0 && (
+          <View className="absolute -top-1 -right-2 min-w-[16px] px-1 h-4 rounded-full bg-red-500 items-center justify-center">
+            <Text className="text-[10px] text-white font-semibold">
+              {badgeCount > 9 ? '9+' : badgeCount}
+            </Text>
+          </View>
+        )}
       </Animated.View>
       <Animated.Text 
         className={`text-xs ${isFocused ? 'text-[#22c55e] font-bold text-base' : 'text-gray-400'}`} 

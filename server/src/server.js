@@ -14,6 +14,7 @@ const dotenv = require("dotenv");
 const { Server } = require("socket.io");
 
 const chatEvents = require("./sockets/chatEvents");
+const notificationEvents = require("./sockets/notificationEvents");
 
 dotenv.config();
 
@@ -27,6 +28,10 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3001",
+      "http://192.168.32.101:3000",
+      "exp://192.168.32.101:8081",
+      "http://192.168.32.101:3000",
+      "exp://192.168.32.101:8081",
       "exp://192.168.1.12:8081",
       "exp://192.168.1.14:8081",
       "exp://10.172.55.251:8081",
@@ -73,12 +78,14 @@ io.use(async (socket, next) => {
 });
 
 chatEvents(io);
+notificationEvents(io);
 
 app.set("trust proxy", true);
 app.use(
   cors({
     origin: [
       "http://localhost:3001",
+      "http://192.168.32.101:3000",
       "http://192.168.1.22:3000",
     ],
     credentials: true,

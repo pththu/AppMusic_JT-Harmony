@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -8,6 +9,7 @@ import {
   Trash2,
   Heart,
   User,
+  MessageSquare,
 } from "lucide-react";
 import {
   Button,
@@ -45,8 +47,16 @@ type LikeItem = {
 };
 
 export default function LikesPage() {
+  const router = useRouter();
   const [postIdInput, setPostIdInput] = useState<string>("");
   const [likes, setLikes] = useState<LikeItem[]>([]);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [visibleCols, setVisibleCols] = useState({
+    id: true,
+    user: true,
+    post: true,
+    likedAt: true,
+  });
   const [selectedLike, setSelectedLike] = useState<LikeItem | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,9 +64,9 @@ export default function LikesPage() {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [limit, setLimit] = useState<string>("");
-  const [offset, setOffset] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
 
-  const loadLikes = async () => {
+  const loadLikes = async (targetPage?: number) => {
     const pid = parseInt(postIdInput, 10);
     setLoading(true);
     try {
@@ -64,9 +74,13 @@ export default function LikesPage() {
         userId: userIdInput ? parseInt(userIdInput, 10) : undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
-        limit: limit ? parseInt(limit, 10) : undefined,
-        offset: offset ? parseInt(offset, 10) : undefined,
+        limit: (limit ? parseInt(limit, 10) : undefined),
       } as any;
+      const limitNum = parseInt(limit || "50", 10) || 50;
+      const currentPage = targetPage && targetPage > 0 ? targetPage : (page > 0 ? page : 1);
+      const offsetNum = (currentPage - 1) * limitNum;
+      commonParams.limit = limitNum;
+      commonParams.offset = offsetNum;
       const data = postIdInput
         ? await getPostLikesAdmin(pid, commonParams)
         : await getAllLikesAdmin(commonParams);
@@ -115,7 +129,7 @@ export default function LikesPage() {
 
   useEffect(() => {
     // Tự động tải tất cả likes khi mở trang
-    loadLikes();
+    loadLikes(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -125,7 +139,7 @@ export default function LikesPage() {
     setDateFrom("");
     setDateTo("");
     setLimit("");
-    setOffset("");
+    setPage(1);
     setLoading(true);
     try {
       const data = await getAllLikesAdmin({});
@@ -151,6 +165,69 @@ export default function LikesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Quản Lý Likes</h1>
           <p className="text-gray-600">Quản lý các lượt thích theo bài đăng</p>
         </div>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Cột
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.id}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, id: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">ID</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.user}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, user: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Người dùng</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.post}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, post: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Bài đăng</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.likedAt}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, likedAt: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Thời gian like</span>
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Filters */}
@@ -164,7 +241,6 @@ export default function LikesPage() {
               <Label htmlFor="postId">ID bài đăng</Label>
               <Input
                 id="postId"
-                placeholder="Nhập Post ID"
                 value={postIdInput}
                 onChange={(e) => setPostIdInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { loadLikes(); } }}
@@ -175,7 +251,6 @@ export default function LikesPage() {
               <Label htmlFor="userId">ID người dùng</Label>
               <Input
                 id="userId"
-                placeholder="Lọc theo User ID"
                 value={userIdInput}
                 onChange={(e) => setUserIdInput(e.target.value)}
                 className="w-48"
@@ -205,24 +280,13 @@ export default function LikesPage() {
               <Label htmlFor="limit">Limit</Label>
               <Input
                 id="limit"
-                placeholder="vd 50"
                 value={limit}
                 onChange={(e) => setLimit(e.target.value)}
-                className="w-28"
-              />
-            </div>
-            <div>
-              <Label htmlFor="offset">Offset</Label>
-              <Input
-                id="offset"
-                placeholder="vd 0"
-                value={offset}
-                onChange={(e) => setOffset(e.target.value)}
-                className="w-28"
+                className="w-25"
               />
             </div>
             <div className="flex items-center gap-2 ml-auto">
-              <Button onClick={loadLikes} disabled={loading}>
+              <Button onClick={() => loadLikes(page)} disabled={loading}>
                 {loading ? "Đang tải..." : "Áp dụng"}
               </Button>
               <Button variant="outline" onClick={resetFilters} disabled={loading}>Đặt lại</Button>
@@ -235,19 +299,44 @@ export default function LikesPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Người Dùng</TableHead>
-              <TableHead>Bài Đăng</TableHead>
-              <TableHead>Thời Gian Like</TableHead>
+              <TableHead className="w-[60px] text-center">STT</TableHead>
+              {visibleCols.id && (
+                <TableHead className="w-[80px] text-center">ID</TableHead>
+              )}
+              {visibleCols.user && <TableHead>Người Dùng</TableHead>}
+              {visibleCols.post && <TableHead>Bài Đăng</TableHead>}
+              {visibleCols.likedAt && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))}
+                >
+                  Thời Gian Like
+                </TableHead>
+              )}
               <TableHead className="w-[70px]">Hành Động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.isArray(likes) && likes.map((like) => {
+            {Array.isArray(likes) && [...likes].sort((a, b) => {
+              const av = new Date(a.likedAt).getTime();
+              const bv = new Date(b.likedAt).getTime();
+              if (av === bv) return 0;
+              const res = av > bv ? 1 : -1;
+              return sortDir === "asc" ? res : -res;
+            }).map((like, index) => {
               const user = (like as any).User;
               const post = (like as any).Post || undefined;
+              const limitNum = parseInt(limit || "50", 10) || 50;
+              const currentPage = page > 0 ? page : 1;
+              const offsetNum = (currentPage - 1) * limitNum;
               return (
                 <TableRow key={like.id}>
-                  <TableCell>
+                  <TableCell className="text-center text-sm text-gray-500">{offsetNum + index + 1}</TableCell>
+                  {visibleCols.id && (
+                    <TableCell className="text-center text-xs text-gray-500">{like.id}</TableCell>
+                  )}
+                  {visibleCols.user && (
+                    <TableCell>
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                         {user?.avatarUrl ? (
@@ -268,15 +357,20 @@ export default function LikesPage() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  )}
+                  {visibleCols.post && (
+                    <TableCell>
                     <div className="max-w-xs">
                       <div className="text-sm text-gray-900 truncate">{post?.content ? post.content : `Post #${like.postId}`}</div>
                       <div className="text-xs text-gray-500">Post ID: {like.postId}</div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {format(new Date(like.likedAt), "MMM dd, yyyy 'lúc' HH:mm")}
-                  </TableCell>
+                  )}
+                  {visibleCols.likedAt && (
+                    <TableCell>
+                      {format(new Date(like.likedAt), "MMM dd, yyyy 'lúc' HH:mm")}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -288,6 +382,12 @@ export default function LikesPage() {
                         <DropdownMenuItem onClick={() => handleViewLike(like)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Xem Chi Tiết
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/posts?postId=${like.postId}`)}
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Tới Bài Đăng
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
@@ -304,6 +404,37 @@ export default function LikesPage() {
             })}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between px-2 sm:px-0 mt-2">
+        <div className="text-sm text-gray-600">Trang {page}</div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1 || loading}
+            onClick={async () => {
+              if (page <= 1) return;
+              const nextPage = page - 1;
+              await loadLikes(nextPage);
+              setPage(nextPage);
+            }}
+          >
+            Prev
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={loading}
+            onClick={async () => {
+              const nextPage = page + 1;
+              await loadLikes(nextPage);
+              setPage(nextPage);
+            }}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* View Like Dialog */}

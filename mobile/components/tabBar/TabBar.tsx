@@ -4,6 +4,7 @@ import TabBarButton from './TabBarButton';
 import { useEffect, useState } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { usePlayerStore } from '@/store/playerStore';
+import { useNotificationStore } from '@/store/notificationStore';
 
 function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
@@ -13,6 +14,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const colorScheme = useColorScheme();
   const [dimemsions, setDimemsions] = useState({ height: 20, width: 100 });
   const buttonWidth = dimemsions.width / state.routes.length;
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   const onTabBarLayout = (e: LayoutChangeEvent) => {
     const { height, width } = e.nativeEvent.layout;
@@ -71,6 +73,8 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           });
         };
 
+        const badgeCount = route.name === 'HomeScreen' ? unreadCount : 0;
+
         return (
           <TabBarButton
             key={route.name}
@@ -80,6 +84,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             routeName={route.name}
             color={isFocused ? '#22c55e' : 'gray'}
             label={label.toString()}
+            badgeCount={badgeCount}
           />
         );
       })}
