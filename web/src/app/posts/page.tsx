@@ -47,6 +47,19 @@ import { getUserById, mockUsers, mockTracks, getCommentsByPostId } from "@/lib/m
 export default function PostsPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<(AdminPost | any)[]>([]);
+  const [sortKey, setSortKey] = useState<"createdAt" | "likeCount" | "commentCount">("createdAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [visibleCols, setVisibleCols] = useState({
+    id: true,
+    author: true,
+    content: true,
+    likes: true,
+    comments: true,
+    createdAt: true,
+  });
+  const [previewPost, setPreviewPost] = useState<any | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -66,9 +79,9 @@ export default function PostsPage() {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [limit, setLimit] = useState<string>("50");
-  const [offset, setOffset] = useState<string>("0");
+  const [page, setPage] = useState<number>(1);
 
-  const loadPosts = async () => {
+  const loadPosts = async (targetPage?: number) => {
     try {
       const params: any = {};
       if (q) params.q = q;
@@ -77,8 +90,11 @@ export default function PostsPage() {
       if (filterIsCover === "original") params.isCover = false;
       if (dateFrom) params.dateFrom = dateFrom;
       if (dateTo) params.dateTo = dateTo;
-      if (limit) params.limit = parseInt(limit, 10);
-      if (offset) params.offset = parseInt(offset, 10);
+      const limitNum = parseInt(limit, 10) || 50;
+      const currentPage = targetPage && targetPage > 0 ? targetPage : (page > 0 ? page : 1);
+      const offsetNum = (currentPage - 1) * limitNum;
+      params.limit = limitNum;
+      params.offset = offsetNum;
       const data = await fetchPostsAdmin(params);
       setPosts(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -94,13 +110,38 @@ export default function PostsPage() {
     setDateFrom("");
     setDateTo("");
     setLimit("50");
-    setOffset("0");
-    await loadPosts();
+    setPage(1);
+    await loadPosts(1);
   };
 
   const handleDeletePost = async (postId: number) => {
     await deletePostAdmin(postId);
     setPosts((prev) => prev.filter((post) => post.id !== postId));
+    setSelectedIds((prev) => prev.filter((id) => id !== postId));
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    const idsToDelete = [...selectedIds];
+    await Promise.all(idsToDelete.map((id) => deletePostAdmin(id)));
+    setPosts((prev) => prev.filter((post) => !idsToDelete.includes(post.id)));
+    setSelectedIds([]);
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllCurrentPage = (currentPagePosts: any[]) => {
+    const ids = currentPagePosts.map((p) => p.id);
+    const allSelected = ids.every((id) => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !ids.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...ids])));
+    }
   };
 
   const handleAddPost = () => {
@@ -110,6 +151,7 @@ export default function PostsPage() {
       content: formData.content,
       fileUrl: formData.fileUrl || undefined,
       heartCount: 0,
+      likeCount: 0,
       shareCount: 0,
       uploadedAt: new Date().toISOString(),
       commentCount: 0,
@@ -177,9 +219,43 @@ export default function PostsPage() {
     return content.substring(0, maxLength) + "...";
   };
 
+  const openPreviewDialog = (post: any) => {
+    setPreviewPost(post);
+    setIsPreviewOpen(true);
+  };
+
   useEffect(() => {
-    loadPosts();
+    loadPosts(1);
   }, []);
+
+  const sortedPosts = (Array.isArray(posts) ? posts : []).slice().sort((a: any, b: any) => {
+    let av: any;
+    let bv: any;
+    if (sortKey === "createdAt") {
+      av = new Date(a.createdAt).getTime();
+      bv = new Date(b.createdAt).getTime();
+    } else if (sortKey === "likeCount") {
+      av = (a.likeCount ?? a.heartCount) ?? 0;
+      bv = (b.likeCount ?? b.heartCount) ?? 0;
+    } else {
+      av = a.commentCount ?? 0;
+      bv = b.commentCount ?? 0;
+    }
+    if (av === bv) return 0;
+    const res = av > bv ? 1 : -1;
+    return sortDir === "asc" ? res : -res;
+  });
+
+  const handleSort = (key: "createdAt" | "likeCount" | "commentCount") => {
+    setSortKey((prevKey) => {
+      if (prevKey === key) {
+        setSortDir((prevDir) => (prevDir === "asc" ? "desc" : "asc"));
+        return prevKey;
+      }
+      setSortDir("desc");
+      return key;
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -190,14 +266,102 @@ export default function PostsPage() {
             Quản lý bài đăng của người dùng và kiểm duyệt nội dung
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm Bài Đăng
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Cột
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.id}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, id: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">ID</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.author}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, author: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Tác giả</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.content}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, content: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Nội dung</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.likes}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, likes: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Lượt thích</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.comments}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, comments: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Bình luận</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.createdAt}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, createdAt: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Ngày tạo</span>
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Thêm Bài Đăng
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Thêm Bài Đăng Mới</DialogTitle>
               <DialogDescription>
@@ -330,8 +494,9 @@ export default function PostsPage() {
             <DialogFooter>
               <Button onClick={handleAddPost}>Thêm Bài Đăng</Button>
             </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
@@ -347,7 +512,7 @@ export default function PostsPage() {
             </div>
             <div>
               <Label className="text-sm font-medium">ID người dùng</Label>
-              <Input value={filterUserId} onChange={(e)=>setFilterUserId(e.target.value)} placeholder="vd 1" className="w-32" />
+              <Input value={filterUserId} onChange={(e)=>setFilterUserId(e.target.value)} className="w-32" />
             </div>
             <div>
               <Label className="text-sm font-medium">Loại</Label>
@@ -373,83 +538,169 @@ export default function PostsPage() {
               <Label className="text-sm font-medium">Limit</Label>
               <Input value={limit} onChange={(e)=>setLimit(e.target.value)} className="w-24" />
             </div>
-            <div>
-              <Label className="text-sm font-medium">Offset</Label>
-              <Input value={offset} onChange={(e)=>setOffset(e.target.value)} className="w-24" />
-            </div>
             <div className="flex items-center gap-2 ml-auto">
-              <Button onClick={loadPosts}>Áp dụng</Button>
+              <Button onClick={() => loadPosts(page)}>Áp dụng</Button>
               <Button variant="outline" onClick={resetFilters}>Đặt lại</Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Posts Table */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between text-sm bg-yellow-50 border border-yellow-200 rounded p-2">
+          <span>
+            Đã chọn <span className="font-semibold">{selectedIds.length}</span> bài đăng
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleBulkDelete}
+            >
+              Xóa các bài đã chọn
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedIds([])}
+            >
+              Bỏ chọn
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tác Giả</TableHead>
-              <TableHead>Nội Dung</TableHead>
-              <TableHead>Lượt Thích</TableHead>
-              <TableHead>Bình Luận</TableHead>
-              <TableHead>Ngày Tạo</TableHead>
+              <TableHead className="w-[40px] text-center">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  onChange={() => toggleSelectAllCurrentPage(sortedPosts)}
+                  checked={
+                    sortedPosts.length > 0 &&
+                    sortedPosts.every((post: any) => selectedIds.includes(post.id))
+                  }
+                />
+              </TableHead>
+              <TableHead className="w-[60px] text-center">STT</TableHead>
+              {visibleCols.id && (
+                <TableHead className="w-[80px] text-center">ID</TableHead>
+              )}
+              {visibleCols.author && <TableHead>Tác Giả</TableHead>}
+              {visibleCols.content && <TableHead>Nội Dung</TableHead>}
+              {visibleCols.likes && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("likeCount")}
+                >
+                  Lượt Thích
+                </TableHead>
+              )}
+              {visibleCols.comments && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("commentCount")}
+                >
+                  Bình Luận
+                </TableHead>
+              )}
+              {visibleCols.createdAt && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("createdAt")}
+                >
+                  Ngày Tạo
+                </TableHead>
+              )}
               <TableHead className="w-[70px]">Hành Động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(Array.isArray(posts) ? posts : []).map((post: any) => {
+            {sortedPosts.map((post: any, index: number) => {
               const author = post.User || post.user || null;
+              const limitNum = parseInt(limit, 10) || 50;
+              const currentPage = page > 0 ? page : 1;
+              const offsetNum = (currentPage - 1) * limitNum;
               return (
                 <TableRow key={post.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                        {author?.avatarUrl ? (
-                          <img
-                            src={author.avatarUrl}
-                            alt={author.username}
-                            className="w-8 h-8 rounded-full"
-                          />
-                        ) : (
-                          <span className="text-sm font-medium text-gray-600">
-                            {author?.username.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {author?.fullName || author?.username}
+                  <TableCell className="text-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={selectedIds.includes(post.id)}
+                      onChange={() => toggleSelect(post.id)}
+                    />
+                  </TableCell>
+                  <TableCell className="text-center text-sm text-gray-500">
+                    {offsetNum + index + 1}
+                  </TableCell>
+                  {visibleCols.id && (
+                    <TableCell className="text-center text-xs text-gray-500">{post.id}</TableCell>
+                  )}
+                  {visibleCols.author && (
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                          {author?.avatarUrl ? (
+                            <img
+                              src={author.avatarUrl}
+                              alt={author.username}
+                              className="w-8 h-8 rounded-full"
+                            />
+                          ) : (
+                            <span className="text-sm font-medium text-gray-600">
+                              {author?.username.charAt(0).toUpperCase()}
+                            </span>
+                          )}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          @{author?.username}
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {author?.fullName || author?.username}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            @{author?.username} · ID: {author?.id}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-xs">
-                      <p className="text-sm text-gray-900 truncate">
-                        {truncateContent(post.content)}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <Heart className="h-4 w-4 text-red-500" />
-                      <span className="text-sm">{post.heartCount}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <MessageSquare className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">{post.commentCount}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(post.createdAt), "MMM dd, yyyy")}
-                  </TableCell>
+                    </TableCell>
+                  )}
+                  {visibleCols.content && (
+                    <TableCell>
+                      <button
+                        type="button"
+                        className="max-w-xs text-left"
+                        onClick={() => openPreviewDialog(post)}
+                      >
+                        <p className="text-sm text-gray-900 truncate underline decoration-dotted">
+                          {truncateContent(post.content)}
+                        </p>
+                      </button>
+                    </TableCell>
+                  )}
+                  {visibleCols.likes && (
+                    <TableCell>
+                      <div className="flex items-center space-x-1">
+                        <Heart className="h-4 w-4 text-red-500" />
+                        <span className="text-sm">{post.likeCount ?? post.heartCount ?? 0}</span>
+                      </div>
+                    </TableCell>
+                  )}
+                  {visibleCols.comments && (
+                    <TableCell>
+                      <div className="flex items-center space-x-1">
+                        <MessageSquare className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">{post.commentCount}</span>
+                      </div>
+                    </TableCell>
+                  )}
+                  {visibleCols.createdAt && (
+                    <TableCell>
+                      {format(new Date(post.createdAt), "MMM dd, yyyy")}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -463,6 +714,18 @@ export default function PostsPage() {
                         >
                           <Eye className="mr-2 h-4 w-4" />
                           Xem Chi Tiết
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/comments?postId=${post.id}`)}
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Xem Bình Luận
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/likes?postId=${post.id}`)}
+                        >
+                          <Heart className="mr-2 h-4 w-4" />
+                          Xem Likes
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openEditDialog(post)}>
                           <Edit className="mr-2 h-4 w-4" />
@@ -484,6 +747,63 @@ export default function PostsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <div className="flex items-center justify-between px-2 sm:px-0">
+        <div className="text-sm text-gray-600">
+          Trang {page}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={async () => {
+              if (page <= 1) return;
+              const nextPage = page - 1;
+              await loadPosts(nextPage);
+              setPage(nextPage);
+            }}
+          >
+            Prev
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const nextPage = page + 1;
+              await loadPosts(nextPage);
+              setPage(nextPage);
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+
+      {/* Preview Post Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Preview Bài Đăng</DialogTitle>
+            <DialogDescription>Xem nhanh nội dung bài đăng.</DialogDescription>
+          </DialogHeader>
+          {previewPost && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">ID: {previewPost.id}</p>
+                <p className="text-base text-gray-900 whitespace-pre-wrap">
+                  {previewPost.content}
+                </p>
+              </div>
+              {previewPost.fileUrl && (
+                <div className="text-sm text-green-700 break-all">
+                  File: {previewPost.fileUrl}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Post Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

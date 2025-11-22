@@ -42,6 +42,15 @@ import {
 
 export default function MessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [visibleCols, setVisibleCols] = useState({
+    id: false,
+    content: true,
+    sender: true,
+    conversation: true,
+    type: true,
+    createdAt: true,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
@@ -52,6 +61,8 @@ export default function MessagesPage() {
   const [filterType, setFilterType] = useState<string>("");
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
   const [filterDateTo, setFilterDateTo] = useState<string>("");
+  const [onlyHasFile, setOnlyHasFile] = useState<boolean>(false);
+  const [onlyReplies, setOnlyReplies] = useState<boolean>(false);
 
   useEffect(() => {
     loadMessages();
@@ -127,6 +138,21 @@ export default function MessagesPage() {
     );
   }
 
+  const sortedMessages: Message[] = (Array.isArray(messages) ? messages : [])
+    .filter((m) => {
+      if (onlyHasFile && !m.fileUrl) return false;
+      if (onlyReplies && !m.replyToId) return false;
+      return true;
+    })
+    .slice()
+    .sort((a, b) => {
+      const aTime = new Date(a.createdAt).getTime();
+      const bTime = new Date(b.createdAt).getTime();
+      if (aTime === bTime) return 0;
+      const res = aTime > bTime ? 1 : -1;
+      return sortDir === "asc" ? res : -res;
+    });
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -149,28 +175,117 @@ export default function MessagesPage() {
             Quản lý các tin nhắn trong cuộc trò chuyện
           </p>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              Cột
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem asChild>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={visibleCols.id}
+                  onChange={(e) =>
+                    setVisibleCols((prev) => ({ ...prev, id: e.target.checked }))
+                  }
+                />
+                <span className="text-sm">ID</span>
+              </label>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={visibleCols.content}
+                  onChange={(e) =>
+                    setVisibleCols((prev) => ({ ...prev, content: e.target.checked }))
+                  }
+                />
+                <span className="text-sm">Tin nhắn</span>
+              </label>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={visibleCols.sender}
+                  onChange={(e) =>
+                    setVisibleCols((prev) => ({ ...prev, sender: e.target.checked }))
+                  }
+                />
+                <span className="text-sm">Người gửi</span>
+              </label>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={visibleCols.conversation}
+                  onChange={(e) =>
+                    setVisibleCols((prev) => ({ ...prev, conversation: e.target.checked }))
+                  }
+                />
+                <span className="text-sm">Cuộc trò chuyện</span>
+              </label>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={visibleCols.type}
+                  onChange={(e) =>
+                    setVisibleCols((prev) => ({ ...prev, type: e.target.checked }))
+                  }
+                />
+                <span className="text-sm">Loại</span>
+              </label>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={visibleCols.createdAt}
+                  onChange={(e) =>
+                    setVisibleCols((prev) => ({ ...prev, createdAt: e.target.checked }))
+                  }
+                />
+                <span className="text-sm">Thời gian</span>
+              </label>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Filters */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
           <div>
             <label className="block text-sm text-gray-600 mb-1">Conversation ID</label>
             <input
-              type="number"
+              type="text"
               value={filterConvId}
               onChange={(e) => setFilterConvId(e.target.value)}
-              placeholder="VD: 123"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  loadMessages();
+                }
+              }}
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">ID người gửi</label>
             <input
-              type="number"
+              type="text"
               value={filterSenderId}
               onChange={(e) => setFilterSenderId(e.target.value)}
-              placeholder="VD: 45"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  loadMessages();
+                }
+              }}
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
@@ -207,8 +322,28 @@ export default function MessagesPage() {
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
+          <div className="flex flex-col justify-center gap-2 mt-6">
+            <label className="flex items-center gap-2 text-xs text-gray-700">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={onlyHasFile}
+                onChange={(e) => setOnlyHasFile(e.target.checked)}
+              />
+              <span>Chỉ tin có file</span>
+            </label>
+            <label className="flex items-center gap-2 text-xs text-gray-700">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={onlyReplies}
+                onChange={(e) => setOnlyReplies(e.target.checked)}
+              />
+              <span>Chỉ tin là reply</span>
+            </label>
+          </div>
         </div>
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 justify-end">
           <Button onClick={loadMessages}>Áp dụng</Button>
           <Button
             variant="outline"
@@ -218,6 +353,8 @@ export default function MessagesPage() {
               setFilterType("");
               setFilterDateFrom("");
               setFilterDateTo("");
+              setOnlyHasFile(false);
+              setOnlyReplies(false);
               loadMessages();
             }}
           >
@@ -231,29 +368,65 @@ export default function MessagesPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tin Nhắn</TableHead>
-              <TableHead>Người Gửi</TableHead>
-              <TableHead>Cuộc Trò Chuyện</TableHead>
-              <TableHead>Loại</TableHead>
-              <TableHead>Thời Gian</TableHead>
+              <TableHead className="w-[60px] text-center">STT</TableHead>
+              {visibleCols.id && (
+                <TableHead className="w-[80px] text-center">ID</TableHead>
+              )}
+              {visibleCols.content && <TableHead>Tin Nhắn</TableHead>}
+              {visibleCols.sender && <TableHead>Người Gửi</TableHead>}
+              {visibleCols.conversation && <TableHead>Cuộc Trò Chuyện</TableHead>}
+              {visibleCols.type && <TableHead>Loại</TableHead>}
+              {visibleCols.createdAt && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))}
+                >
+                  Thời Gian
+                </TableHead>
+              )}
               <TableHead className="w-[70px]">Hành Động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {messages.length === 0 ? (
+            {sortedMessages.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  <p className="text-gray-500">Không có tin nhắn nào</p>
+                <TableCell colSpan={7} className="text-center py-8">
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-gray-500 text-sm">
+                      Không có tin nhắn nào khớp với bộ lọc hiện tại.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setFilterConvId("");
+                        setFilterSenderId("");
+                        setFilterType("");
+                        setFilterDateFrom("");
+                        setFilterDateTo("");
+                        setOnlyHasFile(false);
+                        setOnlyReplies(false);
+                        loadMessages();
+                      }}
+                    >
+                      Đặt lại bộ lọc
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
-              messages.map((message) => {
+              sortedMessages.map((message: Message, index: number) => {
                 const sender = (message as any).Sender || (message as any).User;
                 const conversationName = `Cuộc trò chuyện ${message.conversationId}`;
 
                 return (
                   <TableRow key={message.id}>
-                    <TableCell>
+                    <TableCell className="text-center text-sm text-gray-500">{index + 1}</TableCell>
+                    {visibleCols.id && (
+                      <TableCell className="text-center text-xs text-gray-500">{message.id}</TableCell>
+                    )}
+                    {visibleCols.content && (
+                      <TableCell>
                       <div className="max-w-xs">
                         <p className="text-sm text-gray-900 truncate">
                           {message.content || "File đính kèm"}
@@ -276,7 +449,9 @@ export default function MessagesPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    )}
+                    {visibleCols.sender && (
+                      <TableCell>
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center">
                           {sender?.avatarUrl ? (
@@ -293,24 +468,38 @@ export default function MessagesPage() {
                             </span>
                           )}
                         </div>
-                        <span className="text-sm truncate max-w-[160px]">
-                          {sender?.fullName || sender?.username || "Không rõ"}
-                        </span>
+                        <div className="max-w-[160px]">
+                          <span className="text-sm block truncate">
+                            {sender?.fullName || sender?.username || "Không rõ"}
+                          </span>
+                          {sender && (
+                            <span className="text-xs text-gray-500 block truncate">
+                              ID: {sender.id}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    )}
+                    {visibleCols.conversation && (
+                      <TableCell>
                       <div className="text-sm text-gray-900 truncate max-w-xs">
                         {conversationName}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    )}
+                    {visibleCols.type && (
+                      <TableCell>
                       <Badge variant="outline">
                         {getMessageTypeLabel(message.type)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    )}
+                    {visibleCols.createdAt && (
+                      <TableCell>
                       {format(new Date(message.createdAt), "MMM dd, yyyy")}
                     </TableCell>
+                    )}
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

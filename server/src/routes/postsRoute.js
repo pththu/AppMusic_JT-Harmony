@@ -28,7 +28,8 @@ router.get(
   postController.getPostsByUserId
 ); // Lấy bài đăng theo User ID
 router.get("/mine", authenticateToken, postController.getPostsByMe); // Lấy bài đăng của chính mình
-router.post("/", authenticateToken, postController.createPost); // Tạo bài đăng mới
+router.post( "/", authenticateToken, postController.createPost ); // Tạo bài đăng mới
+router.post("/:id/share", authenticateToken, postController.sharePost); // Chia sẻ lại bài đăng (re-share)
 router.post("/:id/like", authenticateToken, postController.toggleLike); // Thích/ bỏ thích bài đăng
 router.get("/:id/likes", authenticateToken, postController.getLikesByPostId); // Lấy danh sách người đã thích bài đăng
 router.put("/update/:id", authenticateToken, postController.updatePost); // Cập nhật bài đăng

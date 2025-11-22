@@ -323,11 +323,21 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
                 <TouchableOpacity
                   onPress={() => {
                     const pos = usePlayerStore.getState().playbackPosition || 0;
-                    setAttachTime(Math.floor(pos * 1000));
+                    if (attachTime != null) {
+                      // Tắt gán thời gian -> bình luận thường
+                      setAttachTime(null);
+                    } else {
+                      // Bật gán thời gian theo vị trí hiện tại
+                      setAttachTime(Math.floor(pos * 1000));
+                    }
                   }}
                   className="px-3 py-2 rounded-full bg-indigo-500 mr-2"
                 >
-                  <Text className="text-white text-xs font-bold">Gắn {formatTime(usePlayerStore.getState().playbackPosition || 0)}</Text>
+                  <Text className="text-white text-xs font-bold">
+                    {attachTime != null
+                      ? `Tắt gắn mốc (${timeLabel})`
+                      : `Gắn ${formatTime(usePlayerStore.getState().playbackPosition || 0)}`}
+                  </Text>
                 </TouchableOpacity>
                 <TextInput
                   placeholder="Viết bình luận..."

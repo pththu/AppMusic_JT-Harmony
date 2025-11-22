@@ -7,6 +7,13 @@ const Artist = require('../models/artist');
 const Album = require('../models/album');
 const Track = require('../models/track');
 const Playlist = require('../models/playlist');
+const Post = require('../models/post');
+const Like = require('../models/like');
+const Comment = require('../models/comment');
+const PostReport = require('../models/postReport');
+const Conversation = require('../models/conversation');
+const ConversationMember = require('../models/conversationMember');
+const Message = require('../models/message');
 
 // Đọc file JSON trực tiếp
 const roleData = require('../seeders/roles.json');
@@ -16,6 +23,9 @@ const artistData = require('../seeders/artists.json');
 const albumData = require('../seeders/albums.json');
 const trackData = require('../seeders/tracks.json');
 const playlistData = require('../seeders/playlists.json');
+const postData = require('../seeders/posts.json');
+const conversationData = require('../seeders/conversations.json');
+const conversationMemberSeedData = require('../seeders/conversationMembers.json');
 
 const mapArtist = async() => {
     const artists = await Artist.findAll({ attributes: ['id', 'name'] });
@@ -374,11 +384,361 @@ const seedDataArtistTracks = async() => {
 //         } else {
 //             console.log('Pass insert Playlist.');
 //         }
-
+//
 //     } catch (error) {
 //         console.log('Error insert playlist', error);
 //     }
 // }
+
+/**
+ * --- 11. SEED DATA CHO POST ---
+ * Luôn append thêm dữ liệu từ posts.json (không xoá dữ liệu cũ)
+ */
+const seedDataPost = async() => {
+    try {
+        console.log('Start insert Posts (append)...');
+
+        const users = await User.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
+        const tracks = await Track.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
+
+        const userIds = users.map(u => u.id);
+        const trackIds = tracks.map(t => t.id);
+
+        const normalizeTrackId = (index) => {
+            if (!index || trackIds.length === 0) return null;
+            const idx = index - 1;
+            if (idx < 0 || idx >= trackIds.length) return null;
+            return trackIds[idx];
+        };
+
+        const postsToInsert = postData.map(p => ({
+            userId: userIds.length ? userIds[((p.userId || 1) - 1) % userIds.length] : null,
+            content: p.content,
+            fileUrl: p.fileUrl || null,
+            heartCount: p.heartCount || 0,
+            shareCount: p.shareCount || 0,
+            commentCount: p.commentCount || 0,
+            songId: normalizeTrackId(p.songId),
+            isCover: !!p.isCover,
+            originalSongId: normalizeTrackId(p.originalSongId),
+            originalPostId: p.originalPostId || null
+        }));
+
+        await Post.bulkCreate(postsToInsert, { ignoreDuplicates: true });
+        console.log(' Finish insert Posts.');
+    } catch (error) {
+        console.log('Error insert posts', error);
+    }
+}
+
+const seedDataLike = async() => {
+    try {
+        console.log('Start insert Likes (append)...');
+
+        const users = await User.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
+        const posts = await Post.findAll({
+            attributes: ['id', 'userId'],
+            order: [['id', 'DESC']],
+            limit: 20, // chỉ seed cho 20 post mới nhất
+        });
+
+        if (!users.length || !posts.length) {
+            console.log('Skip insert Likes because no users or posts');
+            return;
+        }
+
+        const userIds = users.map(u => u.id);
+        const likesToInsert = [];
+
+        for (const post of posts) {
+            const likeTarget = 3 + Math.floor(Math.random() * 3); // 3-5 like mỗi post
+
+            const usedUserIds = new Set();
+
+            if (!usedUserIds.has(post.userId)) {
+                usedUserIds.add(post.userId);
+                likesToInsert.push({ userId: post.userId, postId: post.id });
+            }
+
+            let idx = 0;
+            while (usedUserIds.size < likeTarget) {
+                const userId = userIds[idx % userIds.length];
+                idx++;
+                if (usedUserIds.has(userId)) continue;
+                usedUserIds.add(userId);
+                likesToInsert.push({ userId, postId: post.id });
+            }
+        }
+
+        await Like.bulkCreate(likesToInsert, { ignoreDuplicates: true });
+        console.log(' Finish insert Likes.');
+    } catch (error) {
+        console.log('Error insert likes', error);
+    }
+}
+
+const seedDataComment = async() => {
+    try {
+        console.log('Start insert Comments (append)...');
+
+        const users = await User.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
+        const posts = await Post.findAll({
+            attributes: ['id'],
+            order: [['id', 'DESC']],
+            limit: 20, // chỉ seed cho 20 post mới nhất
+        });
+
+        if (!users.length || !posts.length) {
+            console.log('Skip insert Comments because no users or posts');
+            return;
+        }
+
+        const userIds = users.map(u => u.id);
+        const commentsToInsert = [];
+
+        const sampleContents = [
+            'Love this post!',
+            'Bài này nghe cuốn quá.',
+            'On repeat all day.',
+            'Nghe nhạc mà thấy chill hẳn.',
+            'This track is a masterpiece.',
+            'Lyrics đỉnh quá trời.',
+            'Cảm ơn đã share bài này.',
+            'Perfect song for coding session.',
+            'Giai điệu nhẹ nhàng dễ chịu.',
+            'Can you share more songs like this?'
+        ];
+
+        const randomContent = () => sampleContents[Math.floor(Math.random() * sampleContents.length)];
+
+        for (const post of posts) {
+            const totalComments = 10 + Math.floor(Math.random() * 6);
+            const rootCount = Math.max(4, Math.floor(totalComments * 0.6));
+
+            for (let i = 0; i < rootCount; i++) {
+                const userId = userIds[(i + post.id) % userIds.length];
+                commentsToInsert.push({
+                    userId,
+                    postId: post.id,
+                    trackId: null,
+                    content: randomContent(),
+                    parentId: null,
+                    fileUrl: null,
+                    timecodeMs: null
+                });
+            }
+
+            const replyCount = totalComments - rootCount;
+            for (let i = 0; i < replyCount; i++) {
+                const userId = userIds[(i + 1 + post.id) % userIds.length];
+                commentsToInsert.push({
+                    userId,
+                    postId: post.id,
+                    trackId: null,
+                    content: randomContent(),
+                    parentId: null,
+                    fileUrl: null,
+                    timecodeMs: null
+                });
+            }
+        }
+
+        const createdComments = await Comment.bulkCreate(commentsToInsert, { ignoreDuplicates: true, returning: true });
+
+        const byPost = {};
+        for (const c of createdComments) {
+            if (!byPost[c.postId]) byPost[c.postId] = [];
+            byPost[c.postId].push(c);
+        }
+
+        for (const postId of Object.keys(byPost)) {
+            const list = byPost[postId];
+            if (list.length < 2) continue;
+            const roots = list.slice(0, Math.floor(list.length * 0.6));
+            const replies = list.slice(roots.length);
+            for (const reply of replies) {
+                const parent = roots[Math.floor(Math.random() * roots.length)];
+                reply.parentId = parent.id;
+                await reply.save();
+            }
+        }
+
+        console.log(' Finish insert Comments.');
+    } catch (error) {
+        console.log('Error insert comments', error);
+    }
+}
+
+const seedDataPostReport = async() => {
+    try {
+        console.log('Start insert PostReports (append)...');
+
+        const users = await User.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
+        const posts = await Post.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
+
+        if (!users.length || !posts.length) {
+            console.log('Skip insert PostReports because no users or posts');
+            return;
+        }
+
+        const reporterIds = users.map(u => u.id).filter(id => id !== 1);
+        const reasons = ['adult_content', 'self_harm', 'misinformation', 'unwanted_content'];
+        const statuses = ['pending', 'reviewed', 'resolved'];
+
+        const reportsToInsert = [];
+        const targetReports = Math.min(10, posts.length);
+
+        for (let i = 0; i < targetReports; i++) {
+            const post = posts[i % posts.length];
+            const reporterId = reporterIds[i % reporterIds.length] || reporterIds[0];
+            const reason = reasons[i % reasons.length];
+            const status = statuses[i % statuses.length];
+
+            reportsToInsert.push({
+                postId: post.id,
+                reporterId,
+                reason,
+                status,
+                reportedAt: new Date(),
+                reviewedAt: status === 'pending' ? null : new Date(),
+                adminNotes: status === 'resolved' ? 'Resolved in seed data.' : null
+            });
+        }
+
+        await PostReport.bulkCreate(reportsToInsert, { ignoreDuplicates: true });
+        console.log(' Finish insert PostReports.');
+    } catch (error) {
+        console.log('Error insert post reports', error);
+    }
+}
+
+const seedDataConversation = async() => {
+    try {
+        console.log('Start insert Conversations (append)...');
+
+        const conversationsToInsert = conversationData.map(c => ({
+            type: c.type || 'private',
+            name: c.name || null
+        }));
+
+        await Conversation.bulkCreate(conversationsToInsert, { ignoreDuplicates: true });
+        console.log(' Finish insert Conversations.');
+    } catch (error) {
+        console.log('Error insert conversations', error);
+    }
+}
+
+const seedDataConversationMember = async() => {
+    try {
+        console.log('Start insert ConversationMembers (append)...');
+
+        const conversations = await Conversation.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
+        if (!conversations.length) {
+            console.log('Skip insert ConversationMembers because no conversations');
+            return;
+        }
+
+        const membersToInsert = conversationMemberSeedData.map(m => {
+            const index = m.conversationIndex - 1;
+            const conversation = conversations[index];
+            if (!conversation) return null;
+            return {
+                conversationId: conversation.id,
+                userId: m.userId,
+                isAdmin: !!m.isAdmin,
+                lastReadMessageId: null,
+                status: 'active'
+            };
+        }).filter(Boolean);
+
+        await ConversationMember.bulkCreate(membersToInsert, { ignoreDuplicates: true });
+        console.log(' Finish insert ConversationMembers.');
+    } catch (error) {
+        console.log('Error insert conversation members', error);
+    }
+}
+
+const seedDataMessage = async() => {
+    try {
+        console.log('Start insert Messages (append)...');
+
+        const conversations = await Conversation.findAll({ order: [['id', 'ASC']] });
+        const members = await ConversationMember.findAll({ order: [['conversation_id', 'ASC'], ['id', 'ASC']] });
+
+        if (!conversations.length || !members.length) {
+            console.log('Skip insert Messages because no conversations or members');
+            return;
+        }
+
+        const byConversation = {};
+        for (const m of members) {
+            if (!byConversation[m.conversationId]) byConversation[m.conversationId] = [];
+            byConversation[m.conversationId].push(m);
+        }
+
+        const sampleMessages = [
+            'Hey, have you listened to the new track?',
+            'Vừa nghe bài mới, hay cực!',
+            'This song is perfect for late night coding.',
+            'Nghe nhạc mà muốn nhảy luôn đó.',
+            'I can’t stop replaying this track.',
+            'Giai điệu bài này chill ghê.',
+            'Send me your favorite playlist!',
+            'Cho mình xin tên bài hát với.',
+            'This chorus is stuck in my head.',
+            'Nghe mà nổi da gà luôn.'
+        ];
+
+        const randomMessage = () => sampleMessages[Math.floor(Math.random() * sampleMessages.length)];
+
+        for (const conversation of conversations) {
+            const convMembers = byConversation[conversation.id] || [];
+            if (convMembers.length === 0) continue;
+
+            const totalMessages = 15 + Math.floor(Math.random() * 6);
+            const createdForConv = [];
+
+            for (let i = 0; i < totalMessages; i++) {
+                const sender = convMembers[i % convMembers.length];
+                const base = {
+                    conversationId: conversation.id,
+                    senderId: sender.userId,
+                    content: randomMessage(),
+                    type: 'text',
+                    fileUrl: null,
+                    replyToId: null
+                };
+
+                if (i > 2 && Math.random() < 0.3 && createdForConv.length) {
+                    const target = createdForConv[Math.floor(Math.random() * createdForConv.length)];
+                    base.replyToId = target.id;
+                }
+
+                const msg = await Message.create(base);
+                createdForConv.push(msg);
+            }
+
+            const last = createdForConv[createdForConv.length - 1];
+            if (last) {
+                conversation.lastMessageId = last.id;
+                await conversation.save();
+            }
+
+            if (convMembers.length >= 2 && createdForConv.length) {
+                const mid = createdForConv[Math.floor(createdForConv.length / 2)];
+                const lastMsg = createdForConv[createdForConv.length - 1];
+                convMembers[0].lastReadMessageId = lastMsg.id;
+                convMembers[1].lastReadMessageId = mid.id;
+                await convMembers[0].save();
+                await convMembers[1].save();
+            }
+        }
+
+        console.log(' Finish insert Messages.');
+    } catch (error) {
+        console.log('Error insert messages', error);
+    }
+}
 
 /**
  * Phương thức để seeding dữ liệu vào database
@@ -400,6 +760,15 @@ async function seedDatabase() {
         await seedDataArtistTracks(); /* Bảng trung gian */
 
         // await seedDataPlaylist();
+
+        await seedDataPost();
+        await seedDataLike();
+        await seedDataComment();
+        await seedDataPostReport();
+        await seedDataConversation();
+        await seedDataConversationMember();
+        await seedDataMessage();
+
         console.log('✅ Finish seeding database.');
 
     } catch (error) {

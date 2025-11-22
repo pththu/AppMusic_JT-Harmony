@@ -1,0 +1,19 @@
+[
+  { "conversationIndex": 1, "userId": 1, "isAdmin": true },
+  { "conversationIndex": 1, "userId": 2, "isAdmin": false },
+
+  { "conversationIndex": 2, "userId": 1, "isAdmin": true },
+  { "conversationIndex": 2, "userId": 3, "isAdmin": false },
+
+  { "conversationIndex": 3, "userId": 1, "isAdmin": true },
+  { "conversationIndex": 3, "userId": 4, "isAdmin": false },
+
+  { "conversationIndex": 4, "userId": 2, "isAdmin": true },
+  { "conversationIndex": 4, "userId": 3, "isAdmin": false },
+
+  { "conversationIndex": 5, "userId": 2, "isAdmin": true },
+  { "conversationIndex": 5, "userId": 4, "isAdmin": false },
+
+  { "conversationIndex": 6, "userId": 3, "isAdmin": true },
+  { "conversationIndex": 6, "userId": 4, "isAdmin": false }
+]

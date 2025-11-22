@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
-    // const { sequelize } = require('../configs/database');
 
 const Notification = sequelize.define(
     'Notification', {
@@ -14,6 +13,16 @@ const Notification = sequelize.define(
             allowNull: false,
             field: 'user_id'
         },
+        actorId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            field: 'actor_id'
+        },
+        postId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'post_id'
+        },
         message: {
             type: DataTypes.TEXT
         },
@@ -24,6 +33,10 @@ const Notification = sequelize.define(
         type: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        metadata: {
+            type: DataTypes.JSON,
+            allowNull: true
         }
     }, {
         tableName: 'notifications',

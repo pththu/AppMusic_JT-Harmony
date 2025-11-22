@@ -29,6 +29,7 @@ const PlaylistTrack = require('./playlist_track');
 const ListeningHistory = require('./listening_history');
 const SearchHistory = require('./search_history');
 const FavoriteItem = require('./favorite_items')
+
 // ================= Associations ================= //
 
 // User - Sync status
@@ -39,16 +40,12 @@ SyncStatus.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(Post, { foreignKey: 'userId' });
 Post.belongsTo(User, {
     foreignKey: 'userId',
-    as: 'User'
+    as: 'User',
 });
 
-// User - PostReport
-User.hasMany(PostReport, { foreignKey: 'reporterId' });
-PostReport.belongsTo(User, { foreignKey: 'reporterId', as: 'Reporter' });
-
-// Post - PostReport
-Post.hasMany(PostReport, { foreignKey: 'postId' });
-PostReport.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+// Post - OriginalPost (re-share)
+Post.belongsTo(Post, { foreignKey: 'originalPostId', as: 'OriginalPost' });
+Post.hasMany(Post, { foreignKey: 'originalPostId', as: 'ReSharedPosts' });
 
 // User - PostHide
 User.hasMany(PostHide, { foreignKey: 'userId' });
@@ -58,6 +55,14 @@ PostHide.belongsTo(User, { foreignKey: 'userId', as: 'User' });
 Post.hasMany(PostHide, { foreignKey: 'postId' });
 PostHide.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
 
+// Post - PostReport
+Post.hasMany(PostReport, { foreignKey: 'postId' });
+PostReport.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+
+// User - PostReport (reporter)
+User.hasMany(PostReport, { foreignKey: 'reporterId', as: 'Reports' });
+PostReport.belongsTo(User, { foreignKey: 'reporterId', as: 'Reporter' });
+
 // User - Comment
 User.hasMany(Comment, { foreignKey: 'userId' });
 Comment.belongsTo(User, {
@@ -66,8 +71,16 @@ Comment.belongsTo(User, {
 });
 
 // User - Notification
-User.hasMany(Notification, { foreignKey: 'userId' });
-Notification.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Notification, { foreignKey: 'userId', as: 'Notifications' });
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'Receiver' });
+
+// Actor - Notification
+User.hasMany(Notification, { foreignKey: 'actorId', as: 'SentNotifications' });
+Notification.belongsTo(User, { foreignKey: 'actorId', as: 'Actor' });
+
+// Post - Notification
+Post.hasMany(Notification, { foreignKey: 'postId', as: 'PostNotifications' });
+Notification.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
 
 // User - Recommendation
 User.hasMany(Recommendation, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });

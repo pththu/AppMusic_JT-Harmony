@@ -11,6 +11,7 @@ const {
   Artist,
 } = require("../models");
 const { Op } = require('sequelize');
+const { createNotification } = require("../utils/notificationHelper");
 
 function isAdmin(req) {
   const u = (req && (req.currentUser || req.user)) || {};
@@ -63,6 +64,198 @@ exports.getAllLikesAdmin = async (req, res) => {
   }
 };
 
+// --- HÀM CHIA SẺ LẠI BÀI ĐĂNG (RE-SHARE) ---
+exports.sharePost = async (req, res) => {
+  try {
+    const userId = req.user && req.user.id;
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ message: "User not authenticated or missing ID", status: "error" });
+    }
+
+    const originalPostId = parseInt(req.params.id, 10);
+    const { content } = req.body || {};
+
+    if (isNaN(originalPostId)) {
+      return res.status(400).json({ message: "ID bài đăng không hợp lệ.", status: "error" });
+    }
+
+    const originalPost = await Post.findByPk(originalPostId, {
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: ["id", "username", "avatarUrl", "fullName"],
+        },
+      ],
+    });
+    if (!originalPost) {
+      return res.status(404).json({ message: "Bài đăng gốc không tồn tại.", status: "error" });
+    }
+
+    const caption =
+      content && typeof content === "string" ? content.trim() : "";
+
+    const transaction = await sequelize.transaction();
+    try {
+      const newPost = await Post.create(
+        {
+          userId,
+          content: caption,
+          fileUrl: null,
+          songId: originalPost.songId || null,
+          isCover: originalPost.isCover || false,
+          originalSongId: originalPost.originalSongId || null,
+          originalPostId: originalPost.id,
+        },
+        { transaction }
+      );
+
+      originalPost.shareCount = (originalPost.shareCount || 0) + 1;
+      await originalPost.save({ transaction });
+
+      const newPostWithUser = await Post.findByPk(newPost.id, {
+        attributes: [
+          "id",
+          "userId",
+          "content",
+          "fileUrl",
+          "heartCount",
+          "shareCount",
+          "uploadedAt",
+          "commentCount",
+          "songId",
+          "originalPostId",
+        ],
+        include: [
+          {
+            model: User,
+            as: "User",
+            attributes: ["id", "username", "avatarUrl", "fullName"],
+          },
+          {
+            model: Post,
+            as: "OriginalPost",
+            attributes: [
+              "id",
+              "userId",
+              "content",
+              "fileUrl",
+              "heartCount",
+              "shareCount",
+              "uploadedAt",
+              "commentCount",
+              "songId",
+            ],
+            include: [
+              {
+                model: User,
+                as: "User",
+                attributes: ["id", "username", "avatarUrl", "fullName"],
+              },
+            ],
+          },
+        ],
+        transaction,
+      });
+
+      let returnedNewPost = newPostWithUser.toJSON();
+      try {
+        if (returnedNewPost.fileUrl) {
+          returnedNewPost.fileUrl = JSON.parse(returnedNewPost.fileUrl);
+          if (!Array.isArray(returnedNewPost.fileUrl)) {
+            returnedNewPost.fileUrl = [returnedNewPost.fileUrl];
+          }
+        } else {
+          returnedNewPost.fileUrl = [];
+        }
+      } catch (e) {
+        returnedNewPost.fileUrl = returnedNewPost.fileUrl
+          ? [returnedNewPost.fileUrl]
+          : [];
+      }
+
+      if (returnedNewPost.OriginalPost) {
+        try {
+          if (returnedNewPost.OriginalPost.fileUrl) {
+            returnedNewPost.OriginalPost.fileUrl = JSON.parse(
+              returnedNewPost.OriginalPost.fileUrl
+            );
+            if (!Array.isArray(returnedNewPost.OriginalPost.fileUrl)) {
+              returnedNewPost.OriginalPost.fileUrl = [
+                returnedNewPost.OriginalPost.fileUrl,
+              ];
+            }
+          } else {
+            returnedNewPost.OriginalPost.fileUrl = [];
+          }
+        } catch (e) {
+          returnedNewPost.OriginalPost.fileUrl =
+            returnedNewPost.OriginalPost.fileUrl
+              ? [returnedNewPost.OriginalPost.fileUrl]
+              : [];
+        }
+      }
+
+      let returnedOriginalPost = originalPost.toJSON();
+      try {
+        if (returnedOriginalPost.fileUrl) {
+          returnedOriginalPost.fileUrl = JSON.parse(returnedOriginalPost.fileUrl);
+          if (!Array.isArray(returnedOriginalPost.fileUrl)) {
+            returnedOriginalPost.fileUrl = [returnedOriginalPost.fileUrl];
+          }
+        } else {
+          returnedOriginalPost.fileUrl = [];
+        }
+      } catch (e) {
+        returnedOriginalPost.fileUrl = returnedOriginalPost.fileUrl
+          ? [returnedOriginalPost.fileUrl]
+          : [];
+      }
+
+      await transaction.commit();
+
+      const actorName =
+        (req.user && (req.user.fullName || req.user.username)) ||
+        "Một người dùng";
+      if (originalPost.userId && originalPost.userId !== userId) {
+        await createNotification({
+          userId: originalPost.userId,
+          actorId: userId,
+          postId: originalPost.id,
+          type: "share",
+          message: `${actorName} đã chia sẻ bài viết của bạn`,
+          metadata: {
+            originalPostId: originalPost.id,
+            reSharePostId: newPost.id,
+            caption,
+          },
+        });
+      }
+
+      return res.status(201).json({
+        message: "Chia sẻ bài đăng thành công!",
+        newPost: returnedNewPost,
+        originalPost: returnedOriginalPost,
+      });
+    } catch (err) {
+      await transaction.rollback();
+      console.error("Lỗi khi chia sẻ bài đăng:", err);
+      return res.status(500).json({
+        message: "Lỗi server khi chia sẻ bài đăng.",
+        status: "error",
+      });
+    }
+  } catch (error) {
+    console.error("Lỗi không xác định khi chia sẻ bài đăng:", error);
+    return res.status(500).json({
+      message: "Lỗi server khi chia sẻ bài đăng.",
+      status: "error",
+    });
+  }
+};
+
 // --- ADMIN: DANH SÁCH BÀI ĐĂNG VỚI FILTER/PAGINATION ---
 exports.getPostsAdmin = async (req, res) => {
   try {
@@ -87,6 +280,34 @@ exports.getPostsAdmin = async (req, res) => {
 
     const posts = await Post.findAll({
       where,
+      attributes: [
+        'id',
+        'userId',
+        'content',
+        'fileUrl',
+        'heartCount',
+        'shareCount',
+        'uploadedAt',
+        'commentCount',
+        'songId',
+        'isCover',
+        'originalSongId',
+        'createdAt',
+        'updatedAt',
+        // Đếm like/comment thực từ bảng likes/comments
+        [
+          sequelize.literal(
+            '(SELECT COUNT(*) FROM likes AS l WHERE l.post_id = "Post"."id")'
+          ),
+          'likeCountReal',
+        ],
+        [
+          sequelize.literal(
+            '(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")'
+          ),
+          'commentCountReal',
+        ],
+      ],
       include: [
         { model: User, as: 'User', attributes: ['id', 'username', 'fullName', 'avatarUrl'] },
       ],
@@ -97,6 +318,19 @@ exports.getPostsAdmin = async (req, res) => {
 
     const result = posts.map((p) => {
       const j = p.toJSON();
+
+      // Map trường đếm thực sang field dùng cho UI
+      const likeCount = Number(j.likeCountReal || 0);
+      const commentCount = Number(j.commentCountReal || 0);
+
+      // UI dùng likeCount/commentCount thực tế
+      j.likeCount = likeCount;
+      j.commentCount = commentCount;
+      // Đồng bộ heartCount cho các UI cũ đang đọc trường này
+      j.heartCount = likeCount;
+      delete j.likeCountReal;
+      delete j.commentCountReal;
+
       try {
         if (j.fileUrl) {
           j.fileUrl = JSON.parse(j.fileUrl);
@@ -300,6 +534,8 @@ exports.getAllPost = async (req, res) => {
         "uploadedAt",
         "commentCount",
         "songId",
+        "isCover",
+        "originalSongId",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")`
@@ -312,6 +548,42 @@ exports.getAllPost = async (req, res) => {
           model: User,
           as: "User",
           attributes: ["id", "username", "avatarUrl", "fullName"],
+        },
+        {
+          model: Post,
+          as: "OriginalPost",
+          attributes: [
+            "id",
+            "userId",
+            "content",
+            "fileUrl",
+            "heartCount",
+            "shareCount",
+            "uploadedAt",
+            "commentCount",
+            "songId",
+          ],
+          include: [
+            {
+              model: User,
+              as: "User",
+              attributes: ["id", "username", "avatarUrl", "fullName"],
+            },
+          ],
+          required: false,
+        },
+        {
+          model: Track,
+          as: "OriginalSong",
+          attributes: ["id", "name", "spotifyId"],
+          include: [
+            {
+              model: Artist,
+              as: "artists",
+              attributes: ["id", "name"],
+            },
+          ],
+          required: false,
         },
       ],
       order: [["uploadedAt", "DESC"]],
@@ -340,13 +612,34 @@ exports.getAllPost = async (req, res) => {
           parsedFileUrls = postJson.fileUrl ? [postJson.fileUrl] : [];
         }
 
+        // Parse OriginalPost.fileUrl nếu có
+        let originalPostParsed = undefined;
+        if (postJson.OriginalPost) {
+          originalPostParsed = { ...postJson.OriginalPost };
+          try {
+            if (originalPostParsed.fileUrl) {
+              originalPostParsed.fileUrl = JSON.parse(originalPostParsed.fileUrl);
+              if (!Array.isArray(originalPostParsed.fileUrl)) {
+                originalPostParsed.fileUrl = [originalPostParsed.fileUrl];
+              }
+            } else {
+              originalPostParsed.fileUrl = [];
+            }
+          } catch (e) {
+            originalPostParsed.fileUrl = originalPostParsed.fileUrl
+              ? [originalPostParsed.fileUrl]
+              : [];
+          }
+        }
+
         return {
-          ...postJson, // Giữ nguyên các trường khác
+          ...postJson, // Giữ nguyên các trường khác (bao gồm OriginalSong nếu có)
           userId: post.userId, // Đảm bảo userId đúng kiểu
           commentCount: commentCountFromDb, // Cập nhật commentCount từ trường tối ưu
           commentCountOptimized: undefined, // Xóa trường tạm
           isLiked: isLiked, // Thêm trường isLiked
           fileUrl: parsedFileUrls, // Thay thế fileUrl bằng mảng đã parse
+          OriginalPost: originalPostParsed,
         };
       })
     );
@@ -419,7 +712,7 @@ exports.createPost = async (req, res) => {
     }
     console.log("Tạo bài đăng: User ID từ token:", userId);
 
-    const { content, fileUrls, isCover } = req.body;
+    const { content, fileUrls, isCover, trackSpotifyId } = req.body;
     let { songId, originalSongId } = req.body;
 
     console.log("Creating post with:", {
@@ -441,7 +734,7 @@ exports.createPost = async (req, res) => {
       });
     }
 
-    // Chuyển đổi và kiểm tra ID
+    // Chuyển đổi và kiểm tra ID (nếu client gửi songId/originalSongId là số)
     if (songId) songId = parseInt(songId, 10);
     if (originalSongId) originalSongId = parseInt(originalSongId, 10);
 
@@ -461,6 +754,24 @@ exports.createPost = async (req, res) => {
         });
       }
       songId = null; // Đảm bảo songId là null cho cover
+    } else {
+      // Không phải cover: cố gắng resolve bài hát theo songId hoặc trackSpotifyId
+      let track = null;
+
+      if (trackSpotifyId) {
+        // Ưu tiên tìm theo spotifyId nếu được cung cấp
+        track = await Track.findOne({ where: { spotifyId: trackSpotifyId } });
+      } else if (songId) {
+        // Fallback: nếu client gửi songId và đó trùng với id trong DB
+        track = await Track.findByPk(songId);
+      }
+
+      if (track) {
+        songId = track.id;
+        if (!originalSongId) {
+          originalSongId = track.id;
+        }
+      }
     }
 
     //  Tạo bài đăng
@@ -545,12 +856,62 @@ exports.createPost = async (req, res) => {
 // --- HÀM LẤY BÀI ĐĂNG THEO ID ---
 exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findByPk(req.params.id);
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid post id" });
+    }
+
+    const post = await Post.findByPk(id, {
+      attributes: [
+        "id",
+        "userId",
+        "content",
+        "fileUrl",
+        "heartCount",
+        "shareCount",
+        "uploadedAt",
+        "commentCount",
+        "songId",
+        "isCover",
+        "originalSongId",
+        "createdAt",
+        "updatedAt",
+        [
+          sequelize.literal(
+            '(SELECT COUNT(*) FROM likes AS l WHERE l.post_id = "Post"."id")'
+          ),
+          "likeCountReal",
+        ],
+        [
+          sequelize.literal(
+            '(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")'
+          ),
+          "commentCountReal",
+        ],
+      ],
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: ["id", "username", "fullName", "avatarUrl"],
+        },
+      ],
+    });
+
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
-    //  Thêm logic parse JSON cho fileUrl
+
     let postJson = post.toJSON();
+
+    const likeCount = Number(postJson.likeCountReal || 0);
+    const commentCount = Number(postJson.commentCountReal || 0);
+    postJson.likeCount = likeCount;
+    postJson.commentCount = commentCount;
+    postJson.heartCount = likeCount;
+    delete postJson.likeCountReal;
+    delete postJson.commentCountReal;
+
     try {
       if (postJson.fileUrl) {
         postJson.fileUrl = JSON.parse(postJson.fileUrl);
@@ -561,12 +922,13 @@ exports.getPostById = async (req, res) => {
         postJson.fileUrl = [];
       }
     } catch (e) {
-      postJson.fileUrl = [postJson.fileUrl];
+      postJson.fileUrl = postJson.fileUrl ? [postJson.fileUrl] : [];
     }
-    // ------------------------------------
-    res.json(postJson);
+
+    return res.json(postJson);
   } catch (error) {
-    res.json({ error: error.message });
+    console.error("Error getPostById:", error);
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -773,13 +1135,18 @@ exports.deletePost = async (req, res) => {
 // --- HÀM THÍCH / BỎ THÍCH BÀI ĐĂNG ---
 exports.toggleLike = async (req, res) => {
   const userId = req.user.id;
-  const postId = req.params.id;
+  const postId = parseInt(req.params.id, 10);
+
+  if (isNaN(postId)) {
+    return res.status(400).json({ message: "ID bài đăng không hợp lệ." });
+  }
 
   try {
     // 1. KIỂM TRA: Người dùng đã thích bài đăng này chưa?
     const existingLike = await Like.findOne({
       where: {
         userId: userId,
+        postId: postId,
       },
     });
 
@@ -811,6 +1178,23 @@ exports.toggleLike = async (req, res) => {
       // Cập nhật heartCount
       post.heartCount += 1;
       await post.save();
+
+      const actorName =
+        (req.user && (req.user.fullName || req.user.username)) ||
+        "Một người dùng";
+      if (post.userId && post.userId !== userId) {
+        await createNotification({
+          userId: post.userId,
+          actorId: userId,
+          postId: post.id,
+          type: "like",
+          message: `${actorName} đã thích bài viết của bạn`,
+          metadata: {
+            postId: post.id,
+            heartCount: post.heartCount,
+          },
+        });
+      }
 
       return res.status(201).json({
         message: "Thích thành công.",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     Alert,
     Image,
@@ -12,7 +12,6 @@ import {
     Dimensions,
     NativeSyntheticEvent,
     NativeScrollEvent,
-    Share
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { togglePostLike, reportPost, updatePost, hidePost } from "../../services/socialApi";
@@ -25,11 +24,11 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 const { width: screenWidth } = Dimensions.get('window');
 // Kích thước cố định cho ảnh trong Post (Đảm bảo ảnh không tràn màn hình)
 const IMAGE_WIDTH = screenWidth - 32; // Giả định padding ngang tổng cộng là 32 (p-4 * 2)
-// Chiều cao tương đối cho ảnh (ví dụ: tỷ lệ 4:3)
-const IMAGE_HEIGHT = IMAGE_WIDTH * 0.75;
+// Chiều cao tương đối cho ảnh (tỷ lệ 4:3)
+const IMAGE_HEIGHT = IMAGE_WIDTH * 0.75; 
 
 
-// --- HÀM TIỆN ÍCH: formatTimeAgo (Được giữ lại) ---
+// --- HÀM TIỆN ÍCH: formatTimeAgo ---
 const formatTimeAgo = (dateString: string): string => {
     const commentDate = new Date(dateString);
     const now = new Date();
@@ -65,10 +64,18 @@ interface PostItemProps {
     shareCount: number;
     isLiked: boolean;
 
+    originalPost?: {
+        id: number;
+        userId: number;
+        content: string;
+        fileUrl?: string[] | string;
+        User?: { username: string; avatarUrl: string; fullName: string };
+    };
+
     // Callbacks
     onPostUpdate: (type: 'heartCount' | 'isLiked' | 'share' | 'content', value: any) => void;
     onCommentPress: () => void;
-    onSharePress: () => void;
+    onSharePress: (postId: number) => void;
     onUserPress: (userId: number) => void;
     onLikeCountPress: (postId: number) => void;
     onHidePost: (postId: number) => void;
@@ -91,6 +98,7 @@ const PostItem: React.FC<PostItemProps> = ({
     commentCount,
     shareCount,
     isLiked: initialIsLiked,
+    originalPost,
     onPostUpdate,
     onCommentPress,
     onSharePress,
@@ -108,10 +116,28 @@ const PostItem: React.FC<PostItemProps> = ({
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [currentLikeCount, setCurrentLikeCount] = useState(heartCount);
 
-    const [activeIndex, setActiveIndex] = useState(0); // Theo dõi chỉ số ảnh hiện tại cho Indicator
-    const [optionsModalVisible, setOptionsModalVisible] = useState(false); // State cho modal options 
-    const [reportModalVisible, setReportModalVisible] = useState(false);    // State cho report modal
-    const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false); // State cho ẩn bài viết tạm thời với undo
+    const originalPostImages = useMemo(() => {
+        if (!originalPost) return [];
+        if (Array.isArray(originalPost.fileUrl)) {
+            return originalPost.fileUrl.filter((url) => typeof url === 'string' && url.length > 0);
+        }
+        if (typeof originalPost.fileUrl === 'string' && originalPost.fileUrl.length > 0) {
+            return [originalPost.fileUrl];
+        }
+        return [];
+    }, [originalPost]);
+
+    // Theo dõi chỉ số ảnh hiện tại cho Indicator
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    // State cho modal options
+    const [optionsModalVisible, setOptionsModalVisible] = useState(false);
+
+    // State cho report modal
+    const [reportModalVisible, setReportModalVisible] = useState(false);
+
+    // State cho ẩn bài viết tạm thời với undo
+    const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false);
     const [undoTimer, setUndoTimer] = useState<number | null>(null);
     // State cho inline editing
     const [isEditing, setIsEditing] = useState(false);
@@ -176,49 +202,13 @@ const PostItem: React.FC<PostItemProps> = ({
     };
 
     // Xử lý nút Chia sẻ
-    const handleShare = async () => {
-        if (isGuest) {
+    const handleShare = () => {
+       if (isGuest) {
             info("Hãy đăng nhập để sử dụng tính năng này.");
             return;
         }
-        try {
-            let shareMessage = `${User?.fullName}: `;
-
-            if (content) {
-                shareMessage += `${content}\n\n`;
-            } else {
-                shareMessage += `Bài đăng của ${User?.fullName}\n\n`;
-            }
-
-            // Thêm URL hình ảnh nếu có
-            if (images && images.length > 0) {
-                shareMessage += `Hình ảnh: ${images.join(', ')}\n\n`;
-            }
-
-            // Thêm liên kết đến bài viết
-            const postLink = `app://post/${postId}`; // Deep link giả định
-            shareMessage += `Xem bài viết: ${postLink}`;
-
-            const result = await Share.share({
-                message: shareMessage,
-                // url: postLink,
-            });
-
-            if (result.action === Share.sharedAction) {
-                if (result.activityType) {
-                    // Shared with activity type of result.activityType
-                } else {
-                }
-                // Update share count after successful share
-                if (onPostUpdate) {
-                    onPostUpdate("share", 1);
-                }
-            } else if (result.action === Share.dismissedAction) {
-                // Dismissed
-            }
-        } catch (err) {
-            console.error('Lỗi khi chia sẻ:', err);
-            error("Không thể chia sẻ bài viết.");
+        if (onSharePress) {
+            onSharePress(postId);
         }
     };
 
@@ -417,9 +407,46 @@ const PostItem: React.FC<PostItemProps> = ({
                     </View>
                 </View>
             ) : (
-                content ? (
-                    <Text className="text-base text-black dark:text-gray-300 mb-3 leading-relaxed">{content}</Text>
-                ) : null
+                <>
+                    {content ? (
+                        <Text className="text-base text-black dark:text-gray-300 mb-2 leading-relaxed">{content}</Text>
+                    ) : null}
+
+                    {originalPost ? (
+                        <View className="mb-3 border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-gray-50 dark:bg-[#111827]">
+                            <View className="flex-row items-center mb-1">
+                                <Image
+                                    source={{
+                                        uri:
+                                            originalPost.User?.avatarUrl ||
+                                            'https://via.placeholder.com/150',
+                                    }}
+                                    className="w-7 h-7 rounded-full border border-indigo-400"
+                                />
+                                <View className="ml-2">
+                                    <Text className="text-xs font-semibold text-black dark:text-white">
+                                        {originalPost.User?.fullName || 'Người dùng'}
+                                    </Text>
+                                </View>
+                            </View>
+                            {originalPost.content ? (
+                                <Text
+                                    className="text-sm text-gray-800 dark:text-gray-200"
+                                    numberOfLines={3}
+                                >
+                                    {originalPost.content}
+                                </Text>
+                            ) : null}
+                            {originalPostImages.length > 0 ? (
+                                <Image
+                                    source={{ uri: originalPostImages[0] }}
+                                    className="mt-2 w-full rounded-lg"
+                                    style={{ height: 140, resizeMode: 'cover' }}
+                                />
+                            ) : null}
+                        </View>
+                    ) : null}
+                </>
             )}
 
             {/*  PHẦN GALLERY MEDIA VÀ INDICATOR */}
@@ -465,17 +492,16 @@ const PostItem: React.FC<PostItemProps> = ({
             ) : null}
 
             {/* Music Link (Nâng cấp) */}
-            {/* {musicLink ? (
-                <TouchableOpacity
-                    onPress={() => Linking.openURL(musicLink)}
+            {musicLink ? (
+                <View
                     className="flex-row items-center bg-indigo-500/10 p-3 rounded-lg mb-3 border border-indigo-200 dark:border-indigo-900"
                 >
                     <Icon name="music" size={18} color="#6366F1" />
                     <Text className="ml-2 text-indigo-600 dark:text-indigo-400 font-medium flex-1" numberOfLines={1}>
                         {musicLink}
                     </Text>
-                </TouchableOpacity>
-            ) : null} */}
+                </View>
+            ) : null}
 
             {/* Interaction Stats Bar */}
             <View className="flex-row justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">

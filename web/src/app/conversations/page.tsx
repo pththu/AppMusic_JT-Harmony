@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -41,7 +42,18 @@ import {
 } from "@/services/conversationApi";
 
 export default function ConversationsPage() {
+  const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [sortKey, setSortKey] = useState<"updatedAt" | "memberCount">("updatedAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [visibleCols, setVisibleCols] = useState({
+    id: true,
+    name: true,
+    type: true,
+    members: true,
+    lastMessage: true,
+    updatedAt: true,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -119,6 +131,32 @@ export default function ConversationsPage() {
     return conversation.lastMessage;
   };
 
+  const sortedConversations = (Array.isArray(conversations) ? conversations : []).slice().sort((a: any, b: any) => {
+    if (sortKey === "memberCount") {
+      const av = (a.members?.length || 0);
+      const bv = (b.members?.length || 0);
+      if (av === bv) return 0;
+      const res = av > bv ? 1 : -1;
+      return sortDir === "asc" ? res : -res;
+    }
+    const aTime = new Date(a.updatedAt).getTime();
+    const bTime = new Date(b.updatedAt).getTime();
+    if (aTime === bTime) return 0;
+    const res = aTime > bTime ? 1 : -1;
+    return sortDir === "asc" ? res : -res;
+  });
+
+  const handleSort = (key: "updatedAt" | "memberCount") => {
+    setSortKey((prevKey) => {
+      if (prevKey === key) {
+        setSortDir((prevDir) => (prevDir === "asc" ? "desc" : "asc"));
+        return prevKey;
+      }
+      setSortDir("desc");
+      return key;
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -150,10 +188,99 @@ export default function ConversationsPage() {
             Quản lý các cuộc trò chuyện và tin nhắn
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Thêm Cuộc Trò Chuyện
-        </Button>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Cột
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.id}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, id: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">ID</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.name}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, name: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Cuộc trò chuyện</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.type}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, type: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Loại</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.members}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, members: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Thành viên</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.lastMessage}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, lastMessage: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Tin nhắn cuối</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.updatedAt}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, updatedAt: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Thời gian</span>
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Thêm Cuộc Trò Chuyện
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -187,7 +314,6 @@ export default function ConversationsPage() {
               type="number"
               value={filterMemberId}
               onChange={(e) => setFilterMemberId(e.target.value)}
-              placeholder="VD: 123"
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
@@ -210,7 +336,7 @@ export default function ConversationsPage() {
             />
           </div>
         </div>
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 justify-end">
           <Button onClick={loadConversations}>Áp dụng</Button>
           <Button
             variant="outline"
@@ -233,70 +359,102 @@ export default function ConversationsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Cuộc Trò Chuyện</TableHead>
-              <TableHead>Loại</TableHead>
-              <TableHead>Thành Viên</TableHead>
-              <TableHead>Tin Nhắn Cuối</TableHead>
-              <TableHead>Thời Gian</TableHead>
+              <TableHead className="w-[60px] text-center">STT</TableHead>
+              {visibleCols.id && (
+                <TableHead className="w-[80px] text-center">ID</TableHead>
+              )}
+              {visibleCols.name && <TableHead>Cuộc Trò Chuyện</TableHead>}
+              {visibleCols.type && <TableHead>Loại</TableHead>}
+              {visibleCols.members && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("memberCount")}
+                >
+                  Thành Viên
+                </TableHead>
+              )}
+              {visibleCols.lastMessage && <TableHead>Tin Nhắn Cuối</TableHead>}
+              {visibleCols.updatedAt && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("updatedAt")}
+                >
+                  Thời Gian
+                </TableHead>
+              )}
               <TableHead className="w-[70px]">Hành Động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {conversations.map((conversation) => {
+            {sortedConversations.map((conversation, index) => {
               const memberCount = getMemberCount(conversation);
               const lastMessage = getLastMessage(conversation);
 
               return (
                 <TableRow key={conversation.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                        {conversation.type === "group" ? (
-                          <Users className="h-5 w-5 text-gray-600" />
+                  <TableCell className="text-center text-sm text-gray-500">{index + 1}</TableCell>
+                  {visibleCols.id && (
+                    <TableCell className="text-center text-xs text-gray-500">{conversation.id}</TableCell>
+                  )}
+                  {visibleCols.name && (
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                          {conversation.type === "group" ? (
+                            <Users className="h-5 w-5 text-gray-600" />
+                          ) : (
+                            <MessageCircle className="h-5 w-5 text-gray-600" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {conversation.name ||
+                              `Cuộc trò chuyện ${conversation.id}`}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                  )}
+                  {visibleCols.type && (
+                    <TableCell>
+                      <Badge variant="outline">
+                        {getConversationType(conversation)}
+                      </Badge>
+                    </TableCell>
+                  )}
+                  {visibleCols.members && (
+                    <TableCell>
+                      <div className="flex items-center space-x-1">
+                        <Users className="h-4 w-4 text-gray-400" />
+                        <span>{memberCount}</span>
+                      </div>
+                    </TableCell>
+                  )}
+                  {visibleCols.lastMessage && (
+                    <TableCell>
+                      <div className="max-w-xs">
+                        {lastMessage ? (
+                          <div>
+                            <p className="text-sm text-gray-900 truncate">
+                              {lastMessage.content || "File đính kèm"}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {lastMessage.User?.username}
+                            </p>
+                          </div>
                         ) : (
-                          <MessageCircle className="h-5 w-5 text-gray-600" />
+                          <p className="text-sm text-gray-500">
+                            Chưa có tin nhắn
+                          </p>
                         )}
                       </div>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {conversation.name ||
-                            `Cuộc trò chuyện ${conversation.id}`}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {getConversationType(conversation)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4 text-gray-400" />
-                      <span>{memberCount}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-xs">
-                      {lastMessage ? (
-                        <div>
-                          <p className="text-sm text-gray-900 truncate">
-                            {lastMessage.content || "File đính kèm"}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {lastMessage.User?.username}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500">
-                          Chưa có tin nhắn
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(conversation.updatedAt), "MMM dd, yyyy")}
-                  </TableCell>
+                    </TableCell>
+                  )}
+                  {visibleCols.updatedAt && (
+                    <TableCell>
+                      {format(new Date(conversation.updatedAt), "MMM dd, yyyy")}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -313,8 +471,7 @@ export default function ConversationsPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            // Navigate to messages page for this conversation
-                            window.location.href = `/messages?conversationId=${conversation.id}`;
+                            router.push(`/messages?conversationId=${conversation.id}`);
                           }}
                         >
                           <MessageCircle className="mr-2 h-4 w-4" />
@@ -513,8 +670,7 @@ export default function ConversationsPage() {
                     const res = await createPrivateConversationWithUser(uid);
                     setIsAddDialogOpen(false);
                     setTargetUserId("");
-                    // Điều hướng sang trang tin nhắn của cuộc trò chuyện vừa tạo
-                    window.location.href = `/messages?conversationId=${res.conversationId}`;
+                    router.push(`/messages?conversationId=${res.conversationId}`);
                   } catch (err) {
                     console.error("Failed to create private conversation:", err);
                   }

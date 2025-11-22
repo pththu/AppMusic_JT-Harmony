@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -31,11 +32,23 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  Label,
 } from "@/components/ui";
 import { fetchPostReports, updatePostReport, type PostReportItem } from "@/services/reportAdminApi";
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [reports, setReports] = useState<PostReportItem[]>([]);
+  const [sortKey, setSortKey] = useState<"reportedAt" | "status">("reportedAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [visibleCols, setVisibleCols] = useState({
+    id: true,
+    reporter: true,
+    post: true,
+    reason: true,
+    status: true,
+    reportedAt: true,
+  });
   const [selectedReport, setSelectedReport] = useState<PostReportItem | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | PostReportItem["status"]>("all");
@@ -96,6 +109,38 @@ export default function ReportsPage() {
     loadReports();
   }, []);
 
+  const sortedReports = (Array.isArray(reports) ? reports : []).slice().sort((a: any, b: any) => {
+    if (sortKey === "status") {
+      const order: Record<string, number> = {
+        pending: 0,
+        reviewed: 1,
+        resolved: 2,
+        dismissed: 3,
+      };
+      const av = order[a.status] ?? 99;
+      const bv = order[b.status] ?? 99;
+      if (av === bv) return 0;
+      const res = av > bv ? 1 : -1;
+      return sortDir === "asc" ? res : -res;
+    }
+    const aTime = new Date((a as any).reportedAt || (a as any).createdAt).getTime();
+    const bTime = new Date((b as any).reportedAt || (b as any).createdAt).getTime();
+    if (aTime === bTime) return 0;
+    const res = aTime > bTime ? 1 : -1;
+    return sortDir === "asc" ? res : -res;
+  });
+
+  const handleSort = (key: "reportedAt" | "status") => {
+    setSortKey((prevKey) => {
+      if (prevKey === key) {
+        setSortDir((prevDir) => (prevDir === "asc" ? "desc" : "asc"));
+        return prevKey;
+      }
+      setSortDir("desc");
+      return key;
+    });
+  };
+
   const loadReports = async () => {
     setLoading(true);
     try {
@@ -115,13 +160,183 @@ export default function ReportsPage() {
     }
   };
 
+  const handleExportCsv = () => {
+    if (!Array.isArray(sortedReports) || sortedReports.length === 0) return;
+
+    const headers = [
+      "id",
+      "postId",
+      "reporterId",
+      "reason",
+      "status",
+      "reportedAt",
+    ];
+
+    const escapeCsv = (value: any) => {
+      if (value === null || value === undefined) return "";
+      const str = String(value);
+      if (/[",\n]/.test(str)) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+
+    const rows = sortedReports.map((item: any) => {
+      const reporter = item.Reporter;
+      const post = item.Post;
+      const reportedAt = (item.reportedAt || item.createdAt)
+        ? new Date(item.reportedAt || item.createdAt).toISOString()
+        : "";
+      const cols = [
+        item.id,
+        post?.id,
+        reporter?.id,
+        item.reason,
+        item.status,
+        reportedAt,
+      ];
+      return cols.map(escapeCsv).join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `reports_${new Date().toISOString()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const applyQuickFilter = async (preset: string) => {
+    const today = new Date();
+    const formatDate = (d: Date) => d.toISOString().slice(0, 10);
+
+    if (preset === "pending_7_days") {
+      const from = new Date(today);
+      from.setDate(from.getDate() - 7);
+      setStatusFilter("pending");
+      setDateFrom(formatDate(from));
+      setDateTo(formatDate(today));
+      await loadReports();
+    } else if (preset === "resolved_30_days") {
+      const from = new Date(today);
+      from.setDate(from.getDate() - 30);
+      setStatusFilter("resolved");
+      setDateFrom(formatDate(from));
+      setDateTo(formatDate(today));
+      await loadReports();
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Quản Lý Báo Cáo</h1>
-        <p className="text-gray-600">
-          Quản lý báo cáo của người dùng và kiểm duyệt nội dung
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Quản Lý Báo Cáo</h1>
+          <p className="text-gray-600">
+            Quản lý báo cáo của người dùng và kiểm duyệt nội dung
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Cột
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.id}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, id: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">ID</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.reporter}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, reporter: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Người báo cáo</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.post}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, post: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Nội dung bài đăng</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.reason}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, reason: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Lý do</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.status}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, status: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Trạng thái</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.reportedAt}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, reportedAt: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Thời gian báo cáo</span>
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={sortedReports.length === 0}
+          >
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -132,7 +347,23 @@ export default function ReportsPage() {
         <CardContent>
           <div className="flex items-end gap-3 flex-wrap">
             <div>
-              <label className="text-sm font-medium">Trạng thái</label>
+              <Label className="text-sm font-medium mb-1 block">Bộ lọc nhanh</Label>
+              <select
+                className="px-3 py-2 border rounded-md text-sm"
+                defaultValue=""
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!value) return;
+                  applyQuickFilter(value);
+                }}
+              >
+                <option value="">Chọn bộ lọc</option>
+                <option value="pending_7_days">Chờ xử lý 7 ngày gần nhất</option>
+                <option value="resolved_30_days">Đã giải quyết 30 ngày</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium mb-1 block">Trạng thái</Label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -146,24 +377,46 @@ export default function ReportsPage() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">ID bài đăng</label>
-              <input className="px-3 py-2 border rounded-md w-40" value={postIdInput} onChange={(e)=>setPostIdInput(e.target.value)} />
+              <Label className="text-sm font-medium mb-1 block">ID bài đăng</Label>
+              <input
+                className="px-3 py-2 border rounded-md w-30"
+                value={postIdInput}
+                onChange={(e) => setPostIdInput(e.target.value)}
+              />
             </div>
             <div>
-              <label className="text-sm font-medium">ID người báo cáo</label>
-              <input className="px-3 py-2 border rounded-md w-40" value={reporterIdInput} onChange={(e)=>setReporterIdInput(e.target.value)} />
+              <Label className="text-sm font-medium mb-1 block">ID người báo cáo</Label>
+              <input
+                className="px-3 py-2 border rounded-md w-30"
+                value={reporterIdInput}
+                onChange={(e) => setReporterIdInput(e.target.value)}
+              />
             </div>
             <div>
-              <label className="text-sm font-medium">Từ ngày</label>
-              <input type="date" className="px-3 py-2 border rounded-md" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} />
+              <Label className="text-sm font-medium mb-1 block">Từ ngày</Label>
+              <input
+                type="date"
+                className="px-3 py-2 border rounded-md"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
             </div>
             <div>
-              <label className="text-sm font-medium">Đến ngày</label>
-              <input type="date" className="px-3 py-2 border rounded-md" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} />
+              <Label className="text-sm font-medium mb-1 block">Đến ngày</Label>
+              <input
+                type="date"
+                className="px-3 py-2 border rounded-md"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
             </div>
             <div className="flex items-center gap-2 ml-auto">
-              <Button onClick={loadReports} disabled={loading}>{loading ? 'Đang tải...' : 'Áp dụng'}</Button>
-              <Button variant="outline" onClick={resetFilters} disabled={loading}>Đặt lại</Button>
+              <Button onClick={loadReports} disabled={loading}>
+                {loading ? "Đang tải..." : "Áp dụng"}
+              </Button>
+              <Button variant="outline" onClick={resetFilters} disabled={loading}>
+                Đặt lại
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -174,21 +427,44 @@ export default function ReportsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Người Báo Cáo</TableHead>
-              <TableHead>Nội Dung Bài Đăng</TableHead>
-              <TableHead>Lý Do</TableHead>
-              <TableHead>Trạng Thái</TableHead>
-              <TableHead>Thời Gian Báo Cáo</TableHead>
+              <TableHead className="w-[60px] text-center">STT</TableHead>
+              {visibleCols.id && (
+                <TableHead className="w-[80px] text-center">ID</TableHead>
+              )}
+              {visibleCols.reporter && <TableHead>Người Báo Cáo</TableHead>}
+              {visibleCols.post && <TableHead>Nội Dung Bài Đăng</TableHead>}
+              {visibleCols.reason && <TableHead>Lý Do</TableHead>}
+              {visibleCols.status && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("status")}
+                >
+                  Trạng Thái
+                </TableHead>
+              )}
+              {visibleCols.reportedAt && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("reportedAt")}
+                >
+                  Thời Gian Báo Cáo
+                </TableHead>
+              )}
               <TableHead className="w-[70px]">Hành Động</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {Array.isArray(reports) && reports.map((report) => {
+          <TableBody> 
+            {sortedReports.map((report, index) => {
               const reporter = (report as any).Reporter;
               const post = (report as any).Post;
               return (
                 <TableRow key={report.id}>
-                  <TableCell>
+                  <TableCell className="text-center text-sm text-gray-500}">{index + 1}</TableCell>
+                  {visibleCols.id && (
+                    <TableCell className="text-center text-xs text-gray-500">{report.id}</TableCell>
+                  )}
+                  {visibleCols.reporter && (
+                    <TableCell>
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                         {reporter?.avatarUrl ? (
@@ -208,28 +484,40 @@ export default function ReportsPage() {
                           {reporter?.fullName || reporter?.username}
                         </div>
                         <div className="text-sm text-gray-500">
-                          @{reporter?.username}
+                          @{reporter?.username} · ID: {reporter?.id}
                         </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  )}
+                  {visibleCols.post && (
+                    <TableCell>
                     <div className="max-w-xs">
                       <p className="text-sm text-gray-900 truncate">
                         {post?.content?.substring(0, 50)}...
                       </p>
+                      {post && (
+                        <p className="text-xs text-gray-500 mt-0.5">Post ID: {post.id}</p>
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {getReasonIcon(report.reason)}
-                      <span className="text-sm">{report.reason}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{getStatusBadge(report.status)}</TableCell>
-                  <TableCell>
-                    {format(new Date((report as any).reportedAt || (report as any).createdAt), "MMM dd, yyyy")}
-                  </TableCell>
+                  )}
+                  {visibleCols.reason && (
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getReasonIcon(report.reason)}
+                        <span className="text-sm">{report.reason}</span>
+                      </div>
+                    </TableCell>
+                  )}
+                  {visibleCols.status && (
+                    <TableCell>{getStatusBadge(report.status)}</TableCell>
+                  )}
+                  {visibleCols.reportedAt && (
+                    <TableCell>
+                      {format(new Date((report as any).reportedAt || (report as any).createdAt), "MMM dd, yyyy")}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -238,6 +526,16 @@ export default function ReportsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            if (post?.id) {
+                              router.push(`/posts?postId=${post.id}`);
+                            }
+                          }}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Tới Bài Đăng
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleViewReport(report)}
                         >

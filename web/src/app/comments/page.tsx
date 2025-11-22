@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   MoreHorizontal,
@@ -47,7 +48,17 @@ import { mockUsers, mockPosts, getUserById, getPostById, type Comment as MockCom
 import { fetchAllComments, deleteCommentAdmin, type AdminComment } from "@/services/commentAdminApi";
 
 export default function CommentsPage() {
+  const router = useRouter();
   const [comments, setComments] = useState<(AdminComment | any)[]>([]);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [visibleCols, setVisibleCols] = useState({
+    id: true,
+    content: true,
+    user: true,
+    type: true,
+    commentedAt: true,
+  });
   const [selectedComment, setSelectedComment] = useState<any | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -67,12 +78,13 @@ export default function CommentsPage() {
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [limit, setLimit] = useState<string>("50");
-  const [offset, setOffset] = useState<string>("0");
+  const [page, setPage] = useState<number>(1);
   const [loading, setLoading] = useState(false);
 
   const handleDeleteComment = async (commentId: number) => {
     await deleteCommentAdmin(commentId);
     setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+    setSelectedIds((prev) => prev.filter((id) => id !== commentId));
   };
 
   const resetFilters = async () => {
@@ -82,8 +94,8 @@ export default function CommentsPage() {
     setDateFrom("");
     setDateTo("");
     setLimit("50");
-    setOffset("0");
-    await loadComments();
+    setPage(1);
+    await loadComments(1);
   };
 
   const handleViewComment = (comment: any) => {
@@ -154,7 +166,31 @@ export default function CommentsPage() {
     return comment.parentId ? "Phản hồi" : "Bình luận";
   };
 
-  const loadComments = async () => {
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    const idsToDelete = [...selectedIds];
+    await Promise.all(idsToDelete.map((id) => deleteCommentAdmin(id)));
+    setComments((prev) => prev.filter((comment) => !idsToDelete.includes(comment.id)));
+    setSelectedIds([]);
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllCurrentPage = (currentPageComments: any[]) => {
+    const ids = currentPageComments.map((c) => c.id);
+    const allSelected = ids.every((id) => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !ids.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...ids])));
+    }
+  };
+
+  const loadComments = async (targetPage?: number) => {
     setLoading(true);
     try {
       const params: any = {};
@@ -163,8 +199,11 @@ export default function CommentsPage() {
       if (q) params.q = q;
       if (dateFrom) params.dateFrom = dateFrom;
       if (dateTo) params.dateTo = dateTo;
-      if (limit) params.limit = parseInt(limit, 10);
-      if (offset) params.offset = parseInt(offset, 10);
+      const limitNum = parseInt(limit, 10) || 50;
+      const currentPage = targetPage && targetPage > 0 ? targetPage : (page > 0 ? page : 1);
+      const offsetNum = (currentPage - 1) * limitNum;
+      params.limit = limitNum;
+      params.offset = offsetNum;
       const data = await fetchAllComments(params);
       setComments(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -176,8 +215,16 @@ export default function CommentsPage() {
   };
 
   useEffect(() => {
-    loadComments();
+    loadComments(1);
   }, []);
+
+  const sortedComments = comments.slice().sort((a: any, b: any) => {
+    const av = new Date(a.commentedAt).getTime();
+    const bv = new Date(b.commentedAt).getTime();
+    if (av === bv) return 0;
+    const res = av > bv ? 1 : -1;
+    return sortDir === "asc" ? res : -res;
+  });
 
   return (
     <div className="space-y-6">
@@ -188,14 +235,89 @@ export default function CommentsPage() {
           </h1>
           <p className="text-gray-600">Quản lý bình luận và phản hồi</p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm Bình Luận
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Cột
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.id}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, id: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">ID</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.content}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, content: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Bình luận</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.user}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, user: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Người dùng</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.type}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, type: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Loại</span>
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={visibleCols.commentedAt}
+                    onChange={(e) =>
+                      setVisibleCols((prev) => ({ ...prev, commentedAt: e.target.checked }))
+                    }
+                  />
+                  <span className="text-sm">Thời gian</span>
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Thêm Bình Luận
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Thêm Bình Luận Mới</DialogTitle>
               <DialogDescription>
@@ -307,8 +429,9 @@ export default function CommentsPage() {
             <DialogFooter>
               <Button onClick={handleAddComment}>Thêm Bình Luận</Button>
             </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
@@ -342,12 +465,8 @@ export default function CommentsPage() {
               <Label className="text-sm font-medium">Limit</Label>
               <Input value={limit} onChange={(e)=>setLimit(e.target.value)} className="w-24" />
             </div>
-            <div>
-              <Label className="text-sm font-medium">Offset</Label>
-              <Input value={offset} onChange={(e)=>setOffset(e.target.value)} className="w-24" />
-            </div>
             <div className="flex items-center gap-2 ml-auto">
-              <Button onClick={loadComments} disabled={loading}>{loading ? 'Đang tải...' : 'Áp dụng'}</Button>
+              <Button onClick={() => loadComments(page)} disabled={loading}>{loading ? 'Đang tải...' : 'Áp dụng'}</Button>
               <Button variant="outline" onClick={resetFilters} disabled={loading}>Đặt lại</Button>
             </div>
           </div>
@@ -355,27 +474,96 @@ export default function CommentsPage() {
       </Card>
 
       {/* Comments Table */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between text-sm bg-yellow-50 border border-yellow-200 rounded p-2">
+          <span>
+            Đã chọn <span className="font-semibold">{selectedIds.length}</span> bình luận
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleBulkDelete}
+            >
+              Xóa các bình luận đã chọn
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedIds([])}
+            >
+              Bỏ chọn
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Bình Luận</TableHead>
-              <TableHead>Người Dùng</TableHead>
-              <TableHead>Loại</TableHead>
-              <TableHead>Thời Gian</TableHead>
+              <TableHead className="w-[40px] text-center">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  onChange={() => toggleSelectAllCurrentPage(sortedComments)}
+                  checked={
+                    sortedComments.length > 0 &&
+                    sortedComments.every((comment: any) => selectedIds.includes(comment.id))
+                  }
+                />
+              </TableHead>
+              <TableHead className="w-[60px] text-center">STT</TableHead>
+              {visibleCols.id && (
+                <TableHead className="w-[80px] text-center">ID</TableHead>
+              )}
+              {visibleCols.content && <TableHead>Bình Luận</TableHead>}
+              {visibleCols.user && <TableHead>Người Dùng</TableHead>}
+              {visibleCols.type && <TableHead>Loại</TableHead>}
+              {visibleCols.commentedAt && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))}
+                >
+                  Thời Gian
+                </TableHead>
+              )}
               <TableHead className="w-[70px]">Hành Động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {comments.map((comment) => {
+            {sortedComments.map((comment, index) => {
               const author = (comment as any).User || null;
               const replies = comments.filter((c) => c.parentId === comment.id);
+              const limitNum = parseInt(limit, 10) || 50;
+              const currentPage = page > 0 ? page : 1;
+              const offsetNum = (currentPage - 1) * limitNum;
               return (
                 <TableRow key={comment.id}>
-                  <TableCell>
-                    <div className="max-w-xs">
-                      <p className="text-sm text-gray-900 truncate">
+                  <TableCell className="text-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={selectedIds.includes(comment.id)}
+                      onChange={() => toggleSelect(comment.id)}
+                    />
+                  </TableCell>
+                  <TableCell className="text-center text-sm text-gray-500">{offsetNum + index + 1}</TableCell>
+                  {visibleCols.id && (
+                    <TableCell className="text-center text-xs text-gray-500">{comment.id}</TableCell>
+                  )}
+                  {visibleCols.content && (
+                    <TableCell>
+                    <button
+                      type="button"
+                      className="max-w-xs text-left"
+                      onClick={() => handleViewComment(comment)}
+                    >
+                      <p className="text-sm text-gray-900 truncate underline decoration-dotted">
                         {comment.content}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Post ID: {comment.postId}
                       </p>
                       {comment.fileUrl && (
                         <p className="text-xs text-green-600 mt-1">
@@ -387,9 +575,11 @@ export default function CommentsPage() {
                           {replies.length} phản hồi
                         </Badge>
                       )}
-                    </div>
+                    </button>
                   </TableCell>
-                  <TableCell>
+                  )}
+                  {visibleCols.user && (
+                    <TableCell>
                     <div className="flex items-center space-x-2">
                       <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
                         {author?.avatarUrl ? (
@@ -404,15 +594,23 @@ export default function CommentsPage() {
                           </span>
                         )}
                       </div>
-                      <span className="text-sm">{author?.fullName || author?.username}</span>
+                      <div>
+                        <span className="text-sm block">{author?.fullName || author?.username}</span>
+                        <span className="text-xs text-gray-500 block">ID: {author?.id}</span>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  )}
+                  {visibleCols.type && (
+                    <TableCell>
                     <Badge variant="outline">{getCommentType(comment)}</Badge>
                   </TableCell>
-                  <TableCell>
-                    {format(new Date(comment.commentedAt), "MMM dd, yyyy")}
-                  </TableCell>
+                  )}
+                  {visibleCols.commentedAt && (
+                    <TableCell>
+                      {format(new Date(comment.commentedAt), "MMM dd, yyyy")}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -448,6 +646,37 @@ export default function CommentsPage() {
             })}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between px-2 sm:px-0">
+        <div className="text-sm text-gray-600">Trang {page}</div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1 || loading}
+            onClick={async () => {
+              if (page <= 1) return;
+              const nextPage = page - 1;
+              await loadComments(nextPage);
+              setPage(nextPage);
+            }}
+          >
+            Prev
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={loading}
+            onClick={async () => {
+              const nextPage = page + 1;
+              await loadComments(nextPage);
+              setPage(nextPage);
+            }}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* View Comment Dialog */}

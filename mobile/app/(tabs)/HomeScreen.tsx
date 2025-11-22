@@ -148,6 +148,8 @@ export default function HomeScreen() {
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
   const iconColor = theme === 'light' ? '#000' : '#fff';
+  const unreadNotificationCount = useNotificationStore((state) => state.unreadCount);
+  const hasNotification = unreadNotificationCount > 0;
 
   const [hasNotification] = useState(true);
   const [isMoodModalVisible, setMoodModalVisible] = useState(false);
@@ -643,7 +645,11 @@ export default function HomeScreen() {
           {/* <TouchableOpacity className="mr-4 relative">
             <Icon name="notifications-outline" size={28} color={iconColor} />
             {hasNotification && (
-              <View className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+              <View className="absolute -top-1 -right-1 min-w-[16px] px-1 h-4 bg-red-500 rounded-full items-center justify-center">
+                <Text className="text-[10px] text-white font-semibold">
+                  {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+                </Text>
+              </View>
             )}
           </TouchableOpacity> */}
           <TouchableOpacity onPress={() => navigate("Profile")}>

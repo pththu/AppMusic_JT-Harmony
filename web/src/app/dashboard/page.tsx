@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { Card, CardContent, CardHeader, CardTitle, Button } from "@/components/ui";
 import { useEffect, useState } from "react";
 import { fetchSummary, fetchTimeseries, fetchPostsCoverBreakdown, fetchReportsStatusBreakdown, fetchTopPosts, fetchTopUsers, type SummaryRes, type Granularity } from "@/services/metricsAdminApi";
 
@@ -40,6 +40,16 @@ export default function DashboardPage() {
   const [dateTo, setDateTo] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [granularity, setGranularity] = useState<Granularity>('day');
   const [loadingAll, setLoadingAll] = useState(false);
+
+  const resetFilters = () => {
+    const defaultFrom = format(subDays(new Date(), 7), 'yyyy-MM-dd');
+    const defaultTo = format(new Date(), 'yyyy-MM-dd');
+    setDateFrom(defaultFrom);
+    setDateTo(defaultTo);
+    setGranularity('day');
+    // reload với bộ lọc mặc định
+    loadAll();
+  };
 
   const getIconStyles = (title: string) => {
     switch (title) {
@@ -105,25 +115,50 @@ export default function DashboardPage() {
       </div>
 
       {/* Header Filters */}
-      <div className="flex items-end gap-3 flex-wrap">
-        <div>
-          <label className="text-sm font-medium">Từ ngày</label>
-          <input type="date" className="px-3 py-2 border rounded-md" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Đến ngày</label>
-          <input type="date" className="px-3 py-2 border rounded-md" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Độ chi tiết</label>
-          <select className="px-3 py-2 border rounded-md" value={granularity} onChange={(e)=>setGranularity(e.target.value as Granularity)}>
-            <option value="day">Ngày</option>
-            <option value="week">Tuần</option>
-            <option value="month">Tháng</option>
-          </select>
-        </div>
-        <button className="px-4 py-2 rounded-md bg-black text-white" onClick={loadAll} disabled={loadingAll}>{loadingAll ? 'Đang tải...' : 'Áp dụng'}</button>
-      </div>
+      <Card>
+        <CardContent>
+          <div className="flex items-end gap-3 flex-wrap">
+            <div>
+              <label className="text-sm font-medium">Từ ngày</label>
+              <input
+                type="date"
+                className="px-3 py-2 border rounded-md"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Đến ngày</label>
+              <input
+                type="date"
+                className="px-3 py-2 border rounded-md"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Độ chi tiết</label>
+              <select
+                className="px-3 py-2 border rounded-md"
+                value={granularity}
+                onChange={(e) => setGranularity(e.target.value as Granularity)}
+              >
+                <option value="day">Ngày</option>
+                <option value="week">Tuần</option>
+                <option value="month">Tháng</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button onClick={loadAll} disabled={loadingAll}>
+                {loadingAll ? "Đang tải..." : "Áp dụng"}
+              </Button>
+              <Button variant="outline" onClick={resetFilters} disabled={loadingAll}>
+                Đặt lại
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Real Metrics Stat Cards (7 ngày gần nhất) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6">
