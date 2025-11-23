@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCustomAlert } from "./useCustomAlert";
 import { useNavigate } from "./useNavigate";
-import { GetUserProfileSocial } from "@/services/followService";
+import { GetFollowees, GetFollowers, GetUserProfileSocial } from "@/services/followService";
 import { fetchPostsByUserId } from "@/services/socialApi";
 import { fetchCoversByUserId } from "@/services/coverService";
 import { useFollowStore } from "@/store/followStore";
@@ -21,6 +21,8 @@ export const useProfileSocialData = (userId) => {
   const [profile, setProfile] = useState(null); // Thông tin profile
   const [posts, setPosts] = useState([]); // Danh sách bài đăng
   const [covers, setCovers] = useState([]); // Danh sách covers
+  const [followersOfProfile, setFollowersOfProfile] = useState([]); // Danh sách người theo dõi
+  const [followeesOfProfile, setFolloweesOfProfile] = useState([]); // Danh sách người mình theo dõi
 
   const fetchProfile = useCallback(async (userId) => {
     if (!userId) {
@@ -64,6 +66,31 @@ export const useProfileSocialData = (userId) => {
     }
   }, [userId]);
 
+  const fetchFollowersOfProfile = useCallback(async (userId) => {
+    try {
+      const response = await GetFollowers(userId);
+      if (response.success) {
+        setFollowersOfProfile(response.data);
+      } else {
+        setFollowersOfProfile([]);
+      }
+    } catch (err) {
+      error("Lỗi", "Không thể tải followers. Vui lòng thử lại." + err.message);
+    }
+  }, [userId]);
+  const fetchFolloweesOfProfile = useCallback(async (userId) => {
+    try {
+      const response = await GetFollowees(userId);
+      if (response.success) {
+        setFolloweesOfProfile(response.data);
+      } else {
+        setFolloweesOfProfile([]);
+      }
+    } catch (err) {
+      error("Lỗi", "Không thể tải followees. Vui lòng thử lại." + err.message);
+    }
+  }, [userId]);
+
   const checkIsFollowing = useCallback(() => {
     if (!userId) {
       setIsFollowing(false);
@@ -82,6 +109,8 @@ export const useProfileSocialData = (userId) => {
     fetchProfile(userId);
     fetchPosts(userId);
     fetchCovers(userId);
+    fetchFollowersOfProfile(userId);
+    fetchFolloweesOfProfile(userId);
     checkIsFollowing();
     setLoading(false);
   }, [userId, checkIsFollowing, fetchProfile, fetchPosts, fetchCovers]);
@@ -94,9 +123,13 @@ export const useProfileSocialData = (userId) => {
     profile,
     posts,
     covers,
+    followersOfProfile,
+    followeesOfProfile,
     loading,
     isFollowing,
     isRefreshing,
+    setFollowersOfProfile,
+    setFolloweesOfProfile,
     setIsRefreshing,
     setIsFollowing,
     setLoading,

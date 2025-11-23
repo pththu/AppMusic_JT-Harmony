@@ -258,13 +258,18 @@ const DeleteFollowUser = async (req, res) => {
         if (!deleted) return res.status(404).json({ error: 'FollowUser not found' });
 
         const cacheKeyFollowers = `followers_user_${followeeId}`;
-        const cacheKeyFollowedUsers = `followees_user_${followerId}`;
+        const cacheKeyFollowers_2 = `followers_user_${followerId}`;
+        const cacheKeyFollowedUsers = `followees_user_${followeeId}`;
+        const cacheKeyFollowedUsers_2 = `followees_user_${followerId}`;
         const cacheKeyProfileSocial = `user_profile_social_${followeeId}`;
         const cacheKeyProfileSocialFollower = `user_profile_social_${followerId}`;
+
         await redisClient.del(cacheKeyProfileSocial);
         await redisClient.del(cacheKeyProfileSocialFollower);
         await redisClient.del(cacheKeyFollowers);
         await redisClient.del(cacheKeyFollowedUsers);
+        await redisClient.del(cacheKeyFollowers_2);
+        await redisClient.del(cacheKeyFollowedUsers_2);
 
         return res.json({ message: 'FollowUser deleted', success: true });
     } catch (error) {

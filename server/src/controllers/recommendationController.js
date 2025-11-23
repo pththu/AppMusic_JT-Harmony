@@ -768,8 +768,6 @@ const GenerateRecommendationsFromFavorites = async (req, res) => {
       return `${item.type} : ${item.name} - ${item.artists || item.description || ""}`;
     }).join(", ");
 
-    console.log('formatFavorites', formatFavorites)
-
     const userContext = `THÔNG TIN NGƯỜI DÙNG: Danh sách yêu thích của người dùng: ${favorites.length > 0 ? formatFavorites : "Chưa có danh sách yêu thích"}`.trim();
     const prompt = `
       Bạn là chuyên gia AI về âm nhạc và phân tích sở thích người dùng, hiểu sâu về tất cả thể loại nhạc, nghệ sĩ Việt Nam và quốc tế.

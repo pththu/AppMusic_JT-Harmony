@@ -1136,13 +1136,15 @@ const getTracksForCover = async (req, res) => {
 
     const dataFormated = [];
     const tracks = await Track.findAll({
-      limit: 100,
+      limit: 70,
       order: [['playCount', 'DESC']]
     });
 
     for (let track of tracks) {
       const spotifyId = track?.spotifyId;
       const idTemp = track?.id || null;
+      const playCount = track?.playCount || 0;
+
       track = await callSpotify(() => spotify.findTrackById(spotifyId));
       if (idTemp) {
         track.tempId = idTemp;
@@ -1152,13 +1154,15 @@ const getTracksForCover = async (req, res) => {
       dataFormated.push(itemFormat);
     }
 
+    console.log('dataFormated', dataFormated);
+
     const response = {
       message: 'Get tracks for cover successful',
       data: dataFormated,
       success: true
     };
 
-    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS * 10 });
     return res.status(200).json(response);
   } catch (error) {
     console.log(11)

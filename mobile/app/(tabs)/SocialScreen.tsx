@@ -1064,9 +1064,11 @@ const SocialScreen = () => {
             </View>
           </View>
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           return (
-            <View className="mb-4 px-3">
+            <View 
+              key={`post-${item.id}-${index}-${item.uploadedAt}`}
+              className="mb-4 px-3">
               {item.isCover ? (
                 <CoverItem
                   id={item.id}

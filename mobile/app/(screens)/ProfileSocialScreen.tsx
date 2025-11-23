@@ -14,18 +14,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import {
-  fetchPostsByUserId,
-  fetchUserProfileSocial,
-  toggleFollow,
-  togglePostLike,
   fetchCommentsByPostId,
   createNewComment,
   toggleCommentLike,
   updatePost,
   deletePost,
-  ProfileSocial,
   Post as PostType,
   Comment,
 } from "../../services/socialApi";
@@ -41,11 +36,10 @@ import { createOrGetPrivateConversation } from "../../services/chatApi";
 import { useNavigate } from "@/hooks/useNavigate";
 import { useFollowStore } from "@/store/followStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { FollowUser, GetUserProfileSocial, UnfollowUser } from "@/services/followService";
+import { FollowUser, UnfollowUser } from "@/services/followService";
 import { useLocalSearchParams } from "expo-router";
 import { useProfileSocialData } from "@/hooks/useProfileSocialData";
-
-// Định nghĩa kiểu cho Route Params
+import { is } from "date-fns/locale";
 
 
 export default function ProfileSocialScreen() {
@@ -57,6 +51,7 @@ export default function ProfileSocialScreen() {
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
 
+  const isGuest = useAuthStore((state) => state.isGuest);
   const currentUser = useAuthStore((state) => state.user);
   const followees = useFollowStore((state) => state.userFollowees);
   const setFollowees = useFollowStore((state) => state.setFollowees);
@@ -79,14 +74,14 @@ export default function ProfileSocialScreen() {
   // STATES CHO FOLLOW MODAL
   const [followModalVisible, setFollowModalVisible] = useState(false); // Hiển thị modal follow
   const [followListType, setFollowListType] = useState<"followers" | "following">("followers"); // Loại danh sách hiển thị
-
+  const [followListData, setFollowListData] = useState([]);
   // STATES CHO LIKE MODAL
   const [likeModalVisible, setLikeModalVisible] = useState(false); // Hiển thị modal like
   const [selectedPostIdForLikes, setSelectedPostIdForLikes] = useState<string | null>(null); // Post ID đang xem danh sách like
 
   // STATES CHO EDIT MODAL
   const [editModalVisible, setEditModalVisible] = useState(false); // Hiển thị modal edit
-  const [editingPost, setEditingPost] = useState<any | null>(null); // Bài đăng đang chỉnh sửa
+  const [editingPost, setEditingPost] = useState(null); // Bài đăng đang chỉnh sửa
   const [editContent, setEditContent] = useState(""); // Nội dung chỉnh sửa
 
   const isCurrentUserProfile = currentUser && currentUser.id === userId;
@@ -98,8 +93,9 @@ export default function ProfileSocialScreen() {
     covers,
     loading,
     isFollowing,
-    setIsFollowing,
     isRefreshing,
+    followersOfProfile,
+    followeesOfProfile,
     setIsRefreshing,
     setPosts,
     setCovers,
@@ -109,6 +105,10 @@ export default function ProfileSocialScreen() {
 
   // Hàm xử lý mở Chat
   const handleChatPress = useCallback(async () => {
+    if (isGuest) {
+      info("Thông báo", "Hãy đăng nhập để sử dụng tính năng này.");
+      return;
+    }
     if (!profile) return;
     try {
       // 1. Gọi API để tạo/lấy Conversation ID
@@ -361,38 +361,44 @@ export default function ProfileSocialScreen() {
   };
 
   //  HÀM XỬ LÝ THEO DÕI
-  const handleToggleFollow = useCallback(async () => {
-    if (!profile || !currentUserId) return;
-    if (profile.id === currentUserId) return; // Không cho phép follow chính mình
+  const handleToggleFollow = useCallback(async (user, isFollow) => {
+    if (isGuest) {
+      info("Thông báo", "Hãy đăng nhập để sử dụng tính năng này.");
+      return;
+    }
+    if (!user || !currentUserId) return;
+    if (user.id === currentUserId) return; // Không cho phép follow chính mình
 
     setIsFollowingPending(true);
-    if (isFollowing) {
-      await handleUnfollow();
+    if (isFollow) {
+      await handleUnfollow(user);
     } else {
-      await handleFollow();
+      await handleFollow(user);
     }
     setIsFollowingPending(false);
   }, [profile, currentUserId]);
 
-  const handleFollow = useCallback(async () => {
+  const handleFollow = useCallback(async (user) => {
     try {
-      console.log('follow: ', profile)
-      const response = await FollowUser(profile.id);
+      console.log('follow: ', user)
+      const response = await FollowUser(user.id);
       console.log('response', response)
       if (response.success) {
         setFollowees([...followees, response.data]);
-        setProfile((prev) => ({ ...prev, followerCount: prev.followerCount + 1 }));
+        if (user.id === profile.id) {
+          setProfile((prev) => ({ ...prev, followerCount: prev.followerCount + 1 }));
+        }
       }
     } catch (err) {
       error("Lỗi", "Không thể theo dõi người dùng: " + err.message);
     }
   }, [profile]);
 
-  const handleUnfollow = useCallback(async () => {
+  const handleUnfollow = useCallback(async (user) => {
     try {
       console.log('un')
       const payload = {
-        followeeId: profile.id,
+        followeeId: user.id,
         followerId: currentUserId,
       }
       console.log('payload: ', payload)
@@ -400,7 +406,9 @@ export default function ProfileSocialScreen() {
       console.log('response', response)
       if (response.success) {
         removeFollowee(payload.followeeId);
-        setProfile((prev) => ({ ...prev, followerCount: prev.followerCount - 1 }));
+        if (user.id === profile.id) {
+          setProfile((prev) => ({ ...prev, followerCount: prev.followerCount - 1 }));
+        }
       }
     } catch (error) {
       error("Lỗi", "Không thể hủy theo dõi người dùng." + error.message);
@@ -411,8 +419,10 @@ export default function ProfileSocialScreen() {
   const handleOpenFollowModal = (type: "followers" | "following") => {
     if (type === "followers") {
       setFollowListType("followers");
+      setFollowListData(followersOfProfile);
     } else {
       setFollowListType("following");
+      setFollowListData(followeesOfProfile);
     }
     setFollowModalVisible(true);
   };
@@ -472,7 +482,7 @@ export default function ProfileSocialScreen() {
               <View className="flex-1">
                 <CustomButton
                   title={isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
-                  onPress={() => handleToggleFollow()}
+                  onPress={() => handleToggleFollow(profile, isFollowing)}
                   iconName={isFollowing ? 'checkmark' : 'add'}
                 />
               </View>
@@ -737,10 +747,11 @@ export default function ProfileSocialScreen() {
 
       {/* FOLLOW LIST MODAL MỚI */}
       <FollowListModal
+        data={followListData}
         visible={followModalVisible}
         onClose={handleCloseFollowModal}
-        userId={userId} // userId của profile đang xem
         listType={followListType} // 'followers' hoặc 'following'
+        handleToggleFollow={handleToggleFollow}
       />
 
       {/* LIKE MODAL */}

@@ -55,6 +55,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
     try {
       if (tracks.length === 0) {
         const response = await GetTracksForCover();
+        console.log(response.data)
         if (response.success) {
           for (let track of response.data) {
             console.log(track.artists)
