@@ -14,7 +14,6 @@ import {
   Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useNavigate } from "@/hooks/useNavigate";
 import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
 import { AddTracksToPlaylists, DeletePlaylist, GetPlaylistsForYou, GetTracksByPlaylistId, SharePlaylist, UpdatePlaylist } from "@/services/musicService";
@@ -32,168 +31,13 @@ import { RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { useMusicAction } from "@/hooks/useMusicAction";
 import { pl } from "date-fns/locale";
+import SearchResultItem from "@/components/items/SearchResultItem";
+import AlbumFavoriteItem from "@/components/items/AlbumFavoriteItem";
+import PlaylistFavoriteItem from "@/components/items/PlaylisFavoritetItem";
+import SearchResultsView from "@/components/search/SearchResultView";
+import TabButton from "@/components/button/TabButton";
 
 const screenHeight = Dimensions.get("window").height;
-
-const PlaylistItem = ({ item, index, onPress, onPressOptions, primaryIconColor, colorScheme }) => {
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(15)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      // Làm mờ
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 400,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-      // Trượt lên
-      Animated.timing(translateYAnim, {
-        toValue: 0,
-        duration: 400,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        opacity: opacityAnim,
-        transform: [{ translateY: translateYAnim }],
-      }}
-    >
-      <Pressable
-        className="flex-row w-full items-center justify-between mb-4"
-        onPress={() => onPress(item)}
-      >
-        <Image
-          source={{ uri: item?.imageUrl }}
-          className="w-16 h-16 rounded-md shadow-md"
-        />
-        <View className="flex-1 mx-4">
-          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semiboldF`} numberOfLines={1}>
-            {item?.name}
-          </Text>
-          <Text className="dark:text-gray-400 text-sm">
-            {item?.totalTracks || 0} bài hát
-          </Text>
-        </View>
-        <Pressable className="p-2" onPress={() => onPressOptions(item)}>
-          <Icon name="ellipsis-vertical" size={20} color={primaryIconColor} />
-        </Pressable>
-      </Pressable>
-    </Animated.View>
-  );
-};
-
-const AlbumItem = ({ item, index, onPress, onPressOptions, primaryIconColor, colorScheme }) => {
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(15)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      // Làm mờ
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 400,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-      // Trượt lên
-      Animated.timing(translateYAnim, {
-        toValue: 0,
-        duration: 400,
-        delay: index * 50,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        opacity: opacityAnim,
-        transform: [{ translateY: translateYAnim }],
-      }}
-    >
-      <Pressable
-        className="flex-row w-full items-center justify-between mb-4"
-        onPress={() => onPress(item)}
-      >
-        <Image
-          source={{ uri: item?.imageUrl }}
-          className="w-16 h-16 rounded-md shadow-md"
-        />
-        <View className="flex-1 mx-4">
-          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semiboldF`} numberOfLines={1}>
-            {item?.name}
-          </Text>
-          <Text className="dark:text-gray-400 text-sm">
-            {item?.totalTracks || 0} bài hát
-          </Text>
-        </View>
-        <Pressable className="p-2" onPress={() => onPressOptions(item)}>
-          <Icon name="ellipsis-vertical" size={20} color={primaryIconColor} />
-        </Pressable>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-const SearchResultItem = ({ item, index, onPress, onPressOptions, primaryIconColor, colorScheme }) => {
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(15)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacityAnim, { toValue: 1, duration: 400, delay: index * 50, useNativeDriver: true }),
-      Animated.timing(translateYAnim, { toValue: 0, duration: 400, delay: index * 50, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  const getSubtitle = () => {
-    if (item.resultType === 'favAlbum') {
-      const artists = item.artists?.map(a => a.name).join(', ') || 'Nghệ sĩ không rõ';
-      return `Album • ${artists}`;
-    }
-    // Cả myPlaylist và favPlaylist đều là playlist
-    const ownerName = item.owner?.name || 'Của bạn';
-    return `Playlist • ${ownerName}`;
-  };
-
-  return (
-    <Animated.View
-      style={{
-        opacity: opacityAnim,
-        transform: [{ translateY: translateYAnim }],
-      }}
-    >
-      <Pressable
-        className="flex-row w-full items-center justify-between mb-4"
-        onPress={() => onPress(item)}
-      >
-        <Image
-          source={{ uri: item?.imageUrl }}
-          className="w-16 h-16 rounded-md shadow-md"
-        />
-        <View className="flex-1 mx-4">
-          <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semiboldF`} numberOfLines={1}>
-            {item?.name}
-          </Text>
-          <Text className="dark:text-gray-400 text-sm" numberOfLines={1}>
-            {getSubtitle()}
-          </Text>
-        </View>
-        <Pressable className="p-2" onPress={() => onPressOptions(item)}>
-          <Icon name="ellipsis-vertical" size={20} color={primaryIconColor} />
-        </Pressable>
-      </Pressable>
-    </Animated.View>
-  );
-};
 
 export default function AllPlaylistScreen() {
   const colorScheme = useColorScheme();
@@ -347,7 +191,6 @@ export default function AllPlaylistScreen() {
   }
 
   const handleUpdatePlaylist = async () => {
-    // console.log('handleUpdatePlaylist')
     try {
       const payload = {
         id: selectedPlaylist.id,
@@ -591,36 +434,7 @@ export default function AllPlaylistScreen() {
         setFavoriteAlbums((prev) => [...prev, favItem.item]);
       }
     }
-  }, []);
-
-  useEffect(() => {
-    const fetchTracks = async () => {
-      if (selectedPlaylist?.spotifyId) {
-        const response = await GetTracksByPlaylistId({
-          playlistId: selectedPlaylist?.spotifyId,
-          type: 'api'
-        });
-        if (response.success) {
-          setPlaylistTracks(response.data);
-        } else {
-          setPlaylistTracks([]);
-        }
-      } else {
-        const response = await GetTracksByPlaylistId({
-          playlistId: selectedPlaylist?.id,
-          type: 'local'
-        });
-        if (response.success) {
-          setPlaylistTracks(response.data);
-        } else {
-          setPlaylistTracks([]);
-        }
-      }
-    }
-    if (selectedPlaylist) {
-      fetchTracks();
-    }
-  }, [selectedPlaylist?.id]);
+  }, [favoriteItems]);
 
   useEffect(() => {
     if (searchQuery === "") {
@@ -683,78 +497,6 @@ export default function AllPlaylistScreen() {
 
   const currentData = activeTab === "myPlaylists" ? myPlaylists : (activeTab === "playlists" ? favoritePlaylists : favoriteAlbums);
 
-  const TabButton = ({ title, tabName, onPress, isActive }) => {
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        className={`flex-1 items-center py-3`}
-      >
-        <Text
-          className={`font-semibold ${isActive
-            ? `${colorScheme === "dark" ? "text-white" : "text-black"}`
-            : "text-gray-400"
-            }`}
-        >
-          {title}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const SearchResultsView = () => (
-    <>
-      <View className="flex-row mb-4">
-        <TabButton
-          title="Tất cả"
-          tabName="all"
-          onPress={() => setSearchFilter('all')}
-          isActive={searchFilter === 'all'}
-        />
-        <TabButton
-          title="Playlist"
-          tabName="playlist"
-          onPress={() => setSearchFilter('playlist')}
-          isActive={searchFilter === 'playlist'}
-        />
-        <TabButton
-          title="Album"
-          tabName="album"
-          onPress={() => setSearchFilter('album')}
-          isActive={searchFilter === 'album'}
-        />
-      </View>
-
-      <Text className={`mb-4 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}>
-        Tìm thấy {filteredSearchResults.length} kết quả
-      </Text>
-
-      {/* Danh sách kết quả tìm kiếm */}
-      {filteredSearchResults.length > 0 ? (
-        <FlatList
-          data={filteredSearchResults}
-          keyExtractor={(item, index) => `${item.resultType}-${item.id || item.spotifyId}-${index}`}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <SearchResultItem
-              item={item}
-              index={index}
-              onPress={() => handleSelectSearchResult(item)}
-              onPressOptions={() => handleOpenOptionsModal(item)}
-              primaryIconColor={primaryIconColor}
-              colorScheme={colorScheme}
-            />
-          )}
-        />
-      ) : (
-        <View className="flex-1 justify-center items-center">
-          <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Không tìm thấy kết quả cho "{searchQuery}"
-          </Text>
-        </View>
-      )}
-    </>
-  );
-
   return (
     <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4`}
       style={{ marginBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
@@ -794,7 +536,16 @@ export default function AllPlaylistScreen() {
       </View>
 
       {isSearching ? (
-        <SearchResultsView />
+        <SearchResultsView
+          searchQuery={searchQuery}
+          searchFilter={searchFilter}
+          filteredSearchResults={filteredSearchResults}
+          setSearchFilter={setSearchFilter}
+          primaryIconColor={primaryIconColor}
+          colorScheme={colorScheme}
+          onSelectSearchResult={handleSelectSearchResult}
+          onOpenOptionsModal={handleOpenOptionsModal}
+        />
       ) : (
         <>
           <View className="flex-row mb-4">
@@ -814,7 +565,7 @@ export default function AllPlaylistScreen() {
               showsVerticalScrollIndicator={false}
               renderItem={({ item, index }) => (
                 activeTab === "albums" ? (
-                  <AlbumItem
+                  <AlbumFavoriteItem
                     item={item}
                     index={index}
                     onPress={() => handleSelectAlbum(item)}
@@ -823,7 +574,7 @@ export default function AllPlaylistScreen() {
                     colorScheme={colorScheme}
                   />
                 ) : (
-                  <PlaylistItem
+                  <PlaylistFavoriteItem
                     item={item}
                     index={index}
                     onPress={() => handleSelectPlaylist(item)}

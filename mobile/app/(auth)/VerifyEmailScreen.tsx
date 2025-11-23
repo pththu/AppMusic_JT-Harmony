@@ -12,7 +12,6 @@ export default function VerifyEmailScreen() {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
-  const login = useAuthStore(state => state.login);
   const params = useLocalSearchParams();
   const email = params.email ? JSON.parse(params.email as string) : "";
   const next = params.next ? params.next as string : "Auth";

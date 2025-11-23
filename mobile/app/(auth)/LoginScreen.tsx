@@ -3,119 +3,35 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
 import { Login } from "@/routes/ApiRouter";
 import useAuthStore from "@/store/authStore";
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "react-native";
 import { useBoardingStore } from "@/store/boardingStore";
-import { GetListeningHistory, GetSearchHistory } from "@/services/historiesService";
-import { GetFavoriteItemsGrouped } from "@/services/favoritesService";
-import { GetArtistFollowed } from "@/services/followService";
-import { GetMyPlaylists } from "@/services/musicService";
-import { useHistoriesStore } from "@/store/historiesStore";
-import { useFavoritesStore } from "@/store/favoritesStore";
-import { usePlayerStore } from "@/store/playerStore";
-import { useFollowStore } from "@/store/followStore";
+import { useAuthData } from "@/hooks/useAuthData";
+import { validateForm } from "@/utils";
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error } = useCustomAlert();
   const { login } = useAuthStore();
+  const {
+    fetchHistory,
+    fetchFavoritesItem,
+    fetchArtistFollowed,
+    fetchMyPlaylists,
+    fetchFollowers,
+    fetchFollowees
+  } = useAuthData();
+
   const setWhenLogin = useBoardingStore(state => state.setWhenLogin);
-  const setListenHistory = useHistoriesStore((state) => state.setListenHistory);
-  const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
-  const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
-  const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
-  const setArtistFollowed = useFollowStore((state) => state.setArtistFollowed);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return "Email không hợp lệ.";
-    }
-    return null;
-  };
-
-  const validatePassword = (password) => {
-    if (password.length < 8) {
-      return "Mật khẩu phải có ít nhất 8 ký tự.";
-    }
-    return null;
-  };
-
-  const validateForm = () => {
-    if (!email || !password) {
-      return "Vui lòng điền đầy đủ thông tin.";
-    }
-    const emailError = validateEmail(email);
-    if (emailError) {
-      return emailError;
-    }
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      return passwordError;
-    }
-    return null;
-  };
-
-  const fetchHistory = useCallback(async (userId) => {
-    const [responseListen, responseSearch] = await Promise.all([
-      GetListeningHistory(userId),
-      GetSearchHistory(userId)
-    ]);
-    if (responseSearch.success) {
-      setSearchHistory(responseSearch.data);
-    } else {
-      setSearchHistory([]);
-    }
-    if (responseListen.success) {
-      setListenHistory(responseListen.data);
-    } else {
-      setListenHistory([]);
-    }
-  }, []);
-
-  const fetchFavoritesItem = useCallback(async (userId) => {
-    try {
-      const response = await GetFavoriteItemsGrouped(userId);
-      if (response.success) {
-        setFavoriteItems(response.data);
-      }
-    } catch (error) {
-      console.log('errorr fetch favorites: ', error);
-    }
-  }, []);
-
-  const fetchArtistFollowed = useCallback(async (userId) => {
-    try {
-      const response = await GetArtistFollowed(userId);
-      if (response.success) {
-        setArtistFollowed(response.data);
-      }
-    } catch (error) {
-      console.log('error fetch follow artist', error);
-    }
-  }, []);
-
-  const fetchMyPlaylists = useCallback(async (userId) => {
-    try {
-      const response = await GetMyPlaylists(userId);
-      if (response.success) {
-        setMyPlaylists(response.data);
-      } else {
-        setMyPlaylists([]);
-      }
-    } catch (error) {
-      console.log("Lỗi khi lấy playlist của tôi:", error);
-    }
-  }, []);
-
   const handleLogin = async () => {
-    const validationMessage = validateForm();
+    const validationMessage = validateForm(email, password);
     if (validationMessage) {
       error("Lỗi Đăng Nhập", validationMessage);
       return;
@@ -132,7 +48,9 @@ export default function LoginScreen() {
         fetchHistory(userId),
         fetchFavoritesItem(userId),
         fetchArtistFollowed(userId),
-        fetchMyPlaylists(userId)
+        fetchMyPlaylists(userId),
+        fetchFollowers(userId),
+        fetchFollowees(userId)
       ])
       setWhenLogin();
       login(response.user, 'local', response.user?.accessToken);

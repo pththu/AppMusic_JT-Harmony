@@ -11,6 +11,8 @@ import { useState } from "react";
 import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
 import { usePlaylistData } from "./usePlaylistData";
 import { useFavoritesStore } from "@/store/favoritesStore";
+import { ShareArtist } from "@/services/followService";
+import { useArtistData } from "./useArtistData";
 
 export const useMusicAction = () => {
 
@@ -21,6 +23,7 @@ export const useMusicAction = () => {
   const isGuest = useAuthStore((state) => state.isGuest);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
   const currentAlbum = usePlayerStore((state) => state.currentAlbum);
+  const currentArtist = useFollowStore((state) => state.currentArtist);
   const listTrack = usePlayerStore((state) => state.listTrack);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
 
@@ -45,6 +48,7 @@ export const useMusicAction = () => {
   const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
 
   const { setModalVisible } = usePlaylistData(currentPlaylist);
+  const { setArtistOptionModalVisible } = useArtistData(currentArtist);
 
   const handleSelectPlaylist = (playlist) => {
     setCurrentPlaylist(playlist);
@@ -260,6 +264,63 @@ export const useMusicAction = () => {
     }
   };
 
+  const handleShareArtist = async () => {
+    if (isGuest) {
+      info("Hãy đăng nhập để sử dụng chức năng này.");
+      return;
+    }
+
+    try {
+      let shareMessage = `${user?.fullName}: `;
+
+      if (currentArtist?.name) {
+        shareMessage += `${currentArtist?.name}\n\n`;
+      } else {
+        shareMessage += `Bài đăng của ${user?.fullName}\n\n`;
+      }
+
+      // Thêm URL hình ảnh nếu có
+      if (currentArtist?.imageUrl) {
+        shareMessage += `${currentArtist?.imageUrl}\n\n`;
+      }
+
+      // Thêm liên kết đến bài viết
+      const postLink = `app://post/${currentArtist?.id}`; // Deep link giả định
+      shareMessage += `Xem bài viết: ${postLink}`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        // url: postLink,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log(result.activityType)
+        } else {
+          console.log('Chia sẻ thành công!');
+        }
+        // Update share count after successful share
+        const response = await ShareArtist({
+          artistId: currentArtist?.id,
+          artistSpotifyId: currentArtist?.spotifyId
+        })
+
+        if (response.success) {
+          currentArtist.id = response.data.artistId;
+          currentArtist.shareCount += 1;
+          setCurrentArtist(currentArtist);
+          success('Đã chia sẻ');
+          setArtistOptionModalVisible(false);
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // Dismissed
+      }
+    } catch (err) {
+      console.error('Lỗi khi chia sẻ:', err);
+      error('Lỗi khi chia sẻ thông tin nghệ sĩ. Vui lòng thử lại sau.');
+    }
+  };
+
   const handleAddFavorite = async (item, type, setIsFavoriteLoading, setIsFavorite) => {
     if (isGuest) {
       info('Hãy đăng nhập để sử dụng chức năng này!');
@@ -450,7 +511,7 @@ export const useMusicAction = () => {
         playlistIds.forEach(id => {
           updateTotalTracksInMyPlaylists(id, 1);
         });
-        success('Đã thêm bài hát vào playlist thành công!');
+        console.log('Đã thêm bài hát vào playlist thành công!');
       }
     } catch (err) {
       console.log(err);
@@ -503,6 +564,26 @@ export const useMusicAction = () => {
     });
   }
 
+  const saveArtistToListeningHistory = () => {
+    if (isGuest) return;
+    const payload = {
+      itemType: 'artist',
+      itemId: currentArtist?.id,
+      itemSpotifyId: currentArtist?.spotifyId,
+      durationListened: 0
+    }
+    SaveToListeningHistory(payload).then((response) => {
+      if (response.success) {
+        if (response.updated) {
+          console.log('Cập nhật lịch sử nghe artist thành công:', response.data);
+        } else {
+          console.log('Tạo mới lịch sử nghe artist thành công:', response.data);
+          addListenHistory(response.data);
+        }
+      }
+    })
+  }
+
   return {
     selectedTrack,
     songModalVisible,
@@ -519,18 +600,21 @@ export const useMusicAction = () => {
     handleSharePlaylist,
     handleShareTrack,
     handleShareAlbum,
+    handleShareArtist,
     handleAddFavorite,
+    handleRemoveFavorite,
     handleAddToQueue,
     handleAddTrackToQueue,
-    handleRemoveFavorite,
     handleTrackViewAlbum,
     handleTrackViewArtist,
+    handleTrackAddToPlaylist,
     handleAddToAnotherPlaylist,
     handleChangePrivacy,
-    handleTrackAddToPlaylist,
     handleConfirmAddTrackToPlaylists,
+
     savePlaylistToListeningHistory,
     saveAlbumToListeningHistory,
+    saveArtistToListeningHistory,
     setSelectedTrack,
     setSongModalVisible,
     setArtistModalVisible,

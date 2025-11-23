@@ -63,6 +63,7 @@ export const useAlbumData = (currentAlbum) => {
     isFavorite,
     isLoading,
     isFavoriteLoading,
+    
     setIsFavorite,
     setIsFavoriteLoading,
     fetchTracks,

@@ -29,7 +29,7 @@ import {
   Post as PostType,
   Comment,
 } from "../../services/socialApi";
-import { fetchCoversByUserId, Cover } from "../../services/coverService";
+import { Cover } from "../../services/coverService";
 import useAuthStore from "@/store/authStore";
 import PostItem from "../../components/items/PostItem";
 import CoverItem from "../../components/items/CoverItem";
@@ -43,7 +43,7 @@ import { useFollowStore } from "@/store/followStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { FollowUser, GetUserProfileSocial, UnfollowUser } from "@/services/followService";
 import { useLocalSearchParams } from "expo-router";
-import { set } from "date-fns";
+import { useProfileSocialData } from "@/hooks/useProfileSocialData";
 
 // Định nghĩa kiểu cho Route Params
 
@@ -58,17 +58,12 @@ export default function ProfileSocialScreen() {
   const navigation = useNavigation();
 
   const currentUser = useAuthStore((state) => state.user);
-  const isFollowing = useFollowStore((state) => state.isFollowing);
-  const userFollowed = useFollowStore((state) => state.userFollowed);
-  const setIsFollowing = useFollowStore((state) => state.setIsFollowing);
-  const setUserFollowed = useFollowStore((state) => state.setUserFollowed);
+  const followees = useFollowStore((state) => state.userFollowees);
+  const setFollowees = useFollowStore((state) => state.setFollowees);
+  const removeFollowee = useFollowStore((state) => state.removeFollowee);
+
   const currentUserId = currentUser?.id;
 
-  // STATE CHÍNH
-  const [profile, setProfile] = useState(null); // Thông tin profile
-  const [posts, setPosts] = useState<PostType[]>([]); // Danh sách bài đăng
-  const [covers, setCovers] = useState<Cover[]>([]); // Danh sách covers
-  const [loading, setLoading] = useState(false); // Loading chính
   const [activeTab, setActiveTab] = useState<"posts" | "covers">("posts"); // Tab active
 
   // STATES CHO COMMENT MODAL
@@ -94,61 +89,23 @@ export default function ProfileSocialScreen() {
   const [editingPost, setEditingPost] = useState<any | null>(null); // Bài đăng đang chỉnh sửa
   const [editContent, setEditContent] = useState(""); // Nội dung chỉnh sửa
 
-  const [isRefreshing, setIsRefreshing] = useState(false); // Trạng thái refresh
-
-  // Kiểm tra xem đây có phải là profile của người dùng hiện tại không
   const isCurrentUserProfile = currentUser && currentUser.id === userId;
 
   // Hàm tải dữ liệu profile và bài đăng
-  const loadData = useCallback(async () => {
-    if (!userId) {
-      error("Lỗi", "Không tìm thấy ID người dùng.");
-      goBack();
-      return;
-    }
+  const {
+    profile,
+    posts,
+    covers,
+    loading,
+    isFollowing,
+    setIsFollowing,
+    isRefreshing,
+    setIsRefreshing,
+    setPosts,
+    setCovers,
+    setProfile,
+  } = useProfileSocialData(userId);
 
-    setLoading(true);
-    try {
-      const profileResponse = await GetUserProfileSocial(userId);
-      console.log(profileResponse)
-      if (!profileResponse.success) {
-        error("Lỗi", profileResponse.message || "Không thể tải thông tin profile.");
-      }
-
-      setProfile(profileResponse.data);
-
-      // 2. Tải Bài đăng
-      const postResponse = await fetchPostsByUserId(userId);
-      if ("message" in postResponse) {
-        throw new Error(String(postResponse.message));
-      }
-      const allPosts = postResponse;
-      const postsOnly = allPosts.filter((post) => !post.isCover);
-      setPosts(postsOnly);
-
-      // 3. Tải Covers riêng biệt
-      const coversResponse = await fetchCoversByUserId(userId);
-      setCovers(coversResponse);
-
-      // 4. Kt theo dõi
-      for (const followedUser of userFollowed) {
-        if (followedUser.id === userId) {
-          setIsFollowing(true);
-          break;
-        }
-      }
-    } catch (err) {
-      console.error("Lỗi tải Profile Social:", err);
-      error("Lỗi", "Không thể tải thông tin profile. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, navigation]);
-
-  useEffect(() => {
-    loadData();
-
-  }, [loadData]);
 
   // Hàm xử lý mở Chat
   const handleChatPress = useCallback(async () => {
@@ -271,27 +228,6 @@ export default function ProfileSocialScreen() {
 
   // HÀM XỬ LÝ XÓA POST
   const handleDeletePress = useCallback(async (postId: string) => {
-    // Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa bài viết này?", [
-    //   { text: "Hủy", style: "cancel" },
-    //   {
-    //     text: "Xóa",
-    //     style: "destructive",
-    //     onPress: async () => {
-    //       try {
-    //         const result = await deletePost(postId);
-    //         if ("message" in result) {
-    //           throw new Error(result.message);
-    //         }
-    //         // Xóa khỏi state local
-    //         setPosts((prev) => prev.filter((p) => p.id !== postId));
-    //         Alert.alert("Thành công", "Bài viết đã được xóa.");
-    //       } catch (error) {
-    //         console.error("Lỗi khi xóa bài viết:", error);
-    //         Alert.alert("Lỗi", "Không thể xóa bài viết.");
-    //       }
-    //     },
-    //   },
-    // ]);
     confirm(
       "Xác nhận xóa",
       "Bạn có chắc chắn muốn xóa bài viết này?",
@@ -303,11 +239,9 @@ export default function ProfileSocialScreen() {
           }
           // Xóa khỏi state local
           setPosts((prev) => prev.filter((p) => p.id !== postId));
-          // Alert.alert("Thành công", "Bài viết đã được xóa.");
           success("Thành công", "Bài viết đã được xóa.");
         } catch (error) {
           console.error("Lỗi khi xóa bài viết:", error);
-          // Alert.alert("Lỗi", "Không thể xóa bài viết.");
           error("Lỗi", "Không thể xóa bài viết.");
         }
       },
@@ -317,9 +251,8 @@ export default function ProfileSocialScreen() {
   // HÀM XỬ LÝ REFRESH
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadData();
     setIsRefreshing(false);
-  }, [loadData]);
+  }, []);
 
   // Xử lý Thích/Bỏ thích bài đăng
   const handleTogglePostLike = async (postId: string) => {
@@ -429,46 +362,50 @@ export default function ProfileSocialScreen() {
 
   //  HÀM XỬ LÝ THEO DÕI
   const handleToggleFollow = useCallback(async () => {
-    if (!profile || !currentUserId) return; // Kiểm tra an toàn
-
-    // Không cho phép tự follow chính mình trên UI (logic này cũng có ở backend)
-    if (profile.id === currentUserId) return;
+    if (!profile || !currentUserId) return;
+    if (profile.id === currentUserId) return; // Không cho phép follow chính mình
 
     setIsFollowingPending(true);
-    try {
-      if (!isFollowing) {
-        console.log('follow')
-        const response = await FollowUser(profile.id);
-        console.log(response)
-        if (!response.success) {
-          throw new Error(response.message || "Lỗi khi theo dõi người dùng.");
-        }
-
-        setIsFollowing(true);
-        setUserFollowed([...userFollowed, response.data]);
-        setProfile((prev) => ({ ...prev, followerCount: prev.followerCount + 1 }));
-      } else {
-        // GỌI API UNFOLLOW
-        console.log('un')
-        for (const followedUser of userFollowed) {
-          if (followedUser.followeeId === profile.id) {
-            const response = await UnfollowUser(followedUser.id);
-            if (!response.success) {
-              throw new Error(response.message || "Lỗi khi hủy theo dõi người dùng.");
-            }
-            setUserFollowed(userFollowed.filter(followedUser => followedUser.followeeId !== profile.id));
-            setProfile((prev) => ({ ...prev, followerCount: prev.followerCount - 1 }));
-            setIsFollowing(false);
-          }
-        }
-      }
-
-    } catch (error) {
-      console.error("Lỗi toggle follow:", error);
-    } finally {
-      setIsFollowingPending(false);
+    if (isFollowing) {
+      await handleUnfollow();
+    } else {
+      await handleFollow();
     }
+    setIsFollowingPending(false);
   }, [profile, currentUserId]);
+
+  const handleFollow = useCallback(async () => {
+    try {
+      console.log('follow: ', profile)
+      const response = await FollowUser(profile.id);
+      console.log('response', response)
+      if (response.success) {
+        setFollowees([...followees, response.data]);
+        setProfile((prev) => ({ ...prev, followerCount: prev.followerCount + 1 }));
+      }
+    } catch (err) {
+      error("Lỗi", "Không thể theo dõi người dùng: " + err.message);
+    }
+  }, [profile]);
+
+  const handleUnfollow = useCallback(async () => {
+    try {
+      console.log('un')
+      const payload = {
+        followeeId: profile.id,
+        followerId: currentUserId,
+      }
+      console.log('payload: ', payload)
+      const response = await UnfollowUser(payload);
+      console.log('response', response)
+      if (response.success) {
+        removeFollowee(payload.followeeId);
+        setProfile((prev) => ({ ...prev, followerCount: prev.followerCount - 1 }));
+      }
+    } catch (error) {
+      error("Lỗi", "Không thể hủy theo dõi người dùng." + error.message);
+    }
+  }, [profile]);
 
   // HÀM XỬ LÝ MỞ Follow MODAL
   const handleOpenFollowModal = (type: "followers" | "following") => {
@@ -696,7 +633,7 @@ export default function ProfileSocialScreen() {
       {/* Danh sách bài đăng với Header */}
       <FlatList
         ListHeaderComponent={renderProfileHeader}
-        data={activeTab === "posts" ? posts : (covers as any)}
+        data={activeTab === "posts" ? posts : covers}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingTop: 80 }}
         renderItem={({ item }) => {

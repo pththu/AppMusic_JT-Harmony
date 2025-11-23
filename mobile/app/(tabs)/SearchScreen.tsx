@@ -7,22 +7,16 @@ import {
   TouchableOpacity,
   View,
   useColorScheme,
-  Image,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigate } from "@/hooks/useNavigate";
-import ArtistItem from "@/components/artists/ArtistItem";
 import CustomButton from "@/components/custom/CustomButton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
-
-import {
-  GetArtistsForYou,
-} from "@/services/musicService";
+import { GetArtistsForYou } from "@/services/musicService";
 import {
   SearchAll,
   SearchTracks,
@@ -42,10 +36,10 @@ import { ClearSearchHistory, RemoveItemSearchHistory, SaveToListeningHistory } f
 import { useHistoriesStore } from "@/store/historiesStore";
 import LocalCategoryItem from "@/components/items/LocalCategoryItem";
 import { BROWSE_CATEGORIES, FILTER_TYPES } from "@/constants/data";
+import ResultSearchListSection from "@/components/section/ResultSearchListSection";
 
 const ACTIVE_COLOR = "#22C55E";
 const SEARCH_HISTORY_KEY = "search_history";
-
 
 export default function SearchScreen() {
   const { navigate } = useNavigate();
@@ -133,7 +127,6 @@ export default function SearchScreen() {
     Keyboard.dismiss();
 
     try {
-
       if (!isGuest) {
         const response = await SaveSearchHistory(query);
         if (response && response.success) {
@@ -386,19 +379,6 @@ export default function SearchScreen() {
     }
   };
 
-  const fetchTrendingArtists = async () => {
-    try {
-      const response = await GetArtistsForYou({ artistNames: [], genres: ['pop', 'K-pop', 'v-pop'] });
-      setTrendingArtists(response.data);
-    } catch (error) {
-      console.error("Failed to load trending artists:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchTrendingArtists();
-  }, []);
-
   useEffect(() => {
     if (user && isLoggedIn) {
       fetchSearchHistory();
@@ -469,82 +449,6 @@ export default function SearchScreen() {
     );
   };
 
-  const renderResultItem = ({ item }) => {
-    const itemType = item.type || "Track";
-    let iconName = "musical-notes";
-    if (itemType === "Album") iconName = "disc";
-    else if (itemType === "Artist") iconName = "person";
-    else if (itemType === "Playlist") iconName = "list";
-    else if (itemType === "User") iconName = "people-circle";
-
-    return (
-      <TouchableOpacity
-        onPress={() => handleItemPress(item)}
-        className="flex-row items-center py-2"
-      >
-        {itemType === 'User' ? (
-          <>
-            <Image
-              source={{ uri: item?.avatarUrl }}
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: itemType === "Artist" || itemType === "User" ? 25 : 4,
-              }}
-            />
-            <View className="ml-3 flex-1">
-              <Text
-                className={`text-${isDark ? "white" : "black"} font-semibold text-base`}
-              >
-                {item.fullName}
-              </Text>
-              <Text
-                className={`text-${isDark ? "gray-400" : "gray-600"} text-xs`}
-              >
-                {itemType} • {item.username || ""}
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={isDark ? "#888" : "#777"} />
-          </>
-        ) : (
-          <>
-            {item.imageUrl ? (
-              <Image
-                source={{ uri: item?.imageUrl }}
-                style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: itemType === "Artist" || itemType === "User" ? 25 : 4,
-                }}
-              />
-            ) : (
-              <View
-                className={`w-12 h-12 rounded-${itemType === "Artist" || itemType === "User" ? "full" : "sm"
-                  } items-center justify-center ${isDark ? "bg-gray-700" : "bg-gray-300"
-                  }`}
-              >
-                <Icon name={iconName} size={24} color={isDark ? "#fff" : "#000"} />
-              </View>
-            )}
-            <View className="ml-3 flex-1">
-              <Text
-                className={`text-${isDark ? "white" : "black"} font-semibold text-base`}
-              >
-                {item.name || item.title}
-              </Text>
-              <Text
-                className={`text-${isDark ? "gray-400" : "gray-600"} text-xs`}
-              >
-                {itemType} • {item.subtitle || item.artists?.[0]?.name || ""}
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={isDark ? "#888" : "#777"} />
-          </>
-        )}
-      </TouchableOpacity>
-    );
-  };
-
   // Flatten results for filtered view
   const flattenedResults = useMemo(() => {
     if (activeFilter === "All") {
@@ -576,18 +480,16 @@ export default function SearchScreen() {
       <SafeAreaView edges={["top"]} className="flex-1">
         <View
           className={`pt-3 pb-2 ${isDark ? "bg-black" : "bg-white"}`}
-          // Đặt background color cứng để che nội dung cuộn bên dưới
           style={{
             backgroundColor: isDark ? "#000" : "#fff",
-            // Thêm shadow hoặc border dưới nếu cần để nổi bật khu vực cố định
             zIndex: 10,
             borderBottomColor: isDark ? '#333' : '#ddd',
           }}
         >
           {/* SEARCH BAR */}
           <View
-            className={`flex-row mx-3 rounded-xl px-3 items-center shadow-lg ${isDark ? "bg-gray-800 shadow-black/30" : "bg-white shadow-gray-300/30 border border-gray-200"
-              }`}
+            className={`flex-row mx-3 rounded-xl px-3 items-center shadow-lg 
+              ${isDark ? "bg-gray-800 shadow-black/30" : "bg-white shadow-gray-300/30 border border-gray-200"}`}
             style={{ height: 44 }}
           >
             {isFocused || isSearching ? (
@@ -600,8 +502,7 @@ export default function SearchScreen() {
 
             <TextInput
               ref={inputRef}
-              className={`flex-1 ${isDark ? "text-white" : "text-black"
-                } text-base h-full mx-2`}
+              className={`flex-1 ${isDark ? "text-white" : "text-black"} text-base h-full mx-2`}
               placeholder="Nhập tên bài hát, nghệ sĩ, album..."
               placeholderTextColor={isDark ? "#888" : "#777"}
               value={searchText}
@@ -660,10 +561,7 @@ export default function SearchScreen() {
           <View className="flex-1">
             {isFocused && !isSearching ? (
               <View className="mt-5 mx-3 flex-1">
-                <Text
-                  className={`text-${isDark ? "white" : "black"
-                    } font-bold text-lg mb-3`}
-                >
+                <Text className={`text-${isDark ? "white" : "black"} font-bold text-lg mb-3`} >
                   {searchText.length > 0 ? "Gợi ý tìm kiếm" : "Tìm kiếm gần đây"}
                 </Text>
 
@@ -672,11 +570,8 @@ export default function SearchScreen() {
                 ) : (
                   <View className="">
                     {
-
                       isGuest && searchText.length === 0 ? (
-                        <Text
-                          className={`text-${isDark ? "gray-400" : "gray-600"
-                            } text-center mt-10`}>
+                        <Text className={`text-${isDark ? "gray-400" : "gray-600"} text-center mt-10`}>
                           Tài khoản khách không có lịch sử tìm kiếm.
                         </Text>
                       ) : ((searchText.length > 0 ? querySuggestions : recentSearches).map((item) => (
@@ -706,106 +601,75 @@ export default function SearchScreen() {
               </View>
             ) : (
               <View className="my-4 ">
-                {
-                  isSearching ? (
-                    <View>
-
-                      {/* Results Title */}
-                      <Text
-                        className={`text-${isDark ? "white" : "black"
-                          } font-bold text-lg mx-3 mb-3`}
-                      >
-                        {activeFilter === "All" ? "Tất cả" : `${activeFilter}`}  "{searchText}" ({resultCount})
-                      </Text>
-
-                      {/* Results List */}
-                      {loading ? (
-                        <View className="flex-1 items-center justify-center pt-10">
-                          <ActivityIndicator size="large" color={ACTIVE_COLOR} />
-                        </View>
-                      ) : (
-                        <View style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}>
-                          {
-                            resultCount > 0 ? (
-                              <View className="px-3 pb-14">
-                                {flattenedResults.map((item, index) => (
-                                  <View key={`${item.type}-${item.id}-${index}`}>
-                                    {renderResultItem({ item })}
-                                    {index < flattenedResults.length - 1 && (
-                                      <View
-                                        className={`h-px mx-3 my-1 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}
-                                      />
-                                    )}
-                                  </View>
-                                ))}
-                              </View>
-                            ) : (
-                              <View className="flex-1 items-center justify-start pt-10">
-                                <Text
-                                  className={`text-${isDark ? "gray-400" : "gray-600"
-                                    } text-center`}
-                                >
-                                  Không tìm thấy kết quả cho "{searchText}" trong {activeFilter}.
-                                </Text>
-                              </View>
-                            )
-                          }
-                        </View>
-                      )}
-                    </View>
-                  ) : (
-                    <View className="mt-5">
-                      <Text
-                        className={`text-${isDark ? "white" : "black"
-                          } font-bold text-lg ml-3 mb-3`}
-                      >
-                        Nghệ sĩ nổi bật
-                      </Text>
-                      <ScrollView
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 16, marginBottom: 20 }}
-                      >
-                        {
-                          trendingArtists.map((item, index) => (
-                            <ArtistItem
-                              key={item.id || `artist-${index}`}
-                              name={item.name}
-                              image={item.imageUrl}
-                              onPress={() =>
-                                handleItemPress({ ...item, type: "Artist" })
-                              }
-                            />
-                          ))}
-                      </ScrollView>
-                      <Text
-                        className={`text-${isDark ? "white" : "black"
-                          } font-bold text-lg ml-3 mb-3`}
-                      >
-                        Khám phá thể loại
-                      </Text>
-                      <View
-                        className="flex-row w-[90%] flex-wrap justify-between self-center"
-                        style={{
-                          paddingBottom: (isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0),
-                        }}
-                      >
-                        {BROWSE_CATEGORIES.map((item, index) => (
-                          <View key={item.id} style={{ width: '50%' }}>
-                            <LocalCategoryItem
-                              name={item.name}
-                              color={item.color}
-                              colorEnd={item.colorEnd}
-                              icon={item.icon}
-                              onPress={() =>
-                                navigate("CategoryScreen", { category: item.name })
-                              }
-                            />
-                          </View>
-                        ))}
+                {isSearching ? (
+                  <View>
+                    {/* Results Title */}
+                    <Text className={`text-${isDark ? "white" : "black"} font-bold text-lg mx-3 mb-3`}>
+                      {activeFilter === "All" ? "Tất cả" : `${activeFilter}`}  "{searchText}" ({resultCount})
+                    </Text>
+                    {/* Results List */}
+                    {loading ? (
+                      <View className="flex-1 items-center justify-center pt-10">
+                        <ActivityIndicator size="large" color={ACTIVE_COLOR} />
                       </View>
+                    ) : (
+                      <View style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}>
+                        {
+                          resultCount > 0 ? (
+                            <View className="px-3 pb-14">
+                              {flattenedResults.map((item, index) => (
+                                <View key={`${item.type}-${item.spotifyId}-${item.id}-${index}`}>
+                                  <ResultSearchListSection
+                                    item={item}
+                                    isDark={isDark}
+                                    onItemPerss={handleItemPress}
+                                  />
+                                  {index < flattenedResults.length - 1 && (
+                                    <View
+                                      className={`h-px mx-3 my-1 ${isDark ? "bg-gray-800" : "bg-gray-100"}`}
+                                    />
+                                  )}
+                                </View>
+                              ))}
+                            </View>
+                          ) : (
+                            <View className="flex-1 items-center justify-start pt-10">
+                              <Text className={`text-${isDark ? "gray-400" : "gray-600"} text-center`}>
+                                Không tìm thấy kết quả cho "{searchText}" trong {activeFilter}.
+                              </Text>
+                            </View>
+                          )
+                        }
+                      </View>
+                    )}
+                  </View>
+                ) : (
+                  <View className="mt-5">
+                    <Text className={`text-${isDark ? "white" : "black"} font-bold text-lg ml-3 mb-3`}>
+                      Khám phá thể loại
+                    </Text>
+                    <View
+                      className="flex-row w-[90%] flex-wrap justify-between self-center"
+                      style={{
+                        paddingBottom: (isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0),
+                      }}
+                    >
+                      {BROWSE_CATEGORIES.map((item, index) => (
+                        <View key={item.id} style={{ width: '50%' }}>
+                          <LocalCategoryItem
+                            name={item.name}
+                            color={item.color}
+                            colorEnd={item.colorEnd}
+                            icon={item.icon}
+                            onPress={() =>
+                              navigate("CategoryScreen", { category: item.name })
+                            }
+                          />
+                        </View>
+                      ))}
                     </View>
-                  )
+                  </View>
+                )
                 }
               </View>
             )}

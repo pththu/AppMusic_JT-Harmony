@@ -8,23 +8,7 @@ import { useNavigate } from '@/hooks/useNavigate';
 import useAuthStore from '@/store/authStore';
 import { UpdateCompletedOnboarding } from '@/routes/ApiRouter';
 import { GenerateFromActivity, GenerateFromMood } from '@/services/recommendationService';
-
-const ACTIVITIES = [
-  { id: 'workout', label: 'Tập luyện', icon: 'barbell-outline' },
-  { id: 'study', label: 'Học tập', icon: 'school-outline' },
-  { id: 'commute', label: 'Di chuyển', icon: 'bus-outline' },
-  { id: 'sleep', label: 'Ngủ', icon: 'moon-outline' },
-  { id: 'party', label: 'Tiệc tùng', icon: 'musical-notes-outline' },
-  { id: 'gaming', label: 'Chơi game', icon: 'game-controller-outline' },
-  { id: 'relax', label: 'Thư giãn', icon: 'leaf-outline' },
-  { id: 'focus', label: 'Tập trung', icon: 'eye-outline' },
-  { id: 'running', label: 'Chạy bộ', icon: 'walk-outline' },
-  { id: 'yoga', label: 'Yoga', icon: 'body-outline' },
-  { id: 'cooking', label: 'Nấu ăn', icon: 'restaurant-outline' },
-  { id: 'reading', label: 'Đọc sách', icon: 'book-outline' },
-  { id: 'meditation', label: 'Thiền', icon: 'medkit-outline' },
-  { id: 'driving', label: 'Lái xe', icon: 'car-outline' },
-];
+import { ACTIVITIES } from '@/constants/data';
 
 export default function ActivitiesScreen() {
   const router = useRouter();

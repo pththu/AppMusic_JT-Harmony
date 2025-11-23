@@ -2,7 +2,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
 
-const LocalCategoryItem = ({ name, color, colorEnd, icon, onPress }) => {
+const LocalCategoryItem = ({ name, color, colorEnd, icon, onPress, isSelected = false }) => {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -21,6 +21,11 @@ const LocalCategoryItem = ({ name, color, colorEnd, icon, onPress }) => {
         <Text className="text-white font-bold text-base">
           {name}
         </Text>
+        {isSelected && (
+          <View className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
+            <Icon name="checkmark" size={10} color="white" />
+          </View>
+        )}
       </LinearGradient>
     </TouchableOpacity>
   );

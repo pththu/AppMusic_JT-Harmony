@@ -51,41 +51,6 @@ const formatTimeAgo = (dateString: string): string => {
     return 'vừa xong';
 };
 
-// interface PostItemProps {
-//     id: number;
-//     userId: number;
-//     User: { username: string; avatarUrl: string; fullName: string };
-//     uploadedAt: string;
-//     content: string;
-//     images: string[];
-//     musicLink: string | null;
-//     heartCount: number;
-//     commentCount: number;
-//     shareCount: number;
-//     isLiked: boolean;
-
-//     originalPost?: {
-//         id: number;
-//         userId: number;
-//         content: string;
-//         fileUrl?: string[] | string;
-//         User?: { username: string; avatarUrl: string; fullName: string };
-//     };
-
-//     // Callbacks
-//     onPostUpdate: (type: 'heartCount' | 'isLiked' | 'share' | 'content', value: any) => void;
-//     onCommentPress: () => void;
-//     onSharePress: (postId: number) => void;
-//     onUserPress: (userId: number) => void;
-//     onLikeCountPress: (postId: number) => void;
-//     onHidePost: (postId: number) => void;
-//     onRefresh?: () => void;
-
-//     onEdit?: () => void;
-//     onDelete?: () => void;
-//     isUserPost?: boolean;
-// }
-
 const PostItem = ({
     id: postId,
     userId,
@@ -93,19 +58,19 @@ const PostItem = ({
     uploadedAt,
     content,
     images,
-    musicLink,
+    musicLink = null,
     heartCount,
     commentCount,
     shareCount,
     isLiked: initialIsLiked,
-    originalPost,
+    originalPost = null,
     onPostUpdate,
     onCommentPress,
     onSharePress,
     onUserPress,
     onLikeCountPress,
     onHidePost,
-    onRefresh,
+    onRefresh = () => { },
     onEdit,
     onDelete,
     isUserPost,

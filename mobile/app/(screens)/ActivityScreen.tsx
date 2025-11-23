@@ -13,13 +13,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
-const NOTIFICATION_FILTERS = [
-  { label: 'Tất cả', value: 'all' },
-  { label: 'Thích', value: 'like' },
-  { label: 'Bình luận', value: 'comment' },
-  { label: 'Chia sẻ', value: 'share' },
-];
+import { NOTIFICATION_FILTERS } from '@/constants/data';
 
 export default function ActivityScreen() {
   const colorScheme = useColorScheme();
@@ -27,9 +21,7 @@ export default function ActivityScreen() {
   const notifications = useNotificationStore((state) => state.notifications);
   const setNotifications = useNotificationStore((state) => state.setNotifications);
   const markNotificationRead = useNotificationStore((state) => state.markNotificationRead);
-  const markAllNotificationsReadLocal = useNotificationStore(
-    (state) => state.markAllNotificationsReadLocal,
-  );
+  const markAllNotificationsReadLocal = useNotificationStore((state) => state.markAllNotificationsReadLocal);
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -111,9 +103,8 @@ export default function ActivityScreen() {
 
     return (
       <TouchableOpacity
-        className={`flex-row items-center px-4 py-3 ${
-          item.isRead ? 'bg-transparent' : 'bg-green-50 dark:bg-green-900/20'
-        }`}
+        className={`flex-row items-center px-4 py-3 ${item.isRead ? 'bg-transparent' : 'bg-green-50 dark:bg-green-900/20'
+          }`}
         onPress={() => handleMarkRead(item)}
       >
         <Image
@@ -172,20 +163,18 @@ export default function ActivityScreen() {
           <TouchableOpacity
             key={filter.value}
             onPress={() => setSelectedFilter(filter.value)}
-            className={`px-3 py-1 rounded-full border ${
-              selectedFilter === filter.value
+            className={`px-3 py-1 rounded-full border ${selectedFilter === filter.value
                 ? 'bg-green-500 border-green-500'
                 : 'border-gray-300 dark:border-gray-600'
-            }`}
+              }`}
           >
             <Text
-              className={`text-sm ${
-                selectedFilter === filter.value
+              className={`text-sm ${selectedFilter === filter.value
                   ? 'text-white'
                   : colorScheme === 'dark'
-                  ? 'text-gray-200'
-                  : 'text-gray-700'
-              }`}
+                    ? 'text-gray-200'
+                    : 'text-gray-700'
+                }`}
             >
               {filter.label}
             </Text>

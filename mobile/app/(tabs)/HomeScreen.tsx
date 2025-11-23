@@ -31,6 +31,7 @@ import QuickActionChip from "@/components/common/QuickActionChip";
 import { useMusicAction } from "@/hooks/useMusicAction";
 import { useHomeData } from "@/hooks/useHomeData";
 import { usePlaylistData } from "@/hooks/usePlaylistData";
+import Icon from "react-native-vector-icons/Ionicons";
 
 export default function HomeScreen() {
 
@@ -66,6 +67,10 @@ export default function HomeScreen() {
   const greetingTranslateY = useRef(new Animated.Value(20)).current;
   const unreadNotificationCount = useNotificationStore((state) => state.unreadCount);
   const hasNotification = unreadNotificationCount > 0;
+
+  const hasHistories = useState(listenHistory.length > 0 ? true : false);
+  const hasFavorites = useState(favoriteItems.length > 0 ? true : false);
+  const hasFollowedArtists = useState(artistFollowed.length > 0 ? true : false);
 
   const [isMoodModalVisible, setMoodModalVisible] = useState(false);
   const [isActivityModalVisible, setActivityModalVisible] = useState(false);
@@ -168,8 +173,8 @@ export default function HomeScreen() {
           Hi, {isGuest ? "Guest" : String(user?.fullName || user?.username)} 👋
         </Text>
         <View className="flex-row items-center">
-          {/* <TouchableOpacity className="mr-4 relative">
-            <Icon name="notifications-outline" size={28} color={iconColor} />
+          <TouchableOpacity className="mr-4 relative">
+            <Icon name="notifications-outline" size={28} color={colorScheme === "dark" ? "white" : "black"} />
             {hasNotification && (
               <View className="absolute -top-1 -right-1 min-w-[16px] px-1 h-4 bg-red-500 rounded-full items-center justify-center">
                 <Text className="text-[10px] text-white font-semibold">
@@ -177,7 +182,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
             )}
-          </TouchableOpacity> */}
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigate("Profile")}>
             <Image
               source={{ uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg' }}
@@ -288,33 +293,39 @@ export default function HomeScreen() {
         />
         {!isGuest && (
           <>
-            <HomeListSection
-              title="Dựa trên nghệ sĩ bạn theo dõi"
-              isLoading={isLoading.baseOnFollowedArtists}
-              data={dataRecommendations.baseOnFollowedArtists}
-              onSelectPlaylist={handleSelectPlaylist}
-              onSelectAlbum={handleSelectAlbum}
-              onSelectArtist={handleSelectArtist}
-              onSelectTrack={() => { }}
-            />
-            <HomeListSection
-              title="Có thể bạn sẽ thích"
-              data={dataRecommendations.baseOnFavoriteItems}
-              isLoading={isLoading.baseOnFavoriteItems}
-              onSelectPlaylist={handleSelectPlaylist}
-              onSelectAlbum={handleSelectAlbum}
-              onSelectArtist={handleSelectArtist}
-              onSelectTrack={() => { }}
-            />
-            <HomeListSection
-              title="Đề xuất dựa trên lịch sử nghe của bạn"
-              data={dataRecommendations.baseOnHistory}
-              isLoading={isLoading.baseOnHistory}
-              onSelectPlaylist={handleSelectPlaylist}
-              onSelectAlbum={handleSelectAlbum}
-              onSelectArtist={handleSelectArtist}
-              onSelectTrack={() => { }}
-            />
+            {hasFollowedArtists && (
+              <HomeListSection
+                title="Dựa trên nghệ sĩ bạn theo dõi"
+                isLoading={isLoading.baseOnFollowedArtists}
+                data={dataRecommendations.baseOnFollowedArtists}
+                onSelectPlaylist={handleSelectPlaylist}
+                onSelectAlbum={handleSelectAlbum}
+                onSelectArtist={handleSelectArtist}
+                onSelectTrack={() => { }}
+              />
+            )}
+            {hasFavorites && (
+              <HomeListSection
+                title="Có thể bạn sẽ thích"
+                data={dataRecommendations.baseOnFavoriteItems}
+                isLoading={isLoading.baseOnFavoriteItems}
+                onSelectPlaylist={handleSelectPlaylist}
+                onSelectAlbum={handleSelectAlbum}
+                onSelectArtist={handleSelectArtist}
+                onSelectTrack={() => { }}
+              />
+            )}
+            {hasHistories && (
+              <HomeListSection
+                title="Đề xuất dựa trên lịch sử nghe của bạn"
+                data={dataRecommendations.baseOnHistory}
+                isLoading={isLoading.baseOnHistory}
+                onSelectPlaylist={handleSelectPlaylist}
+                onSelectAlbum={handleSelectAlbum}
+                onSelectArtist={handleSelectArtist}
+                onSelectTrack={() => { }}
+              />
+            )}
           </>
         )}
 

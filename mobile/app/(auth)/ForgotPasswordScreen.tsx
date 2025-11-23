@@ -5,6 +5,7 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SendOtpEmail } from "@/routes/ApiRouter";
+import { validateEmail } from "@/utils";
 
 export default function ForgotPasswordScreen() {
   const colorScheme = useColorScheme();
@@ -13,14 +14,6 @@ export default function ForgotPasswordScreen() {
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return false;
-    }
-    return true;
-  };
 
   const handleForgot = async () => {
     if (!email) {

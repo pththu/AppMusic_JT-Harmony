@@ -75,9 +75,9 @@ export const FollowUser = async (followeeId) => {
   }
 }
 
-export const UnfollowUser = async (followId) => {
+export const UnfollowUser = async (payload) => {
   try {
-    const response = await axiosClient.delete(`/follows/unfollow-user/${followId}`);
+    const response = await axiosClient.delete(`/follows/unfollow-user?followeeId=${payload.followeeId}&&followerId=${payload.followerId}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -93,9 +93,10 @@ export const UnfollowUser = async (followId) => {
 
 
 // người theo dõi user
-export const GetFollowerOfUser = async (userId) => {
+export const GetFollowers = async (userId) => {
   try {
     const response = await axiosPublicClient.get(`/follows/${userId}/followers`);
+    return response.data;
   } catch (error) {
     if (error.response) {
       const { status, data } = error.response;
@@ -108,9 +109,9 @@ export const GetFollowerOfUser = async (userId) => {
   }
 }
 
-export const GetUserFollowedByUser = async (userId) => {
+export const GetFollowees = async (userId) => {
   try {
-    const response = await axiosPublicClient.get(`/follows/${userId}/followed-users`);
+    const response = await axiosPublicClient.get(`/follows/${userId}/followees`);
     return response.data;
   } catch (error) {
     if (error.response) {

@@ -9,20 +9,27 @@ interface FollowState {
   albums: any[];
   followers: any[];
   artistFollowed: any[];
-  userFollowed: any[];
+  userFollowees: any[];
+  userFollowers: any[];
 
-  setArtistFollowed: (artists: any[]) => void;
-  setUserFollowed: (users: any[]) => void;
   setIsFollowing: (following: boolean) => void;
+  toggleFollow: (boolean) => void;
+  // artist follow
+  setArtistFollowed: (artists: any[]) => void;
   setCurrentArtist: (artist: any) => void;
   setPopularTracks: (tracks: any[]) => void;
-  setFollowers: (followers: any[]) => void;
   setAlbums: (albums: any[]) => void;
   addArtistFollowed: (artist: any) => void;
   removeArtistFollowed: (followId: number) => void;
-  toggleFollow: (boolean) => void;
-  addFollower: (follower: any) => void;
-  removeFollower: (followId: any) => void;
+
+  // user follow
+  setFollowers: (followers: any[]) => void; // danh sách người theo dõi mình
+  setFollowees: (users: any[]) => void; // danh sách người mình theo dõi
+  addFollower: (follower: any) => void; // thêm vào danh sách người theo dõi mình
+  addFollowee: (followee: any) => void; // thêm vào danh sách người mình theo dõi
+  removeFollower: (followId: any) => void; // xóa khỏi danh sách người theo dõi mình
+  removeFollowee: (followId: any) => void; // xóa khỏi danh sách người mình theo dõi
+
   clearFollowStore: () => void;
 }
 
@@ -35,9 +42,9 @@ export const useFollowStore = create<FollowState>()(
       albums: [],
       artistFollowed: [],
       followers: [],
-      userFollowed: [],
+      userFollowees: [],
+      userFollowers: [],
 
-      setUserFollowed: (users) => set({ userFollowed: users }),
       setArtistFollowed: (artists) => set({ artistFollowed: artists }),
       addArtistFollowed: (artist) => {
         set((state) => ({
@@ -50,6 +57,7 @@ export const useFollowStore = create<FollowState>()(
       setCurrentArtist: (artist) => set({ currentArtist: artist }),
       setIsFollowing: (following) => set({ isFollowing: following }),
       setFollowers: (followers) => set({ followers: followers }),
+      setFollowees: (users) => set({ userFollowees: users }),
       setPopularTracks: (tracks) => set({ popularTracks: tracks }),
       setAlbums: (albums) => set({ albums: albums }),
       toggleFollow: (following) => set({ isFollowing: following }),
@@ -61,6 +69,14 @@ export const useFollowStore = create<FollowState>()(
       removeFollower: (followId) => set((state) => ({
         followers: state.followers.filter(f => f.id !== followId),
       })),
+      addFollowee: (followee) => {
+        set((state) => ({
+          userFollowees: [...state.userFollowees, followee],
+        }))
+      },
+      removeFollowee: (followId) => set((state) => ({
+        userFollowees: state.userFollowees.filter(f => f.id !== followId),
+      })),
       clearFollowStore: () => set({
         currentArtist: null,
         isFollowing: false,
@@ -68,6 +84,8 @@ export const useFollowStore = create<FollowState>()(
         albums: [],
         followers: [],
         artistFollowed: [],
+        userFollowees: [],
+        userFollowers: [],
       }),
     }),
     {

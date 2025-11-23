@@ -1045,9 +1045,7 @@ const findVideoIdForTrack = async (req, res) => {
         if (track.duration > 0) {
           duration = track.duration;
         } else {
-          console.log(3)
           duration = await youtube.searchVideoWithDuration(videoId);
-          console.log(2)
           track.duration = duration;
           await track.save();
         }
@@ -1056,27 +1054,18 @@ const findVideoIdForTrack = async (req, res) => {
         videoId = videoData.videoId;
         track.videoId = videoId;
         if (videoId) {
-          console.log(4)
           duration = await youtube.searchVideoWithDuration(videoId);
-          console.log(5)
         }
         track.duration = duration;
         await track.save();
       }
     } else {
-      console.log(11)
       track = await callSpotify(() => spotify.findTrackById(trackSpotifyId));
-      console.log(21)
       videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
-      console.log(31)
       videoId = videoData.videoId;
       if (videoId) {
-        console.log(14)
         duration = await youtube.searchVideoWithDuration(videoId);
-        console.log(51)
       }
-
-      console.log('duration: ', duration);
 
       const row = await Track.create({
         spotifyId: trackSpotifyId,
