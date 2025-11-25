@@ -2,9 +2,9 @@ server/node_modules/
 server/.env.development
 server/serviceAccountKey.json
 
-frontendmusic/node_modules/
-
 mobile/node_modules/
 mobile/.env
 
 admin/node_modules/
+web/node_modules/
+web/.env
