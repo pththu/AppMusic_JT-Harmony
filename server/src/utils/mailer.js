@@ -8,4 +8,4 @@ exports.sendMail = (to, subject, text, html) => {
     text,
     html,
   });
-};
+};  

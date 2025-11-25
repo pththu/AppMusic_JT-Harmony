@@ -5,6 +5,7 @@ const musicController = require('../controllers/musicController');
 const { authenticateToken } = require('../middlewares/authentication');
 
 // ====== PUBLIC ROUTES ======
+router.get('/track/:trackId', musicController.findTrackById);
 router.get('/search/playlists', musicController.findSpotifyPlaylist);
 router.get('/search-album/:albumId', musicController.findAlbumById);
 router.post('/playlist', musicController.findPlaylistById);
@@ -27,6 +28,8 @@ router.post('/search-all', musicController.searchAll);
 router.get('/search-suggestions', musicController.getSearchSuggestions);
 router.get('/category/:category', musicController.getCategoryContent);
 router.get('/track-for-cover', musicController.getTracksForCover);
+router.post('/track-by-name-artist', musicController.findTrackByNameAndArtist);
+router.post('/tracks-from-recommend', musicController.getTracksFromRecommend);
 
 // ====== PROTECTED ROUTES ======
 router.post('/playlist/:playlistId/add-track', authenticateToken, musicController.addTrackToPlaylist);

@@ -44,6 +44,7 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
     const isDark = colorScheme === 'dark';
     const isGuest = useAuthStore((state) => state.isGuest);
     const { navigate } = useNavigate();
+    const avatarDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png';
 
     const canPost = (newPostText.trim() || selectedMediaAssets.length > 0) && !isUploading;
 
@@ -62,7 +63,7 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                 {/* Ảnh đại diện User */}
                 <TouchableOpacity onPress={handleAvatarPress}>
                     <Image
-                        source={{ uri: user?.avatarUrl }}
+                        source={{ uri: user?.avatarUrl || avatarDefault}}
                         className="w-12 h-12 rounded-full mr-3 border-2 border-emerald-500"
                     />
                 </TouchableOpacity>

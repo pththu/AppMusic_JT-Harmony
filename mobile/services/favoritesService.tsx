@@ -28,7 +28,7 @@ export const AddFavoriteItem = async (payload) => {
       itemId: payload.itemId,
       itemSpotifyId: payload.itemSpotifyId
     })
-    console.log('api: ', response.data);
+    // console.log('api: ', response.data);
     return response.data;
   } catch (error) {
     console.log(error);
@@ -39,7 +39,7 @@ export const AddFavoriteItem = async (payload) => {
 export const RemoveFavoriteItem = async (payload) => {
   try {
     const response = await axiosClient.delete(`/favorites/remove/${payload}`);
-    console.log('api: ', response.data);
+    // console.log('api: ', response.data);
     return response.data;
   } catch (error) {
     console.log(error);

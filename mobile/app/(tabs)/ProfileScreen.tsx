@@ -113,7 +113,6 @@ export default function ProfileScreen() {
   }
 
   const handleLogout = async () => {
-    console.log('out')
     try {
       if (isGuest) {
         warning("Tài khoản khách không thể đăng xuất!");
@@ -139,8 +138,8 @@ export default function ProfileScreen() {
       setIsGuest(true);
       setShowLoginWall(false);
       setGuestSongPlayCount(0);
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      error("Lỗi khi đăng xuất: " + err.message);
     }
   };
 

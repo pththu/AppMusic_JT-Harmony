@@ -1,17 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
-  FlatList,
   ScrollView,
-  StyleSheet,
   ActivityIndicator,
-  Share,
   Pressable,
   useColorScheme,
-  Dimensions,
   ImageBackground, // Thêm StyleSheet để tạo bóng
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -20,250 +16,107 @@ import CustomButton from '@/components/custom/CustomButton';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigate } from '@/hooks/useNavigate';
 import { useFollowStore } from '@/store/followStore';
-import { AddTracksToPlaylists, GetAlbumsOfArtist, GetTopTracksOfArtist, ShareTrack } from '@/services/musicService';
+import { AddTracksToPlaylists } from '@/services/musicService';
 import { usePlayerStore } from '@/store/playerStore';
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import useAuthStore from '@/store/authStore';
-import { useFavoritesStore } from '@/store/favoritesStore';
 import AddTrackToPlaylistsModal from '@/components/modals/AddTrackToPlaylistsModal';
 import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
 import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
 import ArtistOptionModal from '@/components/modals/ArtistOptionModal';
-import { FollowArtist, ShareArtist, UnfollowArtist } from '@/services/followService';
-import { SaveToListeningHistory } from '@/services/historiesService';
-import { useHistoriesStore } from '@/store/historiesStore';
-
-const screenHeight = Dimensions.get("window").height;
+import { FollowArtist, UnfollowArtist } from '@/services/followService';
+import { useMusicAction } from '@/hooks/useMusicAction';
+import { useArtistData } from '@/hooks/useArtistData';
 
 export default function ArtistScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
-  const { info, error, success, confirm, warning } = useCustomAlert();
+  const { info, error, success, warning } = useCustomAlert();
 
-  const user = useAuthStore((state) => state.user);
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
   const currentArtist = useFollowStore((state) => state.currentArtist);
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isFollowing = useFollowStore((state) => state.isFollowing);
-  const followers = useFollowStore((state) => state.followers);
   const popularTracks = useFollowStore((state) => state.popularTracks);
   const albums = useFollowStore((state) => state.albums);
-  const listTrack = usePlayerStore((state) => state.listTrack);
   const artistFollowed = useFollowStore((state) => state.artistFollowed);
-  const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const isShuffled = usePlayerStore((state) => state.isShuffled);
-  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
-  const setPopularTracks = useFollowStore((state) => state.setPopularTracks);
-  const setAlbums = useFollowStore((state) => state.setAlbums);
+
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
-  const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
   const setIsFollowing = useFollowStore((state) => state.setIsFollowing);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
-  const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
   const addArtistFollowed = useFollowStore((state) => state.addArtistFollowed);
-  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const removeArtistFollowed = useFollowStore((state) => state.removeArtistFollowed);
-  const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
   const shuffleQueue = usePlayerStore((state) => state.shuffleQueue);
   const unShuffleQueue = usePlayerStore((state) => state.unShuffleQueue);
 
-  const [selectedTrack, setSelectedTrack] = useState(null);
-  const [artistModalVisible, setArtistModalVisible] = useState(false);
-  const [songModalVisible, setSongModalVisible] = useState(false);
   const [artistOptionModalVisible, setArtistOptionModalVisible] = useState(false);
-  const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
   const [isShowingAllTracks, setIsShowingAllTracks] = useState(false);
 
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
 
+  const {
+    selectedTrack,
+    songModalVisible,
+    artistModalVisible,
+    addTrackToPlaylistModalVisible,
 
-  const [isLoading, setIsLoading] = useState({
-    topTracks: true,
-    albums: true,
-    following: false,
-    screen: true,
-  });
+    handleSelectArtist,
+    handleAddTrackToQueue,
+    handleTrackAddToPlaylist,
+    handleShareTrack,
+    handleShareArtist,
+    handlePlayTrack,
+    handleTrackViewAlbum,
+    handleTrackViewArtist,
+    handleTrackOptionPress,
+    handleConfirmAddTrackToPlaylists,
+    setAddTrackToPlaylistModalVisible,
+    saveArtistToListeningHistory,
+    setSongModalVisible,
+    setArtistModalVisible,
+  } = useMusicAction();
 
-  const saveArtistToListeningHistory = () => {
-    if (isGuest) return;
-    const payload = {
-      itemType: 'artist',
-      itemId: currentArtist?.id,
-      itemSpotifyId: currentArtist?.spotifyId,
-      durationListened: 0
-    }
-    SaveToListeningHistory(payload).then((response) => {
-      if (response.success) {
-        if (response.updated) {
-          console.log('Cập nhật lịch sử nghe artist thành công:', response.data);
-        } else {
-          console.log('Tạo mới lịch sử nghe artist thành công:', response.data);
-          addListenHistory(response.data);
-        }
-      }
-    })
-  }
+  const {
+    isLoading,
+    setIsLoading,
+  } = useArtistData(currentArtist);
 
-  const handleSongAddToPlaylist = () => {
-    setSongModalVisible(false);
-    setAddTrackToPlaylistModalVisible(true);
-  };
 
-  const handleSelectArtist = (artist) => {
-    navigate("ArtistScreen", { artist: JSON.stringify(artist) });
-    setArtistModalVisible(false);
-  };
+  // const handleConfirmAddTrackToPlaylists = async (playlistIds) => {
+  //   if (!playlistIds || playlistIds.length === 0) {
+  //     warning("Vui lòng chọn ít nhất một playlist.");
+  //     return;
+  //   }
+  //   if (!selectedTrack) {
+  //     error("Lỗi", "Không tìm thấy bài hát đã chọn.");
+  //     return;
+  //   }
 
-  const handleSongOptionsPress = (track) => {
-    setSelectedTrack(track); // Lưu bài hát đã chọn
-    // console.log('track', track);
-    setSongModalVisible(true); // Mở modal
-  };
+  //   try {
+  //     const trackSpotifyIds = [selectedTrack.spotifyId];
+  //     const response = await AddTracksToPlaylists({
+  //       playlistIds: playlistIds,
+  //       trackSpotifyIds: trackSpotifyIds
+  //     });
 
-  const handleSongAddToQueue = (track) => {
-    addTrackToQueue([track]);
-    setSongModalVisible(false);
-  };
-
-  const handleSongShare = async (track) => {
-    if (!track) {
-      return;
-    }
-
-    if (isGuest) {
-      info("Hãy đăng nhập để sử dụng chức năng này.");
-      return;
-    }
-
-    try {
-      // console.log('share: ', selectedTrack);
-      const artistName = track.artists?.map(a => a.name).join(', ');
-      let shareMessage = `${user?.fullName}: `;
-
-      if (track?.name) {
-        shareMessage += `Nghe thử bài hát này: ${track.name} - ${artistName}\n\n`;
-      } else {
-        shareMessage += `Bài đăng của ${user?.fullName}\n\n`;
-      }
-
-      // Thêm URL hình ảnh nếu có
-      if (track?.imageUrl) {
-        shareMessage += `${track?.imageUrl}\n\n`;
-      }
-
-      // Thêm liên kết đến bài viết
-      const postLink = `app://post/${track?.id}`; // Deep link giả định
-      shareMessage += `Xem bài hát: ${postLink}`;
-
-      const result = await Share.share({
-        message: shareMessage,
-        // url: postLink,
-      });
-
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log(result.activityType)
-        } else {
-          console.log('Chia sẻ thành công!');
-        }
-        // Update share count after successful share
-        const response = await ShareTrack({
-          trackId: track?.id,
-          trackSpotifyId: track?.spotifyId
-        });
-        if (response.success) {
-          success('Đã chia sẻ');
-          selectedTrack.id = response.data.trackId;
-          updateTrack(selectedTrack);
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // Dismissed
-      }
-    } catch (err) {
-      // console.log(err);
-      error('Lỗi khi chia sẻ bài hát.');
-    }
-    setSongModalVisible(false);
-  };
-
-  const handleSongViewArtist = (track) => {
-    if (!track.artists || track.artists.length === 0) {
-      warning("Không tìm thấy thông tin nghệ sĩ.");
-      return;
-    }
-    if (track.artists.length === 1) {
-      navigate("ArtistScreen", { artist: JSON.stringify(track.artists[0]) });
-      setSongModalVisible(false);
-    } else {
-      setSongModalVisible(false);
-      setArtistModalVisible(true);
-    }
-  };
-
-  const handleSongViewAlbum = (track) => {
-    if (track.album && track.album.spotifyId) {
-      const albumData = {
-        ...track.album,
-        artists: track.artists || [],
-      };
-      navigate("AlbumScreen", { album: JSON.stringify(albumData) });
-      setSongModalVisible(false);
-    } else {
-      warning("Không tìm thấy thông tin album.");
-    }
-  };
-
-  const handleConfirmAddTrackToPlaylists = async (playlistIds) => {
-    if (!playlistIds || playlistIds.length === 0) {
-      warning("Vui lòng chọn ít nhất một playlist.");
-      return;
-    }
-    if (!selectedTrack) {
-      error("Lỗi", "Không tìm thấy bài hát đã chọn.");
-      return;
-    }
-
-    try {
-      const trackSpotifyIds = [selectedTrack.spotifyId];
-      const response = await AddTracksToPlaylists({
-        playlistIds: playlistIds,
-        trackSpotifyIds: trackSpotifyIds
-      });
-
-      if (response.success) {
-        playlistIds.forEach(id => {
-          updateTotalTracksInMyPlaylists(id, 1);
-        });
-        success('Đã thêm bài hát vào playlist thành công!');
-      }
-    } catch (err) {
-      // console.log(err);
-      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát.');
-    } finally {
-      setAddTrackToPlaylistModalVisible(false);
-    }
-  };
-
-  const handlePlayTrack = async (track,) => {
-    const playIndex = listTrack.findIndex(t =>
-      (t.spotifyId && t.spotifyId === track.spotifyId) ||
-      (t.id && t.id === track.id)
-    );
-
-    if (playIndex === -1) return;
-    playPlaylist(listTrack, playIndex);
-    const queueData = listTrack.slice(playIndex + 1);
-
-    setCurrentTrack(track);
-    setQueue(queueData);
-  };
+  //     if (response.success) {
+  //       playlistIds.forEach(id => {
+  //         updateTotalTracksInMyPlaylists(id, 1);
+  //       });
+  //       success('Đã thêm bài hát vào playlist thành công!');
+  //     }
+  //   } catch (err) {
+  //     error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát.' + err.message);
+  //   } finally {
+  //     setAddTrackToPlaylistModalVisible(false);
+  //   }
+  // };
 
   const handlePlayTopTracks = async () => {
     if (popularTracks.length === 0) {
@@ -320,8 +173,7 @@ export default function ArtistScreen() {
         setIsFollowing(true);
       }
     } catch (err) {
-      // console.log(err.message);
-      error('Lỗi khi theo dõi nghệ sĩ. Vui lòng thử lại sau.');
+      error('Lỗi khi theo dõi nghệ sĩ. Vui lòng thử lại sau: ' + err.message);
     } finally {
       setIsLoading((prev) => ({ ...prev, following: false }));
     }
@@ -345,69 +197,11 @@ export default function ArtistScreen() {
         removeArtistFollowed(followId);
       }
     } catch (err) {
-      // console.log(err.message)
-      error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau.');
+      error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau: ' + err.message);
     } finally {
       setIsLoading((prev) => ({ ...prev, following: false }));
     }
   }
-
-  const handleShare = async () => {
-    if (isGuest) {
-      info("Hãy đăng nhập để sử dụng chức năng này.");
-      return;
-    }
-
-    try {
-      let shareMessage = `${user?.fullName}: `;
-
-      if (currentArtist?.name) {
-        shareMessage += `${currentArtist?.name}\n\n`;
-      } else {
-        shareMessage += `Bài đăng của ${user?.fullName}\n\n`;
-      }
-
-      // Thêm URL hình ảnh nếu có
-      if (currentArtist?.imageUrl) {
-        shareMessage += `${currentArtist?.imageUrl}\n\n`;
-      }
-
-      // Thêm liên kết đến bài viết
-      const postLink = `app://post/${currentArtist?.id}`; // Deep link giả định
-      shareMessage += `Xem bài viết: ${postLink}`;
-
-      const result = await Share.share({
-        message: shareMessage,
-        // url: postLink,
-      });
-
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log(result.activityType)
-        } else {
-          console.log('Chia sẻ thành công!');
-        }
-        // Update share count after successful share
-        const response = await ShareArtist({
-          artistId: currentArtist?.id,
-          artistSpotifyId: currentArtist?.spotifyId
-        })
-
-        if (response.success) {
-          currentArtist.id = response.data.artistId;
-          currentArtist.shareCount += 1;
-          setCurrentArtist(currentArtist);
-          success('Đã chia sẻ');
-          setArtistOptionModalVisible(false);
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // Dismissed
-      }
-    } catch (err) {
-      console.error('Lỗi khi chia sẻ:', err);
-      error('Lỗi khi chia sẻ thông tin nghệ sĩ. Vui lòng thử lại sau.');
-    }
-  };
 
   const handleBlock = async () => {
     if (isGuest) {
@@ -417,59 +211,13 @@ export default function ArtistScreen() {
     info('Chức năng đang phát triển');
   };
 
-  const fetchAlbums = async () => {
-    try {
-      const response = await GetAlbumsOfArtist(currentArtist.spotifyId);
-      if (response.success === true) {
-        setAlbums(response.data);
-        setIsLoading((prev) => ({ ...prev, albums: false }));
-      }
-    } catch (err) {
-      console.log('Error fetching albums:', err);
-    }
-  }
-
-  const fetchTopTracks = async () => {
-    try {
-      const response = await GetTopTracksOfArtist(currentArtist.spotifyId);
-      if (response.success === true) {
-        setPopularTracks(response.data);
-        setIsLoading((prev) => ({ ...prev, topTracks: false }));
-        setListTrack(response.data);
-      }
-    } catch (err) {
-      console.log('Error fetching top tracks:', err);
-    }
-  }
-
-  useEffect(() => {
-    setIsFollowing(false);
-    setIsLoading((prev) => ({ ...prev, screen: true }));
-
-    if (currentArtist) {
-      fetchTopTracks();
-      fetchAlbums();
-      setIsLoading((prev) => ({ ...prev, screen: false }));
-    }
-  }, [currentArtist?.spotifyId]);
-
-  useEffect(() => {
-    setIsFollowing(false);
-    if (isLoggedIn && user) {
-      const artist = artistFollowed.find(a => a.artistSpotifyId === currentArtist.spotifyId);
-      if (artist) {
-        setIsFollowing(true);
-      }
-    }
-  }, [artistFollowed, user, isLoggedIn]);
-
   const renderSongItem = ({ item, index }) => (
     <SongItem
       key={item.id || item.spotifyId}
       item={item}
       image={item.imageUrl || ''}
-      onPress={() => handlePlayTrack(item)}
-      onOptionsPress={() => handleSongOptionsPress(item)}
+      onPress={() => handlePlayTrack(item, index)}
+      onOptionsPress={() => handleTrackOptionPress(item)}
     />
   );
 
@@ -627,12 +375,12 @@ export default function ArtistScreen() {
           setIsVisible={setSongModalVisible}
           track={selectedTrack}
           isMine={false}
-          onAddToQueue={() => handleSongAddToQueue(selectedTrack)}
-          onAddToPlaylist={handleSongAddToPlaylist}
+          onAddToQueue={() => handleAddTrackToQueue(selectedTrack)}
+          onAddToPlaylist={handleTrackAddToPlaylist}
           onRemoveFromPlaylist={() => { }}
-          onViewAlbum={() => handleSongViewAlbum(selectedTrack)}
-          onViewArtist={() => handleSongViewArtist(selectedTrack)}
-          onShare={() => handleSongShare(selectedTrack)}
+          onViewAlbum={() => handleTrackViewAlbum(selectedTrack)}
+          onViewArtist={() => handleTrackViewArtist(selectedTrack)}
+          onShare={() => handleShareTrack(selectedTrack)}
         />
       )}
 
@@ -652,7 +400,7 @@ export default function ArtistScreen() {
           data={currentArtist}
           isFollowing={isFollowing}
           onFollow={handleToggleFollow}
-          onShare={handleShare}
+          onShare={handleShareArtist}
           onBlock={handleBlock}
         />
       )}

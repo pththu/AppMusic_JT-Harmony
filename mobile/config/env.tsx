@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 
-console.log('Constants.expoConfig?.extra?.SOCKET_SERVER_URL', Constants.expoConfig?.extra?.SOCKET_SERVER_URL);
+// console.log('Constants.expoConfig?.extra?.SOCKET_SERVER_URL', Constants.expoConfig?.extra?.SOCKET_SERVER_URL);
 
 export const ENV = {
   API_URL: Constants.expoConfig?.extra?.API_URL as string,

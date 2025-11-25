@@ -7,22 +7,7 @@ import { useNavigate } from '@/hooks/useNavigate';
 import useAuthStore from '@/store/authStore';
 import { useBoardingStore } from '@/store/boardingStore';
 import { UpdateCompletedOnboarding } from '@/routes/ApiRouter';
-
-const MOODS = [
-  { id: 'happy', label: 'Vui vẻ 😊' },
-  { id: 'sad', label: 'Buồn 😢' },
-  { id: 'focused', label: 'Tập trung 🧠' },
-  { id: 'chill', label: 'Chill 🍃' },
-  { id: 'energetic', label: 'Năng động ⚡' },
-  { id: 'romantic', label: 'Lãng mạn 🌹' },
-  { id: 'sleepy', label: 'Buồn ngủ 😴' },
-  { id: 'angry', label: 'Bực bội 😡' },
-  { id: 'motivated', label: 'Có động lực 🚀' },
-  { id: 'stressed', label: 'Căng thẳng 😰' },
-  { id: 'nostalgic', label: 'Hoài niệm � ' },
-  { id: 'boring', label: 'Chán nản 😐' },
-  { id: "heartbroken", label: 'Đau khổ 💔' },
-];
+import { MOODS } from '@/constants/data';
 
 // chỉ chọn 1 tâm trạng
 export default function MoodsScreen() {

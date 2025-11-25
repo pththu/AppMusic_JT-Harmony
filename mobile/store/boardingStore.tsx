@@ -14,6 +14,9 @@ interface BoardingState {
   recommendBasedOnFavorites: any[];
   recommendBasedOnHistories: any[];
   recommendBasedOnTimeOfDay: any[];
+  recommendBasedOnPlaylist: any[];
+  recommendBasedOnQueue: any[];
+  recommendTrackBasedOnFavorites: any[];
 
   setWhenLogin: () => void;
   setSelectedArtists: (artists: string[]) => void;
@@ -26,6 +29,9 @@ interface BoardingState {
   setRecommendBasedOnFavorites: (recommendations: any[]) => void;
   setRecommendBasedOnHistories: (recommendations: any[]) => void;
   setRecommendBasedOnTimeOfDay: (recommendations: any[]) => void;
+  setRecommendBasedOnPlaylist: (recommendations: any[]) => void;
+  setRecommendBasedOnQueue: (recommendations: any[]) => void;
+  setRecommendTrackBasedOnFavorites: (recommendations: any[]) => void;
   updateSelectedMood: (mood: any) => void;
   updateSelectedActivity: (activity: any) => void;
 
@@ -45,6 +51,9 @@ export const useBoardingStore = create<BoardingState>()(
       recommendBasedOnFavorites: [],
       recommendBasedOnHistories: [],
       recommendBasedOnTimeOfDay: [],
+      recommendBasedOnPlaylist: [],
+      recommendBasedOnQueue: [],
+      recommendTrackBasedOnFavorites: [],
 
       setWhenLogin: () => set({
         selectedMood: { id: 'happy', label: 'Vui vẻ 😊' },
@@ -56,6 +65,9 @@ export const useBoardingStore = create<BoardingState>()(
       setRecommendBasedOnFavorites: (recommendations) => set({ recommendBasedOnFavorites: recommendations }),
       setRecommendBasedOnHistories: (recommendations) => set({ recommendBasedOnHistories: recommendations }),
       setRecommendBasedOnTimeOfDay: (recommendations) => set({ recommendBasedOnTimeOfDay: recommendations }),
+      setRecommendBasedOnPlaylist: (recommendations) => set({ recommendBasedOnPlaylist: recommendations }),
+      setRecommendBasedOnQueue: (recommendations) => set({ recommendBasedOnQueue: recommendations }),
+      setRecommendTrackBasedOnFavorites: (recommendations) => set({ recommendTrackBasedOnFavorites: recommendations }),
       setSelectedArtists: (artists) => set({ selectedArtists: artists }),
       setSelectedMood: (mood) => set({ selectedMood: mood }),
       setSelectedGenres: (genres) => set({ selectedGenres: genres }),
@@ -74,6 +86,9 @@ export const useBoardingStore = create<BoardingState>()(
           recommendBasedOnFavorites: [],
           recommendBasedOnHistories: [],
           recommendBasedOnTimeOfDay: [],
+          recommendBasedOnPlaylist: [],
+          recommendBasedOnQueue: [],
+          recommendTrackBasedOnFavorites: [],
         }),
     }),
     {

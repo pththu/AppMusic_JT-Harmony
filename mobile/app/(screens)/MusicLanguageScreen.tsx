@@ -1,18 +1,8 @@
+import { LANGUAGES } from "@/constants/data";
 import { SettingsContext } from "@/context/SettingsContext";
 import { router } from "expo-router"; // Thêm import này
 import React, { useContext } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-
-const languages = [
-  "International",
-  "Telugu",
-  "Hindi",
-  "Punjabi",
-  "Tamil",
-  "Kannada",
-  "Malayalam",
-  "Bengali",
-];
 
 export default function MusicLanguageScreen() {
   const settings = useContext(SettingsContext);
@@ -38,7 +28,7 @@ export default function MusicLanguageScreen() {
       </View>
       <ScrollView>
         <View className="flex-row flex-wrap justify-between">
-          {languages.map((language) => (
+          {LANGUAGES.map((language) => (
             <TouchableOpacity
               key={language}
               className={`w-1/2 p-3 mb-4 rounded-md ${

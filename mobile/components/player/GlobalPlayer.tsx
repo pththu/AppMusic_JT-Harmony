@@ -51,7 +51,7 @@ export default function GlobalPlayer() {
       console.log("Guest user - not saving listening history.");
       return;
     }
-    console.log('duration: ', duration)
+    // console.log('duration: ', duration)
     if (!track) return;
     if (duration < 1000) {
       duration *= 1000; // Chuyển sang mili-giây

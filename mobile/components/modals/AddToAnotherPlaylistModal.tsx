@@ -88,9 +88,9 @@ const AddToAnotherPlaylistModal = ({
 
   const filteredPlaylists = useMemo(() => {
     return myPlaylists
-      .filter(p => p.id !== data.id)
+      .filter(p => p.id !== data?.id)
       .filter(p => p.name.toLowerCase().includes(searchText.toLowerCase()));
-  }, [myPlaylists, data.id, searchText]);
+  }, [myPlaylists, data?.id, searchText]);
 
 
   return (

@@ -30,10 +30,6 @@ const EditPlaylistModal = ({
       visible={isModalVisible}
       onRequestClose={() => {
         setIsModalVisible(false);
-        setName("");
-        setDescription("");
-        setImage(null);
-        setIsPublic(false);
       }}
     >
       <SafeAreaView

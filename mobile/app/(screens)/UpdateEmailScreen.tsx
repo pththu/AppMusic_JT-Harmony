@@ -36,7 +36,7 @@ export default function UpdateEmailScreen() {
         return true;
       }
     } catch (error) {
-      console.log(error);
+      error("Lỗi kiểm tra email tồn tại: " + error.message);
       return false;
     }
   };
@@ -72,8 +72,7 @@ export default function UpdateEmailScreen() {
       }
       success("Thành công", "OTP mới đã được gửi đến email của bạn!");
     } catch (err) {
-      error("Lỗi", "Không thể gửi lại OTP, vui lòng thử sau.");
-      console.log(err);
+      error("Lỗi", "Không thể gửi lại OTP, vui lòng thử sau: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -96,8 +95,7 @@ export default function UpdateEmailScreen() {
       updateUser(response.user);
       router.back();
     } catch (err) {
-      error("Lỗi", "Không thể xác thực, vui lòng thử lại.");
-      console.log(err);
+      error("Lỗi", "Không thể xác thực, vui lòng thử lại: " + err.message);
     } finally {
       setLoading(false);
     }

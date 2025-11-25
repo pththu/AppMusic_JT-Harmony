@@ -252,14 +252,11 @@ const CreateOneListeningHistory = async (req, res) => {
 
     console.log(req.body)
     if (!itemType || !(itemId || itemSpotifyId)) {
-      console.log(1)
       return res.status(400).json({ message: 'Thiếu thông tin lịch sử nghe' });
     }
 
-    console.log(2)
     let existingHistory;
     if (itemSpotifyId) {
-      console.log(7)
       existingHistory = await ListeningHistory.findOne({
         where: {
           userId: req.user.id,
@@ -267,9 +264,7 @@ const CreateOneListeningHistory = async (req, res) => {
           itemSpotifyId: itemSpotifyId
         }
       });
-      console.log(8)
     } else if (itemId) {
-      console.log(5)
       existingHistory = await ListeningHistory.findOne({
         where: {
           userId: req.user.id,
@@ -277,19 +272,15 @@ const CreateOneListeningHistory = async (req, res) => {
           itemId: itemId
         }
       });
-      console.log(6)
     }
 
-    console.log(9)
     if (existingHistory) {
       console.log(1000000)
       if (existingHistory.itemType === 'track') {
-        console.log(11)
         existingHistory.durationListened = durationListened;
         existingHistory.playCount += 1;
         existingHistory.updatedAt = new Date();
         await existingHistory.save();
-        console.log(12)
         return res.status(200).json({
           message: 'Listening history updated successfully',
           data: existingHistory,
@@ -297,7 +288,6 @@ const CreateOneListeningHistory = async (req, res) => {
           updated: true
         });
       } else {
-        console.log(13)
         return res.status(200).json({
           message: 'Listening history already exists',
           data: existingHistory,
@@ -307,7 +297,6 @@ const CreateOneListeningHistory = async (req, res) => {
       }
     }
 
-    console.log(14)
     const history = await ListeningHistory.create({
       userId: req.user.id,
       itemType,
@@ -316,56 +305,43 @@ const CreateOneListeningHistory = async (req, res) => {
       ... (durationListened !== undefined ? { durationListened } : {})
     });
 
-    console.log(15)
     switch (itemType) {
       case 'track':
-        console.log(16)
         console.log('track')
         const track = await callSpotify(() => spotify.findTrackById(history.itemSpotifyId));
         if (!track) {
-          console.log(171)
           break;
         }
-        console.log(17)
         itemFormatted = formatTrack(track);
         break;
       case 'album':
-        console.log(18)
         console.log('album')
         const album = await callSpotify(() => spotify.findAlbumById(history.itemSpotifyId));
         if (!album) {
-          console.log(19)
           break;
         }
-        console.log(20)
         itemFormatted = formatAlbum(album);
         break;
       case 'artist':
         console.log('artist')
-        console.log(21)
         const artist = await callSpotify(() => spotify.findArtistById(history.itemSpotifyId));
         if (!artist) {
-          console.log(22)
           break;
         }
         itemFormatted = formatArtist(artist);
         break;
       case 'playlist':
         console.log('playlist')
-        console.log(23)
         const playlist = await callSpotify(() => spotify.findPlaylistById(history.itemSpotifyId));
         if (!playlist) {
-          console.log(24)
           break;
         }
         itemFormatted = formatPlaylist(playlist);
         break;
       default:
-        console.log(25)
         console.log(`Loại mục không xác định: ${itemType}`);
     }
 
-    console.log(26)
     res.status(201).json({
       message: 'Listening history created successfully',
       data: {
@@ -376,7 +352,6 @@ const CreateOneListeningHistory = async (req, res) => {
       updated: false
     });
   } catch (error) {
-    console.log(10)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }

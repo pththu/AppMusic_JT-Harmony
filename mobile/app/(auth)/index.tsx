@@ -1,5 +1,5 @@
 import { useNavigate } from '@/hooks/useNavigate';
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, useColorScheme, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -12,15 +12,7 @@ import useAuthStore from '@/store/authStore';
 import { Settings, LoginManager, Profile, AccessToken } from 'react-native-fbsdk-next';
 import { Pressable } from 'react-native';
 import { useBoardingStore } from '@/store/boardingStore';
-import { GetListeningHistory, GetSearchHistory } from '@/services/historiesService';
-import { useHistoriesStore } from '@/store/historiesStore';
-import { GetFavoriteItemsGrouped } from '@/services/favoritesService';
-import { useFavoritesStore } from '@/store/favoritesStore';
-import { GetArtistFollowed } from '@/services/followService';
-import { GetMyPlaylists } from '@/services/musicService';
-import { usePlayerStore } from '@/store/playerStore';
-import { useFollowStore } from '@/store/followStore';
-import { set } from 'date-fns';
+import { useAuthData } from '@/hooks/useAuthData';
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
@@ -36,12 +28,17 @@ export default function AuthScreen() {
   const login = useAuthStore(state => state.login);
   const setIsGuest = useAuthStore(state => state.setIsGuest);
   const setWhenLogin = useBoardingStore(state => state.setWhenLogin);
-  const setListenHistory = useHistoriesStore((state) => state.setListenHistory);
-  const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
-  const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
-  const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
-  const setArtistFollowed = useFollowStore((state) => state.setArtistFollowed);
+
   const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    fetchHistory,
+    fetchFavoritesItem,
+    fetchArtistFollowed,
+    fetchMyPlaylists,
+    fetchFollowers,
+    fetchFollowees
+  } = useAuthData();
 
   const handleLoginWithGoogle = async () => {
     const loginType = 'google';
@@ -55,7 +52,6 @@ export default function AuthScreen() {
 
     const response = await LoginWithGoogle(profileToSend);
     try {
-      console.log('response', response)
       if (!response.success) {
         error('Lỗi đăng nhập', `${response.message}`);
         await GoogleSignin.signOut();
@@ -70,7 +66,9 @@ export default function AuthScreen() {
           fetchHistory(userId),
           fetchFavoritesItem(userId),
           fetchArtistFollowed(userId),
-          fetchMyPlaylists(userId)
+          fetchMyPlaylists(userId),
+          fetchFollowers(userId),
+          fetchFollowees(userId)
         ]);
         setIsLoading(false);
         success('Đăng nhập thành công');
@@ -94,7 +92,6 @@ export default function AuthScreen() {
   };
 
   const handleLoginWithFacebook = async () => {
-    console.log('first')
     const loginType = 'facebook';
     try {
       const result = await LoginManager.logInWithPermissions(['public_profile']);
@@ -123,7 +120,9 @@ export default function AuthScreen() {
               fetchHistory(userId),
               fetchFavoritesItem(userId),
               fetchArtistFollowed(userId),
-              fetchMyPlaylists(userId)
+              fetchMyPlaylists(userId),
+              fetchFollowers(userId),
+              fetchFollowees(userId)
             ])
             setIsLoading(false);
             success('Đăng nhập thành công');
@@ -132,62 +131,10 @@ export default function AuthScreen() {
           }
         }, 1000);
       }
-    } catch (error) {
-      console.log('Login fb fail with error: ' + error);
+    } catch (err) {
+      error('Lỗi đăng nhập', 'Không thể đăng nhập với Facebook. Vui lòng thử lại.' + err.message);
     }
   };
-
-  const fetchHistory = useCallback(async (userId) => {
-    const [responseListen, responseSearch] = await Promise.all([
-      GetListeningHistory(userId),
-      GetSearchHistory(userId)
-    ]);
-    if (responseSearch.success) {
-      setSearchHistory(responseSearch.data);
-    } else {
-      setSearchHistory([]);
-    }
-    if (responseListen.success) {
-      setListenHistory(responseListen.data);
-    } else {
-      setListenHistory([]);
-    }
-  }, []);
-
-  const fetchFavoritesItem = useCallback(async (userId) => {
-    try {
-      const response = await GetFavoriteItemsGrouped(userId);
-      if (response.success) {
-        setFavoriteItems(response.data);
-      }
-    } catch (error) {
-      console.log('errorr fetch favorites: ', error);
-    }
-  }, []);
-
-  const fetchArtistFollowed = useCallback(async (userId) => {
-    try {
-      const response = await GetArtistFollowed(userId);
-      if (response.success) {
-        setArtistFollowed(response.data);
-      }
-    } catch (error) {
-      console.log('error fetch follow artist', error);
-    }
-  }, []);
-
-  const fetchMyPlaylists = useCallback(async (userId) => {
-    try {
-      const response = await GetMyPlaylists(userId);
-      if (response.success) {
-        setMyPlaylists(response.data);
-      } else {
-        setMyPlaylists([]);
-      }
-    } catch (error) {
-      console.log("Lỗi khi lấy playlist của tôi:", error);
-    }
-  }, []);
 
   const goHome = () => {
     setIsGuest(true);
@@ -197,6 +144,7 @@ export default function AuthScreen() {
     return (
       <SafeAreaView className={`flex-1 items-center justify-center px-6 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
         <ActivityIndicator size="large" color="#16a34a" />
+        <Text className={`mt-4 text-lg ${colorScheme === "dark" ? "text-white" : "text-black"}`}>Đang tải dữ liệu...</Text>
       </SafeAreaView>
     );
   }

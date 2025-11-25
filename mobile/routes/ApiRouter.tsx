@@ -138,7 +138,7 @@ export const ChangePassword = async (payload) => {
       currentPassword,
       newPassword
     });
-    console.log(response.data);
+    // console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -167,7 +167,7 @@ export const SelfLockAccount = async (payload) => {
 export const MergeAccount = async (payload) => {
   try {
     const response = await axiosClient.put(`/users/merge-account`, payload);
-    console.log('response.data', response.data);
+    // console.log('response.data', response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -257,7 +257,7 @@ export const UploadMultipleFile = async (payload) => {
         'Content-Type': 'multipart/form-data',
       },
     });
-    console.log('response.data', response.data);
+    // console.log('response.data', response.data);
 
     // Check if the server response indicates failure
     if (response.data.success === false) {

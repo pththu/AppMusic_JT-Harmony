@@ -59,7 +59,7 @@ io.use(async (socket, next) => {
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const user = await User.findByPk(decoded.id);
-    console.log('user', user)
+    // console.log('user', user)
     if (!user) {
       return next(new Error("Authentication error: User not found"));
     }
@@ -114,6 +114,7 @@ const protectedRoutes = [
   "tracks", // Xem bài hát (public), upload bài hát (private)
 ];
 const publicRoutes = [
+  'playlists', // Playlist cá nhân
   "auth",
   "users",
   "posts",
@@ -122,7 +123,6 @@ const publicRoutes = [
   "comments",
   'favorites', // Yêu thích
   'histories', // Lịch sử nghe nhạc
-  'playlists', // Playlist cá nhân
   "recommendations",
 ];
 

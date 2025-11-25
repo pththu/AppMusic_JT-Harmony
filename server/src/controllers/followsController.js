@@ -217,9 +217,24 @@ const CreateFollowUser = async (req, res) => {
         if (!row) {
             return res.status(500).json({ error: 'Cannot create follow user' });
         }
+
+        let followee = await User.findByPk(followeeId,
+            { attributes: ['id', 'username', 'fullName', 'email', 'avatarUrl', 'bio'] }
+        );
+
+        // Invalidate related cache entries
+        const cacheKeyFollowers = `followers_user_${followeeId}`;
+        const cacheKeyFollowedUsers = `followed_users_${followerId}`;
+        const cacheKeyProfileSocial = `user_profile_social_${followeeId}`;
+        const cacheKeyProfileSocialFollower = `user_profile_social_${followerId}`;
+        await redisClient.del(cacheKeyProfileSocial);
+        await redisClient.del(cacheKeyProfileSocialFollower);
+        await redisClient.del(cacheKeyFollowers);
+        await redisClient.del(cacheKeyFollowedUsers);
+
         return res.status(201).json({
             message: 'FollowUser created successfully',
-            data: row,
+            data: followee,
             success: true
         });
     } catch (error) {
@@ -229,25 +244,46 @@ const CreateFollowUser = async (req, res) => {
 
 const DeleteFollowUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        if (!id) {
-            return res.status(400).json({ error: 'FollowUser ID is required' });
+        const { followeeId, followerId } = req.query;
+        console.log(req.query)
+        if (!followeeId && !followerId) {
+            return res.status(400).json({ error: 'Both followeeId and followerId are required' });
         }
-        const deleted = await FollowUser.destroy({ where: { id } });
+
+        if (followeeId === followerId) {
+            return res.status(400).json({ error: 'Cannot unfollow yourself' });
+        }
+
+        const deleted = await FollowUser.destroy({ where: { followeeId, followerId } });
         if (!deleted) return res.status(404).json({ error: 'FollowUser not found' });
-        res.json({ message: 'FollowUser deleted', success: true });
+
+        const cacheKeyFollowers = `followers_user_${followeeId}`;
+        const cacheKeyFollowers_2 = `followers_user_${followerId}`;
+        const cacheKeyFollowedUsers = `followees_user_${followeeId}`;
+        const cacheKeyFollowedUsers_2 = `followees_user_${followerId}`;
+        const cacheKeyProfileSocial = `user_profile_social_${followeeId}`;
+        const cacheKeyProfileSocialFollower = `user_profile_social_${followerId}`;
+
+        await redisClient.del(cacheKeyProfileSocial);
+        await redisClient.del(cacheKeyProfileSocialFollower);
+        await redisClient.del(cacheKeyFollowers);
+        await redisClient.del(cacheKeyFollowedUsers);
+        await redisClient.del(cacheKeyFollowers_2);
+        await redisClient.del(cacheKeyFollowedUsers_2);
+
+        return res.json({ message: 'FollowUser deleted', success: true });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: error.message });
     }
 }
 
 // người theo dõi user
-const GetFollowerOfUser = async (req, res) => {
+const GetFollowers = async (req, res) => {
     try {
         const { userId } = req.params;
 
         const cacheKey = `followers_user_${userId}`;
-        const cachedData = await getCache(cacheKey);
+        const cachedData = await redisClient.get(cacheKey);
         if (cachedData) {
             console.log('CACHE HIT (followers of user');
             return res.status(200).json(JSON.parse(cachedData));
@@ -259,16 +295,28 @@ const GetFollowerOfUser = async (req, res) => {
         }
 
         const followers = await FollowUser.findAll({
-            where: { followeeId: userId }
+            where: { followeeId: userId },
+            include: [
+                {
+                    model: User, as: 'follower',
+                    attributes: ['id', 'username', 'fullName', 'email', 'avatarUrl', 'bio']
+                }
+            ]
         });
+
+        if (followers.length === 0) {
+            return res.status(404).json({ error: 'No followers found for this user' });
+        }
+
+        const followersData = followers.map(follow => follow.follower);
 
         const response = {
             message: 'Followers retrieved successfully',
-            data: followers,
+            data: followersData,
             success: true
         };
 
-        await setCache(cacheKey, JSON.stringify(response), SHORT_TTL_SECONDS); // Cache trong 30 phút
+        await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
         return res.status(200).json(response);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -276,7 +324,7 @@ const GetFollowerOfUser = async (req, res) => {
 }
 
 // người được user theo dõi
-const GetUserFollowedByUser = async (req, res) => {
+const GetFollowees = async (req, res) => {
     try {
         const { userId } = req.params;
 
@@ -284,7 +332,7 @@ const GetUserFollowedByUser = async (req, res) => {
             return res.status(400).json({ error: 'User ID is required' });
         }
 
-        const cacheKey = `followed_users_${userId}`;
+        const cacheKey = `followees_user_${userId}`;
         const cachedData = await redisClient.get(cacheKey);
         if (cachedData) {
             console.log('CACHE HIT (followed users)');
@@ -293,12 +341,24 @@ const GetUserFollowedByUser = async (req, res) => {
         console.log('CACHE MISS (followed users)');
 
         const followUsers = await FollowUser.findAll({
-            where: { followerId: userId }
+            where: { followerId: userId },
+            include: [
+                {
+                    model: User, as: 'followee',
+                    attributes: ['id', 'username', 'fullName', 'email', 'avatarUrl', 'bio']
+                }
+            ]
         });
+
+        if (followUsers.length === 0) {
+            return res.status(404).json({ error: 'No followed users found for this user' });
+        }
+
+        const followeesData = followUsers.map(follow => follow.followee);
 
         const response = {
             message: 'Followed users retrieved successfully',
-            data: followUsers,
+            data: followeesData,
             success: true
         };
 
@@ -355,7 +415,7 @@ const GetUserProfileSocial = async (req, res) => {
             success: true
         };
 
-        await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+        await redisClient.set(cacheKey, JSON.stringify(response), { EX: SHORT_TTL_SECONDS });
         return res.status(200).json(response);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -369,7 +429,7 @@ module.exports = {
     DeleteFollowArtist,
     CreateFollowUser,
     DeleteFollowUser,
-    GetFollowerOfUser,
-    GetUserFollowedByUser,
+    GetFollowers,
+    GetFollowees,
     GetUserProfileSocial
 }

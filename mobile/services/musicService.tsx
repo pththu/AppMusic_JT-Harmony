@@ -1,4 +1,5 @@
 import axiosClient, { axiosPublicClient } from "@/config/axiosClient";
+import { id } from "date-fns/locale";
 
 // get
 export const GetPlaylistsForYou = async (payload) => {
@@ -322,3 +323,51 @@ export const GetTracksForCover = async () => {
     throw error;
   }
 };
+
+export const FindTrackById = async (trackId) => {
+  try {
+    const response = await axiosPublicClient.get(`/music/track/${trackId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const FindTrackByNameAndArtists = async (payload) => {
+  try {
+    const response = await axiosPublicClient.post(`/music/track-by-name-artist`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GetTracksFromRecommend = async (payload) => {
+  try {
+    const response = await axiosPublicClient.post(`/music/tracks-from-recommend`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
