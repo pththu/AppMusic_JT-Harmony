@@ -23,7 +23,6 @@ export default function QueueScreen() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const clearQueue = usePlayerStore((state) => state.clearQueue);
   const removeTrackFromQueue = usePlayerStore((state) => state.removeTrackFromQueue);
-  // console.log('queue', queue);
 
   const [autoRecommendations, setAutoRecommendations] = useState(true);
   const colorScheme = useColorScheme();
@@ -34,8 +33,7 @@ export default function QueueScreen() {
     try {
       removeTrackFromQueue([track]);
     } catch (err) {
-      console.log('Error removing track from queue: ', err);
-      error('Lỗi khi xóa bài hát khỏi danh sách chờ');
+      error('Lỗi khi xóa bài hát khỏi danh sách chờ: ' + err.message);
     }
   };
 

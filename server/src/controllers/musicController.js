@@ -1723,6 +1723,94 @@ const findTrackById = async (req, res) => {
   }
 }
 
+const findTrackByNameAndArtist = async (req, res) => {
+  try {
+    const { trackName, artists } = req.body;
+    if (!trackName || !artists || artists.length === 0) {
+      return res.status(400).json({ message: 'Track name and artists are required', success: false });
+    }
+
+    const cacheKey = `track:bynameartist:${trackName.replace(/\s/g, '-')}:${artists.map(a => a).join(',')}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (FindTrackByNameAndArtist)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+
+    const spotifyQueryString = `track:"${trackName}" ` + artists.map(artist => `artist:"${artist}"`).join(' ');
+    const spotifyData = await callSpotify(() => spotify.searchTracks(spotifyQueryString, 'track', 1));
+    if (!spotifyData || spotifyData.length === 0) {
+      return res.status(404).json({
+        message: 'No track found with the given name and artists',
+        data: null,
+        success: false
+      });
+    }
+
+    const track = spotifyData[0];
+    const itemFormat = formatTrack(track, null, null, null);
+
+    console.log('item: ', itemFormat);
+    const response = {
+      message: 'Find track by name and artist successful',
+      data: itemFormat,
+      success: true
+    };
+
+    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS * 10 });
+    return res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to find track by name and artist' });
+  }
+}
+
+const getTracksFromRecommend = async (req, res) => {
+  try {
+    const { recommendBaseOnPlaylist, recommendBaseOnFavorites } = req.body;
+    if (!recommendBaseOnPlaylist && !recommendBaseOnFavorites) {
+      return res.status(400).json({ message: 'At least one recommendation basis is required', success: false });
+    }
+
+    const dataBaseOnPlaylistFormated = [];
+    const dataBaseOnFavoritesFormated = [];
+
+    if (recommendBaseOnPlaylist) {
+      for (const recommend of recommendBaseOnPlaylist) {
+        const spotifyQueryString = `track:"${recommend.name}" ` + recommend.artists.map(artist => `artist:"${artist}"`).join(' ');
+        const spotifyData = await callSpotify(() => spotify.searchTracks(spotifyQueryString, 'track', 1));
+        if (spotifyData && spotifyData.length > 0) {
+          const track = spotifyData[0];
+          dataBaseOnPlaylistFormated.push(formatTrack(track, null, null, null));
+        }
+      }
+    }
+
+    if (recommendBaseOnFavorites) {
+      for (const recommend of recommendBaseOnFavorites) {
+        const spotifyQueryString = `track:"${recommend.name}" ` + recommend.artists.map(artist => `artist:"${artist}"`).join(' ');
+        const spotifyData = await callSpotify(() => spotify.searchTracks(spotifyQueryString, 'track', 1));
+        if (spotifyData && spotifyData.length > 0) {
+          const track = spotifyData[0];
+          dataBaseOnFavoritesFormated.push(formatTrack(track, null, null, null));
+        }
+      }
+    }
+
+    const response = {
+      message: 'Get tracks from recommend successful',
+      data: {
+        dataBaseOnPlaylist: dataBaseOnPlaylistFormated,
+        dataBaseOnFavorites: dataBaseOnFavoritesFormated
+      },
+      success: true
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get tracks from recommend' });
+  }
+}
+
 module.exports = {
   findSpotifyPlaylist,
   findYoutubeVideo,
@@ -1730,6 +1818,8 @@ module.exports = {
   findAlbumById,
   findVideoIdForTrack,
   findTrackById,
+  findTrackByNameAndArtist,
+  getTracksFromRecommend,
   getTracksFromPlaylist,
   getTracksFromAlbum,
   getPlaylistsForYou,

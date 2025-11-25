@@ -882,11 +882,11 @@ const SocialScreen = () => {
       let apiPosts;
       if (activeTab === "covers") {
         // Fetch only covers when covers tab is active
-        console.log(1)
+        // console.log(1)
         apiPosts = await fetchTopCovers();
       } else {
         // Fetch all posts when posts tab is active
-        console.log(2)
+        // console.log(2)
         if (isGuest) {
           apiPosts = await fetchPostsForGuest();
         } else {

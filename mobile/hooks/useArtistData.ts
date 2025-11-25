@@ -23,6 +23,7 @@ export const useArtistData = (currentArtist) => {
   });
 
   const fetchAlbums = useCallback(async () => {
+    if (!currentArtist?.spotifyId) return;
     try {
       const response = await GetAlbumsOfArtist(currentArtist.spotifyId);
       if (response.success === true) {
@@ -32,9 +33,10 @@ export const useArtistData = (currentArtist) => {
     } catch (err) {
       console.log('Error fetching albums:', err);
     }
-  }, [currentArtist, setAlbums]);
+  }, [currentArtist?.spotifyId]);
 
   const fetchTopTracks = useCallback(async () => {
+    if (!currentArtist?.spotifyId) return;
     try {
       const response = await GetTopTracksOfArtist(currentArtist.spotifyId);
       if (response.success === true) {
@@ -45,7 +47,7 @@ export const useArtistData = (currentArtist) => {
     } catch (err) {
       console.log('Error fetching top tracks:', err);
     }
-  }, [currentArtist, setListTrack, setPopularTracks]);
+  }, [currentArtist?.spotifyId]);
 
   const checkIsFollowing = useCallback(() => {
     if (!currentArtist || !isLoggedIn) {
@@ -65,7 +67,7 @@ export const useArtistData = (currentArtist) => {
     fetchTopTracks();
     fetchAlbums();
     setIsLoading((prev) => ({ ...prev, screen: false }));
-  }, [currentArtist, checkIsFollowing, fetchAlbums, fetchTopTracks]);
+  }, [currentArtist?.spotifyId, checkIsFollowing, fetchAlbums, fetchTopTracks]);
 
   useEffect(() => {
     checkIsFollowing();

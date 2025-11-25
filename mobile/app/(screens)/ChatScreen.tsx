@@ -82,7 +82,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
             source={{ uri: message.fileUrl || "" }}
             className="w-48 h-48 rounded-lg"
             resizeMode="cover"
-            onError={() => console.log("Image load error")}
+            onError={() => { }}
           />
         );
       case "video":
@@ -128,23 +128,20 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
     return (
       <View
-        className={`mb-2 p-2 rounded-lg border-l-4 ${
-          isMyMessage
-            ? "bg-blue-600 border-blue-300"
-            : "bg-gray-300 dark:bg-gray-700 border-gray-500"
-        }`}
+        className={`mb-2 p-2 rounded-lg border-l-4 ${isMyMessage
+          ? "bg-blue-600 border-blue-300"
+          : "bg-gray-300 dark:bg-gray-700 border-gray-500"
+          }`}
       >
         <Text
-          className={`text-xs font-semibold ${
-            isMyMessage ? "text-blue-200" : "text-gray-600 dark:text-gray-300"
-          }`}
+          className={`text-xs font-semibold ${isMyMessage ? "text-blue-200" : "text-gray-600 dark:text-gray-300"
+            }`}
         >
           Trả lời {message.replyTo.Sender.fullName}
         </Text>
         <Text
-          className={`text-sm mt-1 ${
-            isMyMessage ? "text-blue-100" : "text-gray-800 dark:text-gray-200"
-          }`}
+          className={`text-sm mt-1 ${isMyMessage ? "text-blue-100" : "text-gray-800 dark:text-gray-200"
+            }`}
           numberOfLines={1}
         >
           {getReplyContent()}
@@ -173,21 +170,19 @@ const MessageItem: React.FC<MessageItemProps> = ({
         )}
         <TouchableOpacity
           onLongPress={() => onLongPress(message)}
-          className={`p-2 rounded-xl ${
-            isMyMessage
-              ? "bg-blue-500 rounded-tr-none"
-              : "bg-gray-200 dark:bg-gray-800"
-          }`}
+          className={`p-2 rounded-xl ${isMyMessage
+            ? "bg-blue-500 rounded-tr-none"
+            : "bg-gray-200 dark:bg-gray-800"
+            }`}
         >
           {renderReplyPreview()}
           {renderMessageContent()}
         </TouchableOpacity>
         <Text
-          className={`text-xs mt-1 opacity-70 ${
-            isMyMessage
-              ? "text-blue-200 text-right"
-              : "text-gray-500 dark:text-gray-400 text-left"
-          }`}
+          className={`text-xs mt-1 opacity-70 ${isMyMessage
+            ? "text-blue-200 text-right"
+            : "text-gray-500 dark:text-gray-400 text-left"
+            }`}
         >
           {timeAgo}
         </Text>
@@ -274,9 +269,7 @@ const ChatScreen: React.FC = () => {
         // Offset là số tin nhắn đã có
         const offset = (pageToLoad - 1) * limit;
         // Endpoint: GET /api/v1/conversations/:conversationId/messages?limit=20&offset=0
-        // console.log(`Loading messages for conversation ${conversationId}, page ${pageToLoad}, offset ${offset}`);
         const newMessages = await fetchMessages(conversationId, limit, offset);
-        // console.log(`Fetched ${newMessages.length} messages:`, newMessages);
         if (newMessages.length === 0) {
           setHasMoreMessages(false);
         }
@@ -664,9 +657,9 @@ const ChatScreen: React.FC = () => {
     return (
       <SafeAreaView className="flex-1 justify-center items-center bg-white dark:bg-gray-900">
         <ActivityIndicator size="large" color="#4F46E5" />
-          <Text className="mt-2 text-gray-600 dark:text-gray-400">
-            Đang tải danh sách tin nhắn...
-          </Text>
+        <Text className="mt-2 text-gray-600 dark:text-gray-400">
+          Đang tải danh sách tin nhắn...
+        </Text>
       </SafeAreaView>
     );
   }
@@ -700,13 +693,12 @@ const ChatScreen: React.FC = () => {
                     uri: user.avatarUrl || "https://via.placeholder.com/40",
                   }}
                   className="w-8 h-8 rounded-full mr-2"
-                  onError={() => console.log("Image load error")}
+                  onError={() => { }}
                 />
                 {/* Status Indicator */}
                 <View
-                  className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${
-                    typingUsers.length > 0 ? "bg-yellow-400" : "bg-green-400"
-                  }`}
+                  className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${typingUsers.length > 0 ? "bg-yellow-400" : "bg-green-400"
+                    }`}
                 />
               </View>
               <View>

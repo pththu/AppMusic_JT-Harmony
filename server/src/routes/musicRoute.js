@@ -28,6 +28,8 @@ router.post('/search-all', musicController.searchAll);
 router.get('/search-suggestions', musicController.getSearchSuggestions);
 router.get('/category/:category', musicController.getCategoryContent);
 router.get('/track-for-cover', musicController.getTracksForCover);
+router.post('/track-by-name-artist', musicController.findTrackByNameAndArtist);
+router.post('/tracks-from-recommend', musicController.getTracksFromRecommend);
 
 // ====== PROTECTED ROUTES ======
 router.post('/playlist/:playlistId/add-track', authenticateToken, musicController.addTrackToPlaylist);

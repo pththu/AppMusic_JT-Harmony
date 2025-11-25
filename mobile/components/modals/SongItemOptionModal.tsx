@@ -68,7 +68,7 @@ const SongItemOptionModal = ({
         (item) => item?.itemType === 'track' && (item?.itemId === track?.id || item?.itemSpotifyId === track?.spotifyId)
       );
 
-      console.log('favoriteItem: ', favoriteItem.id)
+      // console.log('favoriteItem: ', favoriteItem.id)
 
       if (!favoriteItem) {
         error('Bài hát không có trong mục yêu thích.');
@@ -103,7 +103,7 @@ const SongItemOptionModal = ({
         setIsFavorite(true);
         setIsLoading(false);
         console.log(1234)
-        console.log('response.data ui', response.data)
+        // console.log('response.data ui', response.data)
         addFavoriteItem(response.data[0]);
       }
     } catch (err) {

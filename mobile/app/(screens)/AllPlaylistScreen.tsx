@@ -247,8 +247,7 @@ export default function AllPlaylistScreen() {
       }
 
     } catch (err) {
-      console.log(err);
-      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát vào playlist. Vui lòng thử lại sau.');
+      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát vào playlist. Vui lòng thử lại sau: ' + err.message);
     }
   };
 
@@ -274,14 +273,12 @@ export default function AllPlaylistScreen() {
 
   const handleDelete = () => {
     if (!selectedPlaylist) return;
-    // console.log('handleDeletePlaylist')
     try {
       confirm(
         'Xác nhận xóa',
         'Bạn có chắc chắn muốn xóa playlist này?',
         async () => {
           const response = await DeletePlaylist(selectedPlaylist.id);
-          // console.log('response úi', response);
           if (response.success) {
             removeFromMyPlaylists(selectedPlaylist.id);
             success('Đã xóa playlist thành công!');
@@ -292,16 +289,13 @@ export default function AllPlaylistScreen() {
         () => { }
       );
     } catch (err) {
-      console.log('Lỗi khi xóa playlist:', err);
-      error('Lỗi xóa playlist', 'Đã có lỗi xảy ra khi xóa playlist. Vui lòng thử lại sau.');
+      error('Lỗi xóa playlist', 'Đã có lỗi xảy ra khi xóa playlist. Vui lòng thử lại sau: ' + err.message);
     }
     setIsOptionModalVisible(false);
     setSelectedPlaylist(null);
   };
 
   const handleAddToQueue = async () => {
-    console.log('handleAddToQueue')
-
     let playlistTracks = [];
     const fetchTracks = async () => {
       if (selectedPlaylist?.spotifyId) {
@@ -348,8 +342,7 @@ export default function AllPlaylistScreen() {
         setFavoritePlaylists((prev) => prev.filter((pl) => pl.favoriteItem.id !== selectedPlaylist.favoriteItem.id));
       }
     } catch (err) {
-      console.log(err);
-      error('Lỗi khi xóa playlist khỏi mục yêu thích.');
+      error('Lỗi khi xóa playlist khỏi mục yêu thích: ' + err.message);
     } finally {
       setIsFavoriteLoading(false);
     }
@@ -388,11 +381,7 @@ export default function AllPlaylistScreen() {
       });
 
       if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log(result.activityType)
-        } else {
-          console.log('Chia sẻ thành công!');
-        }
+        success('Chia sẻ thành công!');
         // Update share count after successful share
         const response = await SharePlaylist({
           playlistId: selectedPlaylist?.id,
@@ -407,8 +396,7 @@ export default function AllPlaylistScreen() {
         // Dismissed
       }
     } catch (err) {
-      console.log('Lỗi khi chia sẻ:', err);
-      error('Lỗi khi chia sẻ playlist. Vui lòng thử lại sau.');
+      error('Lỗi khi chia sẻ playlist. Vui lòng thử lại sau: ' + err.message);
     }
     setIsOptionModalVisible(false);
     setSelectedPlaylist(null);

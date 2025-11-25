@@ -25,7 +25,7 @@ import MoodSelectionModal from "@/components/modals/MoodSelectionModal";
 import ActivitySelectionModal from "@/components/modals/ActivitySelectionModal";
 import { useNotificationStore } from "@/store/notificationStore";
 import HomeListSection from "@/components/section/HomeListSection";
-import { formatDataFavorites, formatDataFollowedArtists, formatDataHistories, formatDescription, shuffleData } from "@/utils";
+import { formatDataFavorites, formatDataFollowedArtists, formatDataHistories, formatDescription } from "@/utils";
 import { ACTIVITIES, MOODS } from "@/constants/data";
 import QuickActionChip from "@/components/common/QuickActionChip";
 import { useMusicAction } from "@/hooks/useMusicAction";
@@ -120,7 +120,6 @@ export default function HomeScreen() {
   // ============== END Helpers ==============
   const handlePlayPlaylist = async () => {
     await fetchTracks(currentPlaylist);
-    console.log('handlePlay')
     if (!listTrack || listTrack.length === 0) {
       warning('Playlist không có bài hát để phát!');
       return;

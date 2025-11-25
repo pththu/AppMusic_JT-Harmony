@@ -32,7 +32,7 @@ export const useProfileSocialData = (userId) => {
     }
     try {
       const profileResponse = await GetUserProfileSocial(userId);
-      console.log(profileResponse)
+      // console.log(profileResponse)
       if (!profileResponse.success) {
         error("Lỗi", profileResponse.message || "Không thể tải thông tin profile.");
       }

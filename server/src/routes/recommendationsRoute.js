@@ -16,8 +16,11 @@ router.post('/generate-from-histories', authenticateToken, controller.GenerateRe
 router.post('/generate-from-followed-artists', authenticateToken, controller.GenerateRecommendationsFromFollowedArtists);
 router.post('/generate-from-favorites', authenticateToken, controller.GenerateRecommendationsFromFavorites);
 router.post('/generate-from-genres', authenticateToken, controller.GenerateRecommendationsFromGenres);
+
+
+// 
 router.post('/generate-for-queue', authenticateToken, controller.GenerateRecommendForQueue);
-router.post('/generate-for-add-track-to-playlist-based-on-playlist-tracks', authenticateToken, controller.GenerateRecommendForAddTrackToPlaylistBaseOnPlaylistTracks);
-router.post('/generate-for-add-track-to-playlist-based-on-favorite-tracks', authenticateToken, controller.GenerateRecommendForAddTrackToPlaylistBaseOnFavoriteTracks);
+router.post('/add-track-bn-pl', authenticateToken, controller.GenerateRecommendForAddTrackToPlaylistBaseOnPlaylist);
+router.post('/add-track-bn-fav', authenticateToken, controller.GenerateRecommendForAddTrackToPlaylistBaseOnFavoriteTracks);
 
 module.exports = router;

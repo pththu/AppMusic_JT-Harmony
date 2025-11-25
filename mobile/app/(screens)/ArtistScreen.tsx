@@ -173,8 +173,7 @@ export default function ArtistScreen() {
         setIsFollowing(true);
       }
     } catch (err) {
-      // console.log(err.message);
-      error('Lỗi khi theo dõi nghệ sĩ. Vui lòng thử lại sau.');
+      error('Lỗi khi theo dõi nghệ sĩ. Vui lòng thử lại sau: ' + err.message);
     } finally {
       setIsLoading((prev) => ({ ...prev, following: false }));
     }
@@ -198,8 +197,7 @@ export default function ArtistScreen() {
         removeArtistFollowed(followId);
       }
     } catch (err) {
-      // console.log(err.message)
-      error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau.');
+      error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau: ' + err.message);
     } finally {
       setIsLoading((prev) => ({ ...prev, following: false }));
     }

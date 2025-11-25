@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
 import { SearchTracks } from "@/services/searchService";
 import { shuffleData } from "@/utils/array"; // Cần import shuffleData từ utils
-import { GenerateFromActivity, GenerateFromFavorites, GenerateFromFollowedArtists, GenerateFromHistories, GenerateFromMood, GenerateFromTimeOfDay } from "@/services/recommendationService";
+import { GenerateFromActivity, GenerateFromFavorites, GenerateFromFollowedArtists, GenerateFromHistories, GenerateFromMood, GenerateFromTimeOfDay, GenerateTrackFromFavorites } from "@/services/recommendationService";
 import { useBoardingStore } from "@/store/boardingStore"; // Cần dùng store để set recommendations
 
 interface QueryParams {
@@ -60,6 +60,7 @@ export const useHomeData = (
   const setRecommendBasedOnFavorites = useBoardingStore((state) => state.setRecommendBasedOnFavorites);
   const setRecommendBasedOnHistories = useBoardingStore((state) => state.setRecommendBasedOnHistories);
   const setRecommendBasedOnTimeOfDay = useBoardingStore((state) => state.setRecommendBasedOnTimeOfDay);
+  const setRecommendTrackBasedOnFavorites = useBoardingStore((state) => state.setRecommendTrackBasedOnFavorites);
 
   // fetch data recommend
   const fetchGenericRecommendation = useCallback(async (dataItems, keyStateName, setRecommendStore) => {
@@ -237,17 +238,26 @@ export const useHomeData = (
 
   // --- EFFECT: GỢI Ý THEO FAVORITES ---
   useEffect(() => {
+    const fetchData = async () => {
+      const [responseCommon, responseTrack] = await Promise.all([
+        GenerateFromFavorites(formattedFavoriteItems),
+        GenerateTrackFromFavorites(formattedFavoriteItems),
+      ])
+
+      if (responseCommon.success) {
+        fetchGenericRecommendation(responseCommon.data, 'baseOnFavoriteItems', setRecommendBasedOnFavorites);
+      }
+      if (responseTrack.success) {
+        setRecommendTrackBasedOnFavorites(responseTrack.data || []);
+      }
+    };
+
     if (formattedFavoriteItems.length > 0) {
-      GenerateFromFavorites(formattedFavoriteItems).then(response => {
-        if (response.success) {
-          fetchGenericRecommendation(response.data, 'baseOnFavoriteItems', setRecommendBasedOnFavorites);
-        } else {
-          setIsLoading(prev => ({ ...prev, baseOnFavoriteItems: false }));
-        }
-      });
+      fetchData();
     } else {
       setIsLoading(prev => ({ ...prev, baseOnFavoriteItems: false }));
     }
+
   }, [formattedFavoriteItems, fetchGenericRecommendation, setRecommendBasedOnFavorites]);
 
   // --- EFFECT: GỢI Ý THEO ARTIST FOLLOWED ---
@@ -296,6 +306,10 @@ export const useHomeData = (
       setIsLoading(prev => ({ ...prev, baseOnMoods: false }));
     }
   }, [selectedMood, fetchGenericRecommendation, setRecommendBasedOnMood]);
+
+  useEffect(() => {
+
+  }, []);
 
   return {
     dataForYou,

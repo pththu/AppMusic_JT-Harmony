@@ -36,8 +36,7 @@ export default function VerifyEmailScreen() {
         email: JSON.stringify(email)
       }); // Sau khi xác thực thì điều hướng đến trang tiếp theo
     } catch (err) {
-      error("Lỗi", "Không thể xác thực, vui lòng thử lại.");
-      console.log(err);
+      error("Lỗi", "Không thể xác thực, vui lòng thử lại." + err.message);
     } finally {
       setLoading(false);
     }
@@ -53,8 +52,7 @@ export default function VerifyEmailScreen() {
       }
       success("Thành công", "OTP mới đã được gửi đến email của bạn!");
     } catch (err) {
-      error("Lỗi", "Không thể gửi lại OTP, vui lòng thử sau.");
-      console.log(err);
+      error("Lỗi", "Không thể gửi lại OTP, vui lòng thử sau." + err.message);
     } finally {
       setLoading(false);
     }

@@ -41,8 +41,7 @@ export default function ForgotPasswordScreen() {
         next: "ResetPassword"
       });
     } catch (err) {
-      error("Lỗi", "Không thể gửi yêu cầu, vui lòng thử lại.");
-      console.log(err);
+      error("Lỗi", "Không thể gửi yêu cầu, vui lòng thử lại." + err.message);
     } finally {
       setLoading(false);
     }

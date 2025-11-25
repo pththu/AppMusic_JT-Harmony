@@ -11,10 +11,12 @@ import { UpdateCompletedOnboarding } from '@/routes/ApiRouter';
 import { ARTIST_DATA } from '@/constants/data';
 import { shuffleData } from '@/utils';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useCustomAlert } from '@/hooks/useCustomAlert';
 
 export default function ArtistScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
+  const { success, error } = useCustomAlert();
   const { navigate } = useNavigate();
   const user = useAuthStore(state => state.user);
   const addArtistFollowed = useFollowStore(state => state.addArtistFollowed);
@@ -71,8 +73,8 @@ export default function ArtistScreen() {
           addArtistFollowed(response.data);
         }
       }
-    } catch (error) {
-      console.log('Error following artists: ', error);
+    } catch (err) {
+      error('Lỗi', 'Không thể theo dõi nghệ sĩ. Vui lòng thử lại.' + err.message);
     }
   };
 

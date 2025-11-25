@@ -235,14 +235,12 @@ export default function PlaylistScreen() {
           () => { }
         );
       }
-    } catch (error) {
-      console.log('Lỗi khi xóa playlist:', error);
-      error('Lỗi xóa playlist', 'Đã có lỗi xảy ra khi xóa playlist. Vui lòng thử lại sau.');
+    } catch (err) {
+      error('Lỗi xóa playlist', 'Đã có lỗi xảy ra khi xóa playlist. Vui lòng thử lại sau: ' + err.message);
     }
   }
 
   const handleEditPlaylist = async () => {
-    console.log('handleEditPlaylist')
     try {
       const payload = {
         id: playlist?.id,
@@ -270,7 +268,6 @@ export default function PlaylistScreen() {
       info('Hãy đăng nhập để sử dụng chức năng này!');
       return;
     }
-    console.log('handleDownloadPlaylist')
     info('Chức năng tải playlist sẽ được cập nhật sau!');
   };
 

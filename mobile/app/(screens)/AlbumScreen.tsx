@@ -155,8 +155,7 @@ const AlbumScreen = () => {
         success('Đã thêm các bài hát vào playlist thành công!');
       }
     } catch (err) {
-      console.log(err);
-      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát vào playlist.');
+      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát vào playlist: ' + err.message);
     } finally {
       setModalAddToPlaylistVisible(false);
     }

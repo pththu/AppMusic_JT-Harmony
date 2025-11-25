@@ -380,9 +380,7 @@ export default function ProfileSocialScreen() {
 
   const handleFollow = useCallback(async (user) => {
     try {
-      console.log('follow: ', user)
       const response = await FollowUser(user.id);
-      console.log('response', response)
       if (response.success) {
         setFollowees([...followees, response.data]);
         if (user.id === profile.id) {
@@ -396,14 +394,11 @@ export default function ProfileSocialScreen() {
 
   const handleUnfollow = useCallback(async (user) => {
     try {
-      console.log('un')
       const payload = {
         followeeId: user.id,
         followerId: currentUserId,
       }
-      console.log('payload: ', payload)
       const response = await UnfollowUser(payload);
-      console.log('response', response)
       if (response.success) {
         removeFollowee(payload.followeeId);
         if (user.id === profile.id) {

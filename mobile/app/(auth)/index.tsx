@@ -52,7 +52,6 @@ export default function AuthScreen() {
 
     const response = await LoginWithGoogle(profileToSend);
     try {
-      // console.log('response', response)
       if (!response.success) {
         error('Lỗi đăng nhập', `${response.message}`);
         await GoogleSignin.signOut();
@@ -93,7 +92,6 @@ export default function AuthScreen() {
   };
 
   const handleLoginWithFacebook = async () => {
-    console.log('first')
     const loginType = 'facebook';
     try {
       const result = await LoginManager.logInWithPermissions(['public_profile']);
@@ -133,8 +131,8 @@ export default function AuthScreen() {
           }
         }, 1000);
       }
-    } catch (error) {
-      console.log('Login fb fail with error: ' + error);
+    } catch (err) {
+      error('Lỗi đăng nhập', 'Không thể đăng nhập với Facebook. Vui lòng thử lại.' + err.message);
     }
   };
 

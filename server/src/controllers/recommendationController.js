@@ -1545,22 +1545,13 @@ const GenerateRecommendForQueue = async (req, res) => {
   * length: number
  * }
  */
-const GenerateRecommendForAddTrackToPlaylistBaseOnPlaylistTracks = async (req, res) => {
+const GenerateRecommendForAddTrackToPlaylistBaseOnPlaylist = async (req, res) => {
   try {
     const {
       playlistDetails = {},
       playlistTracks = []
     } = req.body;
     console.log("🎯 CREATE RECOMMENDATIONS FOR ADD TRACK TO PLAYLIST:", playlistDetails.name);
-    const userId = req.user.id;
-
-    const cacheKey = `recommendations-addTrackToPlaylist:${userId}:${playlistDetails.name}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log('CACHE HIT (GenerateRecommendForAddTrackToPlaylist)');
-      return res.status(200).json(JSON.parse(cachedData));
-    }
-    console.log('CACHE MISS (GenerateRecommendForAddTrackToPlaylist)');
 
     const formatPlaylistTracks = playlistTracks.slice(0, 30).map((item) => {
       return `${item.name} - ${item.artists.map(a => a.name).join(", ")}`;
@@ -1693,8 +1684,6 @@ const GenerateRecommendForAddTrackToPlaylistBaseOnPlaylistTracks = async (req, r
       data: recommendations,
     };
 
-    // Cache kết quả
-    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
     res.status(200).json(responseData);
   } catch (error) {
     res.status(500).json({
@@ -1711,17 +1700,8 @@ const GenerateRecommendForAddTrackToPlaylistBaseOnFavoriteTracks = async (req, r
     } = req.body;
 
     console.log("🎯 CREATE RECOMMENDATIONS FOR ADD TRACK TO PLAYLIST BASED ON FAVORITE TRACKS")
-    const userId = req.user.id;
-    const cacheKey = `recommendations-addTrackToPlaylist-favorites:${userId}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log('CACHE HIT (GenerateRecommendForAddTrackToPlaylistBaseOnFavoriteTracks)');
-      return res.status(200).json(JSON.parse(cachedData));
-    }
-    console.log('CACHE MISS (GenerateRecommendForAddTrackToPlaylistBaseOnFavoriteTracks)');
-
     const formatFavoritesItem = favorites.slice(0, 30).map((item) => {
-      return `${item.itemType} : ${item.name} - ${item?.artists?.map(a => a?.name).join(", ") || item?.description || ""}`;
+      return `${item.type} : ${item.name} - ${item.artists || item.description || ""}`;
     })
 
     const userContext = `THÔNG TIN BÀI HÁT YÊU THÍCH: 
@@ -1849,11 +1829,7 @@ const GenerateRecommendForAddTrackToPlaylistBaseOnFavoriteTracks = async (req, r
       data: recommendations,
     };
 
-    // Cache kết quả
-    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
     res.status(200).json(responseData);
-
-
   } catch (error) {
     res.status(500).json({
       error: "Không thể tạo gợi ý thêm bài hát vào playlist",
@@ -1862,7 +1838,7 @@ const GenerateRecommendForAddTrackToPlaylistBaseOnFavoriteTracks = async (req, r
   }
 }
 
-// ===========================================
+// ===========================================  
 // 2. PHÂN TÍCH TÂM TRẠNG/NĂNG LƯỢNG BÀI HÁT
 // ===========================================
 
@@ -2241,6 +2217,6 @@ module.exports = {
   GenerateRecommendationsFromTimeOfDay,
   GenerateRecommendationsFromGenres,
   GenerateRecommendForQueue,
-  GenerateRecommendForAddTrackToPlaylistBaseOnPlaylistTracks,
+  GenerateRecommendForAddTrackToPlaylistBaseOnPlaylist,
   GenerateRecommendForAddTrackToPlaylistBaseOnFavoriteTracks,
 };

@@ -317,7 +317,6 @@ export const RemoveTrackFromPlaylist = async (payload) => {
 export const GetTracksForCover = async () => {
   try {
     const response = await axiosPublicClient.get(`/music/track-for-cover`);
-    console.log(response.data)
     return response.data;
   } catch (error) {
     console.log(error.message);
@@ -328,7 +327,38 @@ export const GetTracksForCover = async () => {
 export const FindTrackById = async (trackId) => {
   try {
     const response = await axiosPublicClient.get(`/music/track/${trackId}`);
-    console.log('response.data[0]', response.data);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const FindTrackByNameAndArtists = async (payload) => {
+  try {
+    const response = await axiosPublicClient.post(`/music/track-by-name-artist`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GetTracksFromRecommend = async (payload) => {
+  try {
+    const response = await axiosPublicClient.post(`/music/tracks-from-recommend`, payload);
     return response.data;
   } catch (error) {
     if (error.response) {
