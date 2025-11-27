@@ -22,7 +22,6 @@ import ArtistsSection from "@/components/artists/ArtistsSection";
 import { useNavigate } from "@/hooks/useNavigate";
 import { usePlayerStore } from "@/store/playerStore";
 import { router } from "expo-router";
-import { albumData, trackData } from "@/constants/data";
 import SongItem from "@/components/items/SongItem";
 import TextTicker from "react-native-text-ticker";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
@@ -44,7 +43,7 @@ export default function SongScreen() {
   const colorScheme = useColorScheme();
 
   const user = useAuthStore((state) => state.user);
-  // const playbackPosition = usePlayerStore((state) => state.playbackPosition)
+  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const currentIndex = usePlayerStore((state) => state.currentIndex);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
@@ -153,8 +152,7 @@ export default function SongScreen() {
       setSharePostModalVisible(false);
       setSharePostText("");
     } catch (e) {
-      console.log(e);
-      error("Lỗi", "Không thể chia sẻ bài đăng.");
+      error("Lỗi", "Không thể chia sẻ bài đăng: " + e.message);
     } finally {
       setIsLoading(false);
     }
@@ -204,7 +202,6 @@ export default function SongScreen() {
   }
 
   const handlePlayPrevious = () => {
-    console.log('preve')
     if (!currentTrack) return;
     if (currentIndex === 0) {
       setPlaybackPosition(0);
@@ -213,12 +210,10 @@ export default function SongScreen() {
   }
 
   const handlePlayNext = () => {
-    console.log('next')
     playNext();
   }
 
   const handleShufflePlay = () => {
-    console.log('handleShufflePlay: ', isShuffled)
     if (isShuffled) {
       unShuffleQueue();
     } else {
@@ -247,8 +242,7 @@ export default function SongScreen() {
     try {
       removeTrackFromQueue([track]);
     } catch (err) {
-      console.log('Error removing track from queue: ', err);
-      error('Lỗi khi xóa bài hát khỏi danh sách chờ');
+      error('Lỗi khi xóa bài hát khỏi danh sách chờ: ' + err.message);
     }
   };
 
@@ -278,17 +272,12 @@ export default function SongScreen() {
       });
 
       if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log(result.activityType)
-        } else {
-          console.log('Chia sẻ thành công!');
-        }
+        success('Đã chia sẻ bài hát.');
         // Update share count after successful share
         const response = await ShareTrack({
           trackId: track?.id,
           trackSpotifyId: track?.spotifyId
         });
-        console.log(response.data)
         if (response.success) {
           success('Đã chia sẻ');
           currentTrack.id = response.data.trackId;
@@ -299,16 +288,13 @@ export default function SongScreen() {
         // Dismissed
       }
     } catch (err) {
-      console.log(err);
-      error('Lỗi khi chia sẻ bài hát.');
+      error('Lỗi khi chia sẻ bài hát: ' + err.message);
     }
   };
 
   const handleUnFavorite = async (track) => {
     try {
-      console.log('un')
       setIsLoading(true);
-      // console.log(favoriteItems)
       const favoriteItem = favoriteItems.find(
         (item) => item?.itemType === 'track' && (item?.itemId === track?.id || item?.itemSpotifyId === track?.spotifyId)
       );
@@ -325,8 +311,7 @@ export default function SongScreen() {
         setIsLoading(false);
       }
     } catch (err) {
-      console.log(err);
-      error('Lỗi khi xóa bài hát khỏi mục yêu thích.');
+      error('Lỗi khi xóa bài hát khỏi mục yêu thích: ' + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -335,7 +320,6 @@ export default function SongScreen() {
   const handleFavorite = async (track) => {
     try {
       setIsLoading(true);
-      console.log('fav')
       const response = await AddFavoriteItem({
         itemType: 'track',
         itemId: track.id,
@@ -343,25 +327,14 @@ export default function SongScreen() {
       });
       if (response.success) {
         setIsFavorite(true);
-        console.log('response.data ui', response.data)
         addFavoriteItem(response.data[0]);
       }
     } catch (err) {
-      console.log(err)
-      error('Lỗi khi thêm bài hát vào mục yêu thích.');
+      error('Lỗi khi thêm bài hát vào mục yêu thích: ' + err.message);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // useEffect(() => {
-  //   if (duration > 0) {
-  //     const percentage = (playbackPosition / duration) * 100;
-  //     setProgress(percentage);
-  //   } else {
-  //     setProgress(0);
-  //   }
-  // }, [playbackPosition, duration]);
 
   useEffect(() => {
     if (repeatMode === 'none') {
@@ -377,7 +350,6 @@ export default function SongScreen() {
   }, [repeatMode])
 
   useEffect(() => {
-    // console.log('current', currentTrack)
     if (favoriteItems) {
       const isFavorite = favoriteItems.some(
         (item) => item?.itemType === 'track' && (item?.itemSpotifyId === currentTrack?.spotifyId || (currentTrack?.id !== null && item?.itemId === currentTrack?.id))
@@ -387,7 +359,6 @@ export default function SongScreen() {
   }, []);
 
   const handleViewAllCovers = () => {
-    // Navigate to SocialScreen with covers filter
     navigate("SocialScreen", { filter: "covers", songId: currentTrack.id });
   };
 
@@ -420,12 +391,12 @@ export default function SongScreen() {
       <View className="items-center mb-4">
         <View className="relative">
           <Image
-            source={{ uri: currentTrack.imageUrl || albumData.find(album => album.name === currentTrack.album)?.imageUrl || '' }}
+            source={{ uri: currentTrack.imageUrl || '' }}
             style={{ width: screenWidth - 32, height: screenWidth - 32 }}
             className="rounded-xl"
             resizeMode="cover"
             onError={(e) => {
-              console.log("Image load error:", e.nativeEvent.error);
+              error("Lỗi khi tải ảnh bìa: " + e.nativeEvent.error);
             }}
           />
         </View>
@@ -582,7 +553,7 @@ export default function SongScreen() {
               </View>
             ))
         }
-        <LyricsSection />
+        {/* <LyricsSection /> */}
       </View>
       <ArtistsSection artists={currentTrack.artists} onPress={() => { }} />
       {sharePostModalVisible && (

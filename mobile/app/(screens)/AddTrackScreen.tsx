@@ -14,135 +14,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { usePlayerStore } from '@/store/playerStore';
-import { albumData } from '@/constants/data';
 import { useCustomAlert } from '@/hooks/useCustomAlert';
 import { AddTrackToPlaylist, AddTrackToPlaylistAfterConfirm, GetTracks } from '@/services/musicService';
 import { SearchTracks } from '@/services/searchService';
+import { useFavoritesStore } from '@/store/favoritesStore';
+import TrackItem from '@/components/items/TrackItem';
+import { useAddTrackData } from '@/hooks/useAddTrackData';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const TrackItem = React.memo(({ item, isDarkMode, onAdd }: { item: any; isDarkMode: boolean; onAdd: (track: any) => void; }) => {
-  const textColor = isDarkMode ? "text-white" : "text-black";
-  const subTextColor = isDarkMode ? "text-gray-400" : "text-gray-600";
-  const primaryColor = "#22c55e";
-
-  return (
-    <View className="flex-row items-center justify-between py-2">
-      <View className="flex-row items-center flex-1 pr-4">
-        <Image
-          source={{ uri: item.imageUrl || albumData.filter(album => album.name === item.album)[0]?.imageUrl || 'https://via.placeholder.com/150' }}
-          className="w-12 h-12 rounded-sm mr-3"
-          resizeMode="cover"
-        />
-        <View className="flex-1">
-          <Text className={`text-base ${textColor}`} numberOfLines={1}>
-            {item.name}
-          </Text>
-          <Text className={`text-sm ${subTextColor}`} numberOfLines={1}>
-            {item.artists?.map(a => a.name).join(', ')}
-          </Text>
-        </View>
-      </View>
-
-      {/* Nút Thêm (+) */}
-      <TouchableOpacity
-        onPress={() => onAdd(item)}
-        className="w-10 h-10 justify-center items-center rounded-full"
-      >
-        <Icon name="add-circle-outline" size={28} color={primaryColor} />
-      </TouchableOpacity>
-    </View>
-  );
-});
-
 const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
 
-  const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
-  const updateTotalTracksInCurrentPlaylist = usePlayerStore((state) => state.updateTotalTracksInCurrentPlaylist);
-  const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
-  const addTrackToPlaylist = usePlayerStore((state) => state.addTrackToPlaylist);
   const colorScheme = useColorScheme();
   const { success, error, confirm, info } = useCustomAlert();
+
+  const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
+
   const bgColor = colorScheme === 'dark' ? '#121212' : 'white';
   const textColor = colorScheme === 'dark' ? 'white' : 'black';
   const iconColor = colorScheme === 'dark' ? 'white' : 'black';
   const inputBgColor = colorScheme === 'dark' ? '#333' : 'rgb(229, 231, 235)';
-  const query = {
-    artist: ["bts", "jungkook", "agust d"],
-    trackName: ["save me", "we are"],
-    album: ["jack in the box", "golden"]
-  }
-  const [recentData, setRecentData] = useState();
-  const [favoriteData, setFavoriteData] = useState();
-  const [recommendData, setRecommendData] = useState();
+
   const [pageData, setPageData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const {
+    isLoading,
+    recentData,
+    favoriteData,
+    recommendData,
+    handleAddTrack,
+  } = useAddTrackData();
 
   const flatListRef = useRef(null);
-
-  const handleAddTrack = async (track) => {
-    console.log(`Đã thêm bài hát: ${track.name}`);
-    // console.log(track)
-    try {
-      const payload = {
-        playlistId: currentPlaylist?.id,
-        trackId: track?.id || null,
-        trackSpotifyId: track?.spotifyId,
-      }
-
-      const response = await AddTrackToPlaylist(payload);
-      // console.log('response', response)
-      if (response.success) {
-        const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
-          setStateFunc(prevData => {
-            if (!prevData) return [];
-            return prevData.filter(t => t.spotifyId !== trackIdToRemove);
-          });
-        };
-        removeTrackFromState(setRecentData, track.spotifyId);
-        removeTrackFromState(setFavoriteData, track.spotifyId);
-        removeTrackFromState(setRecommendData, track.spotifyId);
-
-        updateTotalTracksInCurrentPlaylist(1);
-        updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
-        addTrackToPlaylist(response.data);
-      } else {
-        if (response.isExisting) {
-          confirm(
-            'Bài hát đã tồn tại',
-            response.message,
-            async () => {
-              const confirmResponse = await AddTrackToPlaylistAfterConfirm(payload);
-              // console.log('confirmResponse', confirmResponse)
-              if (confirmResponse.success) {
-                const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
-                  setStateFunc(prevData => {
-                    if (!prevData) return [];
-                    return prevData.filter(t => t.spotifyId !== trackIdToRemove);
-                  });
-                };
-                removeTrackFromState(setRecentData, track.spotifyId);
-                removeTrackFromState(setFavoriteData, track.spotifyId);
-                removeTrackFromState(setRecommendData, track.spotifyId);
-
-                updateTotalTracksInCurrentPlaylist(1);
-                updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
-                addTrackToPlaylist(confirmResponse.data);
-              } else {
-                error('Lỗi', 'Không thể thêm bài hát vào danh sách phát.');
-              }
-            },
-            () => { }
-          )
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      error('Lỗi', 'Không thể thêm bài hát vào danh sách phát.');
-    }
-  };
 
   const handleScroll = (event) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -156,7 +61,6 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
     if (!isSearching) return [];
 
     const lowerCaseQuery = searchQuery.toLowerCase();
-
     const allTracks = pageData.flatMap(group => group.data);
 
     return allTracks.filter(track =>
@@ -166,44 +70,11 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
   }, [searchQuery, pageData, isSearching]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(false);
-      try {
-        const promiseRecent = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
-        const promiseFavorite = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
-        const promiseRecommend = SearchTracks({ trackName: query.trackName, artist: query.artist, limit: 10 });
-
-        const [responseRecent, responseFavorite, responseRecommend] = await Promise.all([
-          promiseRecent,
-          promiseFavorite,
-          promiseRecommend
-        ]);
-
-        if (responseRecent.success) {
-          setRecentData(responseRecent.data);
-        }
-        if (responseFavorite.success) {
-          setFavoriteData(responseFavorite.data);
-        }
-        if (responseRecommend.success) {
-          setRecommendData(responseRecommend.data);
-        }
-      } catch (err) {
-        // console.log(err.message);
-        error('Lỗi', 'Có lỗi khi cập nhật dữ liệu');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
     const newPageData = [
       {
-        title: "Mới phát gần đây",
+        title: "Đề xuất cho danh sách phát này",
         data: Array.isArray(recentData) ? recentData : [],
-        subtitle: null,
+        subtitle: "Dựa trên các bài hát trong danh sách phát.",
       },
       {
         title: "Bài hát bạn đã thích",
@@ -213,7 +84,7 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
       {
         title: "Được đề xuất",
         data: Array.isArray(recommendData) ? recommendData : [],
-        subtitle: "Dựa trên các bài hát bạn vừa thêm vào.",
+        subtitle: "Dựa trên các bài hát bạn đã thích.",
       },
     ].filter(group => group.data.length > 0); // Chỉ hiển thị nhóm có dữ liệu
 
@@ -307,39 +178,43 @@ const AddTrackScreen = ({ playlistName = "Playlist của tôi" }) => {
         {/* --- Phần chính: Slider (Nếu không tìm kiếm) hoặc Kết quả tìm kiếm --- */}
         {isSearching ? (
           renderSearchMode()
-        ) : isLoading ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#22c55e" />
-            <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải playlist...</Text>
-          </View>
         ) : (
           <>
-            <FlatList
-              ref={flatListRef}
-              data={pageData}
-              keyExtractor={(item, index) => item.title}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-              renderItem={renderSlide}
-              decelerationRate="fast"
-              snapToInterval={SCREEN_WIDTH}
-            />
-
-            <View className="flex-row justify-center py-3 absolute bottom-20 w-full">
-              {pageData?.map((_, index) => (
-                <View
-                  key={index}
-                  className="w-2 h-2 rounded-full mx-1"
-                  style={{
-                    backgroundColor: activeIndex === index ? iconColor : 'gray',
-                    opacity: activeIndex === index ? 1 : 0.5,
-                  }}
+            {isLoading ? (
+              <View className="flex-1 justify-center items-center">
+                <ActivityIndicator size="large" color="#22c55e" />
+                <Text className="mt-2 text-gray-600 dark:text-gray-400">Đang tải playlist...</Text>
+              </View>
+            ) : (
+              <>
+                <FlatList
+                  ref={flatListRef}
+                  data={pageData}
+                  keyExtractor={(item, index) => item.title}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
+                  renderItem={renderSlide}
+                  decelerationRate="fast"
+                  snapToInterval={SCREEN_WIDTH}
                 />
-              ))}
-            </View>
+
+                <View className="flex-row justify-center py-3 absolute bottom-20 w-full">
+                  {pageData?.map((_, index) => (
+                    <View
+                      key={index}
+                      className="w-2 h-2 rounded-full mx-1"
+                      style={{
+                        backgroundColor: activeIndex === index ? iconColor : 'gray',
+                        opacity: activeIndex === index ? 1 : 0.5,
+                      }}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
           </>
         )}
       </View>

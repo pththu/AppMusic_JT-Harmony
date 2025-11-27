@@ -44,6 +44,7 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
     const isDark = colorScheme === 'dark';
     const isGuest = useAuthStore((state) => state.isGuest);
     const { navigate } = useNavigate();
+    const avatarDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png';
 
     const canPost = (newPostText.trim() || selectedMediaAssets.length > 0) && !isUploading;
 
@@ -62,8 +63,8 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                 {/* Ảnh đại diện User */}
                 <TouchableOpacity onPress={handleAvatarPress}>
                     <Image
-                        source={{ uri: user?.avatarUrl }}
-                        className="w-12 h-12 rounded-full mr-3 border-2 border-indigo-500"
+                        source={{ uri: user?.avatarUrl || avatarDefault}}
+                        className="w-12 h-12 rounded-full mr-3 border-2 border-emerald-500"
                     />
                 </TouchableOpacity>
 
@@ -114,10 +115,10 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
 
             {/* 3. HIỂN THỊ SONG ID ĐÃ CHỌN */}
             {selectedSongId ? (
-                <View className="mt-3 p-3 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex-row items-center justify-between">
+                <View className="mt-3 p-3 bg-emerald-100 dark:bg-emerald-900 rounded-lg flex-row items-center justify-between">
                     <View className="flex-row items-center flex-1">
                         <Icon name="music" size={18} color={isDark ? "#A5B4FC" : "#4F46E5"} />
-                        <Text className="ml-2 text-indigo-700 dark:text-indigo-300 flex-1 font-semibold" numberOfLines={1}>
+                        <Text className="ml-2 text-emerald-700 dark:text-emerald-300 flex-1 font-semibold" numberOfLines={1}>
                             Đính kèm Bài hát ID: {selectedSongId}
                         </Text>
                     </View>
@@ -136,10 +137,10 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                         onPress={handleSelectMedia}
                         disabled={isUploading}
                         className="flex-row items-center p-2 rounded-full mr-3"
-                        style={{ backgroundColor: isUploading ? '#374151' : '#4F46E5' }}
+                        style={{ backgroundColor: isUploading ? '#047857' : '#10b981' }}
                     >
                         {isUploading ? (
-                            <ActivityIndicator size="small" color="#4F46E5" />
+                            <ActivityIndicator size="small" color="#d1fae5" />
                         ) : (
                             <Icon name="image" size={20} color="white" />
                         )}

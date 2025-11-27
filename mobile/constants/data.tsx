@@ -1,360 +1,227 @@
-export const trackData = [
-  {
-    id: 1,
-    spotifyId: "5YMXGBD6vcYP7IolemyLtK",
-    videoId: "5BdSZkY6F4M",
-    name: "Euphoria",
-    lyrics: "",
-    externalUrl: "https://www.youtube.com/embed/dj0MgHYbFYI?si=vBAAhaIIxworrzHc",
-    duration: 228615,
-    artists: [
-      {
-        name: "BTS"
-      }
-    ],
-    album: "Love Yourself 結 'Answer'",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
-    discNumber: 1,
-    trackNumber: 1,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 2,
-    spotifyId: "4YDHRtzm0OGuieCTVQjVuk",
-    videoId: "IiW1kEJDBDQ",
-    name: "Trivia 起 : Just Dance",
-    lyrics: "",
-    externalUrl: "https://www.youtube.com/embed/IiW1kEJDBDQ?si=fv4GlCBWV-x3D37z",
-    duration: 225220,
-    artists: [
-      {
-        name: "BTS"
-      }
-    ],
-    album: "Love Yourself 結 'Answer'",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
-    discNumber: 1,
-    trackNumber: 2,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 3,
-    spotifyId: "1dS4l6xmdgEhCZTAhdOm4N",
-    videoId: "ejR5zKaPZ0g",
-    name: "Serendipity (Full Length Edition)",
-    lyrics: "",
-    externalUrl: "https://www.youtube.com/embed/ejR5zKaPZ0g?si=SRkv0exUJBLaOFni",
-    duration: 276707,
-    artists: [
-      {
-        name: "BTS"
-      }
-    ],
-    album: "Love Yourself 結 'Answer'",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
-    discNumber: 1,
-    trackNumber: 3,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 4,
-    spotifyId: "2ngmiq1KoYn3x25VOmvd8F",
-    videoId: "Rx6D5FN1pvg",
-    name: "DNA",
-    lyrics: "",
-    externalUrl: "https://www.youtube.com/embed/Rx6D5FN1pvg?si=Y_JImAhXOzDNBtWq",
-    duration: 223122,
-    artists: [
-      {
-        name: "BTS"
-      }
-    ],
-    album: "Love Yourself 結 'Answer'",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
-    discNumber: 1,
-    trackNumber: 4,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 5,
-    spotifyId: "5TA0pfOtzeYDWtZlZ3JwcN",
-    videoId: "0CjFN2LuqAc",
-    name: "Vô Cực - Chill Mix",
-    lyrics: "",
-    externalUrl: "https://open.spotify.com/track/5TA0pfOtzeYDWtZlZ3JwcN",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2739ac548c878dcfacf8bd868b9",
-    duration: 252500,
-    artists: [
-      {
-        name: "Vũ Cát Tường"
-      }
-    ],
-    album: "Vi Nhất (Chill Mix)",
-    discNumber: 1,
-    trackNumber: 2,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 6,
-    spotifyId: "0gZjxVfCcwIDpZWkxhHDkV",
-    videoId: "P69q6rJ5Rc4",
-    name: "Hư Vô - Chill Mix",
-    lyrics: "",
-    externalUrl: "https://open.spotify.com/track/0gZjxVfCcwIDpZWkxhHDkV",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2739ac548c878dcfacf8bd868b9",
-    duration: 238285,
-    artists: [
-      {
-        name: "Vũ Cát Tường"
-      }
-    ],
-    album: "Vi Nhất (Chill Mix)",
-    discNumber: 1,
-    trackNumber: 3,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 7,
-    spotifyId: "4bc5tsjeIEkQDk4D7fHA1O",
-    videoId: "BgkUcC5tsjo",
-    name: "Độc Nhất - Chill Mix",
-    lyrics: "",
-    externalUrl: "https://open.spotify.com/track/4bc5tsjeIEkQDk4D7fHA1O",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2739ac548c878dcfacf8bd868b9",
-    duration: 220421,
-    artists: [
-      {
-        name: "Vũ Cát Tường"
-      }
-    ],
-    album: "Vi Nhất (Chill Mix)",
-    discNumber: 1,
-    trackNumber: 4,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    id: 8,
-    spotifyId: "01XrNHfoHYc151TTwqtQEx",
-    videoId: "fuF_-UHX23o",
-    name: "Intro (Mong Em Hạnh Phúc Suốt Cuộc Đời Này)",
-    lyrics: "",
-    externalUrl: "https://open.spotify.com/track/01XrNHfoHYc151TTwqtQEx",
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b273fe0cbef064f18008462d29ef",
-    duration: 121749,
-    artists: [
-      {
-        name: "buitruonglinh"
-      }
-    ],
-    album: "Từng Ngày Như Mãi Mãi",
-    discNumber: 1,
-    trackNumber: 1,
-    type: "track",
-    explicit: false,
-    playCount: 0,
-    shareCount: 0
-  },
-  {
-    "spotifyId": "3smbno1dKL410vC27M5KOS",
-    "videoId": "L7hZ8Z9sM38",
-    "name": "Tear",
-    "lyrics": "",
-    "externalUrl": "https://open.spotify.com/track/3smbno1dKL410vC27M5KOS",
-    "duration": 284980,
-    "artists": [
-      {
-        name: "BTS"
-      }
-    ],
-    "album": "Love Yourself 結 'Answer'",
-    "discNumber": 1,
-    "trackNumber": 12,
-    "type": "track",
-    "explicit": false,
-    "playCount": 0,
-    "shareCount": 0
-  },
-  {
-    "spotifyId": "6L88EH68XwlaXwvChlTS41",
-    "videoId": "_GiBbhq7hfI",
-    "name": "Epiphany",
-    "lyrics": "",
-    "externalUrl": "https://open.spotify.com/track/6L88EH68XwlaXwvChlTS41",
-    "duration": 240361,
-    "artists": [
-      {
-        name: "BTS"
-      }
-    ],
-    "album": "Love Yourself 結 'Answer'",
-    "discNumber": 1,
-    "trackNumber": 13,
-    "type": "track",
-    "explicit": false,
-    "playCount": 0,
-    "shareCount": 0
-  },
-  {
-    "spotifyId": "7HYJqAMbKDJYRyEfUGOCBB",
-    "videoId": "dyXhcS04MVY",
-    "name": "I'm Fine",
-    "lyrics": "",
-    "externalUrl": "https://open.spotify.com/track/7HYJqAMbKDJYRyEfUGOCBB",
-    "duration": 240339,
-    "artists": [
-      {
-        name: "BTS"
-      }
-    ],
-    "album": "Love Yourself 結 'Answer'",
-    "discNumber": 1,
-    "trackNumber": 14,
-    "type": "track",
-    "explicit": false,
-    "playCount": 0,
-    "shareCount": 0
-  },
-  {
-    "spotifyId": "1e8J3XClxZbFmvIHLI8CE4",
-    "videoId": "vgJeQvGYYpk",
-    "name": "IDOL",
-    "lyrics": "",
-    "externalUrl": "https://open.spotify.com/track/1e8J3XClxZbFmvIHLI8CE4",
-    "duration": 222732,
-    "artists": [
-      {
-        name: "BTS"
-      }
-    ],
-    "album": "Love Yourself 結 'Answer'",
-    "discNumber": 1,
-    "trackNumber": 15,
-    "type": "track",
-    "explicit": false,
-    "playCount": 0,
-    "shareCount": 0
-  },
+const ACTIVITIES = [
+  { id: 'workout', label: 'Tập luyện', icon: 'barbell-outline' },
+  { id: 'study', label: 'Học tập', icon: 'school-outline' },
+  { id: 'commute', label: 'Di chuyển', icon: 'bus-outline' },
+  { id: 'sleep', label: 'Ngủ', icon: 'moon-outline' },
+  { id: 'party', label: 'Tiệc tùng', icon: 'musical-notes-outline' },
+  { id: 'gaming', label: 'Chơi game', icon: 'game-controller-outline' },
+  { id: 'relax', label: 'Thư giãn', icon: 'leaf-outline' },
+  { id: 'focus', label: 'Tập trung', icon: 'eye-outline' },
+  { id: 'running', label: 'Chạy bộ', icon: 'walk-outline' },
+  { id: 'yoga', label: 'Yoga', icon: 'body-outline' },
+  { id: 'cooking', label: 'Nấu ăn', icon: 'restaurant-outline' },
+  { id: 'reading', label: 'Đọc sách', icon: 'book-outline' },
+  { id: 'meditation', label: 'Thiền', icon: 'medkit-outline' },
+  { id: 'driving', label: 'Lái xe', icon: 'car-outline' },
 ];
 
-export const artistData = [
+const NOTIFICATION_FILTERS = [
+  { label: 'Tất cả', value: 'all' },
+  { label: 'Thích', value: 'like' },
+  { label: 'Bình luận', value: 'comment' },
+  { label: 'Chia sẻ', value: 'share' },
+];
+
+const MOODS = [
+  { id: 'happy', label: 'Vui vẻ 😊' },
+  { id: 'sad', label: 'Buồn 😢' },
+  { id: 'focused', label: 'Tập trung 🧠' },
+  { id: 'chill', label: 'Chill 🍃' },
+  { id: 'energetic', label: 'Năng động ⚡' },
+  { id: 'romantic', label: 'Lãng mạn 🌹' },
+  { id: 'sleepy', label: 'Buồn ngủ 😴' },
+  { id: 'angry', label: 'Bực bội 😡' },
+  { id: 'motivated', label: 'Có động lực 🚀' },
+  { id: 'stressed', label: 'Căng thẳng 😰' },
+  { id: 'nostalgic', label: 'Hoài niệm � ' },
+  { id: 'boring', label: 'Chán nản 😐' },
+  { id: "heartbroken", label: 'Đau khổ 💔' },
+];
+
+const BROWSE_CATEGORIES = [
+  { id: "3", name: "POP", color: "#4facfe", colorEnd: "#e0c3fc", icon: "heart" },
+  { id: "4", name: "K-POP", color: "#e8198b", colorEnd: "#f794a4", icon: "people" },
+  { id: "6", name: "V-POP", color: "#ff0844", colorEnd: "#f9d423", icon: "star" },
+  { id: "2", name: "C-POP", color: "#f5576c", colorEnd: "#fee140", icon: "snow" },
+  { id: "5", name: "J-POP", color: "#e8198b", colorEnd: "#efefef", icon: "disc" },
+  { id: "7", name: "RAP", color: "#c71d6f", colorEnd: "#96deda", icon: "mic" },
+  { id: "12", name: "ROCK", color: "#e8198b", colorEnd: "#FFBD71", icon: "mic" },
+  { id: "8", name: "HIP-HOP", color: "#2b5876", colorEnd: "#dad4ec", icon: "headset" },
+  { id: "9", name: "DANCE", color: "#009efd", colorEnd: "#38f9d7", icon: "body" },
+  { id: "10", name: "INDIE", color: "#a18cd1", colorEnd: "#FBC2EB", icon: "leaf" },
+  { id: "1", name: "TAMIL", color: "#eacda3", colorEnd: "#94B447", icon: "musical-notes" },
+  { id: "11", name: "JAZZ", color: "#FF7A7B", colorEnd: "#FFBD71", icon: "musical-note" },
+];
+
+const FILTER_TYPES = ["All", "Track", "Artist", "Album", "Playlist", "User"];
+
+const ARTIST_DATA = [
   {
-    spotifyId: "3Nrfpe0tUJi4K4DXYWgMUX",
-    name: "BTS",
-    genres: [
+    "spotifyId": "3Nrfpe0tUJi4K4DXYWgMUX",
+    "name": "BTS",
+    "genres": [
       "k-pop"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5ebd642648235ebf3460d2d1f6a",
-    totalFollowers: 81063906,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5ebd642648235ebf3460d2d1f6a",
+    "totalFollowers": 81063906,
+    "type": "artist"
   },
   {
-    spotifyId: "5RmQ8k4l3HZ8JoPb4mNsML",
-    name: "Agust D",
-    genres: [
+    "spotifyId": "5RmQ8k4l3HZ8JoPb4mNsML",
+    "name": "Agust D",
+    "genres": [
       "k-pop",
       "k-rap"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5eb191d43dca6f2f5a126e43e4b",
-    totalFollowers: 15501873,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb191d43dca6f2f5a126e43e4b",
+    "totalFollowers": 15501873,
+    "type": "artist"
   },
   {
-    spotifyId: "2auC28zjQyVTsiZKNgPRGs",
-    name: "RM",
-    genres: [
+    "spotifyId": "2auC28zjQyVTsiZKNgPRGs",
+    "name": "RM",
+    "genres": [
       "k-pop",
       "k-rap"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5eb847fe9bbfef3acf7981acd2a",
-    totalFollowers: 17682294,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb847fe9bbfef3acf7981acd2a",
+    "totalFollowers": 17682294,
+    "type": "artist"
   },
   {
-    spotifyId: "3JsHnjpbhX4SnySpvpa9DK",
-    name: "V",
-    genres: [
+    "spotifyId": "3JsHnjpbhX4SnySpvpa9DK",
+    "name": "V",
+    "genres": [
       "k-pop"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5eb8e7d00d3aae87cf8fc6946e2",
-    totalFollowers: 20041156,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb8e7d00d3aae87cf8fc6946e2",
+    "totalFollowers": 20041156,
+    "type": "artist"
   },
   {
-    spotifyId: "6HaGTQPmzraVmaVxvz6EUc",
-    name: "Jung Kook",
-    genres: [
+    "spotifyId": "6HaGTQPmzraVmaVxvz6EUc",
+    "name": "Jung Kook",
+    "genres": [
       "k-pop"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5eb40a7268dd742e5f63759b960",
-    totalFollowers: 18544435,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb40a7268dd742e5f63759b960",
+    "totalFollowers": 18544435,
+    "type": "artist"
   },
   {
-    spotifyId: "0b1sIQumIAsNbqAoIClSpy",
-    name: "j-hope",
-    genres: [
+    "spotifyId": "0b1sIQumIAsNbqAoIClSpy",
+    "name": "j-hope",
+    "genres": [
       "k-pop",
       "k-rap"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5eb25c2401c3595f0ac35e19b98",
-    totalFollowers: 19182844,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb25c2401c3595f0ac35e19b98",
+    "totalFollowers": 19182844,
+    "type": "artist"
   },
   {
-    spotifyId: "77AiFEVeAVj2ORpC85QVJs",
-    name: "Steve Aoki",
-    genres: [
+    "spotifyId": "77AiFEVeAVj2ORpC85QVJs",
+    "name": "Steve Aoki",
+    "genres": [
       "electro house",
       "edm"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5ebcf85b39d94c486218a687248",
-    totalFollowers: 3788173,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5ebcf85b39d94c486218a687248",
+    "totalFollowers": 3788173,
+    "type": "artist"
   },
   {
-    spotifyId: "7yquVKfxBuNFJbG9cy2R8A",
-    name: "Vũ Cát Tường",
-    genres: [
+    "spotifyId": "7yquVKfxBuNFJbG9cy2R8A",
+    "name": "Vũ Cát Tường",
+    "genres": [
       "v-pop",
       "vietnam indie"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5ebb6f728660d5609ec077de870",
-    totalFollowers: 904099,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5ebb6f728660d5609ec077de870",
+    "totalFollowers": 904099,
+    "type": "artist"
   },
   {
-    spotifyId: "7Cp2hGcriAaDUAWpXnSEwm",
-    name: "buitruonglinh",
-    genres: [
+    "spotifyId": "7Cp2hGcriAaDUAWpXnSEwm",
+    "name": "buitruonglinh",
+    "genres": [
       "v-pop",
       "vietnamese lo-fi",
       "vietnam indie",
       "vinahouse"
     ],
-    imageUrl: "https://i.scdn.co/image/ab6761610000e5eb9adfc46417bb7d546b4ab3dd",
-    totalFollowers: 803620,
-    type: "artist"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb9adfc46417bb7d546b4ab3dd",
+    "totalFollowers": 803620,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "15qIW0R8ys6DkGKygGnMEN",
+    "name": "Kiều Chi",
+    "genres": [
+      "v-pop"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5ebe62ee19fc33a48d29b388437",
+    "totalFollowers": 12988,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "3euFcFd5Dc7JAz6t7oKg7m",
+    "name": "BMZ",
+    "genres": [
+      "v-pop",
+      "vinahouse",
+      "vietnam indie",
+      "vietnamese lo-fi"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb72ee71305a5799765ff63db4",
+    "totalFollowers": 13194,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "33J4sIJ9vp7KgdKpxXm6z6",
+    "name": "Minsicko",
+    "genres": [
+      "vietnamese hip hop",
+      "v-pop",
+      "vietnam indie"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5ebbc3e8e565ba02855a050dde2",
+    "totalFollowers": 3097,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "5xY6E5PMZNtz9jDvxTRiGI",
+    "name": "Dangrangto",
+    "genres": [
+      "vietnamese hip hop",
+      "v-pop"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb5b09f4c3eeb52b57f76dccbc",
+    "totalFollowers": 448373,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "1y28JlO6rDMUB5rkcA4RAh",
+    "name": "52Hz",
+    "genres": [
+      "v-pop",
+      "vietnam indie",
+      "vietnamese hip hop"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb72856734dbbdac3027b447e3",
+    "totalFollowers": 294841,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "2dC1IBU9NOD9xsQJ5RE7j7",
+    "name": "Puppy",
+    "genres": [
+      "v-pop",
+      "vietnamese hip hop"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb980a220d32409b1164cc9a1d",
+    "totalFollowers": 113401,
+    "type": "artist"
   },
   {
     "spotifyId": "37yCp3F1wG0gNrnaLkIdDV",
@@ -607,6 +474,28 @@ export const artistData = [
     "name": "Kye Bum Zu",
     "genres": [],
     "totalFollowers": 62,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "6f4srX54JFrLNK4aTJe2Sc",
+    "name": "Ren Ran",
+    "genres": [
+      "mandopop",
+      "c-pop",
+      "gufeng",
+      "chinese r&b",
+      "taiwanese pop"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5ebf275b5cd5f576cf23bad5f94",
+    "totalFollowers": 480144,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "5IH6FPUwQTxPSXurCrcIov",
+    "name": "Alec Benjamin",
+    "genres": [],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb5af962a543938243f083cbb9",
+    "totalFollowers": 5567558,
     "type": "artist"
   },
   {
@@ -997,172 +886,237 @@ export const artistData = [
     "totalFollowers": 5899926,
     "type": "artist"
   },
-];
-
-export const albumData = [
   {
-    spotifyId: "43wFM1HquliY3iwKWzPN4y",
-    name: "Love Yourself 結 'Answer'",
-    artists: [
-      "BTS"
+    "spotifyId": "2GWuBfYdmPB91krBNQavHa",
+    "name": "Paledusk",
+    "genres": [
+      "mathcore",
+      "j-rock",
+      "metalcore"
     ],
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2733825e6d4d02e4b4c0cec7e1d",
-    releaseDate: "2018-08-24T00:00:00.000Z",
-    totalTracks: 26,
-    externalUrl: "https://open.spotify.com/album/43wFM1HquliY3iwKWzPN4y",
-    type: "album"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb9d36b5ac87f38e8ebce7dde9",
+    "totalFollowers": 80499,
+    "type": "artist"
   },
   {
-    spotifyId: "2dEiuw5biqbGQzKd0FEgds",
-    name: "Vi Nhất (Chill Mix)",
-    artists: [
-      "Vũ Cát Tường"
+    "spotifyId": "074tUrKhXVuH4s5Mfg0zWz",
+    "name": "CHICO CARLITO",
+    "genres": [
+      "j-rap"
     ],
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2739ac548c878dcfacf8bd868b9",
-    releaseDate: "2023-11-28T00:00:00.000Z",
-    totalTracks: 4,
-    externalUrl: "https://open.spotify.com/album/2dEiuw5biqbGQzKd0FEgds",
-    type: "album"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb17ba793f42f2ad205ffa3d1e",
+    "totalFollowers": 52425,
+    "type": "artist"
   },
   {
-    spotifyId: "2DCbDdIBNRxx0SxLtgyd4D",
-    name: "Từng Ngày Như Mãi Mãi",
-    artists: [
-      "buitruonglinh"
+    "spotifyId": "1fTWz0OemWveF9AMkRPJKi",
+    "name": "Forest Studio",
+    "genres": [
+      "v-pop",
+      "vietnam indie"
     ],
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b273fe0cbef064f18008462d29ef",
-    releaseDate: "2024-12-12T00:00:00.000Z",
-    totalTracks: 14,
-    externalUrl: "https://open.spotify.com/album/2DCbDdIBNRxx0SxLtgyd4D",
-    type: "album"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb980fdbc56854717fe9a8b50a",
+    "totalFollowers": 47095,
+    "type": "artist"
   },
   {
-    spotifyId: "10Dwjqs7dJNxn2g1PkvRCw",
-    name: "Dữ Liệu Quý",
-    artists: [
-      "Dương Domic"
+    "spotifyId": "67iEesKynAK85rx8smKhCZ",
+    "name": "Tiến Luật",
+    "genres": [
+      "v-pop",
+      "vietnam indie"
     ],
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b273aa8b2071efbaa7ec3f41b60b",
-    releaseDate: "2024-11-22T00:00:00.000Z",
-    totalTracks: 4,
-    externalUrl: "https://open.spotify.com/album/10Dwjqs7dJNxn2g1PkvRCw",
-    type: "album"
+    "totalFollowers": 766,
+    "type": "artist"
   },
   {
-    spotifyId: "5tlCVkYaDAmAtJ5YxejpWi",
-    name: "BẬT NÓ LÊN",
-    artists: [
-      "SOOBIN"
+    "spotifyId": "2mpSmbp35mvG7ig3cg1jEj",
+    "name": "Diệu Nhi",
+    "genres": [
+      "v-pop"
     ],
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2738bdbdf691a5b791a5afb515b",
-    releaseDate: "2024-06-25T00:00:00.000Z",
-    totalTracks: 10,
-    externalUrl: "https://open.spotify.com/album/5tlCVkYaDAmAtJ5YxejpWi",
-    type: "album"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb7ba9f1c7ca1da781dc72f2a1",
+    "totalFollowers": 4837,
+    "type": "artist"
   },
   {
-    spotifyId: "2WVu4ar7QsDx7fY03ZBSge",
-    name: "Vọng",
-    artists: [
-      "buitruonglinh"
+    "spotifyId": "6oqtpFuvCTISMPeGv6P2sj",
+    "name": "Bùi Công Nam",
+    "genres": [
+      "v-pop",
+      "vietnam indie"
     ],
-    imageUrl: "https://i.scdn.co/image/ab67616d0000b2731dcf3f929ddc6fff13e5db84",
-    releaseDate: "2022-12-14T00:00:00.000Z",
-    totalTracks: 8,
-    externalUrl: "https://open.spotify.com/album/2WVu4ar7QsDx7fY03ZBSge",
-    type: "album"
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb30b06e8ef75d11396d495259",
+    "totalFollowers": 79302,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "56vNGG0GJtL6p8ltx7cLvj",
+    "name": "Cầm",
+    "genres": [
+      "v-pop",
+      "vinahouse",
+      "vietnam indie"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb15942731974bf0db725c2536",
+    "totalFollowers": 15021,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "5M3ffmRiOX9Q8Y4jNeR5wu",
+    "name": "Wren Evans",
+    "genres": [
+      "v-pop",
+      "vietnam indie",
+      "vietnamese hip hop",
+      "vinahouse"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb170428492febf4a71ef1e08e",
+    "totalFollowers": 635187,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "30eFAXoU2kTjJPf2cq80B8",
+    "name": "WEAN",
+    "genres": [
+      "v-pop",
+      "vietnamese hip hop",
+      "vietnam indie"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb040ce9d8a0ff0e237249a644",
+    "totalFollowers": 499227,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "1L1VfizWn4DkFt602yD80U",
+    "name": "ERIK",
+    "genres": [
+      "v-pop",
+      "vinahouse",
+      "vietnam indie"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb916407e907705dc1ab9010c3",
+    "totalFollowers": 1130697,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "3Wj34lTDJnPp70u4YCl4jz",
+    "name": "Lil Wuyn",
+    "genres": [
+      "vietnamese hip hop",
+      "v-pop",
+      "vietnam indie"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb70cb097c71b1b2bab9f1c69a",
+    "totalFollowers": 172631,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "6NF9Oa4ThQWCj6mogFSrVD",
+    "name": "W/N",
+    "genres": [
+      "v-pop",
+      "vietnamese lo-fi",
+      "vietnamese hip hop",
+      "vietnam indie"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb316c0f0bc6cf3a29c203ab1e",
+    "totalFollowers": 1749749,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "0ZbgKh0FgPYeFP38nVaEGp",
+    "name": "Obito",
+    "genres": [
+      "v-pop",
+      "vietnamese hip hop",
+      "vietnam indie"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eba385bd3e0f67945f277792c2",
+    "totalFollowers": 1225921,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "1Z7VMoFxsMu5ZbPJBq5zO8",
+    "name": "嚴藝丹",
+    "genres": [
+      "gufeng",
+      "c-pop",
+      "mandopop"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab67616d0000b2733d8bb7c92d80c2afaaa03ce1",
+    "totalFollowers": 13489,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "5OAvvoK5e5SrxveVL7CQUX",
+    "name": "Fiona Fung",
+    "genres": [
+      "cantopop"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab67616d0000b2735c61e2214b36439e731035d9",
+    "totalFollowers": 12193,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "5Y8PCl4iNLDIHGkCMi5i76",
+    "name": "Ace Hashimoto",
+    "genres": [],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb007f4fe808d9cf1b0b08a85d",
+    "totalFollowers": 10146,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "2u7CP5T30c8ctenzXgEV1W",
+    "name": "pH-1",
+    "genres": [
+      "k-rap"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5ebb4e1a93443ecd2faf97cc2e1",
+    "totalFollowers": 492684,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "0UswO8FFKS2tv6dzyNyJLD",
+    "name": "Slom",
+    "genres": [
+      "k-rap"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb1ebcdcd506f1e75b30669cbf",
+    "totalFollowers": 34313,
+    "type": "artist"
+  },
+  {
+    "spotifyId": "2oNStf3CKKLM5lnzELWMcH",
+    "name": "Taichi Mukai",
+    "genres": [
+      "j-r&b",
+      "j-pop",
+      "japanese indie"
+    ],
+    "imageUrl": "https://i.scdn.co/image/ab6761610000e5eb5b2da19cad93661d1f30bbfd",
+    "totalFollowers": 138052,
+    "type": "artist"
   }
 ];
 
-export const playlistData = [
-  {
-    spotifyId: "0aiBKNSqiPnhtcw1QlXK5s",
-    name: "Nhạc Việt Top Hits - VPOP 2025",
-    description: "Những bản V-POP, Hip Hop, Rap Việt và Indie Việt hay nhất được tuyển chọn hàng tuần bởi LONGK. Happy listening!",
-    imageUrl: "https://image-cdn-fa.spotifycdn.com/image/ab67706c0000d72c6e299909baab23a0806a3391",
-    totalTracks: 139,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "6VCsmVYfvQI8lmSMEAwWso",
-    name: "VPOP Nhạc Hay Nhất 2025",
-    description: "Nhạc Việt Hay Nhất Trên Spotify - VPOP 2025 On Spotify - Vpop Top Hits Vietnam - any suggestion DM me at @luqiss.ai on IG",
-    imageUrl: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da84e11e2ad51c8598c0ad87de10",
-    totalTracks: 636,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "7wGr9ksv12OioDdM11bDoY",
-    name: "VINAHOUSE MIX 2025",
-    description: "",
-    imageUrl: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da845b9b45f3bdfdfc903a212ca8",
-    totalTracks: 129,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "7FLb5PMzkFurzJxGMBjBzp",
-    name: "TikTok Remix Trending Vietnam 2025",
-    description: "Tổng hợp các bài hát Trending&#x2F;Viral trên TikTok trong năm 2025. Ảnh: TikToker Xuân Ca và Ciin",
-    imageUrl: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da84b83f5ec2174cd5f331c37235",
-    totalTracks: 277,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "6EMgCox8plLFYiG5cot8sM",
-    name: "List nhạc Hàn 🌷✨",
-    description: "",
-    imageUrl: "https://mosaic.scdn.co/640/ab67616d00001e02388aec3abf08cdabd580d1beab67616d00001e023e3eb54b0842a353b2a7ec00ab67616d00001e0291cc8126b18191c1c00cf247ab67616d00001e02f0915ebccbf28c75a51bc66c",
-    totalTracks: 46,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "1vWAoZQ3oaIRdkAPPrkLAM",
-    name: "Top 100 Bài Hát Âu Mỹ Hay Nhất 2025 Bảng Xếp Hạng Nhạc Âu Mỹ 2025",
-    description: "Top 100 Bài Hát Âu Mỹ, Nhạc Âu Mỹ Hay Nhất 2025, Bảng Xếp Hạng 2025, Nhạc Hot Âu Mỹ, Bài Hát Được Yêu Thích, Những Ca Khúc Âu Mỹ Hay Nhất",
-    imageUrl: "https://mosaic.scdn.co/640/ab67616d00001e0234934fb9b26cd45a01eb9159ab67616d00001e02459d675aa0b6f3b211357370ab67616d00001e029df54b112dfa5da467239db0ab67616d00001e02b3661a089bc89defa235def3",
-    totalTracks: 169,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "4sOeJqypOMbN7zo7wKmTCm",
-    name: "Nhạc Hàn bất hủ",
-    description: "",
-    imageUrl: "https://mosaic.scdn.co/640/ab67616d00001e02125e616921c1b800878d5672ab67616d00001e021663625d5541eab978b0de2dab67616d00001e025ff2d8bc2e6d25d11c5c03edab67616d00001e02f42cae27b199e3c2d49d39c2",
-    totalTracks: 26,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "2TILtuWEZHZdLuiFfSxcP5",
-    name: "Nhạc Hàn Quốc 9x Bất Hủ 🤍",
-    description: "",
-    imageUrl: "https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da8495d4f61093c3c7ae29a719b7",
-    totalTracks: 94,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "6U8mhsSXaqsEAg0k2r46wH",
-    name: "Chill cùng nhạc Kpop",
-    description: "",
-    imageUrl: "https://mosaic.scdn.co/640/ab67616d00001e020fdd9fc8745ed9185dc95873ab67616d00001e02580ac3ad7dfc81e509171120ab67616d00001e028fbcf6544ff02a8959a81781ab67616d00001e02dbe6edc2373a90a5200d30d0",
-    totalTracks: 29,
-    isPublic: true,
-    type: "playlist"
-  },
-  {
-    spotifyId: "3qxE8TnC6yYCwOT5Nyb0NR",
-    name: "Nhạc Hàn sôi động",
-    description: "",
-    imageUrl: "https://mosaic.scdn.co/640/ab67616d00001e0217db30ce3f081d6818a8ad49ab67616d00001e028fbcf6544ff02a8959a81781ab67616d00001e02a7e481899b7e0396f93d10b8ab67616d00001e02f7da7c0f322b7a1c95190d92",
-    totalTracks: 62,
-    isPublic: true,
-    type: "playlist"
-  }
-]
+const LANGUAGES = [
+  "International",
+  "Telugu",
+  "Hindi",
+  "Punjabi",
+  "Tamil",
+  "Kannada",
+  "Malayalam",
+  "Bengali",
+];
+
+export {
+  ACTIVITIES,
+  NOTIFICATION_FILTERS,
+  BROWSE_CATEGORIES,
+  MOODS,
+  FILTER_TYPES,
+  ARTIST_DATA,
+  LANGUAGES
+}

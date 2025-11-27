@@ -166,12 +166,13 @@ FollowArtist.belongsTo(User, { foreignKey: 'followerId', onDelete: 'CASCADE', ho
 
 Artist.hasMany(FollowArtist, { foreignKey: 'artistId', onDelete: 'CASCADE', hooks: true });
 FollowArtist.belongsTo(Artist, { foreignKey: 'artistId', onDelete: 'CASCADE', hooks: true });
+// follower: người theo dõi (User)
+// followee: người được theo dõi (Artist)
+User.hasMany(FollowUser, { foreignKey: 'followerId', as: 'followees', onDelete: 'CASCADE', hooks: true });
+FollowUser.belongsTo(User, { foreignKey: 'followerId', as: 'follower', onDelete: 'CASCADE', hooks: true });
 
-User.hasMany(FollowUser, { foreignKey: 'followerId', onDelete: 'CASCADE', hooks: true });
-FollowUser.belongsTo(User, { foreignKey: 'followerId', onDelete: 'CASCADE', hooks: true });
-
-User.hasMany(FollowUser, { foreignKey: 'followeeId', onDelete: 'CASCADE', hooks: true });
-FollowUser.belongsTo(User, { foreignKey: 'followeeId', onDelete: 'CASCADE', hooks: true });
+User.hasMany(FollowUser, { foreignKey: 'followeeId', as: 'followers', onDelete: 'CASCADE', hooks: true });
+FollowUser.belongsTo(User, { foreignKey: 'followeeId', as: 'followee', onDelete: 'CASCADE', hooks: true });
 
 // User ↔ Playlist (1-N)
 User.hasMany(Playlist, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });

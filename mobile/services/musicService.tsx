@@ -1,4 +1,5 @@
-import axiosClient from "@/config/axiosClient";
+import axiosClient, { axiosPublicClient } from "@/config/axiosClient";
+import { id } from "date-fns/locale";
 
 // get
 export const GetPlaylistsForYou = async (payload) => {
@@ -93,9 +94,9 @@ export const GetAlbumsOfArtist = async (payload) => {
   }
 };
 
-export const GetMyPlaylists = async () => {
+export const GetMyPlaylists = async (userId) => {
   try {
-    const response = await axiosClient.get(`/music/mine/playlists`);
+    const response = await axiosPublicClient.get(`/music/${userId}/playlists`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -111,7 +112,7 @@ export const GetMyPlaylists = async () => {
 
 export const GetTracks = async (payload) => {
   try {
-    const response = await axiosClient.post(`/music//search-track`, payload);
+    const response = await axiosClient.post(`/music/get-tracks`, { queries: payload });
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -313,12 +314,60 @@ export const RemoveTrackFromPlaylist = async (payload) => {
 }
 
 // đang test
-export const fetchTracks = async () => {
+export const GetTracksForCover = async () => {
   try {
-    const response = await axiosClient.get(`/music/tracks`);
-    return response.data.data;
+    const response = await axiosPublicClient.get(`/music/track-for-cover`);
+    return response.data;
   } catch (error) {
     console.log(error.message);
     throw error;
   }
 };
+
+export const FindTrackById = async (trackId) => {
+  try {
+    const response = await axiosPublicClient.get(`/music/track/${trackId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const FindTrackByNameAndArtists = async (payload) => {
+  try {
+    const response = await axiosPublicClient.post(`/music/track-by-name-artist`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GetTracksFromRecommend = async (payload) => {
+  try {
+    const response = await axiosPublicClient.post(`/music/tracks-from-recommend`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}

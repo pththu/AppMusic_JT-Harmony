@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useTheme } from '@/components/ThemeContext';
-import { useArtistStore } from "@/store/artistStore";
+import { useFollowStore } from "@/store/followStore";
 import { useNavigate } from "@/hooks/useNavigate";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { UnfollowArtist } from "@/services/followService";
@@ -79,11 +79,11 @@ export default function ArtistsFollowingScreen() {
   const router = useRouter();
   const { navigate } = useNavigate();
   const { theme } = useTheme();
-  const { error } = useCustomAlert();
+  const { error, info } = useCustomAlert();
 
-  const artistFollowed = useArtistStore((state) => state.artistFollowed);
-  const removeArtistFollowed = useArtistStore((state) => state.removeArtistFollowed);
-  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const artistFollowed = useFollowStore((state) => state.artistFollowed);
+  const removeArtistFollowed = useFollowStore((state) => state.removeArtistFollowed);
+  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
 
   const [isLoading, setIsLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -152,15 +152,14 @@ export default function ArtistsFollowingScreen() {
         error(response.message || 'Hủy theo dõi thất bại.');
       }
     } catch (err) {
-      // console.log(err.message);
-      error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau.');
+      error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau: ' + err.message);
     } finally {
       setIsLoading(false);
     }
   }
 
   const handleBlockArtist = (artist) => {
-    console.log("Blocking artist:", artist.name);
+    info('Chức năng chặn nghệ sĩ sẽ được cập nhật trong các phiên bản sau.');
   }
   // --- End Handlers ---
 

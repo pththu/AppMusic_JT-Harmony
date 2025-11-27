@@ -12,7 +12,6 @@ export default function VerifyEmailScreen() {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
-  const login = useAuthStore(state => state.login);
   const params = useLocalSearchParams();
   const email = params.email ? JSON.parse(params.email as string) : "";
   const next = params.next ? params.next as string : "Auth";
@@ -37,8 +36,7 @@ export default function VerifyEmailScreen() {
         email: JSON.stringify(email)
       }); // Sau khi xác thực thì điều hướng đến trang tiếp theo
     } catch (err) {
-      error("Lỗi", "Không thể xác thực, vui lòng thử lại.");
-      console.log(err);
+      error("Lỗi", "Không thể xác thực, vui lòng thử lại." + err.message);
     } finally {
       setLoading(false);
     }
@@ -54,8 +52,7 @@ export default function VerifyEmailScreen() {
       }
       success("Thành công", "OTP mới đã được gửi đến email của bạn!");
     } catch (err) {
-      error("Lỗi", "Không thể gửi lại OTP, vui lòng thử sau.");
-      console.log(err);
+      error("Lỗi", "Không thể gửi lại OTP, vui lòng thử sau." + err.message);
     } finally {
       setLoading(false);
     }

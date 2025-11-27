@@ -10,7 +10,7 @@ import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { useHistoriesStore } from '@/store/historiesStore';
 import AlbumItem from '@/components/items/AlbumItem';
 import PlaylistItem from '@/components/items/PlaylistItem';
-import { useArtistStore } from '@/store/artistStore';
+import { useFollowStore } from '@/store/followStore';
 import ArtistItem from '@/components/artists/ArtistItem';
 import { ScrollView } from 'react-native';
 import useAuthStore from '@/store/authStore';
@@ -57,7 +57,7 @@ export default function YourLibraryScreen() {
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
   const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
-  const setCurrentArtist = useArtistStore((state) => state.setCurrentArtist);
+  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
 
   const albumList = useMemo(() => {

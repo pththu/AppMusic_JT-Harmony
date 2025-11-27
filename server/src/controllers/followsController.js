@@ -1,7 +1,12 @@
-const { Follow, User, sequelize, FollowArtist, Artist } = require('../models');
+const { Follow, User, sequelize, FollowArtist, Artist, FollowUser } = require('../models');
 const Sequelize = require('sequelize'); // Import module gốc
 const spotify = require('../configs/spotify');
+const { getCached } = require('../utils/cache');
+const { redisClient } = require('../configs/redis');
 const Op = Sequelize.Op; // Lấy toán tử Op từ module gốc
+
+const DEFAULT_TTL_SECONDS = 3600 * 2; // 2 giờ
+const SHORT_TTL_SECONDS = 1800;
 
 const formatArtist = (artist, genres) => {
     return {
@@ -14,255 +19,8 @@ const formatArtist = (artist, genres) => {
     }
 }
 
-// //  HÀM TIỆN ÍCH MỚI: Kiểm tra trạng thái follow của người dùng hiện tại đối với 1 người
-// async function checkIsFollowing(currentUserId, targetUserId) {
-//     if (!currentUserId || currentUserId === targetUserId) {
-//         return false;
-//     }
-//     const follow = await Follow.findOne({
-//         where: {
-//             followerId: currentUserId,
-//             userFolloweeId: targetUserId,
-//         },
-//     });
-//     return !!follow;
-// }
-
-// // Toggle theo dõi người dùng
-// exports.toggleUserFollow = async(req, res) => {
-//     // 1. Lấy ID của người dùng hiện đang đăng nhập (Người theo dõi)
-//     // Giả định middleware auth đã đặt req.user.id
-//     const followerId = req.user.id;
-
-//     // 2. Lấy ID của người dùng được theo dõi (Từ URL params)
-//     const userFolloweeId = req.params.userId;
-
-//     // Tự theo dõi chính mình?
-//     if (followerId == userFolloweeId) {
-//         return res.status(400).json({ message: "Bạn không thể theo dõi chính mình." });
-//     }
-
-//     try {
-//         // 3. KIỂM TRA: Người dùng đã theo dõi chưa?
-//         const existingFollow = await Follow.findOne({
-//             where: {
-//                 followerId: followerId,
-//                 userFolloweeId: userFolloweeId,
-//                 artistFolloweeId: null, // Đảm bảo chỉ kiểm tra follow User
-//             }
-//         });
-
-//         if (existingFollow) {
-//             // 4. HỦY THEO DÕI: Xóa bản ghi Follow
-//             await existingFollow.destroy();
-//             return res.status(200).json({ message: "Hủy theo dõi thành công.", isFollowing: false });
-//         } else {
-//             // 5. THỰC HIỆN THEO DÕI: Tạo bản ghi Follow mới
-//             await Follow.create({
-//                 followerId: followerId,
-//                 userFolloweeId: userFolloweeId,
-//                 artistFolloweeId: null,
-//                 followedAt: new Date(),
-//             });
-//             return res.status(201).json({ message: "Theo dõi thành công.", isFollowing: true });
-//         }
-//     } catch (error) {
-//         console.error("Lỗi toggleFollow:", error);
-//         return res.status(500).json({ message: "Lỗi Server nội bộ khi xử lý theo dõi." });
-//     }
-// };
-
-// // ----------------------------------------------------
-// //  CHỨC NĂNG LẤY DANH SÁCH NGƯỜI THEO DÕI (FOLLOWERS)
-// // ----------------------------------------------------
-// /**
-//  * Lấy danh sách những người đang theo dõi user có userId (Followers)
-//  * Endpoint: GET /follows/users/:userId/followers
-//  */
-// exports.getUserFollowers = async(req, res) => {
-//     const userId = req.params.userId; // ID của người được theo dõi (Followee, vd: user7916)
-//     //  Lấy ID của người dùng đang đăng nhập (vd: user2718)
-//     const currentUserId = req.user.id;
-
-//     try {
-//         const follows = await Follow.findAll({
-//             where: {
-//                 userFolloweeId: userId
-//             },
-//             // Liên kết để lấy thông tin chi tiết của Người theo dõi
-//             include: [{
-//                 model: User,
-//                 as: 'Follower',
-//                 attributes: ['id', 'username', 'avatarUrl', 'fullName'],
-//             }],
-//             order: [
-//                 ['followedAt', 'DESC']
-//             ]
-//         });
-
-//         // Chỉ trả về User object của những người theo dõi
-//         const rawUsers = follows
-//             .filter(follow => follow.Follower)
-//             .map(follow => follow.Follower.get({ plain: true }));
-
-//         //  THÊM LOGIC KIỂM TRA isFollowing
-//         const finalData = await Promise.all(rawUsers.map(async(user) => {
-//             const isFollowing = await checkIsFollowing(currentUserId, user.id);
-//             return {
-//                 ...user,
-//                 isFollowing: isFollowing, // Trạng thái follow của user2718 đối với người này
-//             };
-//         }));
-
-//         res.json(finalData);
-
-//     } catch (error) {
-//         console.error("Lỗi khi lấy danh sách người theo dõi:", error);
-//         res.status(500).json({
-//             error: "Lỗi Server khi tải danh sách người theo dõi."
-//         });
-//     }
-// };
-
-// // ----------------------------------------------------
-// //  CHỨC NĂNG LẤY DANH SÁCH ĐANG THEO DÕI (FOLLOWING)
-// // ----------------------------------------------------
-// /**
-//  * Lấy danh sách những người mà user có userId đang theo dõi (Following)
-//  * Endpoint: GET /follows/users/:userId/following
-//  */
-// exports.getUserFollowing = async(req, res) => {
-//     const userId = req.params.userId; // ID của người đang theo dõi (Follower, vd: user7916)
-//     //  Lấy ID của người dùng đang đăng nhập (vd: user2718)
-//     const currentUserId = req.user.id;
-
-//     try {
-//         const following = await Follow.findAll({
-//             where: {
-//                 followerId: userId,
-//                 // ⚠️ CHỈ LẤY CÁC MỤC ĐANG THEO DÕI USER (không phải Artist)
-//                 userFolloweeId: {
-//                     [Op.not]: null
-//                 }
-//             },
-//             // Liên kết để lấy thông tin chi tiết của Người được theo dõi
-//             include: [{
-//                 model: User,
-//                 as: 'Followee', // Tên alias của người được theo dõi
-//                 attributes: ['id', 'username', 'avatarUrl', 'fullName'],
-//             }],
-//             order: [
-//                 ['followedAt', 'DESC']
-//             ]
-//         });
-
-//         // Chỉ trả về User object của những người đang theo dõi
-//         const rawUsers = following
-//             .filter(follow => follow.Followee)
-//             .map(follow => follow.Followee.get({ plain: true }));
-
-//         //  THÊM LOGIC KIỂM TRA isFollowing
-//         const finalData = await Promise.all(rawUsers.map(async(user) => {
-//             const isFollowing = await checkIsFollowing(currentUserId, user.id);
-//             return {
-//                 ...user,
-//                 isFollowing: isFollowing, // Trạng thái follow của user2718 đối với người này
-//             };
-//         }));
-
-//         res.json(finalData);
-
-//     } catch (error) {
-//         console.error("Lỗi khi lấy danh sách đang theo dõi:", error);
-//         res.status(500).json({
-//             error: "Lỗi Server khi tải danh sách đang theo dõi."
-//         });
-//     }
-// };
-
-exports.getAllFollows = async (req, res) => {
-    try {
-        const rows = await Follow.findAll();
-        res.json(rows);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};
-
-// exports.getFollowById = async(req, res) => {
-//     try {
-//         const row = await Follow.findByPk(req.params.id);
-//         if (!row) return res.status(404).json({ error: 'Follow not found' });
-//         res.json(row);
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// };
-
-// exports.getFollowByUserId = async(req, res) => {
-//     try {
-//         const userId = req.params.userId;
-//         const follows = await Follow.findAll({ where: { userId } });
-//         if (!follows) return res.status(404).json({ error: 'No Follow found for this user' });
-//         res.json(follows);
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-// exports.getFollowByArtistFolloweeId = async(req, res) => {
-//     try {
-//         const artistFolloweeId = req.params.artistFolloweeId;
-//         const follows = await Follow.findAll({ where: { artistFolloweeId } });
-//         if (!follows) return res.status(404).json({ error: 'No follows found for this artist' });
-//         res.json(follows);
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-// exports.getFollowByUserFolloweeId = async(req, res) => {
-//     try {
-//         const userFolloweeId = req.params.userFolloweeId;
-//         const follows = await Follow.findAll({ where: { userFolloweeId } });
-//         if (!follows) return res.status(404).json({ error: 'No follows found for this user' });
-//         res.json(follows);
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-// exports.createFollow = async(req, res) => {
-//     try {
-//         const row = await Follow.create(req.body);
-//         res.status(201).json(row);
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// };
-
-// exports.updateFollow = async(req, res) => {
-//     try {
-//         const [updated] = await Follow.update(req.body, { where: { id: req.params.id } });
-//         if (!updated) return res.status(404).json({ error: 'Follows not found' });
-//         const row = await Follow.findByPk(req.params.id);
-//         res.json(row);
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// };
-
-// exports.deleteFollow = async(req, res) => {
-//     try {
-//         const deleted = await Follow.destroy({ where: { id: req.params.id } });
-//         if (!deleted) return res.status(404).json({ error: 'Follows not found' });
-//         res.json({ message: 'Follows deleted' });
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// };
-
-exports.getFollowerOfArtist = async (req, res) => {
+// ================= FOLLOW ARTIST CONTROLLER =================
+const GetFollowerOfArtist = async (req, res) => {
     try {
         const { artistSpotifyId } = req.body;
         console.log(artistSpotifyId)
@@ -289,10 +47,14 @@ exports.getFollowerOfArtist = async (req, res) => {
     }
 };
 
-exports.getArtistFollowedByUser = async (req, res) => {
+const GetArtistFollowedByUser = async (req, res) => {
     try {
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
         const followArtists = await FollowArtist.findAll({
-            where: { followerId: req.user.id }
+            where: { followerId: userId }
         })
 
         const dataFormated = [];
@@ -320,7 +82,8 @@ exports.getArtistFollowedByUser = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
-exports.createFollowArtist = async (req, res) => {
+
+const CreateFollowArtist = async (req, res) => {
     try {
         let { artistId, artistSpotifyId } = req.body;
         const userId = req.user.id;
@@ -400,7 +163,7 @@ exports.createFollowArtist = async (req, res) => {
     }
 };
 
-exports.deleteFollowArtist = async (req, res) => {
+const DeleteFollowArtist = async (req, res) => {
     try {
         const { id } = req.params;
         if (!id) {
@@ -422,4 +185,251 @@ exports.deleteFollowArtist = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+}
+
+// ================ FOLLOW USER CONTROLLER ================
+
+const CreateFollowUser = async (req, res) => {
+    try {
+        const followerId = req.user.id;
+        const { followeeId } = req.params;
+
+        if (!followerId || !followeeId) {
+            return res.status(400).json({ error: 'Both followerId and followeeId are required' });
+        }
+
+        const existingFollow = await FollowUser.findOne({
+            where: {
+                followerId,
+                followeeId,
+            },
+        });
+
+        if (existingFollow) {
+            return res.status(400).json({ error: 'You are already following this user' });
+        }
+
+        const row = await FollowUser.create({
+            followerId,
+            followeeId,
+        });
+
+        if (!row) {
+            return res.status(500).json({ error: 'Cannot create follow user' });
+        }
+
+        let followee = await User.findByPk(followeeId,
+            { attributes: ['id', 'username', 'fullName', 'email', 'avatarUrl', 'bio'] }
+        );
+
+        // Invalidate related cache entries
+        const cacheKeyFollowers = `followers_user_${followeeId}`;
+        const cacheKeyFollowedUsers = `followed_users_${followerId}`;
+        const cacheKeyProfileSocial = `user_profile_social_${followeeId}`;
+        const cacheKeyProfileSocialFollower = `user_profile_social_${followerId}`;
+        await redisClient.del(cacheKeyProfileSocial);
+        await redisClient.del(cacheKeyProfileSocialFollower);
+        await redisClient.del(cacheKeyFollowers);
+        await redisClient.del(cacheKeyFollowedUsers);
+
+        return res.status(201).json({
+            message: 'FollowUser created successfully',
+            data: followee,
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+const DeleteFollowUser = async (req, res) => {
+    try {
+        const { followeeId, followerId } = req.query;
+        console.log(req.query)
+        if (!followeeId && !followerId) {
+            return res.status(400).json({ error: 'Both followeeId and followerId are required' });
+        }
+
+        if (followeeId === followerId) {
+            return res.status(400).json({ error: 'Cannot unfollow yourself' });
+        }
+
+        const deleted = await FollowUser.destroy({ where: { followeeId, followerId } });
+        if (!deleted) return res.status(404).json({ error: 'FollowUser not found' });
+
+        const cacheKeyFollowers = `followers_user_${followeeId}`;
+        const cacheKeyFollowers_2 = `followers_user_${followerId}`;
+        const cacheKeyFollowedUsers = `followees_user_${followeeId}`;
+        const cacheKeyFollowedUsers_2 = `followees_user_${followerId}`;
+        const cacheKeyProfileSocial = `user_profile_social_${followeeId}`;
+        const cacheKeyProfileSocialFollower = `user_profile_social_${followerId}`;
+
+        await redisClient.del(cacheKeyProfileSocial);
+        await redisClient.del(cacheKeyProfileSocialFollower);
+        await redisClient.del(cacheKeyFollowers);
+        await redisClient.del(cacheKeyFollowedUsers);
+        await redisClient.del(cacheKeyFollowers_2);
+        await redisClient.del(cacheKeyFollowedUsers_2);
+
+        return res.json({ message: 'FollowUser deleted', success: true });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+}
+
+// người theo dõi user
+const GetFollowers = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const cacheKey = `followers_user_${userId}`;
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            console.log('CACHE HIT (followers of user');
+            return res.status(200).json(JSON.parse(cachedData));
+        }
+        console.log('CACHE MISS (followers of user');
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        const followers = await FollowUser.findAll({
+            where: { followeeId: userId },
+            include: [
+                {
+                    model: User, as: 'follower',
+                    attributes: ['id', 'username', 'fullName', 'email', 'avatarUrl', 'bio']
+                }
+            ]
+        });
+
+        if (followers.length === 0) {
+            return res.status(404).json({ error: 'No followers found for this user' });
+        }
+
+        const followersData = followers.map(follow => follow.follower);
+
+        const response = {
+            message: 'Followers retrieved successfully',
+            data: followersData,
+            success: true
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+        return res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+// người được user theo dõi
+const GetFollowees = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        const cacheKey = `followees_user_${userId}`;
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            console.log('CACHE HIT (followed users)');
+            return res.status(200).json(JSON.parse(cachedData));
+        }
+        console.log('CACHE MISS (followed users)');
+
+        const followUsers = await FollowUser.findAll({
+            where: { followerId: userId },
+            include: [
+                {
+                    model: User, as: 'followee',
+                    attributes: ['id', 'username', 'fullName', 'email', 'avatarUrl', 'bio']
+                }
+            ]
+        });
+
+        if (followUsers.length === 0) {
+            return res.status(404).json({ error: 'No followed users found for this user' });
+        }
+
+        const followeesData = followUsers.map(follow => follow.followee);
+
+        const response = {
+            message: 'Followed users retrieved successfully',
+            data: followeesData,
+            success: true
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+        return res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+const GetUserProfileSocial = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        const cacheKey = `user_profile_social_${userId}`;
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            console.log('CACHE HIT (user profile social)');
+            return res.status(200).json(JSON.parse(cachedData));
+        }
+        console.log('CACHE MISS (user profile social)');
+
+        const user = await User.findByPk(userId, {
+            attributes: ['id', 'username', 'fullName', 'email', 'avatarUrl', 'bio']
+        });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // dếm số người theo dõi
+        const followerCount = await FollowUser.count({
+            where: { followeeId: userId }
+        });
+
+        // dem số người được theo dõi
+        const followingCount = await FollowUser.count({
+            where: { followerId: userId }
+        });
+
+        console.log('Follower count:', followerCount);
+        console.log('Following count:', followingCount);
+
+        const response = {
+            message: 'User profile social retrieved successfully',
+            data: {
+                ...user.toJSON(),
+                followerCount,
+                followingCount
+            },
+            success: true
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(response), { EX: SHORT_TTL_SECONDS });
+        return res.status(200).json(response);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = {
+    GetFollowerOfArtist,
+    GetArtistFollowedByUser,
+    CreateFollowArtist,
+    DeleteFollowArtist,
+    CreateFollowUser,
+    DeleteFollowUser,
+    GetFollowers,
+    GetFollowees,
+    GetUserProfileSocial
 }

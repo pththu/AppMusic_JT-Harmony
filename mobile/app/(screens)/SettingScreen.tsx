@@ -62,7 +62,6 @@ export default function SettingScreen() {
           const profile = await Profile.getCurrentProfile();
           if (profile) {
             const response = await LinkSocialAccount({ userInfor: profile, provider: 'facebook' });
-            // console.log('response link facebook', response);
             if (!response.success) {
               if (!response.userId) {
                 error("Liên kết thất bại", response.message);
@@ -82,8 +81,8 @@ export default function SettingScreen() {
           }
         }, 2000);
       }
-    } catch (error) {
-      console.log('Login fb fail with error: ' + error);
+    } catch (err) {
+      error("Liên kết thất bại", "Không thể liên kết với Facebook. Vui lòng thử lại sau: " + err.message);
     } finally {
       LoginManager.logOut();
     }
@@ -99,7 +98,6 @@ export default function SettingScreen() {
       const userInfor = await GoogleSignin.signIn();
       const response = await LinkSocialAccount({ userInfor: userInfor.data.user, provider: 'google' });
       if (!response.success) {
-        console.log(1)
         if (!response.userId) {
           error("Liên kết thất bại", response.message);
           return;
@@ -116,7 +114,7 @@ export default function SettingScreen() {
       updateUser(response.user);
       success("Liên kết thành công tài khoản Google");
     } catch (error) {
-      console.log(error);
+      error("Liên kết thất bại", "Không thể liên kết với Google. Vui lòng thử lại sau: " + error.message);
     } finally {
       await GoogleSignin.signOut();
     }
@@ -126,7 +124,6 @@ export default function SettingScreen() {
     async function lock() {
       setLoading(true);
       setTimeout(async () => {
-        console.log('lock account');
         try {
           const response = await SelfLockAccount(password);
           if (!response.success) {
@@ -142,7 +139,6 @@ export default function SettingScreen() {
     }
 
     function cancel() {
-      console.log('cancel lock account');
       setLoading(false);
     }
 
@@ -179,7 +175,7 @@ export default function SettingScreen() {
       }
       logout();
     } catch (error) {
-      console.log(error);
+      error("Lỗi khi đăng xuất", error.message);
     }
   };
 

@@ -191,7 +191,6 @@ export default function LikedSongsScreen() {
 
   const handleSongOptionsPress = (track) => {
     setSelectedTrack(track); // Lưu bài hát đã chọn
-    console.log('track', track);
     setSongModalVisible(true); // Mở modal
   };
 
@@ -202,7 +201,6 @@ export default function LikedSongsScreen() {
 
   const handleSongShare = async (track) => {
     try {
-      // console.log('share: ', selectedTrack);
       const artistName = track.artists?.map(a => a.name).join(', ');
       let shareMessage = `${user?.fullName}: `;
 
@@ -227,11 +225,7 @@ export default function LikedSongsScreen() {
       });
 
       if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log(result.activityType)
-        } else {
-          console.log('Chia sẻ thành công!');
-        }
+        success('Chia sẻ thành công!');
         // Update share count after successful share
         const response = await ShareTrack({
           trackId: track?.id,
@@ -246,8 +240,7 @@ export default function LikedSongsScreen() {
         // Dismissed
       }
     } catch (err) {
-      console.log(err);
-      error('Lỗi khi chia sẻ bài hát.');
+      error('Lỗi khi chia sẻ bài hát: ' + err.message);
     }
     setSongModalVisible(false);
   };
@@ -303,8 +296,7 @@ export default function LikedSongsScreen() {
         success('Đã thêm bài hát vào playlist thành công!');
       }
     } catch (err) {
-      console.log(err);
-      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát.');
+      error('Lỗi', 'Đã có lỗi xảy ra khi thêm bài hát: ' + err.message);
     } finally {
       setAddTrackToPlaylistModalVisible(false);
     }

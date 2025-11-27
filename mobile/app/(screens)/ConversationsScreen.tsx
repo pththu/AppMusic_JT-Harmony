@@ -270,14 +270,14 @@ export default function ConversationsScreen() {
         // Định dạng thời gian
         const timeAgo = item.lastMessage
             ? formatDistanceToNowStrict(parseISO(item.lastMessage.createdAt), {
-                  addSuffix: true,
-                  locale: vi
-              })
+                addSuffix: true,
+                locale: vi
+            })
             : formatDistanceToNowStrict(parseISO(item.updatedAt), {
-                  addSuffix: true,
-                  locale: vi
-              });
-        
+                addSuffix: true,
+                locale: vi
+            });
+
         // Classes nhất quán
         const textPrimary = colorScheme === 'dark' ? 'text-white' : 'text-black';
         const textMuted = colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600';
@@ -287,7 +287,7 @@ export default function ConversationsScreen() {
         return (
             <TouchableOpacity
                 // Thêm hiệu ứng nhấn và border
-                className={`flex-row items-center px-4 py-3 border-b ${borderColor} ${activeOpacity}`} 
+                className={`flex-row items-center px-4 py-3 border-b ${borderColor} ${activeOpacity}`}
                 onPress={() => {
                     (navigation as any).navigate('ChatScreen', {
                         conversationId: item.id,
@@ -300,14 +300,14 @@ export default function ConversationsScreen() {
                     source={{ uri: otherParticipant.avatarUrl || 'https://via.placeholder.com/60' }}
                     className="w-14 h-14 rounded-full mr-4 bg-gray-300 border border-indigo-400 dark:border-indigo-600" // w-14 h-14 thay vì w-12 h-12
                 />
-                
+
                 <View className="flex-1 flex-row justify-between items-center">
                     <View className="flex-1 mr-4">
                         {/* Tên người dùng */}
-                        <Text className={`text-lg font-bold ${textPrimary}`}> 
+                        <Text className={`text-lg font-bold ${textPrimary}`}>
                             {otherParticipant.fullName}
                         </Text>
-                        
+
                         {/* Tin nhắn cuối cùng */}
                         <Text className={`text-sm ${textMuted}`} numberOfLines={1}>
                             {item.lastMessage ? item.lastMessage.content : 'Chưa có tin nhắn'}
@@ -325,13 +325,12 @@ export default function ConversationsScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView className={`flex-1 justify-center items-center ${
-                colorScheme === 'dark' ? 'bg-gray-900' : 'bg-white'
-            }`}>
+            <SafeAreaView className={`flex-1 justify-center items-center ${colorScheme === 'dark' ? 'bg-gray-900' : 'bg-white'
+                }`}>
                 <ActivityIndicator size="large" color="#4F46E5" />
-                    <Text className="mt-2 text-gray-600 dark:text-gray-400">
-                        Đang tải danh sách cuộc trò chuyện...
-                    </Text>
+                <Text className="mt-2 text-gray-600 dark:text-gray-400">
+                    Đang tải danh sách cuộc trò chuyện...
+                </Text>
             </SafeAreaView>
         );
     }
@@ -339,18 +338,16 @@ export default function ConversationsScreen() {
     return (
         <View className={`flex-1 ${colorScheme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
             {/* Header */}
-            <View className={`flex-row items-center justify-between p-4 border-b ${
-                colorScheme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-            }`}>
+            <View className={`flex-row items-center justify-between p-4 border-b ${colorScheme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+                }`}>
                 <TouchableOpacity
                     onPress={() => goBack()}
                     className="p-2"
                 >
-                    <Icon name="arrow-left" size={24} color="#10B981"/>
+                    <Icon name="arrow-left" size={24} color="#10B981" />
                 </TouchableOpacity>
-                <Text className={`text-xl font-bold ${
-                    colorScheme === 'dark' ? 'text-white' : 'text-black'
-                }`}>
+                <Text className={`text-xl font-bold ${colorScheme === 'dark' ? 'text-white' : 'text-black'
+                    }`}>
                     Tin nhắn
                 </Text>
                 <TouchableOpacity
@@ -363,17 +360,14 @@ export default function ConversationsScreen() {
             </View>
 
             {/* Search Bar */}
-            <View className={`px-4 py-3 border-b ${
-                colorScheme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-            }`}>
-                <View className={`flex-row items-center px-3 py-2 rounded-lg ${
-                    colorScheme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+            <View className={`px-4 py-3 border-b ${colorScheme === 'dark' ? 'border-gray-700' : 'border-gray-200'
                 }`}>
+                <View className={`flex-row items-center px-3 py-2 rounded-lg ${colorScheme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                    }`}>
                     <Icon name="search" size={20} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
                     <TextInput
-                        className={`flex-1 ml-2 text-base ${
-                            colorScheme === 'dark' ? 'text-white' : 'text-black'
-                        }`}
+                        className={`flex-1 ml-2 text-base ${colorScheme === 'dark' ? 'text-white' : 'text-black'
+                            }`}
                         placeholder="Tìm kiếm cuộc trò chuyện..."
                         placeholderTextColor={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
                         value={searchQuery}
@@ -391,14 +385,12 @@ export default function ConversationsScreen() {
             {filteredConversations.length === 0 ? (
                 <View className="flex-1 justify-center items-center p-8">
                     <Icon name="message-circle" size={64} color={colorScheme === 'dark' ? '#6B7280' : '#9CA3AF'} />
-                    <Text className={`text-lg font-semibold mt-4 ${
-                        colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
+                    <Text className={`text-lg font-semibold mt-4 ${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
                         {searchQuery.trim() ? 'Không tìm thấy cuộc trò chuyện nào' : 'Chưa có cuộc trò chuyện nào'}
                     </Text>
-                    <Text className={`text-center mt-2 ${
-                        colorScheme === 'dark' ? 'text-gray-500' : 'text-gray-500'
-                    }`}>
+                    <Text className={`text-center mt-2 ${colorScheme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                        }`}>
                         {searchQuery.trim() ? 'Thử tìm kiếm với từ khóa khác' : 'Bắt đầu trò chuyện với bạn bè của bạn!'}
                     </Text>
                 </View>
@@ -422,7 +414,7 @@ export default function ConversationsScreen() {
             <UsersModal
                 isVisible={isUsersModalVisible} // Hiển thị modal
                 onClose={() => setIsUsersModalVisible(false)} // Đóng modal
-                users={users} // Truyền danh sách users
+                users={users.filter((user) => user.roleId !== 1)} // Truyền danh sách users
                 loadingUsers={loadingUsers} // Truyền trạng thái loading
                 colorScheme={colorScheme}// Truyền colorScheme
                 onOpenRestrictedModal={openRestrictedModal} // Mở modal restricted users

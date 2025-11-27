@@ -1,25 +1,53 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { GetArtistsForYou } from '@/services/musicService';
 import { FollowArtist } from '@/services/followService';
 import { useNavigate } from '@/hooks/useNavigate';
-import { useArtistStore } from '@/store/artistStore';
+import { useFollowStore } from '@/store/followStore';
 import useAuthStore from '@/store/authStore';
 import { UpdateCompletedOnboarding } from '@/routes/ApiRouter';
-import { artistData } from '@/constants/data';
+import { ARTIST_DATA } from '@/constants/data';
+import { shuffleData } from '@/utils';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useCustomAlert } from '@/hooks/useCustomAlert';
 
 export default function ArtistScreen() {
+  const colorScheme = useColorScheme();
   const router = useRouter();
+  const { success, error } = useCustomAlert();
   const { navigate } = useNavigate();
   const user = useAuthStore(state => state.user);
-  const addArtistFollowed = useArtistStore(state => state.addArtistFollowed);
+  const addArtistFollowed = useFollowStore(state => state.addArtistFollowed);
   const updateUser = useAuthStore(state => state.updateUser);
-  const [selected, setSelected] = useState<string[]>([]);
-  const artistNames = ["BTS", "buitruonglinh", "Hoàng Dũng", "Taylor Swift", "Sơn Tùng M-TP", "Đen Vâu", "Justin Bieber", "Mono", "Charlie Puth", "HIEUTHUHAI", "Chillies", "Binz"];
-  const [artists, setArtists] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
+
+  const initialData = useMemo(() => shuffleData(ARTIST_DATA), []);
+
+  const sortedArtists = useMemo(() => {
+    const selectedArtists = initialData.filter(item => selected.includes(item.spotifyId));
+    const unselectedArtists = initialData.filter(item => !selected.includes(item.spotifyId));
+
+    return [...selectedArtists, ...unselectedArtists];
+  }, [selected, initialData]);
+
+  const scrollToTop = () => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
+
+  // Hàm theo dõi cuộn để hiển thị/ẩn nút
+  const handleScroll = (event: any) => {
+    const scrollYValue = event.nativeEvent.contentOffset.y;
+    // Hiển thị nút khi cuộn xuống hơn 400px
+    if (scrollYValue > 400) {
+      setShowScrollTop(true);
+    } else {
+      setShowScrollTop(false);
+    }
+  };
 
   const toggleSelection = (id) => {
     setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -45,8 +73,8 @@ export default function ArtistScreen() {
           addArtistFollowed(response.data);
         }
       }
-    } catch (error) {
-      console.log('Error following artists: ', error);
+    } catch (err) {
+      error('Lỗi', 'Không thể theo dõi nghệ sĩ. Vui lòng thử lại.' + err.message);
     }
   };
 
@@ -66,10 +94,13 @@ export default function ArtistScreen() {
         </View>
 
         <FlatList
-          data={artistData}
+          ref={flatListRef}
+          data={sortedArtists}
           numColumns={3}
           keyExtractor={(item, index) => item.spotifyId + '-' + index}
           showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           columnWrapperStyle={{ justifyContent: 'space-between' }}
           renderItem={({ item }) => {
             const isSelected = selected.includes(item.spotifyId);
@@ -108,6 +139,14 @@ export default function ArtistScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      {showScrollTop && (
+        <TouchableOpacity
+          onPress={scrollToTop}
+          className="absolute bottom-24 right-5 bg-gray-600 dark:bg-gray-200 p-3 rounded-full shadow-lg"
+        >
+          <MaterialIcons name="keyboard-double-arrow-up" color={colorScheme === 'dark' ? 'black' : 'white'} size={24} />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }

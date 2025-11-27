@@ -571,7 +571,8 @@ exports.getAllPost = async (req, res) => {
             },
           ],
           required: false,
-        },
+        }
+        ,
         {
           model: Track,
           as: "OriginalSong",
@@ -631,6 +632,8 @@ exports.getAllPost = async (req, res) => {
               : [];
           }
         }
+
+        // console.log(postJson.OriginalSong)
 
         return {
           ...postJson, // Giữ nguyên các trường khác (bao gồm OriginalSong nếu có)

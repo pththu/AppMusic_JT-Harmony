@@ -1,4 +1,4 @@
-import axiosClient from "@/config/axiosClient";
+import axiosClient, { axiosPublicClient } from "@/config/axiosClient";
 
 // auth api
 export const Login = async (payload) => {
@@ -24,10 +24,7 @@ export const GetMe = async () => {
 export const LoginWithGoogle = async (payload) => {
   try {
     const userInfor = payload;
-    const response = await axiosClient.post(`/auth/google-login`,
-      userInfor,
-      { skipAuth: true }
-    );
+    const response = await axiosPublicClient.post(`/auth/google-login`, userInfor);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -36,9 +33,8 @@ export const LoginWithGoogle = async (payload) => {
 export const LoginWithFacebook = async (payload) => {
   try {
     const profile = payload;
-    const response = await axiosClient.post(`/auth/facebook-login`,
-      profile,
-      { skipAuth: true }
+    const response = await axiosPublicClient.post(`/auth/facebook-login`,
+      profile
     );
     return response.data;
   } catch (error) {
@@ -142,7 +138,7 @@ export const ChangePassword = async (payload) => {
       currentPassword,
       newPassword
     });
-    console.log(response.data);
+    // console.log(response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -171,7 +167,7 @@ export const SelfLockAccount = async (payload) => {
 export const MergeAccount = async (payload) => {
   try {
     const response = await axiosClient.put(`/users/merge-account`, payload);
-    console.log('response.data', response.data);
+    // console.log('response.data', response.data);
     return response.data;
   } catch (error) {
     return { message: error.message, status: "error" };
@@ -261,7 +257,7 @@ export const UploadMultipleFile = async (payload) => {
         'Content-Type': 'multipart/form-data',
       },
     });
-    console.log('response.data', response.data);
+    // console.log('response.data', response.data);
 
     // Check if the server response indicates failure
     if (response.data.success === false) {

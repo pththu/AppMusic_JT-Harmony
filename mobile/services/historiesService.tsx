@@ -1,4 +1,4 @@
-import axiosClient from "@/config/axiosClient";
+import axiosClient, { axiosPublicClient } from "@/config/axiosClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const SaveToListeningHistory = async (payload) => {
@@ -17,9 +17,9 @@ export const SaveToListeningHistory = async (payload) => {
   }
 }
 
-export const GetListeningHistory = async () => {
+export const GetListeningHistory = async (payload) => {
   try {
-    const response = await axiosClient.get('/histories/listening/user/me');
+    const response = await axiosPublicClient.get(`/histories/listening/user/${payload}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -33,9 +33,9 @@ export const GetListeningHistory = async () => {
   }
 }
 
-export const GetSearchHistory = async () => {
+export const GetSearchHistory = async (userId) => {
   try {
-    const response = await axiosClient.get('/histories/search/user/me');
+    const response = await axiosClient.get(`/histories/search/user/${userId}`);
     return response.data;
   } catch (error: any) {
     if (error.response) {

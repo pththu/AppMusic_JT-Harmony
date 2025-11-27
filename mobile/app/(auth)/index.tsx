@@ -1,6 +1,6 @@
 import { useNavigate } from '@/hooks/useNavigate';
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, useColorScheme, Image } from 'react-native';
+import { View, Text, TouchableOpacity, useColorScheme, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -12,6 +12,7 @@ import useAuthStore from '@/store/authStore';
 import { Settings, LoginManager, Profile, AccessToken } from 'react-native-fbsdk-next';
 import { Pressable } from 'react-native';
 import { useBoardingStore } from '@/store/boardingStore';
+import { useAuthData } from '@/hooks/useAuthData';
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
@@ -21,63 +22,76 @@ Settings.initializeSDK();
 
 export default function AuthScreen() {
 
+  const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { error, success } = useCustomAlert();
-  const colorScheme = useColorScheme();
   const login = useAuthStore(state => state.login);
   const setIsGuest = useAuthStore(state => state.setIsGuest);
   const setWhenLogin = useBoardingStore(state => state.setWhenLogin);
-  const { error: showAlertError, success: showAlertSuccess } = useCustomAlert();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    fetchHistory,
+    fetchFavoritesItem,
+    fetchArtistFollowed,
+    fetchMyPlaylists,
+    fetchFollowers,
+    fetchFollowees
+  } = useAuthData();
 
   const handleLoginWithGoogle = async () => {
     const loginType = 'google';
+    await GoogleSignin.hasPlayServices();
+    const userInfor = await GoogleSignin.signIn();
+    const profileToSend = userInfor.data?.user;
 
+    if (!profileToSend || !profileToSend.email || !profileToSend.id) {
+      throw new Error('Dữ liệu Google Profile bị thiếu: Email hoặc ID.');
+    }
+
+    const response = await LoginWithGoogle(profileToSend);
     try {
-      await GoogleSignin.hasPlayServices();
-      const userInfor = await GoogleSignin.signIn();
-
-      const profileToSend = userInfor.data?.user;
-
-      // Kiểm tra dữ liệu
-      if (!profileToSend || !profileToSend.email || !profileToSend.id) {
-        throw new Error('Dữ liệu Google Profile bị thiếu: Email hoặc ID.');
-      }
-
-      // 1. Gửi dữ liệu user profile đã trích xuất lên server
-      const response = await LoginWithGoogle(profileToSend);
-
       if (!response.success) {
-        showAlertError('Lỗi đăng nhập', `${response.message}`);
+        error('Lỗi đăng nhập', `${response.message}`);
         await GoogleSignin.signOut();
         return;
       }
 
       if (response.success) {
-        console.log(response)
-        login(response.user, loginType, response.user.accessToken);
+        setIsLoading(true);
         setWhenLogin();
-        showAlertSuccess('Đăng nhập thành công');
+        const userId = response.user.id;
+        await Promise.all([
+          fetchHistory(userId),
+          fetchFavoritesItem(userId),
+          fetchArtistFollowed(userId),
+          fetchMyPlaylists(userId),
+          fetchFollowers(userId),
+          fetchFollowees(userId)
+        ]);
+        setIsLoading(false);
+        success('Đăng nhập thành công');
+        login(response.user, loginType, response.user.accessToken);
         // navigate('Main');
       }
 
-    } catch (error) {
+    } catch (err) {
       let errorMessage = 'Không thể đăng nhập với Google. Vui lòng thử lại.';
-      if (error.message && error.message.includes('Google Profile')) {
-        errorMessage = error.message;
+      if (err.message && err.message.includes('Google Profile')) {
+        errorMessage = err.message;
       }
 
-      if (typeof showAlertError === 'function') {
-        showAlertError('Lỗi đăng nhập', errorMessage);
+      if (typeof error === 'function') {
+        error('Lỗi đăng nhập', errorMessage);
       } else {
         console.error('LỖI CẤU HÌNH: Hàm showAlertError không phải là hàm.');
       }
-
       await GoogleSignin.signOut();
     }
   };
 
   const handleLoginWithFacebook = async () => {
-    console.log('first')
     const loginType = 'facebook';
     try {
       const result = await LoginManager.logInWithPermissions(['public_profile']);
@@ -95,24 +109,44 @@ export default function AuthScreen() {
           if (profile) {
             const response = await LoginWithFacebook(profile);
             if (!response.success) {
+              setIsLoading(true);
               error('Lỗi đăng nhập', `${response.message}`);
               LoginManager.logOut();
               return;
             }
+            const userId = response.user.id;
+            setWhenLogin();
+            await Promise.all([
+              fetchHistory(userId),
+              fetchFavoritesItem(userId),
+              fetchArtistFollowed(userId),
+              fetchMyPlaylists(userId),
+              fetchFollowers(userId),
+              fetchFollowees(userId)
+            ])
+            setIsLoading(false);
             success('Đăng nhập thành công');
             login(response.user, loginType, response.user.accessToken);
-            setWhenLogin();
             navigate('Main');
           }
         }, 1000);
       }
-    } catch (error) {
-      console.log('Login fb fail with error: ' + error);
+    } catch (err) {
+      error('Lỗi đăng nhập', 'Không thể đăng nhập với Facebook. Vui lòng thử lại.' + err.message);
     }
   };
 
   const goHome = () => {
     setIsGuest(true);
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className={`flex-1 items-center justify-center px-6 ${colorScheme === "dark" ? "bg-[#0E0C1F]" : "bg-white"}`}>
+        <ActivityIndicator size="large" color="#16a34a" />
+        <Text className={`mt-4 text-lg ${colorScheme === "dark" ? "text-white" : "text-black"}`}>Đang tải dữ liệu...</Text>
+      </SafeAreaView>
+    );
   }
 
   return (

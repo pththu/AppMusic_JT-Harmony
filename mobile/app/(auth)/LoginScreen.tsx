@@ -8,49 +8,30 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "react-native";
 import { useBoardingStore } from "@/store/boardingStore";
+import { useAuthData } from "@/hooks/useAuthData";
+import { validateForm } from "@/utils";
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const { success, error } = useCustomAlert();
   const { login } = useAuthStore();
+  const {
+    fetchHistory,
+    fetchFavoritesItem,
+    fetchArtistFollowed,
+    fetchMyPlaylists,
+    fetchFollowers,
+    fetchFollowees
+  } = useAuthData();
+
   const setWhenLogin = useBoardingStore(state => state.setWhenLogin);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return "Email không hợp lệ.";
-    }
-    return null;
-  };
-
-  const validatePassword = (password) => {
-    if (password.length < 8) {
-      return "Mật khẩu phải có ít nhất 8 ký tự.";
-    }
-    return null;
-  };
-
-  const validateForm = () => {
-    if (!email || !password) {
-      return "Vui lòng điền đầy đủ thông tin.";
-    }
-    const emailError = validateEmail(email);
-    if (emailError) {
-      return emailError;
-    }
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      return passwordError;
-    }
-    return null;
-  };
-
   const handleLogin = async () => {
-    const validationMessage = validateForm();
+    const validationMessage = validateForm(email, password);
     if (validationMessage) {
       error("Lỗi Đăng Nhập", validationMessage);
       return;
@@ -62,8 +43,17 @@ export default function LoginScreen() {
         error("Lỗi Đăng Nhập", response.message || "Đăng nhập thất bại.");
         return;
       }
-      login(response.user, 'local', response.user?.accessToken);
+      const userId = response.user.id;
+      await Promise.all([
+        fetchHistory(userId),
+        fetchFavoritesItem(userId),
+        fetchArtistFollowed(userId),
+        fetchMyPlaylists(userId),
+        fetchFollowers(userId),
+        fetchFollowees(userId)
+      ])
       setWhenLogin();
+      login(response.user, 'local', response.user?.accessToken);
       success("Thành Công", "Đăng nhập thành công!");
       // navigate("Main");
     } catch (err) {

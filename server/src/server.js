@@ -59,7 +59,7 @@ io.use(async (socket, next) => {
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const user = await User.findByPk(decoded.id);
-    console.log('user', user)
+    // console.log('user', user)
     if (!user) {
       return next(new Error("Authentication error: User not found"));
     }
@@ -105,20 +105,26 @@ app.use(
 
 // --- KHAI BÁO ROUTES Ở PHẠM VI TOÀN CỤC ---
 const protectedRoutes = [
-  'favorites', // Yêu thích
-  'histories', // Lịch sử nghe nhạc
   'notifications', // Thông báo
-  'playlists', // Playlist cá nhân
-  'follows', // Theo dõi người dùng, nghệ sĩ
   'genres', // Xem thể loại nhạc
   'artists', // Xem thông tin nghệ sĩ
   'albums', // Xem album
   "conversations",
   "upload", // Upload hình ảnh, file
   "tracks", // Xem bài hát (public), upload bài hát (private)
-  "recommendations"
 ];
-const publicRoutes = ["auth", "users", "posts", "music", "comments"]; // posts được xử lý riêng
+const publicRoutes = [
+  'playlists', // Playlist cá nhân
+  "auth",
+  "users",
+  "posts",
+  'follows', // Theo dõi người dùng, nghệ sĩ
+  "music",
+  "comments",
+  'favorites', // Yêu thích
+  'histories', // Lịch sử nghe nhạc
+  "recommendations",
+];
 
 // 1. Xử lý các route yêu cầu authentication bắt buộc
 publicRoutes.forEach((route) => {

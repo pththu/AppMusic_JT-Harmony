@@ -229,7 +229,7 @@ export const createNewPost = async (
   fileUrls: string[] | null = null,
   songId: number | null = null,
   trackSpotifyId: string | null = null
-): Promise<Post | { message: string; status: string }> => {
+) => {
   try {
     if (!useAuthStore.getState().user)
       return { message: "Chưa đăng nhập", status: "error" };
@@ -241,7 +241,7 @@ export const createNewPost = async (
       trackSpotifyId,
     });
     const newPostResponse = response.data.data;
-    return newPostResponse as Post;
+    return newPostResponse;
   } catch (error) {
     console.error("Lỗi tạo bài đăng:", error);
     return { message: "Không thể tạo bài đăng mới.", status: "error" };

@@ -39,7 +39,6 @@ export default function ResetPasswordScreen() {
       navigate("Login");
     } catch (err) {
       error("Lỗi", "Không thể đặt lại mật khẩu, vui lòng thử lại.");
-      console.log(err);
     } finally {
       setLoading(false);
     }

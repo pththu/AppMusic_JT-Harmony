@@ -1,5 +1,4 @@
 import axiosClient from "@/config/axiosClient";
-import { hi } from "date-fns/locale";
 
 export const GetRecommendationsByUser = async () => {
   try {
@@ -116,6 +115,38 @@ export const GenerateFromFavorites = async (payload) => {
 export const GenerateFromGenres = async (payload) => {
   try {
     const response = await axiosClient.post('/recommendations/generate-from-genres', { genres: payload });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GenerateFromPlaylist = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/recommendations/add-track-bn-pl`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GenerateTrackFromFavorites = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/recommendations/add-track-bn-fav`, { favorites: payload });
     return response.data;
   } catch (error) {
     if (error.response) {

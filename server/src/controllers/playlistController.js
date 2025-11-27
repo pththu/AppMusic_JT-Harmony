@@ -1,6 +1,7 @@
 const { Playlist, PlaylistTrack, Track } = require('../models');
 const Op = require('sequelize').Op;
 const spotify = require('../configs/spotify');
+const { redisClient } = require('../configs/redis');
 
 exports.getAllPlaylist = async (req, res) => {
   try {
@@ -40,7 +41,9 @@ exports.createOne = async (req, res) => {
       return res.status(400).json({ error: 'Mô tả không được vượt quá 500 ký tự' });
     }
 
-    const row = await Playlist.create({ name, description, imageUrl, isPublic, userId: req.user.id, totalTracks: 0, sharedCount: 0 });
+    // invalid cache
+    await redisClient.del(`user:${req.user?.id}:playlists`);
+    const row = await Playlist.create({ name, description, imageUrl, isPublic, userId: req.user?.id, totalTracks: 0, sharedCount: 0 });
     res.status(201).json({
       message: 'Tạo danh sách phát thành công',
       playlist: row,
@@ -171,6 +174,7 @@ exports.deletePlaylist = async (req, res) => {
   try {
     const deleted = await Playlist.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'Danh sách phát không tìm thấy' });
+    await redisClient.del(`user:${req.user?.id}:playlists`);
     res.status(200).send({ message: 'Đã xóa danh sách phát', success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

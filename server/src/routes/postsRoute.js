@@ -22,11 +22,7 @@ router.get("/covers/user/:userId", coverController.getCoversByUserId); // Lấy 
 router.post("/:id/vote", authenticateToken, coverController.voteCover); // Vote cho cover
 
 // --- ROUTE YÊU CẦU LOGIN ---
-router.get(
-  "/byUser/:userId",
-  authenticateToken,
-  postController.getPostsByUserId
-); // Lấy bài đăng theo User ID
+router.get( "/byUser/:userId", postController.getPostsByUserId); // Lấy bài đăng theo User ID
 router.get("/mine", authenticateToken, postController.getPostsByMe); // Lấy bài đăng của chính mình
 router.post( "/", authenticateToken, postController.createPost ); // Tạo bài đăng mới
 router.post("/:id/share", authenticateToken, postController.sharePost); // Chia sẻ lại bài đăng (re-share)
