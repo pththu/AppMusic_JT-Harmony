@@ -33,77 +33,78 @@ const FavoriteItem = require('./favorite_items')
 // ================= Associations ================= //
 
 // User - Sync status
-User.hasMany(SyncStatus, { foreignKey: 'userId' });
-SyncStatus.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(SyncStatus, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
+SyncStatus.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
 
 // User - Post
-User.hasMany(Post, { foreignKey: 'userId' });
+User.hasMany(Post, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
 Post.belongsTo(User, {
     foreignKey: 'userId',
     as: 'User',
+    onDelete: 'CASCADE', hooks: true
 });
 
 // Post - OriginalPost (re-share)
-Post.belongsTo(Post, { foreignKey: 'originalPostId', as: 'OriginalPost' });
-Post.hasMany(Post, { foreignKey: 'originalPostId', as: 'ReSharedPosts' });
+Post.belongsTo(Post, { foreignKey: 'originalPostId', as: 'OriginalPost', onDelete: 'CASCADE', hooks: true });
+Post.hasMany(Post, { foreignKey: 'originalPostId', as: 'ReSharedPosts', onDelete: 'CASCADE', hooks: true });
 
 // User - PostHide
-User.hasMany(PostHide, { foreignKey: 'userId' });
-PostHide.belongsTo(User, { foreignKey: 'userId', as: 'User' });
+User.hasMany(PostHide, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
+PostHide.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
 
 // Post - PostHide
-Post.hasMany(PostHide, { foreignKey: 'postId' });
-PostHide.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+Post.hasMany(PostHide, { foreignKey: 'postId', onDelete: 'CASCADE', hooks: true });
+PostHide.belongsTo(Post, { foreignKey: 'postId', as: 'Post', onDelete: 'CASCADE', hooks: true });
 
 // Post - PostReport
-Post.hasMany(PostReport, { foreignKey: 'postId' });
-PostReport.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+Post.hasMany(PostReport, { foreignKey: 'postId', onDelete: 'CASCADE', hooks: true });
+PostReport.belongsTo(Post, { foreignKey: 'postId', as: 'Post', onDelete: 'CASCADE', hooks: true });
 
 // User - PostReport (reporter)
-User.hasMany(PostReport, { foreignKey: 'reporterId', as: 'Reports' });
-PostReport.belongsTo(User, { foreignKey: 'reporterId', as: 'Reporter' });
+User.hasMany(PostReport, { foreignKey: 'reporterId', as: 'Reports', onDelete: 'CASCADE', hooks: true });
+PostReport.belongsTo(User, { foreignKey: 'reporterId', as: 'Reporter', onDelete: 'CASCADE', hooks: true });
 
 // User - Comment
-User.hasMany(Comment, { foreignKey: 'userId' });
+User.hasMany(Comment, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
 Comment.belongsTo(User, {
     foreignKey: 'userId',
-    as: 'User'
+    as: 'User',
+    onDelete: 'CASCADE', hooks: true
 });
 
 // User - Notification
-User.hasMany(Notification, { foreignKey: 'userId', as: 'Notifications' });
-Notification.belongsTo(User, { foreignKey: 'userId', as: 'Receiver' });
+User.hasMany(Notification, { foreignKey: 'userId', as: 'Notifications', onDelete: 'CASCADE', hooks: true });
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'Receiver', onDelete: 'CASCADE', hooks: true });
 
 // Actor - Notification
-User.hasMany(Notification, { foreignKey: 'actorId', as: 'SentNotifications' });
-Notification.belongsTo(User, { foreignKey: 'actorId', as: 'Actor' });
+User.hasMany(Notification, { foreignKey: 'actorId', as: 'SentNotifications', onDelete: 'CASCADE', hooks: true });
+Notification.belongsTo(User, { foreignKey: 'actorId', as: 'Actor', onDelete: 'CASCADE', hooks: true });
 
 // Post - Notification
-Post.hasMany(Notification, { foreignKey: 'postId', as: 'PostNotifications' });
-Notification.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
-
+Post.hasMany(Notification, { foreignKey: 'postId', as: 'PostNotifications', onDelete: 'CASCADE', hooks: true });
+Notification.belongsTo(Post, { foreignKey: 'postId', as: 'Post', onDelete: 'CASCADE', hooks: true });
 // User - Recommendation
 User.hasMany(Recommendation, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
 Recommendation.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
 
 // Quan hệ Người dùng - Lượt thích Bình luận (User <-> CommentLike)
-User.hasMany(CommentLike, { foreignKey: 'userId', as: 'CommentLikes' });
-CommentLike.belongsTo(User, { foreignKey: 'userId', as: 'User' });
+User.hasMany(CommentLike, { foreignKey: 'userId', as: 'CommentLikes', onDelete: 'CASCADE', hooks: true });
+CommentLike.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
 
 // Post - Comment
-Post.hasMany(Comment, { foreignKey: 'postId' });
-Comment.belongsTo(Post, { foreignKey: 'postId' });
+Post.hasMany(Comment, { foreignKey: 'postId', onDelete: 'CASCADE', hooks: true });
+Comment.belongsTo(Post, { foreignKey: 'postId', onDelete: 'CASCADE', hooks: true });
 
 // Comment - Comment
-Comment.hasMany(Comment, { foreignKey: 'parentId', as: 'Replies' });
-Comment.belongsTo(Comment, { foreignKey: 'parentId', as: 'Parent' });
+Comment.hasMany(Comment, { foreignKey: 'parentId', as: 'Replies', onDelete: 'CASCADE', hooks: true });
+Comment.belongsTo(Comment, { foreignKey: 'parentId', as: 'Parent', onDelete: 'CASCADE', hooks: true });
 
 // Quan hệ Bình luận - Lượt thích (Comment <-> CommentLike)
-Comment.hasMany(CommentLike, { foreignKey: 'commentId', as: 'Likes' });
-CommentLike.belongsTo(Comment, { foreignKey: 'commentId', as: 'Comment' });
+Comment.hasMany(CommentLike, { foreignKey: 'commentId', as: 'Likes', onDelete: 'CASCADE', hooks: true });
+CommentLike.belongsTo(Comment, { foreignKey: 'commentId', as: 'Comment', onDelete: 'CASCADE', hooks: true });
 
-Role.hasMany(User, { foreignKey: 'roleId' });
-User.belongsTo(Role, { foreignKey: 'roleId' });
+Role.hasMany(User, { foreignKey: 'roleId', onDelete: 'CASCADE', hooks: true });
+User.belongsTo(Role, { foreignKey: 'roleId', onDelete: 'CASCADE', hooks: true });
 
 
 // TRACK - ARTIST - ALBUM - GENRES - PLAYLIST ASSOCIATIONS
@@ -194,16 +195,16 @@ User.hasMany(SearchHistory, { foreignKey: 'userId', as: 'SearchHistories', onDel
 SearchHistory.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
 
 // Like - User & Post
-Like.belongsTo(User, { foreignKey: 'userId', as: 'User' });
-Like.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+Like.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
+Like.belongsTo(Post, { foreignKey: 'postId', as: 'Post', onDelete: 'CASCADE', hooks: true });
 
 // Conversation - Message (1-N)
-Conversation.hasMany(Message, { foreignKey: 'conversationId', as: 'Messages' });
-Message.belongsTo(Conversation, { foreignKey: 'conversationId', as: 'Conversation' });
+Conversation.hasMany(Message, { foreignKey: 'conversationId', as: 'Messages', onDelete: 'CASCADE', hooks: true });
+Message.belongsTo(Conversation, { foreignKey: 'conversationId', as: 'Conversation', onDelete: 'CASCADE', hooks: true });
 
 // Conversation - Message (Latest Message - 1-1)
 // Dùng để lấy tin nhắn cuối cùng trong danh sách cuộc trò chuyện
-Conversation.belongsTo(Message, { foreignKey: 'lastMessageId', as: 'LastMessage' });
+Conversation.belongsTo(Message, { foreignKey: 'lastMessageId', as: 'LastMessage', onDelete: 'CASCADE', hooks: true });
 // Message.hasOne(Conversation, { foreignKey: 'lastMessageId', as: 'ConversationOfLastMessage' }); // Có thể bỏ qua
 
 // Conversation - User (N-N) thông qua ConversationMember
@@ -211,30 +212,32 @@ Conversation.belongsToMany(User, {
     through: ConversationMember,
     foreignKey: 'conversationId',
     otherKey: 'userId',
-    as: 'Participants' // User tham gia cuộc trò chuyện
+    as: 'Participants', // User tham gia cuộc trò chuyện
+    onDelete: 'CASCADE', hooks: true
 });
 User.belongsToMany(Conversation, {
     through: ConversationMember,
     foreignKey: 'userId',
     otherKey: 'conversationId',
-    as: 'Conversations' // Danh sách cuộc trò chuyện của User
+    as: 'Conversations', // Danh sách cuộc trò chuyện của User
+    onDelete: 'CASCADE', hooks: true
 });
 
 // Conversation - Creator (1-1)
-Conversation.belongsTo(User, { foreignKey: 'creatorId', as: 'Creator' });
+Conversation.belongsTo(User, { foreignKey: 'creatorId', as: 'Creator', onDelete: 'CASCADE', hooks: true });
 
 // Message - Sender (1-1)
-Message.belongsTo(User, { foreignKey: 'senderId', as: 'Sender' });
+Message.belongsTo(User, { foreignKey: 'senderId', as: 'Sender', onDelete: 'CASCADE', hooks: true });
 
 // Model trung gian ConversationMember - User & Conversation (1-N)
-ConversationMember.belongsTo(Conversation, { foreignKey: 'conversationId', as: 'Conversation' });
-ConversationMember.belongsTo(User, { foreignKey: 'userId', as: 'User' });
-Conversation.hasMany(ConversationMember, { foreignKey: 'conversationId', as: 'Members' });
-User.hasMany(ConversationMember, { foreignKey: 'userId', as: 'Memberships' });
+ConversationMember.belongsTo(Conversation, { foreignKey: 'conversationId', as: 'Conversation', onDelete: 'CASCADE', hooks: true });
+ConversationMember.belongsTo(User, { foreignKey: 'userId', as: 'User', onDelete: 'CASCADE', hooks: true });
+Conversation.hasMany(ConversationMember, { foreignKey: 'conversationId', as: 'Members', onDelete: 'CASCADE', hooks: true });
+User.hasMany(ConversationMember, { foreignKey: 'userId', as: 'Memberships', onDelete: 'CASCADE', hooks: true });
 
 // Post - Track (for covers)
-Post.belongsTo(Track, { foreignKey: 'originalSongId', as: 'OriginalSong' }); // Bài cover liên kết đến bài hát gốc
-Track.hasMany(Post, { foreignKey: 'originalSongId', as: 'Covers' }); // Bài hát gốc có nhiều bài cover
+Post.belongsTo(Track, { foreignKey: 'originalSongId', as: 'OriginalSong', onDelete: 'CASCADE', hooks: true }); // Bài cover liên kết đến bài hát gốc
+Track.hasMany(Post, { foreignKey: 'originalSongId', as: 'Covers', onDelete: 'CASCADE', hooks: true }); // Bài hát gốc có nhiều bài cover
 
 // ================= Export ================= //
 module.exports = {

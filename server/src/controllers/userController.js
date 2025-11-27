@@ -3,11 +3,25 @@ const Op = require('sequelize').Op;
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const cloudinary = require('../configs/cloudinary');
+const { redisClient } = require('../configs/redis');
 
 const GetAllUser = async (req, res) => {
     try {
-        const rows = await User.findAll();
-        res.json(rows);
+        const cacheKey = 'all_users';
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            return res.json(JSON.parse(cachedData));
+        }
+        const rows = await User.findAll({
+            where: { roleId: 2 }
+        });
+        const response = {
+            message: 'Lấy tất cả người dùng thành công',
+            data: rows,
+            success: true
+        };
+        await redisClient.set(cacheKey, JSON.stringify(response));
+        res.json(response);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

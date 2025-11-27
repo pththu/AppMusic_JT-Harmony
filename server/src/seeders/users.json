@@ -35,7 +35,7 @@
       "local"
     ],
     "fullName": "Duy Tuấn",
-    "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocI_F6zDgM5K_wIv4rvCCDTh1TtckT9dZewAfsEGSa852jHuhbvN=s96-c",
+    "avatarUrl": "https://i.pravatar.cc/150?img=1",
     "bio": null,
     "dob": null,
     "gender": null,
@@ -45,13 +45,23 @@
     "notificationEnabled": true,
     "streamQuality": "low",
     "status": "active",
-    "roleName": "User"
+    "roleName": "User",
+    "lastLogin": "2025-11-20T08:30:00.000Z"
   },
   {
     "facebookId": "122298904754006905",
     "googleId": "111213575981860747234",
     "username": "user7916",
     "email": "phanthihuynhthu2806@gmail.com",
+    "favoritesGenres": [
+      "J-POP",
+      "V-POP",
+      "POP",
+      "ROCK",
+      "C-POP",
+      "K-POP"
+    ],
+    "completedOnboarding": true,
     "password": "$2b$10$cJwHCmWRBQOfizIpRSC5oe1NzuZgDJ9F2h30PmzT42.CERk271hui",
     "accountType": [
       "facebook",
@@ -59,7 +69,7 @@
       "google"
     ],
     "fullName": "Bảo Trâm",
-    "avatarUrl": "https://graph.facebook.com/v16.0/122298904754006905/picture?height=100&width=100&migration_overrides=%7Boctober_2012%3Atrue%7D&access_token=EAAmsY35StoABPm9E6dcZBZAU9wDsysFH1DyZC7S28NwysnvvuM0NPxvpEVbSS60aCSLCueSellKBDC6QhCnUuKQW5autU8gilIYV9Rz2fMNtIzpS8dTr2Luy88zX8PF0q9xxjCymngFAu2oUZBZAhIwiXa933CiQX6W7VyZA70ZBfKtjAq5Ijxf0pS95cy8jDZCXjjhjCnYfZBqy9hKCDaueM1u4SvIK48bZBSF8aI7zyS7fLO9XMT7uAzRsilkZBhTJP4ZD",
+    "avatarUrl": "https://i.pravatar.cc/150?img=2",
     "bio": null,
     "dob": null,
     "gender": null,
@@ -72,13 +82,22 @@
     "notificationEnabled": true,
     "streamQuality": "low",
     "status": "active",
-    "roleName": "User"
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:45:12.000Z"
   },
   {
     "facebookId": "2003030190549726",
     "googleId": "113691898021987373332",
     "username": "chaam",
     "email": "baotrammari2003@gmail.com",
+    "favoritesGenres": [
+      "J-POP",
+      "V-POP",
+      "ROCK",
+      "C-POP",
+      "K-POP"
+    ],
+    "completedOnboarding": true,
     "password": "$2b$10$InQtbBS1I35vfMMcACi/duv6GALJ7Puh2hiWAZ8MXzySYuKx.mRHW",
     "accountType": [
       "google",
@@ -86,7 +105,7 @@
       "facebook"
     ],
     "fullName": "Mari Trâm Bảo",
-    "avatarUrl": "https://res.cloudinary.com/chaamz03/image/upload/v1760507856/kltn/x9tvc7xuzyuap2bumil3.jpg",
+    "avatarUrl": "https://i.pravatar.cc/150?img=3",
     "bio": "ảmi",
     "dob": "2008-10-21T17:00:00.000Z",
     "gender": false,
@@ -96,6 +115,4622 @@
     "notificationEnabled": true,
     "streamQuality": "low",
     "status": "active",
-    "roleName": "User"
+    "roleName": "User",
+    "lastLogin": "2025-11-27T01:15:30.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "user5500",
+    "email": "maivanhieu@yahoo.com",
+    "favoritesGenres": [
+      "POP",
+      "DANCE",
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$A4tqLhKjS7oV5xZp2yF9q.uO8L8jG5q0F0jY3kP0Q7mE9wX9yV8wA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Mai Văn Hiếu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=4",
+    "bio": "Yêu nhạc Dance và Hip-hop.",
+    "dob": "1995-05-15T17:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-15T19:22:55.000Z"
+  },
+  {
+    "facebookId": "1558009876543212",
+    "googleId": null,
+    "username": "user8899",
+    "email": "nguyenthivan@outlook.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$Y1rTzIuNqWpO5xZp2yF9q.uO8L8jG5q0F0jY3kP0Q7mE9wX9yV8wB",
+    "accountType": [
+      "facebook",
+      "local"
+    ],
+    "fullName": "Nguyễn Thị Vân",
+    "avatarUrl": "https://i.pravatar.cc/150?img=5",
+    "bio": "Tìm kiếm sự thư giãn trong âm nhạc.",
+    "dob": "2000-11-01T17:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-22T10:05:01.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "1001234567890123450",
+    "username": "guest101",
+    "email": "guest101@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$Z2sUvWpKX7qP6yTz3xF8r.vO9L9kH6r1G1lZ4lQ1R8nF0oG0zW0xR",
+    "accountType": [
+      "google"
+    ],
+    "fullName": "Khách Hàng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=6",
+    "bio": null,
+    "dob": null,
+    "gender": null,
+    "accessToken": null,
+    "refreshToken": null,
+    "expiry": null,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-01T15:40:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "119876543210987654321",
+    "username": "musiclover01",
+    "email": "musiclover01@example.com",
+    "favoritesGenres": [
+      "POP",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn A",
+    "avatarUrl": "https://i.pravatar.cc/150?img=7",
+    "bio": "Yêu nhạc êm dịu.",
+    "dob": "1990-01-01T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T21:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000001",
+    "googleId": null,
+    "username": "rockfanatic",
+    "email": "rockfanatic@example.com",
+    "favoritesGenres": [
+      "ROCK",
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook",
+      "local"
+    ],
+    "fullName": "Lê Thị B",
+    "avatarUrl": "https://i.pravatar.cc/150?img=8",
+    "bio": null,
+    "dob": "1995-05-15T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T11:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "hiphopking",
+    "email": "hiphopking@example.com",
+    "favoritesGenres": [
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Nguyễn Văn C",
+    "avatarUrl": "https://i.pravatar.cc/150?img=9",
+    "bio": "Rapper nghiệp dư.",
+    "dob": "1998-10-20T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-18T16:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "112233445566778899001",
+    "username": "kpopgirl",
+    "email": "kpopgirl@example.com",
+    "favoritesGenres": [
+      "K-POP",
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "google"
+    ],
+    "fullName": "Phạm Thị D",
+    "avatarUrl": "https://i.pravatar.cc/150?img=10",
+    "bio": null,
+    "dob": "2002-03-08T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T00:10:45.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "moderator_h",
+    "email": "moderator.h@example.com",
+    "favoritesGenres": [
+      "POP",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Trần Thanh H",
+    "avatarUrl": "https://i.pravatar.cc/150?img=11",
+    "bio": "Quản lý nội dung.",
+    "dob": "1992-06-10T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-23T14:50:20.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "inactive_user",
+    "email": "inactive@example.com",
+    "favoritesGenres": [
+      "DANCE"
+    ],
+    "completedOnboarding": false,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Nguyễn Văn G",
+    "avatarUrl": "https://i.pravatar.cc/150?img=12",
+    "bio": null,
+    "dob": null,
+    "gender": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-05T09:12:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000008",
+    "googleId": "110011223344556677889",
+    "username": "premium_v",
+    "email": "premium.v@example.com",
+    "favoritesGenres": [
+      "POP",
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook",
+      "google"
+    ],
+    "fullName": "Đỗ Thị V",
+    "avatarUrl": "https://i.pravatar.cc/150?img=13",
+    "bio": "Tài khoản Premium.",
+    "dob": "1988-04-25T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T07:40:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000010",
+    "googleId": null,
+    "username": "popstar",
+    "email": "popstar@example.com",
+    "favoritesGenres": [
+      "POP",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Mai Thị K",
+    "avatarUrl": "https://i.pravatar.cc/150?img=14",
+    "bio": "Yêu nhảy múa.",
+    "dob": "2000-12-30T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-24T18:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "112211221122112211221",
+    "username": "vpop_fan",
+    "email": "vpop_fan@example.com",
+    "favoritesGenres": [
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Đinh Văn L",
+    "avatarUrl": "https://i.pravatar.cc/150?img=15",
+    "bio": "Hỗ trợ nhạc Việt.",
+    "dob": "1997-07-07T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-21T02:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000012",
+    "googleId": "113322441155667788990",
+    "username": "metalhead",
+    "email": "metalhead@example.com",
+    "favoritesGenres": [
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Thị M",
+    "avatarUrl": "https://i.pravatar.cc/150?img=16",
+    "bio": "Nghe nhạc cực mạnh.",
+    "dob": "1994-08-18T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-10T12:35:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "jazz_master",
+    "email": "jazz_master@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phùng Văn N",
+    "avatarUrl": "https://i.pravatar.cc/150?img=17",
+    "bio": "Thích sự ngẫu hứng của Jazz.",
+    "dob": "1980-09-05T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T09:55:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000014",
+    "googleId": null,
+    "username": "edm_party",
+    "email": "edm_party@example.com",
+    "favoritesGenres": [
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Hà Thị P",
+    "avatarUrl": "https://i.pravatar.cc/150?img=18",
+    "bio": null,
+    "dob": "2001-01-22T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-19T06:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "110099887766554433221",
+    "username": "indie_soul",
+    "email": "indie_soul@example.com",
+    "favoritesGenres": [
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "google"
+    ],
+    "fullName": "Đào Văn Q",
+    "avatarUrl": "https://i.pravatar.cc/150?img=19",
+    "bio": null,
+    "dob": "1996-04-12T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:30:15.000Z"
+  },
+  {
+    "facebookId": "100000000000000016",
+    "googleId": "119900887766554433221",
+    "username": "jpop_addict",
+    "email": "jpop_addict@example.com",
+    "favoritesGenres": [
+      "J-POP",
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook",
+      "google"
+    ],
+    "fullName": "Nguyễn Thị R",
+    "avatarUrl": "https://i.pravatar.cc/150?img=20",
+    "bio": "Mê văn hóa Nhật Bản và Trung Quốc.",
+    "dob": "2003-06-28T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T13:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "moderator_t",
+    "email": "moderator.t@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Bùi Văn T",
+    "avatarUrl": "https://i.pravatar.cc/150?img=21",
+    "bio": "Người kiểm duyệt.",
+    "dob": "1983-12-05T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T08:15:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "old_school",
+    "email": "oldschool@example.com",
+    "favoritesGenres": [
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Văn X",
+    "avatarUrl": "https://i.pravatar.cc/150?img=22",
+    "bio": "Người hâm mộ nhạc thập niên 90.",
+    "dob": "1970-10-10T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-20T14:40:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000020",
+    "googleId": "117788990011223344556",
+    "username": "premium_y",
+    "email": "premium.y@example.com",
+    "favoritesGenres": [
+      "POP",
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Dương Thị Y",
+    "avatarUrl": "https://i.pravatar.cc/150?img=23",
+    "bio": null,
+    "dob": "1993-07-29T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T22:10:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "112233445566778899002",
+    "username": "electronic_z",
+    "email": "electronic_z@example.com",
+    "favoritesGenres": [
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "google"
+    ],
+    "fullName": "Nguyễn Văn Z",
+    "avatarUrl": "https://i.pravatar.cc/150?img=24",
+    "bio": null,
+    "dob": "1991-05-19T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T17:35:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000022",
+    "googleId": null,
+    "username": "cpop_fan",
+    "email": "cpop_fan@example.com",
+    "favoritesGenres": [
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Thị W",
+    "avatarUrl": "https://i.pravatar.cc/150?img=25",
+    "bio": "Thích nghe nhạc Hoa ngữ.",
+    "dob": "2004-02-01T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T00:50:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "118877665544332211009",
+    "username": "folk_guy",
+    "email": "folk_guy@example.com",
+    "favoritesGenres": [
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lâm Văn H",
+    "avatarUrl": "https://i.pravatar.cc/150?img=26",
+    "bio": null,
+    "dob": "1986-11-25T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-24T11:20:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000026",
+    "googleId": "115544332211009988775",
+    "username": "premium_p",
+    "email": "premium.p@example.com",
+    "favoritesGenres": [
+      "POP",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook",
+      "local"
+    ],
+    "fullName": "Phan Văn P",
+    "avatarUrl": "https://i.pravatar.cc/150?img=27",
+    "bio": "Người dùng trả phí.",
+    "dob": "1994-01-01T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T15:05:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000030",
+    "googleId": "113322441155667788991",
+    "username": "mixed_genres",
+    "email": "mixed_genres@example.com",
+    "favoritesGenres": [
+      "POP",
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$XyzAbc123...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Bùi Văn M",
+    "avatarUrl": "https://i.pravatar.cc/150?img=28",
+    "bio": "Nghe mọi thể loại.",
+    "dob": "1987-04-04T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T01:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000031",
+    "googleId": null,
+    "username": "coder_pop",
+    "email": "coder_pop@example.com",
+    "favoritesGenres": [
+      "POP",
+      "INDIE",
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Đạt",
+    "avatarUrl": "https://i.pravatar.cc/150?img=29",
+    "bio": "Mê pop và công nghệ.",
+    "dob": "1995-03-10T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T09:45:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "119988776655443322111",
+    "username": "chill_vibes",
+    "email": "chill_vibes@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "google"
+    ],
+    "fullName": "Trần Thị Ánh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=30",
+    "bio": null,
+    "dob": "1998-07-21T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000033",
+    "googleId": "110011223344556677880",
+    "username": "vip_user_33",
+    "email": "vip_user_33@example.com",
+    "favoritesGenres": [
+      "POP",
+      "DANCE",
+      "HIP-HOP",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Lý Văn Tùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=31",
+    "bio": "Người dùng VIP toàn diện.",
+    "dob": "1990-12-05T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T06:20:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "inactive_4",
+    "email": "inactive_4@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Hồ Thị Mai",
+    "avatarUrl": "https://i.pravatar.cc/150?img=32",
+    "bio": null,
+    "dob": null,
+    "gender": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-09T10:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000036",
+    "googleId": "112211221122112211224",
+    "username": "kpop_bias",
+    "email": "kpop_bias@example.com",
+    "favoritesGenres": [
+      "K-POP",
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google"
+    ],
+    "fullName": "Phạm Văn Đức",
+    "avatarUrl": "https://i.pravatar.cc/150?img=33",
+    "bio": "Fan K-Pop cuồng nhiệt.",
+    "dob": "2000-09-02T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T19:10:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "rock_and_roll",
+    "email": "rock_and_roll@example.com",
+    "favoritesGenres": [
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Vũ Thị Thảo",
+    "avatarUrl": "https://i.pravatar.cc/150?img=34",
+    "bio": null,
+    "dob": "1987-11-20T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-15T13:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000038",
+    "googleId": "113322441155667788992",
+    "username": "trance_fan",
+    "email": "trance_fan@example.com",
+    "favoritesGenres": [
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "local"
+    ],
+    "fullName": "Hà Văn Minh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=35",
+    "bio": "Nhạc điện tử là chân ái.",
+    "dob": "1992-06-15T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T04:40:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "110099887766554433220",
+    "username": "indie_folk",
+    "email": "indie_folk@example.com",
+    "favoritesGenres": [
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Ngọc",
+    "avatarUrl": "https://i.pravatar.cc/150?img=36",
+    "bio": null,
+    "dob": "1996-05-18T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:05:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000042",
+    "googleId": null,
+    "username": "hiphop_nation",
+    "email": "hiphop_nation@example.com",
+    "favoritesGenres": [
+      "HIP-HOP",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Đỗ Văn Hòa",
+    "avatarUrl": "https://i.pravatar.cc/150?img=37",
+    "bio": "Hiphop là cuộc sống.",
+    "dob": "2001-02-09T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T23:55:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "unverified_43",
+    "email": "unverified_43@example.com",
+    "favoritesGenres": [
+      "POP"
+    ],
+    "completedOnboarding": false,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Trần Thị Cúc",
+    "avatarUrl": "https://i.pravatar.cc/150?img=38",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-12T07:10:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000044",
+    "googleId": "115566778899001122335",
+    "username": "metal_mania",
+    "email": "metal_mania@example.com",
+    "favoritesGenres": [
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Hoàng Văn Đạo",
+    "avatarUrl": "https://i.pravatar.cc/150?img=39",
+    "bio": "Headbanger chính hiệu.",
+    "dob": "1994-10-31T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-24T05:25:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000046",
+    "googleId": null,
+    "username": "jpop_lover",
+    "email": "jpop_lover@example.com",
+    "favoritesGenres": [
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Văn Phú",
+    "avatarUrl": "https://i.pravatar.cc/150?img=40",
+    "bio": null,
+    "dob": "2003-01-07T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T10:15:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "118877665544332211008",
+    "username": "vpop_only",
+    "email": "vpop_only@example.com",
+    "favoritesGenres": [
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Lan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=41",
+    "bio": "Chỉ nghe nhạc Việt.",
+    "dob": "1997-04-01T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:45:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000048",
+    "googleId": "119900112233445566779",
+    "username": "contributor_8",
+    "email": "contributor_8@example.com",
+    "favoritesGenres": [
+      "HIP-HOP",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Đỗ Văn Thành",
+    "avatarUrl": "https://i.pravatar.cc/150?img=42",
+    "bio": "Người đóng góp Hip-hop/Rock.",
+    "dob": "1991-09-19T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T14:15:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "unverified_9",
+    "email": "unverified_9@example.com",
+    "favoritesGenres": [
+      "DANCE"
+    ],
+    "completedOnboarding": false,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Nguyễn Thị Hoa",
+    "avatarUrl": "https://i.pravatar.cc/150?img=43",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-08T05:50:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000050",
+    "googleId": "112233445566778899003",
+    "username": "pop_chill",
+    "email": "pop_chill@example.com",
+    "favoritesGenres": [
+      "POP",
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google"
+    ],
+    "fullName": "Phan Văn Quang",
+    "avatarUrl": "https://i.pravatar.cc/150?img=44",
+    "bio": null,
+    "dob": "1996-03-25T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T20:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000052",
+    "googleId": null,
+    "username": "kpop_idol",
+    "email": "kpop_idol@example.com",
+    "favoritesGenres": [
+      "K-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Hoàng Văn Nam",
+    "avatarUrl": "https://i.pravatar.cc/150?img=45",
+    "bio": null,
+    "dob": "2005-06-06T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T18:55:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000054",
+    "googleId": "115544332211009988773",
+    "username": "world_jazz",
+    "email": "world_jazz@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Võ Văn Vinh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=46",
+    "bio": null,
+    "dob": "1978-02-08T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T12:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "112211221122112211225",
+    "username": "dance_floor",
+    "email": "dance_floor@example.com",
+    "favoritesGenres": [
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "google"
+    ],
+    "fullName": "Đỗ Thị Quỳnh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=47",
+    "bio": "Luôn sẵn sàng nhảy.",
+    "dob": "2000-08-08T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T00:05:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000056",
+    "googleId": null,
+    "username": "cpop_fanatic",
+    "email": "cpop_fanatic@example.com",
+    "favoritesGenres": [
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "local"
+    ],
+    "fullName": "Bùi Văn Sang",
+    "avatarUrl": "https://i.pravatar.cc/150?img=48",
+    "bio": null,
+    "dob": "1994-05-05T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T16:45:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "113322441155667788994",
+    "username": "inactive_17",
+    "email": "inactive_17@example.com",
+    "favoritesGenres": [
+      "ROCK"
+    ],
+    "completedOnboarding": false,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "google"
+    ],
+    "fullName": "Lê Văn Tùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=49",
+    "bio": null,
+    "dob": null,
+    "gender": true,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-13T10:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000058",
+    "googleId": "115566778899001122336",
+    "username": "jazz_addict",
+    "email": "jazz_addict@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Thị Kim",
+    "avatarUrl": "https://i.pravatar.cc/150?img=50",
+    "bio": "Jazz là niềm đam mê.",
+    "dob": "1988-10-10T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T09:40:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "rnb_queen",
+    "email": "rnb_queen@example.com",
+    "favoritesGenres": [
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Thị Loan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=51",
+    "bio": null,
+    "dob": "1999-07-27T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T01:10:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000060",
+    "googleId": "117788990011223344558",
+    "username": "contributor_0",
+    "email": "contributor_0@example.com",
+    "favoritesGenres": [
+      "V-POP",
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google"
+    ],
+    "fullName": "Cao Văn Bách",
+    "avatarUrl": "https://i.pravatar.cc/150?img=52",
+    "bio": "Đóng góp nhạc Indie/V-Pop.",
+    "dob": "1995-04-04T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T14:20:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "rock_guy_2",
+    "email": "rock_guy_2@example.com",
+    "favoritesGenres": [
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Dương Văn Huy",
+    "avatarUrl": "https://i.pravatar.cc/150?img=53",
+    "bio": null,
+    "dob": "1984-01-08T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-20T05:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000062",
+    "googleId": "119988776655443322112",
+    "username": "pop_dancemix",
+    "email": "pop_dancemix@example.com",
+    "favoritesGenres": [
+      "POP",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Bùi Thị Yến",
+    "avatarUrl": "https://i.pravatar.cc/150?img=54",
+    "bio": "Fan của Pop và Dance.",
+    "dob": "2001-11-28T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:25:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "unverified_3",
+    "email": "unverified_3@example.com",
+    "favoritesGenres": [
+      "HIP-HOP"
+    ],
+    "completedOnboarding": false,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Trần Văn Sang",
+    "avatarUrl": "https://i.pravatar.cc/150?img=55",
+    "bio": null,
+    "dob": null,
+    "gender": true,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-10T16:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000066",
+    "googleId": null,
+    "username": "kpop_stans",
+    "email": "kpop_stans@example.com",
+    "favoritesGenres": [
+      "K-POP",
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Nguyễn Thị Mai",
+    "avatarUrl": "https://i.pravatar.cc/150?img=56",
+    "bio": "Fan K-Pop và C-Pop.",
+    "dob": "2004-10-10T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T01:50:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000068",
+    "googleId": "113322441155667788995",
+    "username": "unverified_8",
+    "email": "unverified_8@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Hồng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=57",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-05T08:20:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "vip_user_69",
+    "email": "vip_user_69@example.com",
+    "favoritesGenres": [
+      "POP",
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Hùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=58",
+    "bio": "VIP yêu nhạc Pop Việt.",
+    "dob": "1986-06-16T00:00:00.000Z",
+    "gender": true,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T11:40:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000072",
+    "googleId": null,
+    "username": "indie_rock",
+    "email": "indie_rock@example.com",
+    "favoritesGenres": [
+      "INDIE",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Thị Diệu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=59",
+    "bio": null,
+    "dob": "1995-05-15T00:00:00.000Z",
+    "gender": false,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T17:55:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000074",
+    "googleId": "115566778899001122337",
+    "username": "unverified_4",
+    "email": "unverified_4@example.com",
+    "favoritesGenres": [
+      "POP"
+    ],
+    "completedOnboarding": false,
+    "password": "$2b$10$AbcDef456...",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Thị Phương",
+    "avatarUrl": "https://i.pravatar.cc/150?img=60",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-02T21:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000221",
+    "googleId": "118899001122334455665",
+    "username": "coder_hiphop",
+    "email": "coder.hiphop@example.com",
+    "favoritesGenres": [
+      "HIP-HOP",
+      "RAP",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn Quý",
+    "avatarUrl": "https://i.pravatar.cc/150?img=61",
+    "bio": null,
+    "dob": "1997-05-15T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "119900112233445566775",
+    "username": "jazz_vpop_fan",
+    "email": "jazz.vpop.fan@example.com",
+    "favoritesGenres": [
+      "JAZZ",
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Thảo",
+    "avatarUrl": "https://i.pravatar.cc/150?img=62",
+    "bio": null,
+    "dob": "1994-08-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T18:10:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000223",
+    "googleId": null,
+    "username": "inactive_rock",
+    "email": "inactive.rock@example.com",
+    "favoritesGenres": [
+      "ROCK",
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Hoà",
+    "avatarUrl": "https://i.pravatar.cc/150?img=63",
+    "bio": null,
+    "dob": "1990-11-10T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-17T09:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_unverified",
+    "email": "local.unverified@example.com",
+    "favoritesGenres": [
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Thị Loan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=64",
+    "bio": null,
+    "dob": "2001-02-01T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-03T04:45:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000225",
+    "googleId": "110011223344556677887",
+    "username": "kpop_cpop_vip",
+    "email": "kpop.cpop.vip@example.com",
+    "favoritesGenres": [
+      "K-POP",
+      "C-POP",
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Văn Tài",
+    "avatarUrl": "https://i.pravatar.cc/150?img=65",
+    "bio": "Fan Pop Châu Á.",
+    "dob": "2003-12-12T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:20:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_no_genres",
+    "email": "local.no.genres@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Cao Thị Phương",
+    "avatarUrl": "https://i.pravatar.cc/150?img=66",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-01T19:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000227",
+    "googleId": "111122334455667788995",
+    "username": "tamil_rap_mix_2",
+    "email": "tamil.rap.mix.2@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "RAP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Văn Tùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=67",
+    "bio": null,
+    "dob": "1996-01-28T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T19:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "fb_only_indie",
+    "email": "fb.only.indie@example.com",
+    "favoritesGenres": [
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Đỗ Thị Thu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=68",
+    "bio": null,
+    "dob": "1998-03-10T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T00:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000229",
+    "googleId": "112233445566778899016",
+    "username": "locked_jazz",
+    "email": "locked.jazz@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn Cảnh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=69",
+    "bio": null,
+    "dob": "1985-06-20T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-04T13:45:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_inactive_230",
+    "email": "local.inactive.230@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Văn Nam",
+    "avatarUrl": "https://i.pravatar.cc/150?img=70",
+    "bio": null,
+    "dob": null,
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-07T12:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000231",
+    "googleId": "113344556677889900116",
+    "username": "pop_dance_rock",
+    "email": "pop.dance.rock@example.com",
+    "favoritesGenres": [
+      "POP",
+      "DANCE",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Mai Thị Kim",
+    "avatarUrl": "https://i.pravatar.cc/150?img=71",
+    "bio": null,
+    "dob": "1999-07-27T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "114455667788990011226",
+    "username": "tamil_kpop",
+    "email": "tamil.kpop@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "K-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn Tùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=72",
+    "bio": null,
+    "dob": "2002-04-04T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T15:15:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000233",
+    "googleId": null,
+    "username": "banned_vpop",
+    "email": "banned.vpop@example.com",
+    "favoritesGenres": [
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Lê Thị Thuý",
+    "avatarUrl": "https://i.pravatar.cc/150?img=73",
+    "bio": null,
+    "dob": "1998-09-19T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-06T20:40:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_verified",
+    "email": "local.email.verified@example.com",
+    "favoritesGenres": [
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Hà Văn Nam",
+    "avatarUrl": "https://i.pravatar.cc/150?img=74",
+    "bio": null,
+    "dob": "1991-12-05T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T01:35:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000235",
+    "googleId": "115566778899001122336",
+    "username": "jpop_rap_dance",
+    "email": "jpop.rap.dance@example.com",
+    "favoritesGenres": [
+      "J-POP",
+      "RAP",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Thị Diệu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=75",
+    "bio": null,
+    "dob": "2000-06-16T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T21:45:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "116677889900112233446",
+    "username": "indie_cpop",
+    "email": "indie.cpop@example.com",
+    "favoritesGenres": [
+      "INDIE",
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Lợi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=76",
+    "bio": null,
+    "dob": "1993-01-01T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000237",
+    "googleId": null,
+    "username": "fb_only_locked",
+    "email": "fb.only.locked@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Cao Thị Hằng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=77",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-09T17:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_active_238",
+    "email": "local.active.238@example.com",
+    "favoritesGenres": [
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Đỗ Văn Thanh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=78",
+    "bio": null,
+    "dob": "1995-10-10T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T10:05:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000239",
+    "googleId": "117788990011223344556",
+    "username": "kpop_dance_hiphop",
+    "email": "kpop.dance.hiphop@example.com",
+    "favoritesGenres": [
+      "K-POP",
+      "DANCE",
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Thị Ngọc",
+    "avatarUrl": "https://i.pravatar.cc/150?img=79",
+    "bio": null,
+    "dob": "2004-02-29T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T00:45:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "fb_only_banned",
+    "email": "fb.only.banned@example.com",
+    "favoritesGenres": [
+      "TAMIL"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Vũ Văn Lập",
+    "avatarUrl": "https://i.pravatar.cc/150?img=80",
+    "bio": null,
+    "dob": "1991-04-12T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-04T07:20:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000241",
+    "googleId": "118899001122334455666",
+    "username": "jpop_indie_rock",
+    "email": "jpop.indie.rock@example.com",
+    "favoritesGenres": [
+      "J-POP",
+      "INDIE",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Thị Lan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=81",
+    "bio": null,
+    "dob": "1997-09-09T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T16:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "119900112233445566776",
+    "username": "vpop_cpop_pop",
+    "email": "vpop.cpop.pop@example.com",
+    "favoritesGenres": [
+      "V-POP",
+      "C-POP",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Văn Tiến",
+    "avatarUrl": "https://i.pravatar.cc/150?img=82",
+    "bio": null,
+    "dob": "1995-12-01T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T01:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000243",
+    "googleId": null,
+    "username": "fb_only_active",
+    "email": "fb.only.active@example.com",
+    "favoritesGenres": [
+      "JAZZ",
+      "RAP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Nguyễn Thị Phương",
+    "avatarUrl": "https://i.pravatar.cc/150?img=83",
+    "bio": null,
+    "dob": "1992-04-01T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T18:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_unverified_2",
+    "email": "local.unverified.2@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Văn Lợi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=84",
+    "bio": null,
+    "dob": null,
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-06T09:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000245",
+    "googleId": "110011223344556677888",
+    "username": "locked_tamil_dance",
+    "email": "locked.tamil.dance@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Thị Vân",
+    "avatarUrl": "https://i.pravatar.cc/150?img=85",
+    "bio": null,
+    "dob": "1996-05-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-08T23:55:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "111122334455667788996",
+    "username": "pop_kpop_jpop",
+    "email": "pop.kpop.jpop@example.com",
+    "favoritesGenres": [
+      "POP",
+      "K-POP",
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Văn Thắng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=86",
+    "bio": null,
+    "dob": "2003-01-01T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:05:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000247",
+    "googleId": null,
+    "username": "fb_only_inactive",
+    "email": "fb.only.inactive@example.com",
+    "favoritesGenres": [
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Thị Ánh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=87",
+    "bio": null,
+    "dob": "1994-11-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-14T14:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_banned",
+    "email": "local.banned@example.com",
+    "favoritesGenres": [
+      "RAP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Đỗ Văn Toàn",
+    "avatarUrl": "https://i.pravatar.cc/150?img=88",
+    "bio": null,
+    "dob": "1992-08-08T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-01T22:15:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000249",
+    "googleId": "112233445566778899017",
+    "username": "indie_vpop_dance",
+    "email": "indie.vpop.dance@example.com",
+    "favoritesGenres": [
+      "INDIE",
+      "V-POP",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Cao Thị Diệu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=89",
+    "bio": null,
+    "dob": "2001-03-22T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T23:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "113344556677889900117",
+    "username": "google_only_locked",
+    "email": "google.only.locked@example.com",
+    "favoritesGenres": [
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Hoà",
+    "avatarUrl": "https://i.pravatar.cc/150?img=90",
+    "bio": null,
+    "dob": "1993-06-16T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-11T05:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000251",
+    "googleId": null,
+    "username": "fb_only_inactive_2",
+    "email": "fb.only.inactive.2@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Lê Thị Hồng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=91",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-18T00:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_active_3",
+    "email": "local.active.3@example.com",
+    "favoritesGenres": [
+      "RAP",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Văn Lợi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=92",
+    "bio": null,
+    "dob": "1996-10-10T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T01:25:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000253",
+    "googleId": "114455667788990011227",
+    "username": "banned_jazz_pop",
+    "email": "banned.jazz.pop@example.com",
+    "favoritesGenres": [
+      "JAZZ",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Thị Vân",
+    "avatarUrl": "https://i.pravatar.cc/150?img=93",
+    "bio": null,
+    "dob": "1988-02-08T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-03T11:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_verified_2",
+    "email": "local.email.verified.2@example.com",
+    "favoritesGenres": [
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Hà Văn Cường",
+    "avatarUrl": "https://i.pravatar.cc/150?img=94",
+    "bio": null,
+    "dob": "1994-05-05T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T12:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000255",
+    "googleId": "115566778899001122337",
+    "username": "jpop_cpop_vpop_3",
+    "email": "jpop.cpop.vpop.3@example.com",
+    "favoritesGenres": [
+      "J-POP",
+      "C-POP",
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Thị Diễm",
+    "avatarUrl": "https://i.pravatar.cc/150?img=95",
+    "bio": null,
+    "dob": "2002-12-12T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:15:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "116677889900112233447",
+    "username": "tamil_rock_mix",
+    "email": "tamil.rock.mix@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Đạt",
+    "avatarUrl": "https://i.pravatar.cc/150?img=96",
+    "bio": null,
+    "dob": "1991-03-03T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-25T13:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000257",
+    "googleId": null,
+    "username": "fb_only_unverified",
+    "email": "fb.only.unverified@example.com",
+    "favoritesGenres": [
+      "DANCE",
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Thị Thuỷ",
+    "avatarUrl": "https://i.pravatar.cc/150?img=97",
+    "bio": null,
+    "dob": "2000-01-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-16T15:40:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_unverified_3",
+    "email": "local.unverified.3@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Văn Hiếu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=98",
+    "bio": null,
+    "dob": null,
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000259",
+    "googleId": "117788990011223344557",
+    "username": "locked_hiphop_pop",
+    "email": "locked.hiphop.pop@example.com",
+    "favoritesGenres": [
+      "HIP-HOP",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Thị Mai",
+    "avatarUrl": "https://i.pravatar.cc/150?img=99",
+    "bio": null,
+    "dob": "1995-11-11T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-05T01:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "118899001122334455667",
+    "username": "jazz_rap_rock",
+    "email": "jazz.rap.rock@example.com",
+    "favoritesGenres": [
+      "JAZZ",
+      "RAP",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Văn Quang",
+    "avatarUrl": "https://i.pravatar.cc/150?img=100",
+    "bio": null,
+    "dob": "1989-08-08T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000261",
+    "googleId": null,
+    "username": "fb_only_banned_2",
+    "email": "fb.only.banned.2@example.com",
+    "favoritesGenres": [
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Thị Diễm",
+    "avatarUrl": "https://i.pravatar.cc/150?img=101",
+    "bio": null,
+    "dob": "2001-05-05T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-04T19:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_active_4",
+    "email": "local.active.4@example.com",
+    "favoritesGenres": [
+      "C-POP",
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Văn Tài",
+    "avatarUrl": "https://i.pravatar.cc/150?img=102",
+    "bio": null,
+    "dob": "1993-09-29T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T01:15:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000263",
+    "googleId": "119900112233445566777",
+    "username": "kpop_tamil_hiphop",
+    "email": "kpop.tamil.hiphop@example.com",
+    "favoritesGenres": [
+      "K-POP",
+      "TAMIL",
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Đỗ Thị Thu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=103",
+    "bio": null,
+    "dob": "2004-01-01T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T22:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_locked_2",
+    "email": "local.locked.2@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Trần Văn Sáng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=104",
+    "bio": null,
+    "dob": "1980-11-20T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-06T08:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000265",
+    "googleId": "110011223344556677889",
+    "username": "pop_rock_dance_3",
+    "email": "pop.rock.dance.3@example.com",
+    "favoritesGenres": [
+      "POP",
+      "ROCK",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Thuý",
+    "avatarUrl": "https://i.pravatar.cc/150?img=105",
+    "bio": null,
+    "dob": "1998-07-07T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:45:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "111122334455667788997",
+    "username": "rap_hiphop_indie",
+    "email": "rap.hiphop.indie@example.com",
+    "favoritesGenres": [
+      "RAP",
+      "HIP-HOP",
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Hùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=106",
+    "bio": null,
+    "dob": "1994-04-04T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T00:10:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000267",
+    "googleId": null,
+    "username": "fb_only_locked_2",
+    "email": "fb.only.locked.2@example.com",
+    "favoritesGenres": [
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Phạm Thị Loan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=107",
+    "bio": null,
+    "dob": "2003-06-25T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-09T18:40:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_inactive_5",
+    "email": "local.inactive.5@example.com",
+    "favoritesGenres": [
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Cao Văn Mạnh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=108",
+    "bio": null,
+    "dob": "1996-02-14T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-15T09:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000269",
+    "googleId": "112233445566778899018",
+    "username": "banned_cpop_kpop",
+    "email": "banned.cpop.kpop@example.com",
+    "favoritesGenres": [
+      "C-POP",
+      "K-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Đỗ Thị Thảo",
+    "avatarUrl": "https://i.pravatar.cc/150?img=109",
+    "bio": null,
+    "dob": "2000-09-19T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-02T15:20:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "113344556677889900118",
+    "username": "google_only_active_2",
+    "email": "google.only.active.2@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn Đạt",
+    "avatarUrl": "https://i.pravatar.cc/150?img=110",
+    "bio": null,
+    "dob": "1992-12-12T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T14:35:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000271",
+    "googleId": "114455667788990011228",
+    "username": "pop_vpop_kpop_4",
+    "email": "pop.vpop.kpop.4@example.com",
+    "favoritesGenres": [
+      "POP",
+      "V-POP",
+      "K-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn Phú",
+    "avatarUrl": "https://i.pravatar.cc/150?img=111",
+    "bio": null,
+    "dob": "1997-03-25T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "115566778899001122338",
+    "username": "tamil_dance_rap",
+    "email": "tamil.dance.rap@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "DANCE",
+      "RAP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Ngọc",
+    "avatarUrl": "https://i.pravatar.cc/150?img=112",
+    "bio": null,
+    "dob": "2001-11-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T21:10:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000273",
+    "googleId": null,
+    "username": "fb_only_banned_3",
+    "email": "fb.only.banned.3@example.com",
+    "favoritesGenres": [
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Nguyễn Văn Đạt",
+    "avatarUrl": "https://i.pravatar.cc/150?img=113",
+    "bio": null,
+    "dob": "1990-08-15T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-05T10:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_unverified_4",
+    "email": "local.unverified.4@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Thị Thảo",
+    "avatarUrl": "https://i.pravatar.cc/150?img=114",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-13T16:20:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000275",
+    "googleId": "116677889900112233448",
+    "username": "jazz_indie_cpop",
+    "email": "jazz.indie.cpop@example.com",
+    "favoritesGenres": [
+      "JAZZ",
+      "INDIE",
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Văn Lợi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=115",
+    "bio": null,
+    "dob": "1988-10-10T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T08:50:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "117788990011223344558",
+    "username": "pop_hiphop_vpop",
+    "email": "pop.hiphop.vpop@example.com",
+    "favoritesGenres": [
+      "POP",
+      "HIP-HOP",
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Thị Vân",
+    "avatarUrl": "https://i.pravatar.cc/150?img=116",
+    "bio": null,
+    "dob": "1995-04-01T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000277",
+    "googleId": null,
+    "username": "fb_only_locked_3",
+    "email": "fb.only.locked.3@example.com",
+    "favoritesGenres": [
+      "J-POP",
+      "K-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Văn Long",
+    "avatarUrl": "https://i.pravatar.cc/150?img=117",
+    "bio": null,
+    "dob": "2000-05-05T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-07T12:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_unverified_5",
+    "email": "local.email.unverified.5@example.com",
+    "favoritesGenres": [
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Lê Thị Thu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=118",
+    "bio": null,
+    "dob": "1999-09-19T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T09:10:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000279",
+    "googleId": "118899001122334455668",
+    "username": "banned_tamil_pop",
+    "email": "banned.tamil.pop@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Phạm Văn Duy",
+    "avatarUrl": "https://i.pravatar.cc/150?img=119",
+    "bio": null,
+    "dob": "1994-12-05T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-03T15:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_no_genres_2",
+    "email": "local.no.genres.2@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Nguyễn Thị Mai",
+    "avatarUrl": "https://i.pravatar.cc/150?img=120",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-19T10:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000281",
+    "googleId": "119900112233445566778",
+    "username": "hiphop_rap_rock",
+    "email": "hiphop.rap.rock@example.com",
+    "favoritesGenres": [
+      "HIP-HOP",
+      "RAP",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Văn Tài",
+    "avatarUrl": "https://i.pravatar.cc/150?img=121",
+    "bio": null,
+    "dob": "1996-01-20T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "110011223344556677890",
+    "username": "jazz_vpop_indie",
+    "email": "jazz.vpop.indie@example.com",
+    "favoritesGenres": [
+      "JAZZ",
+      "V-POP",
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Thị Anh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=122",
+    "bio": null,
+    "dob": "1993-06-16T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T17:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000283",
+    "googleId": null,
+    "username": "fb_only_active_2",
+    "email": "fb.only.active.2@example.com",
+    "favoritesGenres": [
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Văn Hiếu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=123",
+    "bio": null,
+    "dob": "2002-09-09T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T00:05:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_locked_3",
+    "email": "local.locked.3@example.com",
+    "favoritesGenres": [
+      "DANCE",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Lê Thị Hồng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=124",
+    "bio": null,
+    "dob": "1999-02-14T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-08T15:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000285",
+    "googleId": "111122334455667788998",
+    "username": "kpop_jpop_tamil",
+    "email": "kpop.jpop.tamil@example.com",
+    "favoritesGenres": [
+      "K-POP",
+      "J-POP",
+      "TAMIL"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Đăng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=125",
+    "bio": null,
+    "dob": "2003-12-12T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T19:40:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "112233445566778899019",
+    "username": "rap_hiphop_dance",
+    "email": "rap.hiphop.dance@example.com",
+    "favoritesGenres": [
+      "RAP",
+      "HIP-HOP",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Phạm Thị Loan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=126",
+    "bio": null,
+    "dob": "1998-05-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T01:50:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000287",
+    "googleId": null,
+    "username": "fb_only_banned_4",
+    "email": "fb.only.banned.4@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Vũ Văn Nam",
+    "avatarUrl": "https://i.pravatar.cc/150?img=127",
+    "bio": null,
+    "dob": "1985-03-03T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-02T04:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_inactive_6",
+    "email": "local.inactive.6@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Cao Thị Diệu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=128",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-17T11:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000289",
+    "googleId": "113344556677889900119",
+    "username": "pop_rock_indie",
+    "email": "pop.rock.indie@example.com",
+    "favoritesGenres": [
+      "POP",
+      "ROCK",
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn Minh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=129",
+    "bio": null,
+    "dob": "1997-10-10T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T23:45:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "114455667788990011229",
+    "username": "vpop_cpop_jpop",
+    "email": "vpop.cpop.jpop@example.com",
+    "favoritesGenres": [
+      "V-POP",
+      "C-POP",
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Thuý",
+    "avatarUrl": "https://i.pravatar.cc/150?img=130",
+    "bio": null,
+    "dob": "2001-02-01T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000291",
+    "googleId": null,
+    "username": "fb_only_locked_4",
+    "email": "fb.only.locked.4@example.com",
+    "favoritesGenres": [
+      "TAMIL"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Nguyễn Văn Hùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=131",
+    "bio": null,
+    "dob": "1994-04-12T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-10T21:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_verified_6",
+    "email": "local.email.verified.6@example.com",
+    "favoritesGenres": [
+      "K-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Thị Loan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=132",
+    "bio": null,
+    "dob": "2003-05-15T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T18:50:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000293",
+    "googleId": "115566778899001122339",
+    "username": "banned_jazz_dance",
+    "email": "banned.jazz.dance@example.com",
+    "favoritesGenres": [
+      "JAZZ",
+      "DANCE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Văn Hiếu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=133",
+    "bio": null,
+    "dob": "1987-11-20T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-01T06:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "116677889900112233449",
+    "username": "hiphop_rap_vpop_2",
+    "email": "hiphop.rap.vpop.2@example.com",
+    "favoritesGenres": [
+      "HIP-HOP",
+      "RAP",
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Thị Oanh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=134",
+    "bio": null,
+    "dob": "1999-01-01T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:05:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000295",
+    "googleId": null,
+    "username": "fb_only_inactive_3",
+    "email": "fb.only.inactive.3@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Văn Tùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=135",
+    "bio": null,
+    "dob": null,
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-11T13:40:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_locked_4",
+    "email": "local.locked.4@example.com",
+    "favoritesGenres": [
+      "C-POP",
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Lê Thị Hồng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=136",
+    "bio": null,
+    "dob": "1993-08-18T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-07T00:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000297",
+    "googleId": "117788990011223344559",
+    "username": "indie_rock_pop_2",
+    "email": "indie.rock.pop.2@example.com",
+    "favoritesGenres": [
+      "INDIE",
+      "ROCK",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Phạm Văn Lợi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=137",
+    "bio": null,
+    "dob": "1995-10-05T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T20:15:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "118899001122334455669",
+    "username": "kpop_dance_tamil",
+    "email": "kpop.dance.tamil@example.com",
+    "favoritesGenres": [
+      "K-POP",
+      "DANCE",
+      "TAMIL"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Thị Mai",
+    "avatarUrl": "https://i.pravatar.cc/150?img=138",
+    "bio": null,
+    "dob": "2002-04-12T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000299",
+    "googleId": null,
+    "username": "fb_only_unverified_2",
+    "email": "fb.only.unverified.2@example.com",
+    "favoritesGenres": [
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Hà Văn Cường",
+    "avatarUrl": "https://i.pravatar.cc/150?img=139",
+    "bio": null,
+    "dob": "1994-01-01T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "high",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-15T07:45:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_inactive_7",
+    "email": "local.inactive.7@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Trần Thị Diễm",
+    "avatarUrl": "https://i.pravatar.cc/150?img=140",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-09T05:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000301",
+    "googleId": "119900112233445566779",
+    "username": "jazz_rap_cpop",
+    "email": "jazz.rap.cpop@example.com",
+    "favoritesGenres": [
+      "JAZZ",
+      "RAP",
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Văn Tùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=141",
+    "bio": null,
+    "dob": "1993-06-06T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "110011223344556677891",
+    "username": "vpop_indie_pop",
+    "email": "vpop.indie.pop@example.com",
+    "favoritesGenres": [
+      "V-POP",
+      "INDIE",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Thị Phương",
+    "avatarUrl": "https://i.pravatar.cc/150?img=142",
+    "bio": null,
+    "dob": "1998-03-22T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T17:15:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000303",
+    "googleId": null,
+    "username": "fb_only_locked_5",
+    "email": "fb.only.locked.5@example.com",
+    "favoritesGenres": [
+      "K-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Phạm Văn Nam",
+    "avatarUrl": "https://i.pravatar.cc/150?img=143",
+    "bio": null,
+    "dob": "2004-06-16T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-06T11:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_unverified_6",
+    "email": "local.email.unverified.6@example.com",
+    "favoritesGenres": [
+      "DANCE",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Vũ Thị Vân",
+    "avatarUrl": "https://i.pravatar.cc/150?img=144",
+    "bio": null,
+    "dob": "1996-09-09T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T15:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000305",
+    "googleId": "111122334455667788999",
+    "username": "banned_tamil_pop_2",
+    "email": "banned.tamil.pop.2@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Văn Long",
+    "avatarUrl": "https://i.pravatar.cc/150?img=145",
+    "bio": null,
+    "dob": "1990-11-05T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-01T08:10:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "112233445566778899020",
+    "username": "rap_hiphop_jazz",
+    "email": "rap.hiphop.jazz@example.com",
+    "favoritesGenres": [
+      "RAP",
+      "HIP-HOP",
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Thị Anh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=146",
+    "bio": null,
+    "dob": "1995-07-27T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000307",
+    "googleId": null,
+    "username": "fb_only_inactive_4",
+    "email": "fb.only.inactive.4@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Lê Văn Tiến",
+    "avatarUrl": "https://i.pravatar.cc/150?img=147",
+    "bio": null,
+    "dob": null,
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-12T04:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_unverified_7",
+    "email": "local.email.unverified.7@example.com",
+    "favoritesGenres": [
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Thị Thảo",
+    "avatarUrl": "https://i.pravatar.cc/150?img=148",
+    "bio": null,
+    "dob": "1998-03-03T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T16:40:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000309",
+    "googleId": "113344556677889900120",
+    "username": "locked_rock_pop",
+    "email": "locked.rock.pop@example.com",
+    "favoritesGenres": [
+      "ROCK",
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Văn Lợi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=149",
+    "bio": null,
+    "dob": "1997-12-24T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-04T13:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "114455667788990011230",
+    "username": "google_only_active_3",
+    "email": "google.only.active.3@example.com",
+    "favoritesGenres": [
+      "V-POP",
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Thị Ngọc",
+    "avatarUrl": "https://i.pravatar.cc/150?img=150",
+    "bio": null,
+    "dob": "2000-09-09T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000311",
+    "googleId": null,
+    "username": "fb_only_inactive_5",
+    "email": "fb.only.inactive.5@example.com",
+    "favoritesGenres": [
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Văn Tín",
+    "avatarUrl": "https://i.pravatar.cc/150?img=151",
+    "bio": null,
+    "dob": "1991-05-15T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-16T14:15:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_verified_7",
+    "email": "local.email.verified.7@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Lê Thị Lan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=152",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000313",
+    "googleId": "115566778899001122340",
+    "username": "banned_rap_hiphop",
+    "email": "banned.rap.hiphop@example.com",
+    "favoritesGenres": [
+      "RAP",
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Đạt",
+    "avatarUrl": "https://i.pravatar.cc/150?img=153",
+    "bio": null,
+    "dob": "1998-08-08T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-03T18:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "116677889900112233450",
+    "username": "google_only_locked_2",
+    "email": "google.only.locked.2@example.com",
+    "favoritesGenres": [
+      "TAMIL"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Phạm Thị Loan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=154",
+    "bio": null,
+    "dob": "1994-05-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-05T00:00:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000315",
+    "googleId": null,
+    "username": "fb_only_active_3",
+    "email": "fb.only.active.3@example.com",
+    "favoritesGenres": [
+      "POP",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Vũ Văn Minh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=155",
+    "bio": null,
+    "dob": "1996-09-09T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T10:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_unverified_8",
+    "email": "local.email.unverified.8@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Hà Thị Oanh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=156",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-11T09:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000317",
+    "googleId": "117788990011223344560",
+    "username": "locked_indie_jazz",
+    "email": "locked.indie.jazz@example.com",
+    "favoritesGenres": [
+      "INDIE",
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn Sáng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=157",
+    "bio": null,
+    "dob": "1993-02-14T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-09T03:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "118899001122334455670",
+    "username": "google_only_active_4",
+    "email": "google.only.active.4@example.com",
+    "favoritesGenres": [
+      "DANCE",
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Thu",
+    "avatarUrl": "https://i.pravatar.cc/150?img=158",
+    "bio": null,
+    "dob": "2001-07-07T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T00:40:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000319",
+    "googleId": null,
+    "username": "fb_only_banned_5",
+    "email": "fb.only.banned.5@example.com",
+    "favoritesGenres": [
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Nguyễn Văn Hoà",
+    "avatarUrl": "https://i.pravatar.cc/150?img=159",
+    "bio": null,
+    "dob": "1995-10-10T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-02T13:30:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_verified_8",
+    "email": "local.email.verified.8@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Phạm Thị Loan",
+    "avatarUrl": "https://i.pravatar.cc/150?img=160",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T17:10:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000321",
+    "googleId": "119900112233445566780",
+    "username": "pop_hiphop_rap",
+    "email": "pop.hiphop.rap@example.com",
+    "favoritesGenres": [
+      "POP",
+      "HIP-HOP",
+      "RAP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Vũ Văn Lợi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=161",
+    "bio": null,
+    "dob": "1998-04-04T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T02:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "110011223344556677892",
+    "username": "tamil_kpop_jpop",
+    "email": "tamil.kpop.jpop@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "K-POP",
+      "J-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Hà Thị Mai",
+    "avatarUrl": "https://i.pravatar.cc/150?img=162",
+    "bio": null,
+    "dob": "2003-01-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T21:40:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000323",
+    "googleId": null,
+    "username": "fb_only_locked_6",
+    "email": "fb.only.locked.6@example.com",
+    "favoritesGenres": [
+      "JAZZ"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Trần Văn Tùng",
+    "avatarUrl": "https://i.pravatar.cc/150?img=163",
+    "bio": null,
+    "dob": "1980-11-11T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-01T15:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_inactive_8",
+    "email": "local.inactive.8@example.com",
+    "favoritesGenres": [
+      "INDIE"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Lê Thị Hương",
+    "avatarUrl": "https://i.pravatar.cc/150?img=164",
+    "bio": null,
+    "dob": "1996-03-20T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": true,
+    "streamQuality": "high",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-13T08:20:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000325",
+    "googleId": "111122334455667789000",
+    "username": "banned_dance_rock",
+    "email": "banned.dance.rock@example.com",
+    "favoritesGenres": [
+      "DANCE",
+      "ROCK"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$wT2eXyT8zJ4cD5nB7aQ9.uV1rO3sP4qI6lG8mK0jL2oH7yW6sE9dC",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Nguyễn Văn Minh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=165",
+    "bio": null,
+    "dob": "1999-07-07T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-05T12:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "112233445566778899021",
+    "username": "google_only_locked_3",
+    "email": "google.only.locked.3@example.com",
+    "favoritesGenres": [
+      "POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$tZ1aS3wX5yR7uI9oP2qO4nL6mK8jH0gD1fC3bV5eZ7rY9tX2vB4uA",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Phạm Thị Anh",
+    "avatarUrl": "https://i.pravatar.cc/150?img=166",
+    "bio": null,
+    "dob": "1997-04-12T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "locked",
+    "roleName": "User",
+    "lastLogin": "2025-11-10T04:15:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000327",
+    "googleId": null,
+    "username": "fb_only_inactive_6",
+    "email": "fb.only.inactive.6@example.com",
+    "favoritesGenres": [
+      "HIP-HOP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$hG9fC8dP7eB6aZ5yW4xV3uT2sR1qP0oN9mJ8lK7iH6gE5dD4cC2bA",
+    "accountType": [
+      "facebook"
+    ],
+    "fullName": "Vũ Văn Tài",
+    "avatarUrl": "https://i.pravatar.cc/150?img=167",
+    "bio": null,
+    "dob": "1994-06-06T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": false,
+    "streamQuality": "high",
+    "status": "inactive",
+    "roleName": "User",
+    "lastLogin": "2025-11-17T20:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": null,
+    "username": "local_email_unverified_9",
+    "email": "local.email.unverified.9@example.com",
+    "favoritesGenres": null,
+    "completedOnboarding": false,
+    "password": "$2b$10$kL5oD6pC7bV8nF9mJ0hL2qW3eR4tY5uI7oP9aZ1xS3cE5gT7rY9wZ",
+    "accountType": [
+      "local"
+    ],
+    "fullName": "Hà Thị Ngọc",
+    "avatarUrl": "https://i.pravatar.cc/150?img=168",
+    "bio": null,
+    "dob": null,
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": false,
+    "notificationEnabled": false,
+    "streamQuality": "medium",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-27T03:30:00.000Z"
+  },
+  {
+    "facebookId": "100000000000000329",
+    "googleId": "113344556677889900121",
+    "username": "active_pop_cpop",
+    "email": "active.pop.cpop@example.com",
+    "favoritesGenres": [
+      "POP",
+      "C-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$mN0jL2oH7yW6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.u",
+    "accountType": [
+      "facebook",
+      "google",
+      "local"
+    ],
+    "fullName": "Trần Văn Đạt",
+    "avatarUrl": "https://i.pravatar.cc/150?img=169",
+    "bio": null,
+    "dob": "1999-12-12T00:00:00.000Z",
+    "gender": true,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "low",
+    "status": "active",
+    "roleName": "User",
+    "lastLogin": "2025-11-26T22:00:00.000Z"
+  },
+  {
+    "facebookId": null,
+    "googleId": "114455667788990011231",
+    "username": "google_only_banned",
+    "email": "google.only.banned@example.com",
+    "favoritesGenres": [
+      "TAMIL",
+      "V-POP"
+    ],
+    "completedOnboarding": true,
+    "password": "$2b$10$qR6sE9dC1fC3bV5eZ7rY9tX2vB4uA8zJ4cD5nB7aQ9.uV1rO3sP4qI",
+    "accountType": [
+      "google",
+      "local"
+    ],
+    "fullName": "Lê Thị Thảo",
+    "avatarUrl": "https://i.pravatar.cc/150?img=170",
+    "bio": null,
+    "dob": "1996-03-03T00:00:00.000Z",
+    "gender": false,
+    "otp": null,
+    "expireOtp": null,
+    "emailVerified": true,
+    "notificationEnabled": true,
+    "streamQuality": "medium",
+    "status": "banned",
+    "roleName": "User",
+    "lastLogin": "2025-11-03T09:45:00.000Z"
   }
 ]

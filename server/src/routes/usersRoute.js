@@ -4,11 +4,17 @@ const upload = require('../middlewares/upload');
 const userController = require('../controllers/userController')
 const { authorizeRole, authenticateToken } = require('../middlewares/authentication')
 
-router.get('/', userController.GetAllUser)
-router.get('/search', userController.Search)
-router.get('/:id', userController.GetUserById)
+// admin authorization
+router.get('/', authenticateToken, authorizeRole, userController.GetAllUser);
+router.delete('/remove/:id', authenticateToken, authorizeRole, userController.DeleteUser)
 
-router.post('/', userController.CreateUser)
+// public routes
+router.get('/search', userController.Search)
+
+// router.get('/:id', userController.GetUserById)
+// router.post('/', userController.CreateUser)
+
+// protected routes
 router.post('/link-social-account', authenticateToken, userController.LinkSocialAccount)
 router.put('/update-profile', authenticateToken, userController.UpdateInforUser)
 router.put('/change-password', authenticateToken, userController.ChangePassword)
@@ -20,14 +26,9 @@ router.put('/completed-onboarding', authenticateToken, userController.UpdateComp
 
 // 1. LẤY PROFILE CHI TIẾT CHO MÀN HÌNH SOCIAL (Gồm isFollowing)
 router.get('/:userId/profile', authenticateToken, userController.GetUserProfileSocial);
-
-// 2. TOGGLE THEO DÕI / HỦY THEO DÕI
-// router.post('/:userId/follow', authenticateToken, userController.toggleFollow);
-
-// admin authorization
-router.delete('/remove/:id', authorizeRole, userController.DeleteUser)
-
 router.get('/search', authenticateToken, userController.SearchUsers);
 router.post('/search-all', userController.Search);
+
+
 
 module.exports = router

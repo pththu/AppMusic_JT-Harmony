@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 
-export function AuthCheck({ children }: { children: React.ReactNode }) {
+export function AuthCheck({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -34,7 +34,7 @@ export function AuthCheck({ children }: { children: React.ReactNode }) {
             parsed?.token ??
             null;
         }
-      } catch {}
+      } catch { }
 
       if (token && user) {
         const roleId = user?.roleId ?? user?.role_id ?? user?.role?.id;

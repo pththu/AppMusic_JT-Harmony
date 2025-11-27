@@ -40,6 +40,11 @@ export default function DashboardPage() {
   const [dateTo, setDateTo] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [granularity, setGranularity] = useState<Granularity>('day');
   const [loadingAll, setLoadingAll] = useState(false);
+  const [cardItems, setCardItems] = useState([
+    { title: 'Posts', data: tsPosts },
+    { title: 'Comments', data: tsComments },
+    { title: 'Likes', data: tsLikes }
+  ]);
 
   const resetFilters = () => {
     const defaultFrom = format(subDays(new Date(), 7), 'yyyy-MM-dd');
@@ -167,8 +172,6 @@ export default function DashboardPage() {
           { title: "Bình Luận", icon: MessageCircle, value: summary?.comments ?? "-" },
           { title: "Thích", icon: Heart, value: summary?.likes ?? "-" },
           { title: "Báo Cáo", icon: Flag, value: summary?.reports ?? "-" },
-          { title: "Cuộc Trò Chuyện", icon: MessageSquare, value: summary?.conversations ?? "-" },
-          { title: "Tin Nhắn", icon: Mail, value: summary?.messages ?? "-" },
         ].map((s) => (
           <Card key={s.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -191,7 +194,7 @@ export default function DashboardPage() {
 
       {/* Timeseries charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-        {[{title:'Posts', data: tsPosts}, {title:'Comments', data: tsComments}, {title:'Likes', data: tsLikes}, {title:'Messages', data: tsMessages}, {title:'Conversations', data: tsConvs}].map(({title, data}) => (
+        {cardItems.map(({ title, data }) => (
           <Card key={title}>
             <CardHeader>
               <CardTitle>{title} theo thời gian</CardTitle>
@@ -232,9 +235,9 @@ export default function DashboardPage() {
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Pie data={coverBreakdown.map(d=>({ name: d.isCover ? 'Cover' : 'Original', value: d.count }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
+                  <Pie data={coverBreakdown.map(d => ({ name: d.isCover ? 'Cover' : 'Original', value: d.count }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
                     {coverBreakdown.map((_, i) => (
-                      <Cell key={i} fill={["#34d399","#60a5fa"][i % 2]} />
+                      <Cell key={i} fill={["#34d399", "#60a5fa"][i % 2]} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -256,9 +259,9 @@ export default function DashboardPage() {
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Pie data={reportsBreakdown.map(d=>({ name: d.status, value: Number(d.count) }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
+                  <Pie data={reportsBreakdown.map(d => ({ name: d.status, value: Number(d.count) }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
                     {reportsBreakdown.map((_, i) => (
-                      <Cell key={i} fill={["#f87171","#f59e0b","#10b981","#6366f1"][i % 4]} />
+                      <Cell key={i} fill={["#f87171", "#f59e0b", "#10b981", "#6366f1"][i % 4]} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -291,7 +294,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {topPosts.map((p:any) => (
+                    {topPosts.map((p: any) => (
                       <tr key={p.id} className="border-t">
                         <td className="py-2 pr-4 max-w-[360px] truncate">{p.content || p.title || '(không có nội dung)'}</td>
                         <td className="py-2 pr-4">{p.User?.fullName || p.User?.username || p.userId}</td>
@@ -324,7 +327,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {topUsers.map((u:any) => (
+                    {topUsers.map((u: any) => (
                       <tr key={u.userId} className="border-t">
                         <td className="py-2 pr-4">{u.User?.fullName || u.User?.username || u.userId}</td>
                         <td className="py-2 pr-4">{u.count}</td>

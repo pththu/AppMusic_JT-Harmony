@@ -9,9 +9,9 @@ const { API_PREFIX } = require("./configs/constants");
 const { authenticateToken, authorizeRole } = require("./middlewares/authentication");
 const seedDatabase = require("./utils/seeder");
 const { connectRedis } = require('./configs/redis');
-
 const dotenv = require("dotenv");
 const { Server } = require("socket.io");
+
 
 const chatEvents = require("./sockets/chatEvents");
 const notificationEvents = require("./sockets/notificationEvents");
@@ -27,6 +27,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
+      "http://localhost:3000",
       "http://localhost:3001",
       "http://192.168.32.101:3000",
       "exp://192.168.32.101:8081",
@@ -84,6 +85,7 @@ app.set("trust proxy", true);
 app.use(
   cors({
     origin: [
+      "http://localhost:3000",
       "http://localhost:3001",
       "http://192.168.32.101:3000",
       "http://192.168.1.22:3000",
@@ -162,8 +164,8 @@ async function startServer() {
 
     await connectRedis();
 
-    server.listen(process.env.PORT || 3001, () => {
-      console.log(`🚀 Server is running on port ${process.env.PORT || 3001}`);
+    server.listen(process.env.PORT || 3000, () => {
+      console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);
     });
   } catch (e) {
     console.error("❌ Server startup error:", e.message);
