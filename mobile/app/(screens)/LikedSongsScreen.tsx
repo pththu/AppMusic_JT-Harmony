@@ -62,6 +62,9 @@ export default function LikedSongsScreen() {
   const [songModalVisible, setSongModalVisible] = useState(false);
   const [artistModalVisible, setArtistModalVisible] = useState(false);
   const [addTrackToPlaylistModalVisible, setAddTrackToPlaylistModalVisible] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
 
   const handleSongAddToPlaylist = () => {
@@ -69,12 +72,89 @@ export default function LikedSongsScreen() {
     setAddTrackToPlaylistModalVisible(true);
   };
 
+  // Chuyển đổi chế độ chọn
+  const toggleSelectionMode = () => {
+    if (isSelectionMode) {
+      // Nếu đang ở chế độ chọn và muốn thoát
+      setSelectedTracks(new Set());
+      setSelectAll(false);
+    }
+    setIsSelectionMode(!isSelectionMode);
+  };
+
+  // Chọn/bỏ chọn một bài hát
+  const toggleTrackSelection = (trackId: string) => {
+    setSelectedTracks(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(trackId)) {
+        newSelection.delete(trackId);
+      } else {
+        newSelection.add(trackId);
+      }
+      setSelectAll(newSelection.size === filteredTracks.length);
+      return newSelection;
+    });
+  };
+
+  // Chọn tất cả/bỏ chọn tất cả
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedTracks(new Set());
+    } else {
+      const allTrackIds = new Set(filteredTracks.map(track => track.id?.toString() || track.spotifyId || ''));
+      setSelectedTracks(allTrackIds);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  // Xóa các bài hát đã chọn
+  const deleteSelectedTracks = async () => {
+    if (selectedTracks.size === 0) return;
+
+    const confirmed: any = await confirm(
+      'Xác nhận xóa',
+      `Bạn có chắc chắn muốn xóa ${selectedTracks.size} bài hát đã chọn khỏi danh sách yêu thích?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { removeFavoriteItem } = useFavoritesStore.getState();
+      const { favoriteItems } = useFavoritesStore.getState();
+
+      // Tạo bản sao của danh sách yêu thích và lọc ra các bài hát đã chọn
+      const updatedFavorites = favoriteItems.filter(item => {
+        const trackId = item.itemId?.toString() || item.itemSpotifyId || '';
+        return !selectedTracks.has(trackId);
+      });
+
+      // Cập nhật store
+      useFavoritesStore.setState({ favoriteItems: updatedFavorites });
+
+      // Cập nhật state local
+      const updatedTracks = updatedFavorites
+        .filter(item => item.itemType === 'track')
+        .map(item => item.item);
+      setFavoriteTracks(updatedTracks);
+
+      // Đặt lại trạng thái chọn
+      setSelectedTracks(new Set());
+      setIsSelectionMode(false);
+      setSelectAll(false);
+
+      success(`Đã xóa ${selectedTracks.size} bài hát khỏi danh sách yêu thích`);
+    } catch (err) {
+      console.error('Lỗi khi xóa bài hát:', err);
+      error('Đã xảy ra lỗi khi xóa bài hát');
+    }
+  };
+
   const handleSelectArtist = (artist) => {
     navigate("ArtistScreen", { artist: JSON.stringify(artist) });
     setArtistModalVisible(false);
   };
 
-  const handlePlayTrack = async (track,) => {
+  const handlePlayTrack = async (track) => {
     const playIndex = filteredTracks.findIndex(t =>
       (t.spotifyId && t.spotifyId === track.spotifyId) ||
       (t.id && t.id === track.id)
@@ -305,19 +385,63 @@ export default function LikedSongsScreen() {
     <View className={`flex-1 px-4 pt-4 bg-white dark:bg-black`}
     // style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
     >
-      <View className="flex-row items-start mb-4">
-        <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <Icon name="arrow-back" size={24} color={primaryIconColor} />
-        </TouchableOpacity>
-        <View>
-          <Text className="text-black dark:text-white text-2xl font-semibold mb-2">
-            Bài hát yêu thích
-          </Text>
-          <Text className="text-gray-600 dark:text-gray-400">
-            {favoriteTracks.length || 0} bài hát
+      <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center">
+          {isSelectionMode ? (
+            <TouchableOpacity onPress={toggleSelectionMode} className="mr-4">
+              <Text className="text-blue-500 text-base">Hủy</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => router.back()} className="mr-4">
+              <Icon name="arrow-back" size={24} color={primaryIconColor} />
+            </TouchableOpacity>
+          )}
+          <View>
+            <Text className="text-black dark:text-white text-2xl font-semibold">
+              {isSelectionMode ? `Đã chọn ${selectedTracks.size}` : 'Bài hát yêu thích'}
+            </Text>
+            {!isSelectionMode && (
+              <Text className="text-gray-600 dark:text-gray-400">
+                {favoriteTracks.length || 0} bài hát
+              </Text>
+            )}
+          </View>
+        </View>
+        
+        {isSelectionMode ? (
+          <TouchableOpacity 
+            onPress={deleteSelectedTracks}
+            disabled={selectedTracks.size === 0}
+          >
+            <Text className={`text-base ${selectedTracks.size > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+              Xóa ({selectedTracks.size})
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={toggleSelectionMode}>
+            <Text className="text-blue-500 text-base">Chọn</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Thanh chọn khi ở chế độ chọn */}
+      {isSelectionMode && (
+        <View className="flex-row items-center justify-between mb-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <TouchableOpacity onPress={toggleSelectAll} className="flex-row items-center">
+            <Icon 
+              name={selectAll ? 'checkbox-outline' : 'square-outline'} 
+              size={24} 
+              color={selectAll ? '#3b82f6' : (colorScheme === 'dark' ? '#fff' : '#000')} 
+            />
+            <Text className="ml-2 text-black dark:text-white">
+              {selectAll ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+            </Text>
+          </TouchableOpacity>
+          <Text className="text-black dark:text-white">
+            {selectedTracks.size} đã chọn
           </Text>
         </View>
-      </View>
+      )}
       <View className="flex-row items-center mb-4">
         <View className="flex-1 bg-gray-200 dark:bg-gray-800 rounded-md p-2 flex-row items-center">
           <Icon name="search" size={20} color="#888" />
@@ -357,13 +481,50 @@ export default function LikedSongsScreen() {
       )}
 
       <FlatList
-        data={filteredTracks} // Dùng danh sách đã lọc
+        data={filteredTracks}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
-        keyExtractor={(item) => item?.favoriteItem.id?.toString()}
+        keyExtractor={(item, index) => item?.id?.toString() || item?.spotifyId || index.toString()}
         renderItem={({ item, index }) => (
-          renderRecentlyPlayedItem({ item, index })
+          <TouchableOpacity
+            onPress={() => {
+              if (isSelectionMode) {
+                toggleTrackSelection(item.id?.toString() || item.spotifyId || '');
+              } else {
+                handlePlayTrack(item);
+              }
+            }}
+            onLongPress={() => {
+              if (!isSelectionMode) {
+                setIsSelectionMode(true);
+                toggleTrackSelection(item.id?.toString() || item.spotifyId || '');
+              }
+            }}
+            className={`flex-row items-center p-2 ${isSelectionMode ? 'pl-4' : ''}`}
+          >
+            {isSelectionMode && (
+              <View className="mr-3">
+                <Icon
+                  name={selectedTracks.has(item.id?.toString() || item.spotifyId || '') ? 'checkbox-outline' : 'square-outline'}
+                  size={24}
+                  color={selectedTracks.has(item.id?.toString() || item.spotifyId || '') ? '#3b82f6' : (colorScheme === 'dark' ? '#fff' : '#000')}
+                />
+              </View>
+            )}
+            <View className="flex-1">
+              {renderRecentlyPlayedItem({ item, index })}
+            </View>
+          </TouchableOpacity>
         )}
+        ListEmptyComponent={
+          <View className="flex-1 justify-center items-center py-10">
+            <Text className="text-gray-500 text-center">
+              {searchQuery
+                ? 'Không tìm thấy bài hát phù hợp'
+                : 'Chưa có bài hát yêu thích nào'}
+            </Text>
+          </View>
+        }
       />
 
       <Modal
