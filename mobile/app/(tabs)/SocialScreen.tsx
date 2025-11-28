@@ -317,17 +317,22 @@ const SocialScreen = () => {
         throw new Error((apiPost as any)?.message || 'Không thể tạo bài đăng');
       }
 
-      // Sử dụng functional update để đảm bảo cập nhật state chính xác
-      setPosts(prevPosts => {
-        const newPost = mapApiPostToLocal(apiPost);
-        return [newPost, ...prevPosts];
-      });
+      // Map bài đăng mới về format local (hàm async)
+      const newPost = await mapApiPostToLocal(apiPost);
+
+      // Cập nhật state: thêm bài mới lên đầu danh sách (optimistic)
+      setPosts(prevPosts => [newPost, ...prevPosts]);
 
       // RESET INPUTS
       setNewPostText("");
       setSelectedMediaAssets([]);
       setSelectedSongId(null);
       Keyboard.dismiss();
+
+      // Sau khi đăng thành công, gọi lại loadPosts để đồng bộ với backend
+      setLoading(true);
+      await loadPosts();
+      setLoading(false);
     } catch (err) {
       console.error("Lỗi khi tạo bài đăng:", err);
       const errorMessage = err.response?.data?.error || err.message || "Không thể tạo bài đăng.";
@@ -826,8 +831,8 @@ const SocialScreen = () => {
 
       const { newPost, originalPost } = result;
 
-      // Thêm bài re-share mới vào đầu danh sách
-      const mappedNewPost = mapApiPostToLocal(newPost);
+      // Thêm bài re-share mới vào đầu danh sách (map async)
+      const mappedNewPost = await mapApiPostToLocal(newPost);
       setPosts((prevPosts) => [mappedNewPost, ...prevPosts]);
 
       // Cập nhật shareCount cho bài gốc nếu backend trả về
@@ -843,6 +848,11 @@ const SocialScreen = () => {
       setReShareModalVisible(false);
       setReShareCaption("");
       setReShareTargetPost(null);
+
+      // Sau khi share thành công, đồng bộ lại danh sách bài đăng với backend
+      setLoading(true);
+      await loadPosts();
+      setLoading(false);
     } catch (error) {
       console.error("Lỗi khi chia sẻ bài đăng:", error);
       Alert.alert("Lỗi", "Không thể chia sẻ bài viết.");

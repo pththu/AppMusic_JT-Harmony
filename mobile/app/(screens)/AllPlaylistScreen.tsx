@@ -12,7 +12,9 @@ import {
   ActivityIndicator,
   Share,
   Dimensions,
+  Modal,
 } from "react-native";
+
 import Icon from "react-native-vector-icons/Ionicons";
 import { router } from "expo-router";
 import useAuthStore from "@/store/authStore";
@@ -72,6 +74,8 @@ export default function AllPlaylistScreen() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchFilter, setSearchFilter] = useState("all");
   const isSearching = searchQuery.length > 0;
+  const [sortOrder, setSortOrder] = useState<'date_desc' | 'date_asc' | 'name_asc' | 'name_desc'>('date_desc');
+  const [sortModalVisible, setSortModalVisible] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -485,6 +489,46 @@ export default function AllPlaylistScreen() {
 
   const currentData = activeTab === "myPlaylists" ? myPlaylists : (activeTab === "playlists" ? favoritePlaylists : favoriteAlbums);
 
+  const sortedCurrentData = useMemo(() => {
+    const list = [...currentData];
+
+    list.sort((a, b) => {
+      const aDate = (a as any)?.favoriteCreatedAt || (a as any)?.createdAt;
+      const bDate = (b as any)?.favoriteCreatedAt || (b as any)?.createdAt;
+
+      switch (sortOrder) {
+        case 'name_asc':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'name_desc':
+          return (b.name || '').localeCompare(a.name || '');
+        case 'date_asc': {
+          const aTime = aDate ? new Date(aDate).getTime() : 0;
+          const bTime = bDate ? new Date(bDate).getTime() : 0;
+          return aTime - bTime; // Cũ nhất
+        }
+        case 'date_desc':
+        default: {
+          const aTime = aDate ? new Date(aDate).getTime() : 0;
+          const bTime = bDate ? new Date(bDate).getTime() : 0;
+          return bTime - aTime; // Mới nhất
+        }
+      }
+    });
+
+    return list;
+  }, [currentData, sortOrder]);
+
+  const SortOptionButton = ({ title, active, onPress }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      className={`py-3 px-2 rounded-md ${active ? 'bg-green-500/20' : ''}`}
+    >
+      <Text className={`text-base ${active ? 'text-green-500 font-semibold' : (colorScheme === 'dark' ? 'text-white' : 'text-black')}`}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'} px-4`}
       style={{ marginBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
@@ -505,6 +549,62 @@ export default function AllPlaylistScreen() {
         )}
       </View>
 
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={sortModalVisible}
+        onRequestClose={() => setSortModalVisible(false)}
+      >
+        <Pressable
+          className="flex-1 justify-center items-center bg-black/60"
+          onPress={() => setSortModalVisible(false)}
+        >
+          <View
+            className={`w-4/5 rounded-lg p-4 ${colorScheme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
+            onStartShouldSetResponder={() => true}
+          >
+            <Text
+              className={`text-lg font-bold mb-4 ${colorScheme === 'dark' ? 'text-white' : 'text-black'}`}
+            >
+              Sắp xếp theo
+            </Text>
+
+            <SortOptionButton
+              title="Mới nhất"
+              active={sortOrder === 'date_desc'}
+              onPress={() => {
+                setSortOrder('date_desc');
+                setSortModalVisible(false);
+              }}
+            />
+            <SortOptionButton
+              title="Cũ nhất"
+              active={sortOrder === 'date_asc'}
+              onPress={() => {
+                setSortOrder('date_asc');
+                setSortModalVisible(false);
+              }}
+            />
+            <SortOptionButton
+              title="Tên (A-Z)"
+              active={sortOrder === 'name_asc'}
+              onPress={() => {
+                setSortOrder('name_asc');
+                setSortModalVisible(false);
+              }}
+            />
+            <SortOptionButton
+              title="Tên (Z-A)"
+              active={sortOrder === 'name_desc'}
+              onPress={() => {
+                setSortOrder('name_desc');
+                setSortModalVisible(false);
+              }}
+            />
+          </View>
+        </Pressable>
+      </Modal>
+
       {/* Thanh Search (CẬP NHẬT) */}
       <View className="flex-row items-center mb-4">
         <View className={`flex-1 ${colorScheme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} rounded-md p-2 flex-row items-center`}>
@@ -518,8 +618,8 @@ export default function AllPlaylistScreen() {
             clearButtonMode="while-editing" // <-- Thêm nút clear
           />
         </View>
-        <TouchableOpacity className="ml-4">
-          <Icon name="swap-vertical" size={24} color="#888" />
+        <TouchableOpacity className="ml-4" onPress={() => setSortModalVisible(true)}>
+          <Icon name="swap-vertical" size={24} color={primaryIconColor} />
         </TouchableOpacity>
       </View>
 
@@ -548,7 +648,7 @@ export default function AllPlaylistScreen() {
 
           {currentData ? (
             <FlatList
-              data={currentData}
+              data={sortedCurrentData}
               keyExtractor={(item, index) => `${activeTab}-${item.id || item.spotifyId}-${index}`}
               showsVerticalScrollIndicator={false}
               renderItem={({ item, index }) => (

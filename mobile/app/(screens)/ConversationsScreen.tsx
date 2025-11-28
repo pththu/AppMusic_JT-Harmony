@@ -17,6 +17,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useNavigate } from "@/hooks/useNavigate";
 import { useColorScheme } from 'react-native';
 import useAuthStore from '@/store/authStore';
+import { useFollowStore } from '@/store/followStore';
 import { fetchUserConversations, fetchAllUsers, Conversation, createOrGetPrivateConversation } from '@/services/chatApi';
 import UsersModal from '@/components/modals/UsersModal';
 import ConversationOptionsModal from '@/components/modals/ConversationOptionsModal';
@@ -96,16 +97,36 @@ export default function ConversationsScreen() {
         loadConversations();
     }, [loadConversations]);
 
-    // Hàm tải danh sách users
+    // Hàm tải danh sách users để tạo cuộc trò chuyện mới
+    // ƯU TIÊN dùng dữ liệu đã có trong followStore (không gọi lại API all users)
     const loadUsers = useCallback(async () => {
         setLoadingUsers(true);
         try {
-            const data = await fetchAllUsers();
-            const filteredUsers = data.filter((user: any) => user.id !== currentUserId && !restrictedUsers.has(user.id));
+            const { userFollowees, userFollowers } = useFollowStore.getState();
+
+            // userFollowees: danh sách người MÌNH đang follow
+            // userFollowers: danh sách người ĐANG follow MÌNH
+            const combined = [...(userFollowees || []), ...(userFollowers || [])];
+
+            // Loại bỏ trùng theo id
+            const uniqueById = new Map<number, any>();
+            combined.forEach((u: any) => {
+                if (u && typeof u.id === 'number' && !uniqueById.has(u.id)) {
+                    uniqueById.set(u.id, u);
+                }
+            });
+
+            const baseList = Array.from(uniqueById.values());
+
+            // Bỏ chính mình và những user trong restrictedUsers
+            const filteredUsers = baseList.filter((user: any) =>
+                user && user.id !== currentUserId && !restrictedUsers.has(user.id)
+            );
+
             setUsers(filteredUsers);
         } catch (error) {
-            console.error('Lỗi khi tải danh sách users:', error);
-            Alert.alert('Lỗi', 'Không thể tải danh sách người dùng');
+            console.error('Lỗi khi tải danh sách users từ followStore:', error);
+            Alert.alert('Lỗi', 'Không thể tải danh sách người dùng từ danh sách theo dõi');
         } finally {
             setLoadingUsers(false);
         }

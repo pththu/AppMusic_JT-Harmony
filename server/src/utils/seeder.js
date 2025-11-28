@@ -63,6 +63,15 @@ const mapTrack = async() => {
     return trackMap;
 }
 
+const mapTrackBySpotifyId = async() => {
+    const tracks = await Track.findAll({ attributes: ['id', 'spotifyId'] });
+    const trackMap = tracks.reduce((map, track) => {
+        map[track.spotifyId] = track.id;
+        return map;
+    }, {});
+    return trackMap;
+}
+
 /**
  * --- 1. SEED DATA CHO ROLE ---
  * Kiểm tra nếu bảng Role đã có dữ liệu (quan trọng để tránh trùng lặp)
@@ -399,17 +408,10 @@ const seedDataPost = async() => {
         console.log('Start insert Posts (append)...');
 
         const users = await User.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
-        const tracks = await Track.findAll({ attributes: ['id'], order: [['id', 'ASC']] });
-
         const userIds = users.map(u => u.id);
-        const trackIds = tracks.map(t => t.id);
 
-        const normalizeTrackId = (index) => {
-            if (!index || trackIds.length === 0) return null;
-            const idx = index - 1;
-            if (idx < 0 || idx >= trackIds.length) return null;
-            return trackIds[idx];
-        };
+        // Map spotifyId -> track.id để không phụ thuộc vào thứ tự seed/ID tự tăng
+        const trackSpotifyMap = await mapTrackBySpotifyId();
 
         const postsToInsert = postData.map(p => ({
             userId: userIds.length ? userIds[((p.userId || 1) - 1) % userIds.length] : null,
@@ -418,9 +420,10 @@ const seedDataPost = async() => {
             heartCount: p.heartCount || 0,
             shareCount: p.shareCount || 0,
             commentCount: p.commentCount || 0,
-            songId: normalizeTrackId(p.songId),
+            // Dùng trackSpotifyId/originalTrackSpotifyId từ posts.json để map sang Track.id
+            songId: p.trackSpotifyId ? (trackSpotifyMap[p.trackSpotifyId] || null) : null,
             isCover: !!p.isCover,
-            originalSongId: normalizeTrackId(p.originalSongId),
+            originalSongId: p.originalTrackSpotifyId ? (trackSpotifyMap[p.originalTrackSpotifyId] || null) : null,
             originalPostId: p.originalPostId || null
         }));
 

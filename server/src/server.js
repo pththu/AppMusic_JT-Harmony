@@ -32,11 +32,11 @@ const io = new Server(server, {
       "exp://192.168.32.101:8081",
       "http://192.168.32.101:3000",
       "exp://192.168.32.101:8081",
-      "exp://192.168.1.12:8081",
-      "exp://192.168.1.14:8081",
+      "exp://192.168.1.28:8081",
+      "exp://192.168.1.28:8081",
       "exp://10.172.55.251:8081",
-      "http://192.168.1.22:3000",
-      "exp://192.168.1.22:8081",
+      "http://192.168.1.28:3000",
+      "exp://192.168.1.28:8081",
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -86,7 +86,7 @@ app.use(
     origin: [
       "http://localhost:3001",
       "http://192.168.32.101:3000",
-      "http://192.168.1.22:3000",
+      "http://192.168.1.28:3000",
     ],
     credentials: true,
   })
@@ -155,9 +155,9 @@ app.use(
 async function startServer() {
   try {
     // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
-    // await sequelize.sync({ alter: true });
+     await sequelize.sync({ alter: true });
     // await sequelize.sync();
-    // console.log('✅ Database synchronized successfully')
+     console.log('✅ Database synchronized successfully')
     // await seedDatabase();
 
     await connectRedis();

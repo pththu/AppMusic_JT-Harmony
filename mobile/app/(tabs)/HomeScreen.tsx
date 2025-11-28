@@ -172,7 +172,9 @@ export default function HomeScreen() {
           Hi, {isGuest ? "Guest" : String(user?.fullName || user?.username)} 👋
         </Text>
         <View className="flex-row items-center">
-          <TouchableOpacity className="mr-4 relative">
+          <TouchableOpacity className="mr-4 relative"
+           onPress={() => navigate("Activity")}
+          >
             <Icon name="notifications-outline" size={28} color={colorScheme === "dark" ? "white" : "black"} />
             {hasNotification && (
               <View className="absolute -top-1 -right-1 min-w-[16px] px-1 h-4 bg-red-500 rounded-full items-center justify-center">

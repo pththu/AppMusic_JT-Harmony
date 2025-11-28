@@ -1,6 +1,6 @@
 import axiosClient from '@/config/axiosClient';
 
-export type NotificationType = 'like' | 'comment' | 'share' | string;
+export type NotificationType = 'like' | 'comment' | 'share' | 'follow' | 'message' | string;
 
 export interface NotificationActor {
   id: number;

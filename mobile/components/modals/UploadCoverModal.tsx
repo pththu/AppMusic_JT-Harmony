@@ -221,9 +221,9 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         <Icon name="chevron-right" size={20} color="rgb(156, 163, 175)" />
       </TouchableOpacity>
 
-      {/* Chọn media - Thiết kế dạng thẻ nổi bật */}
+      {/* Chọn media */}
       <TouchableOpacity
-        onPress={handleSelectMedia}
+        onPress={isUploading ? undefined : handleSelectMedia}
         className={`flex-row items-center border rounded-xl p-4 mb-4 ${selectedMedia
           ? "border-indigo-500 bg-indigo-500/10"
           : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#171431]"
@@ -238,7 +238,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
           <Text
             className={`font-semibold text-base ${selectedMedia ? "text-indigo-600 dark:text-indigo-400" : "text-gray-500 dark:text-gray-400"}`}
           >
-            {selectedMedia ? "Media đã chọn" : "Chọn Audio/Video"}
+            {selectedMedia ? "Upload khi nhấn đăng" : "Chọn Audio/Video"}
           </Text>
           {selectedMedia && (
             <Text className="text-sm text-black dark:text-white mt-1">
@@ -266,8 +266,11 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
 
       {/* Button post */}
       <CustomButton
-        title="Đăng Cover"
-        onPress={handlePostCover}
+        title={isUploading ? "Đang đăng cover..." : "Đăng Cover"}
+        onPress={() => {
+          if (isUploading || !selectedSong || !selectedMedia) return;
+          handlePostCover();
+        }}
         variant="primary"
         size="large"
         className={`${isUploading || !selectedSong || !selectedMedia
@@ -355,6 +358,14 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
           <TouchableWithoutFeedback>
             {/* Main content container */}
             <View className="bg-white dark:bg-[#171431] rounded-t-3xl p-6 flex-1 max-h-[85%]">
+              {isUploading && (
+                <View className="absolute inset-0 bg-black/40 z-10 justify-center items-center rounded-t-3xl">
+                  <ActivityIndicator size="large" color="#22c55e" />
+                  <Text className="mt-2 text-white font-semibold">
+                    Đang tải lên cover...
+                  </Text>
+                </View>
+              )}
               {/* Header cho Form chính */}
               {!showSongSelector && (
                 <View className="flex-row justify-between items-center pb-4 mb-4 border-b border-gray-100 dark:border-gray-700">

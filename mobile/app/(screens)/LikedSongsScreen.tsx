@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
-  Modal
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import SongItem from "@/components/items/SongItem";
@@ -24,6 +25,7 @@ import { useRouter } from "expo-router";
 import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
 import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
 import { useFavoritesStore } from "@/store/favoritesStore";
+import { RemoveFavoriteItem } from "@/services/favoritesService";
 import { useHistoriesStore } from "@/store/historiesStore";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
@@ -65,6 +67,7 @@ export default function LikedSongsScreen() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const primaryIconColor = colorScheme === 'dark' ? 'white' : 'black';
 
   const handleSongAddToPlaylist = () => {
@@ -108,45 +111,59 @@ export default function LikedSongsScreen() {
   };
 
   // Xóa các bài hát đã chọn
-  const deleteSelectedTracks = async () => {
-    if (selectedTracks.size === 0) return;
+  const deleteSelectedTracks = () => {
+    if (selectedTracks.size === 0 || isDeleting) return;
 
-    const confirmed: any = await confirm(
+    confirm(
       'Xác nhận xóa',
-      `Bạn có chắc chắn muốn xóa ${selectedTracks.size} bài hát đã chọn khỏi danh sách yêu thích?`
+      `Bạn có chắc chắn muốn xóa ${selectedTracks.size} bài hát đã chọn khỏi danh sách yêu thích?`,
+      async () => {
+        try {
+          setIsDeleting(true);
+          const { favoriteItems } = useFavoritesStore.getState();
+
+          // Tìm các bản ghi favorite tương ứng với các track đã chọn
+          const itemsToRemove = favoriteItems.filter(item => {
+            const trackId = item.itemId?.toString() || item.itemSpotifyId || '';
+            return selectedTracks.has(trackId) && item.itemType === 'track';
+          });
+
+          // Gọi API xóa trên backend cho từng bản ghi yêu thích
+          for (const favItem of itemsToRemove) {
+            try {
+              await RemoveFavoriteItem(favItem.id);
+            } catch (apiErr) {
+              console.error('Lỗi khi xóa favorite trên server:', apiErr);
+            }
+          }
+
+          // Cập nhật lại store local sau khi xóa
+          const updatedFavorites = favoriteItems.filter(item => !itemsToRemove.includes(item));
+          useFavoritesStore.setState({ favoriteItems: updatedFavorites });
+
+          // Cập nhật state local cho danh sách bài hát yêu thích (kèm thời điểm thêm vào yêu thích)
+          const updatedTracks = updatedFavorites
+            .filter(item => item.itemType === 'track')
+            .map(item => ({
+              ...item.item,
+              favoriteCreatedAt: item.createdAt,
+            }));
+          setFavoriteTracks(updatedTracks);
+
+          // Đặt lại trạng thái chọn
+          setSelectedTracks(new Set());
+          setIsSelectionMode(false);
+          setSelectAll(false);
+
+          success(`Đã xóa ${itemsToRemove.length} bài hát khỏi danh sách yêu thích`);
+        } catch (err) {
+          console.error('Lỗi khi xóa bài hát:', err);
+          error('Đã xảy ra lỗi khi xóa bài hát');
+        } finally {
+          setIsDeleting(false);
+        }
+      }
     );
-
-    if (!confirmed) return;
-
-    try {
-      const { removeFavoriteItem } = useFavoritesStore.getState();
-      const { favoriteItems } = useFavoritesStore.getState();
-
-      // Tạo bản sao của danh sách yêu thích và lọc ra các bài hát đã chọn
-      const updatedFavorites = favoriteItems.filter(item => {
-        const trackId = item.itemId?.toString() || item.itemSpotifyId || '';
-        return !selectedTracks.has(trackId);
-      });
-
-      // Cập nhật store
-      useFavoritesStore.setState({ favoriteItems: updatedFavorites });
-
-      // Cập nhật state local
-      const updatedTracks = updatedFavorites
-        .filter(item => item.itemType === 'track')
-        .map(item => item.item);
-      setFavoriteTracks(updatedTracks);
-
-      // Đặt lại trạng thái chọn
-      setSelectedTracks(new Set());
-      setIsSelectionMode(false);
-      setSelectAll(false);
-
-      success(`Đã xóa ${selectedTracks.size} bài hát khỏi danh sách yêu thích`);
-    } catch (err) {
-      console.error('Lỗi khi xóa bài hát:', err);
-      error('Đã xảy ra lỗi khi xóa bài hát');
-    }
   };
 
   const handleSelectArtist = (artist) => {
@@ -305,16 +322,26 @@ export default function LikedSongsScreen() {
   const sortedTracks = useMemo(() => {
     const sortableList = [...favoriteTracks]; // Tạo bản sao
     sortableList.sort((a, b) => {
+      // Ưu tiên thời điểm được thêm vào danh sách yêu thích (favoriteCreatedAt), fallback về createdAt của track
+      const aDate = a?.favoriteCreatedAt || a?.createdAt;
+      const bDate = b?.favoriteCreatedAt || b?.createdAt;
+
       switch (sortOrder) {
         case 'name_asc':
           return (a.name || '').localeCompare(b.name || ''); // A-Z
         case 'name_desc':
           return (b.name || '').localeCompare(a.name || ''); // Z-A
-        case 'date_asc':
-          return new Date(a?.createdAt).getTime() - new Date(b?.createdAt).getTime(); // Cũ nhất
+        case 'date_asc': {
+          const aTime = aDate ? new Date(aDate).getTime() : 0;
+          const bTime = bDate ? new Date(bDate).getTime() : 0;
+          return aTime - bTime; // Cũ nhất
+        }
         case 'date_desc':
-        default:
-          return new Date(b?.createdAt).getTime() - new Date(a?.createdAt).getTime(); // Mới nhất
+        default: {
+          const aTime = aDate ? new Date(aDate).getTime() : 0;
+          const bTime = bDate ? new Date(bDate).getTime() : 0;
+          return bTime - aTime; // Mới nhất
+        }
       }
     });
     return sortableList;
@@ -341,7 +368,11 @@ export default function LikedSongsScreen() {
     const allFavoriteTracks = [];
     for (const favItem of favoriteItems) {
       if (favItem.itemType === 'track') {
-        allFavoriteTracks.push(favItem.item);
+        // Gắn thêm thời điểm được thêm vào yêu thích để phục vụ sắp xếp mới nhất/cũ nhất
+        allFavoriteTracks.push({
+          ...favItem.item,
+          favoriteCreatedAt: favItem.createdAt,
+        });
       }
     }
     setFavoriteTracks(allFavoriteTracks);
@@ -377,6 +408,12 @@ export default function LikedSongsScreen() {
     <View className={`flex-1 px-4 pt-4 bg-white dark:bg-black`}
     // style={{ paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0 }}
     >
+      {isDeleting && (
+        <View className="absolute inset-0 z-20 bg-black/30 justify-center items-center">
+          <ActivityIndicator size="large" color="#22c55e" />
+          <Text className="mt-2 text-white font-semibold">Đang xóa bài hát yêu thích...</Text>
+        </View>
+      )}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center">
           {isSelectionMode ? (
