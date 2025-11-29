@@ -14,9 +14,9 @@ const createDatabaseIfNotExists = async () => {
             password: DB_PASS,
             port: DB_PORT,
             database: 'postgres', // Kết nối tới cơ sở dữ liệu mặc định
-            ssl: {
-                rejectUnauthorized: false, // Thiết lập này chỉ nên dùng cho môi trường phát triển
-            },
+            // ssl: {
+            //     rejectUnauthorized: false, // Thiết lập này chỉ nên dùng cho môi trường phát triển
+            // },
         });
 
         await client.connect();
@@ -44,12 +44,12 @@ const initializeSequelize = () => {
         dialect: 'postgres',
         port: process.env.DB_PORT,
         logging: false, // Hiển thị log các câu SQL (có thể tắt nếu không cần)
-        dialectOptions: {
-            ssl: {
-                require: true,
-                rejectUnauthorized: false, // Thiết lập này chỉ nên dùng cho môi trường phát triển
-            },
-        },
+        // dialectOptions: {
+        //     ssl: {
+        //         require: true,
+        //         rejectUnauthorized: false, // Thiết lập này chỉ nên dùng cho môi trường phát triển
+        //     },
+        // },
     });
 
     return sequelize;

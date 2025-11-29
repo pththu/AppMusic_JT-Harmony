@@ -3,15 +3,31 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
+interface SongItemProps {
+  item: any;
+  image?: string;
+  onPress?: () => void;
+  onOptionsPress?: () => void;
+  isHistoryItem?: boolean;
+  isQueueItem?: boolean;
+  updateAt?: Date;
+  isSelected?: boolean;
+  selectionMode?: boolean;
+  track?: any;
+}
+
 export default function SongItem({
   item,
   image,
-  onPress,
-  onOptionsPress,
+  onPress = () => {},
+  onOptionsPress = () => {},
   isHistoryItem = false,
   isQueueItem = false,
   updateAt = new Date(),
-}) {
+  isSelected = false,
+  selectionMode = false,
+  track = null,
+}: SongItemProps) {
   const colorScheme = useColorScheme();
   const imageTrackDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1761533935/kltn/playlist_default.png';
 
@@ -43,11 +59,33 @@ export default function SongItem({
   }
 
   return (
-    <TouchableOpacity className="flex-row items-center py-2 mb-1" onPress={onPress}>
+    <TouchableOpacity 
+      className={`flex-row items-center py-2 mb-1 ${selectionMode ? 'pl-2' : ''}`} 
+      onPress={onPress}
+    >
+      {selectionMode && (
+        <View className="mr-3">
+          <Icon 
+            name={isSelected ? 'checkbox-outline' : 'square-outline'} 
+            size={24} 
+            color={isSelected ? '#3b82f6' : (colorScheme === 'dark' ? '#fff' : '#000')} 
+          />
+        </View>
+      )}
       <Image source={{ uri: image || imageTrackDefault }} className="w-12 h-12 rounded-md mr-3" />
       <View className="flex-1">
-        <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semibold`}>{item.name}</Text>
-        <Text className={`${colorScheme === 'dark' ? 'text-gray-300' : 'text-gray-800'} text-xs`}>{formatArtistNames(item.artists)}</Text>
+        <Text 
+          className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} font-semibold`}
+          numberOfLines={1}
+        >
+          {track?.name || item.name}
+        </Text>
+        <Text 
+          className={`${colorScheme === 'dark' ? 'text-gray-300' : 'text-gray-800'} text-xs`}
+          numberOfLines={1}
+        >
+          {formatArtistNames(track?.artists || item.artists || [])}
+        </Text>
       </View>
       {!isHistoryItem && (
         <TouchableOpacity onPress={onOptionsPress}>

@@ -1,4 +1,6 @@
 const { Follow, User, sequelize, FollowArtist, Artist, FollowUser } = require('../models');
+const { createNotification } = require('../utils/notificationHelper');
+
 const Sequelize = require('sequelize'); // Import module gốc
 const spotify = require('../configs/spotify');
 const { getCached } = require('../utils/cache');
@@ -274,6 +276,15 @@ const CreateFollowUser = async (req, res) => {
         await redisClient.del(cacheKeyProfileSocialFollower);
         await redisClient.del(cacheKeyFollowers);
         await redisClient.del(cacheKeyFollowedUsers);
+
+        // Tạo thông báo follow cho người được theo dõi
+        await createNotification({
+            userId: followeeId,
+            actorId: followerId,
+            type: 'follow',
+            message: '',
+            metadata: {},
+        });
 
         return res.status(201).json({
             message: 'FollowUser created successfully',

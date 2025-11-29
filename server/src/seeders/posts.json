@@ -6,9 +6,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 1,
+    "trackSpotifyId": "5YMXGBD6vcYP7IolemyLtK",
     "isCover": false,
-    "originalSongId": 1,
+    "originalTrackSpotifyId": "5YMXGBD6vcYP7IolemyLtK",
     "originalPostId": null
   },
   {
@@ -18,9 +18,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 2,
+    "trackSpotifyId": "4YDHRtzm0OGuieCTVQjVuk",
     "isCover": false,
-    "originalSongId": 2,
+    "originalTrackSpotifyId": "4YDHRtzm0OGuieCTVQjVuk",
     "originalPostId": null
   },
   {
@@ -30,9 +30,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 3,
+    "trackSpotifyId": "1dS4l6xmdgEhCZTAhdOm4N",
     "isCover": false,
-    "originalSongId": 3,
+    "originalTrackSpotifyId": "1dS4l6xmdgEhCZTAhdOm4N",
     "originalPostId": null
   },
   {
@@ -54,9 +54,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 4,
+    "trackSpotifyId": "2ngmiq1KoYn3x25VOmvd8F",
     "isCover": false,
-    "originalSongId": 4,
+    "originalTrackSpotifyId": "2ngmiq1KoYn3x25VOmvd8F",
     "originalPostId": null
   },
 
@@ -67,9 +67,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 5,
+    "trackSpotifyId": "1rLkzFZdokhx6Wcs80uvnw",
     "isCover": false,
-    "originalSongId": 5,
+    "originalTrackSpotifyId": "1rLkzFZdokhx6Wcs80uvnw",
     "originalPostId": null
   },
   {
@@ -91,9 +91,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 6,
+    "trackSpotifyId": "6bSwpQYEguyMlkCoWiBt3Y",
     "isCover": false,
-    "originalSongId": 6,
+    "originalTrackSpotifyId": "6bSwpQYEguyMlkCoWiBt3Y",
     "originalPostId": null
   },
   {
@@ -128,9 +128,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 1,
+    "trackSpotifyId": "5YMXGBD6vcYP7IolemyLtK",
     "isCover": true,
-    "originalSongId": 1,
+    "originalTrackSpotifyId": "5YMXGBD6vcYP7IolemyLtK",
     "originalPostId": null
   },
   {
@@ -140,9 +140,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 3,
+    "trackSpotifyId": "1dS4l6xmdgEhCZTAhdOm4N",
     "isCover": true,
-    "originalSongId": 3,
+    "originalTrackSpotifyId": "1dS4l6xmdgEhCZTAhdOm4N",
     "originalPostId": null
   },
   {
@@ -152,9 +152,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 2,
+    "trackSpotifyId": "4YDHRtzm0OGuieCTVQjVuk",
     "isCover": true,
-    "originalSongId": 2,
+    "originalTrackSpotifyId": "4YDHRtzm0OGuieCTVQjVuk",
     "originalPostId": null
   },
   {
@@ -164,9 +164,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 4,
+    "trackSpotifyId": "2ngmiq1KoYn3x25VOmvd8F",
     "isCover": true,
-    "originalSongId": 4,
+    "originalTrackSpotifyId": "2ngmiq1KoYn3x25VOmvd8F",
     "originalPostId": null
   },
   {
@@ -176,9 +176,9 @@
     "heartCount": 0,
     "shareCount": 0,
     "commentCount": 0,
-    "songId": 5,
+    "trackSpotifyId": "1rLkzFZdokhx6Wcs80uvnw",
     "isCover": true,
-    "originalSongId": 5,
+    "originalTrackSpotifyId": "1rLkzFZdokhx6Wcs80uvnw",
     "originalPostId": null
   },
 

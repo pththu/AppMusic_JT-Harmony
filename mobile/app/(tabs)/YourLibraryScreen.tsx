@@ -84,6 +84,13 @@ export default function YourLibraryScreen() {
   const trackList = useMemo(() => {
     const tracks = listenHistory
       .filter((item) => item.itemType === 'track')
+      // Sắp xếp theo thời gian thêm vào (mới nhất lên đầu)
+      .sort((a, b) => {
+        // Sử dụng timestamp nếu có, nếu không sử dụng thời gian hiện tại
+        const timeA = a.timestamp || new Date().getTime();
+        const timeB = b.timestamp || new Date().getTime();
+        return timeB - timeA; // Sắp xếp giảm dần (mới nhất lên đầu)
+      })
       .map((item) => item);
     return tracks;
   }, [listenHistory]);

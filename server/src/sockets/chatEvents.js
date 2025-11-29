@@ -1,4 +1,5 @@
 const { User, Message, Conversation, ConversationMember, sequelize } = require('../models');
+const { createNotification } = require('../utils/notificationHelper');
 
 /**
  *  Export một hàm nhận instance của Socket.IO Server (io)
@@ -68,6 +69,25 @@ module.exports = function (io) {
 
                 // Gửi tin nhắn tới tất cả thành viên trong phòng Chat
                 io.to(`conversation_${conversationId}`).emit('receive_message', messageWithSender);
+
+                // Tạo thông báo tin nhắn mới cho tất cả thành viên khác trong cuộc trò chuyện
+                const members = await ConversationMember.findAll({
+                    where: { conversationId },
+                    attributes: ['userId'],
+                });
+
+                for (const member of members) {
+                    const receiverId = member.userId;
+                    if (receiverId === userId) continue; // Bỏ qua chính người gửi
+
+                    await createNotification({
+                        userId: receiverId,
+                        actorId: userId,
+                        type: 'message',
+                        message: '',
+                        metadata: { conversationId },
+                    });
+                }
 
                 // Cập nhật trạng thái "đã đọc" cho chính người gửi
                 await ConversationMember.update({ lastReadMessageId: newMessage.id }, { where: { conversationId, userId } });

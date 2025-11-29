@@ -90,6 +90,22 @@ export default function ActivityScreen() {
   }, [markAllNotificationsReadLocal, setUnreadCount]);
 
   const navigateToNotification = (notification: NotificationItem) => {
+    // Thông báo tin nhắn mới: điều hướng đến màn hình trò chuyện
+    if (notification.type === 'message') {
+      navigate('ConversationsScreen');
+      return;
+    }
+
+    // Thông báo follow: mở trang profile của người theo dõi
+    if (notification.type === 'follow') {
+      const targetUserId = notification.Actor?.id || notification.actorId;
+      if (targetUserId) {
+        navigate('ProfileSocialScreen', { userId: targetUserId });
+      }
+      return;
+    }
+
+    // Thông báo liên quan bài viết (like/comment/share)
     if (notification.postId) {
       navigate('Social');
     }
@@ -137,6 +153,10 @@ export default function ActivityScreen() {
         return 'đã bình luận bài viết của bạn';
       case 'share':
         return 'đã chia sẻ bài viết của bạn';
+      case 'follow':
+        return 'đã bắt đầu theo dõi bạn';
+      case 'message':
+        return 'đã gửi cho bạn một tin nhắn mới';
       default:
         return 'đã tương tác với bạn';
     }

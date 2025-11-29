@@ -20,6 +20,8 @@ const NOTIFICATION_FILTERS = [
   { label: 'Thích', value: 'like' },
   { label: 'Bình luận', value: 'comment' },
   { label: 'Chia sẻ', value: 'share' },
+  { label: 'Theo dõi', value: 'follow' },
+  { label: 'Tin nhắn', value: 'message' },
 ];
 
 const MOODS = [

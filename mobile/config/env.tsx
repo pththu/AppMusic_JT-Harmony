@@ -8,6 +8,6 @@ export const ENV = {
   FACEBOOK_APP_ID: Constants.expoConfig?.extra?.FACEBOOK_APP_ID as string,
   FACEBOOK_CLIENT_TOKEN: Constants.expoConfig?.extra?.FACEBOOK_CLIENT_TOKEN as string,
   FACEBOOK_DISPLAY_NAME: Constants.expoConfig?.extra?.FACEBOOK_DISPLAY_NAME as string,
-  // SOCKET_SERVER_URL: Constants.expoConfig?.extra?.SOCKET_SERVER_URL as string,
-  SOCKET_SERVER_URL: 'http://192.168.1.14:3000'
+  SOCKET_SERVER_URL: Constants.expoConfig?.extra?.SOCKET_SERVER_URL as string,
+  // SOCKET_SERVER_URL: 'http://192.168.1.28:3000'
 };

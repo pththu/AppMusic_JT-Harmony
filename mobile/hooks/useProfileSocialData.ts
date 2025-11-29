@@ -49,8 +49,15 @@ export const useProfileSocialData = (userId) => {
       if ("message" in postResponse) {
         throw new Error(String(postResponse.message));
       }
-      const allPosts = postResponse;
-      const postsOnly = allPosts.filter((post) => !post.isCover);
+      const allPosts = postResponse as any[];
+
+      const normalizedPosts = allPosts.map((post) => ({
+        ...post,
+        // Đảm bảo luôn có field originalPost giống SocialScreen.mapApiPostToLocal
+        originalPost: (post as any).originalPost || (post as any).OriginalPost || null,
+      }));
+
+      const postsOnly = normalizedPosts.filter((post) => !post.isCover);
       setPosts(postsOnly);
     } catch (err) {
       error("Lỗi", "Không thể tải bài đăng. Vui lòng thử lại." + err.message);

@@ -311,18 +311,32 @@ const SocialScreen = () => {
 
       // GỌI API TẠO BÀI ĐĂNG
       const apiPost = await createNewPost(content, fileUrlsToSend, songId);
+      
+      // Kiểm tra lỗi từ API
+      if (!apiPost || (apiPost as any).status === 'error') {
+        throw new Error((apiPost as any)?.message || 'Không thể tạo bài đăng');
+      }
 
-      // MAP KẾT QUẢ VÀ CẬP NHẬT STATE
-      const newPost = mapApiPostToLocal(apiPost);
-      setPosts([newPost, ...posts]);
+      // Map bài đăng mới về format local (hàm async)
+      const newPost = await mapApiPostToLocal(apiPost);
+
+      // Cập nhật state: thêm bài mới lên đầu danh sách (optimistic)
+      setPosts(prevPosts => [newPost, ...prevPosts]);
 
       // RESET INPUTS
       setNewPostText("");
       setSelectedMediaAssets([]);
       setSelectedSongId(null);
       Keyboard.dismiss();
+
+      // Sau khi đăng thành công, gọi lại loadPosts để đồng bộ với backend
+      setLoading(true);
+      await loadPosts();
+      setLoading(false);
     } catch (err) {
-      error("Lỗi Đăng Bài", err.response?.data?.error || "Không thể tạo bài đăng.");
+      console.error("Lỗi khi tạo bài đăng:", err);
+      const errorMessage = err.response?.data?.error || err.message || "Không thể tạo bài đăng.";
+      Alert.alert("Lỗi Đăng Bài", errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -392,50 +406,57 @@ const SocialScreen = () => {
 
   // Hàm xử lý xóa bài viết
   const handleDeletePost = async (postId: string) => {
-    // Alert.alert("Xác nhận xóa", "Bạn có chắc chắn muốn xóa bài viết này?", [
-    //   { text: "Hủy", style: "cancel" },
-    //   {
-    //     text: "Xóa",
-    //     style: "destructive",
-    //     onPress: async () => {
-    //       try {
-    //         const result = await deletePost(postId);
-    //         if ("message" in result) {
-    //           throw new Error(result.message);
-    //         }
-    //         // Xóa bài viết khỏi state
-    //         setPosts((prevPosts) =>
-    //           prevPosts.filter((post) => post.id !== postId)
-    //         );
-    //         Alert.alert("Thành công", "Bài viết đã được xóa.");
-    //       } catch (error) {
-    //         console.error("Lỗi khi xóa bài viết:", error);
-    //         Alert.alert("Lỗi", "Không thể xóa bài viết.");
-    //       }
-    //     },
-    //   },
-    // ]);
     confirm(
       "Xác nhận xóa",
       "Bạn có chắc chắn muốn xóa bài viết này?",
       async () => {
         try {
+          // Thêm hiệu ứng loading
+          setIsUploading(true);
+          
+          // Gọi API xóa bài viết
           const result = await deletePost(postId);
-          if ("message" in result) {
-            throw new Error(result.message);
+          
+          // Kiểm tra kết quả trả về từ API
+          if (result && 'message' in result) {
+            if (result.message === 'Post deleted successfully') {
+              // Xóa bài viết khỏi state nếu xóa thành công
+              setPosts(prevPosts => 
+                prevPosts.filter(post => post.id !== postId)
+              );
+              success("Bài viết đã được xóa thành công!");
+            } else {
+              throw new Error(result.message || 'Không thể xóa bài viết');
+            }
+          } else {
+            // Xử lý trường hợp không có thông báo từ server
+            // Vẫn cập nhật UI để đảm bảo trải nghiệm người dùng mượt mà
+            setPosts(prevPosts => 
+              prevPosts.filter(post => post.id !== postId)
+            );
+            success("Bài viết đã được xóa thành công!");
           }
-          // Xóa bài viết khỏi state
-          setPosts((prevPosts) =>
-            prevPosts.filter((post) => post.id !== postId)
-          );
-          success("Bài viết đã được xóa.");
         } catch (error) {
           console.error("Lỗi khi xóa bài viết:", error);
-          error("Lỗi", "Không thể xóa bài viết.");
+          
+          // Hiển thị thông báo lỗi chi tiết hơn
+          let errorMessage = "Đã xảy ra lỗi khi xóa bài viết";
+          if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          Alert.alert("Lỗi", errorMessage);
+        } finally {
+          setIsUploading(false);
         }
       },
-      () => { }
-    )
+      () => {
+        // Hủy xóa
+        console.log("Đã hủy xóa bài viết");
+      }
+    );
   };
 
   // Mở modal comment
@@ -810,8 +831,8 @@ const SocialScreen = () => {
 
       const { newPost, originalPost } = result;
 
-      // Thêm bài re-share mới vào đầu danh sách
-      const mappedNewPost = mapApiPostToLocal(newPost);
+      // Thêm bài re-share mới vào đầu danh sách (map async)
+      const mappedNewPost = await mapApiPostToLocal(newPost);
       setPosts((prevPosts) => [mappedNewPost, ...prevPosts]);
 
       // Cập nhật shareCount cho bài gốc nếu backend trả về
@@ -827,6 +848,11 @@ const SocialScreen = () => {
       setReShareModalVisible(false);
       setReShareCaption("");
       setReShareTargetPost(null);
+
+      // Sau khi share thành công, đồng bộ lại danh sách bài đăng với backend
+      setLoading(true);
+      await loadPosts();
+      setLoading(false);
     } catch (error) {
       console.error("Lỗi khi chia sẻ bài đăng:", error);
       Alert.alert("Lỗi", "Không thể chia sẻ bài viết.");
