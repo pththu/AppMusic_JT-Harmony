@@ -40,6 +40,11 @@ export default function DashboardPage() {
   const [dateTo, setDateTo] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [granularity, setGranularity] = useState<Granularity>('day');
   const [loadingAll, setLoadingAll] = useState(false);
+  const [cardItems, setCardItems] = useState([
+    { title: 'Posts', data: tsPosts },
+    { title: 'Comments', data: tsComments },
+    { title: 'Likes', data: tsLikes }
+  ]);
 
   const resetFilters = () => {
     const defaultFrom = format(subDays(new Date(), 7), 'yyyy-MM-dd');
@@ -61,10 +66,6 @@ export default function DashboardPage() {
         return { text: "text-pink-600", bg: "bg-pink-50" };
       case "Báo Cáo":
         return { text: "text-red-600", bg: "bg-red-50" };
-      case "Cuộc Trò Chuyện":
-        return { text: "text-teal-600", bg: "bg-teal-50" };
-      case "Tin Nhắn":
-        return { text: "text-orange-600", bg: "bg-orange-50" };
       default:
         return { text: "text-gray-500", bg: "bg-gray-100" };
     }
@@ -74,13 +75,11 @@ export default function DashboardPage() {
     setLoadingAll(true);
     try {
       const params = { dateFrom, dateTo, granularity } as any;
-      const [sum, p, c, l, m, cv, cb, rb, tp, tu] = await Promise.all([
+      const [sum, p, c, l, cb, rb, tp, tu] = await Promise.all([
         fetchSummary({ dateFrom, dateTo }),
         fetchTimeseries('posts', params),
         fetchTimeseries('comments', params),
         fetchTimeseries('likes', params),
-        fetchTimeseries('messages', params),
-        fetchTimeseries('conversations', params),
         fetchPostsCoverBreakdown({ dateFrom, dateTo }),
         fetchReportsStatusBreakdown({ dateFrom, dateTo }),
         fetchTopPosts({ by: 'likes', dateFrom, dateTo, limit: 5 }),
@@ -90,8 +89,6 @@ export default function DashboardPage() {
       setTsPosts(p.data || []);
       setTsComments(c.data || []);
       setTsLikes(l.data || []);
-      setTsMessages(m.data || []);
-      setTsConvs(cv.data || []);
       setCoverBreakdown(cb || []);
       setReportsBreakdown(rb || []);
       setTopPosts(tp || []);
@@ -167,8 +164,6 @@ export default function DashboardPage() {
           { title: "Bình Luận", icon: MessageCircle, value: summary?.comments ?? "-" },
           { title: "Thích", icon: Heart, value: summary?.likes ?? "-" },
           { title: "Báo Cáo", icon: Flag, value: summary?.reports ?? "-" },
-          { title: "Cuộc Trò Chuyện", icon: MessageSquare, value: summary?.conversations ?? "-" },
-          { title: "Tin Nhắn", icon: Mail, value: summary?.messages ?? "-" },
         ].map((s) => (
           <Card key={s.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -191,7 +186,7 @@ export default function DashboardPage() {
 
       {/* Timeseries charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-        {[{title:'Posts', data: tsPosts}, {title:'Comments', data: tsComments}, {title:'Likes', data: tsLikes}, {title:'Messages', data: tsMessages}, {title:'Conversations', data: tsConvs}].map(({title, data}) => (
+        {cardItems.map(({ title, data }) => (
           <Card key={title}>
             <CardHeader>
               <CardTitle>{title} theo thời gian</CardTitle>
@@ -199,19 +194,25 @@ export default function DashboardPage() {
             <CardContent>
               {loadingAll ? (
                 <div className="h-[300px] flex items-center justify-center text-gray-500">Đang tải...</div>
-              ) : data.length === 0 ? (
-                <div className="h-[300px] flex items-center justify-center text-gray-500">Không có dữ liệu</div>
               ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <>
+                  {
+                    data.length === 0 ? (
+                      <div className="h-[300px] flex items-center justify-center text-gray-500">Không có dữ liệu</div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={data}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )
+                  }
+                </>
               )}
             </CardContent>
           </Card>
@@ -227,19 +228,23 @@ export default function DashboardPage() {
           <CardContent>
             {loadingAll ? (
               <div className="h-[300px] flex items-center justify-center text-gray-500">Đang tải...</div>
-            ) : coverBreakdown.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-gray-500">Không có dữ liệu</div>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={coverBreakdown.map(d=>({ name: d.isCover ? 'Cover' : 'Original', value: d.count }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
-                    {coverBreakdown.map((_, i) => (
-                      <Cell key={i} fill={["#34d399","#60a5fa"][i % 2]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <>{
+                coverBreakdown.length === 0 ? (
+                  <div className="h-[300px] flex items-center justify-center text-gray-500">Không có dữ liệu</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie data={coverBreakdown.map(d => ({ name: d.isCover ? 'Cover' : 'Original', value: d.count }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
+                        {coverBreakdown.map((_, i) => (
+                          <Cell key={i} fill={["#34d399", "#60a5fa"][i % 2]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )
+              }</>
             )}
           </CardContent>
         </Card>
@@ -251,19 +256,25 @@ export default function DashboardPage() {
           <CardContent>
             {loadingAll ? (
               <div className="h-[300px] flex items-center justify-center text-gray-500">Đang tải...</div>
-            ) : reportsBreakdown.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-gray-500">Không có dữ liệu</div>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={reportsBreakdown.map(d=>({ name: d.status, value: Number(d.count) }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
-                    {reportsBreakdown.map((_, i) => (
-                      <Cell key={i} fill={["#f87171","#f59e0b","#10b981","#6366f1"][i % 4]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <>
+                {
+                  reportsBreakdown.length === 0 ? (
+                    <div className="h-[300px] flex items-center justify-center text-gray-500">Không có dữ liệu</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie data={reportsBreakdown.map(d => ({ name: d.status, value: Number(d.count) }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
+                          {reportsBreakdown.map((_, i) => (
+                            <Cell key={i} fill={["#f87171", "#f59e0b", "#10b981", "#6366f1"][i % 4]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )
+                }
+              </>
             )}
           </CardContent>
         </Card>
@@ -278,29 +289,35 @@ export default function DashboardPage() {
           <CardContent>
             {loadingAll ? (
               <div className="py-10 text-center text-gray-500">Đang tải...</div>
-            ) : topPosts.length === 0 ? (
-              <div className="py-10 text-center text-gray-500">Không có dữ liệu</div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-500">
-                      <th className="py-2 pr-4">Bài đăng</th>
-                      <th className="py-2 pr-4">Tác giả</th>
-                      <th className="py-2 pr-4">Lượt thích</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topPosts.map((p:any) => (
-                      <tr key={p.id} className="border-t">
-                        <td className="py-2 pr-4 max-w-[360px] truncate">{p.content || p.title || '(không có nội dung)'}</td>
-                        <td className="py-2 pr-4">{p.User?.fullName || p.User?.username || p.userId}</td>
-                        <td className="py-2 pr-4">{p.heartCount ?? p.likeCount ?? 0}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                {
+                  topPosts.length === 0 ? (
+                    <div className="py-10 text-center text-gray-500">Không có dữ liệu</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-gray-500">
+                            <th className="py-2 pr-4">Bài đăng</th>
+                            <th className="py-2 pr-4">Tác giả</th>
+                            <th className="py-2 pr-4">Lượt thích</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topPosts.map((p: any) => (
+                            <tr key={p.id} className="border-t">
+                              <td className="py-2 pr-4 max-w-[360px] truncate">{p.content || p.title || '(không có nội dung)'}</td>
+                              <td className="py-2 pr-4">{p.User?.fullName || p.User?.username || p.userId}</td>
+                              <td className="py-2 pr-4">{p.heartCount ?? p.likeCount ?? 0}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                }
+              </>
             )}
           </CardContent>
         </Card>
@@ -312,27 +329,33 @@ export default function DashboardPage() {
           <CardContent>
             {loadingAll ? (
               <div className="py-10 text-center text-gray-500">Đang tải...</div>
-            ) : topUsers.length === 0 ? (
-              <div className="py-10 text-center text-gray-500">Không có dữ liệu</div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-500">
-                      <th className="py-2 pr-4">Người dùng</th>
-                      <th className="py-2 pr-4">Số lượng</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topUsers.map((u:any) => (
-                      <tr key={u.userId} className="border-t">
-                        <td className="py-2 pr-4">{u.User?.fullName || u.User?.username || u.userId}</td>
-                        <td className="py-2 pr-4">{u.count}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                {
+                  topUsers.length === 0 ? (
+                    <div className="py-10 text-center text-gray-500">Không có dữ liệu</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-gray-500">
+                            <th className="py-2 pr-4">Người dùng</th>
+                            <th className="py-2 pr-4">Số lượng</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topUsers.map((u: any) => (
+                            <tr key={u.userId} className="border-t">
+                              <td className="py-2 pr-4">{u.User?.fullName || u.User?.username || u.userId}</td>
+                              <td className="py-2 pr-4">{u.count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                }
+              </>
             )}
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
 import { useNavigate } from '@/hooks/useNavigate';
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, useColorScheme, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, useColorScheme, Image, ActivityIndicator, Button } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';

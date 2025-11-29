@@ -6,7 +6,12 @@ const { redisClient } = require('../configs/redis');
 exports.getAllPlaylist = async (req, res) => {
   try {
     const rows = await Playlist.findAll();
-    res.json(rows);
+    const response = {
+      message: 'Lấy tất cả danh sách phát thành công',
+      data: rows,
+      success: true
+    }
+    res.status(200).json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

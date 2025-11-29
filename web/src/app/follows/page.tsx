@@ -1,456 +1,213 @@
 "use client";
 
-import { useState } from "react";
-import { format } from "date-fns";
-import {
-  MoreHorizontal,
-  Eye,
-  Trash2,
-  UserPlus,
-  Music,
-  Users,
-} from "lucide-react";
-import {
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui";
-import {
-  mockFollowArtists,
-  mockFollowUsers,
-  mockUsers,
-  mockArtists,
-  getUserById,
-  type FollowArtist,
-  type FollowUser,
-} from "@/lib/mock-data";
+import React, { useState, useMemo, useEffect } from "react";
+import { format, subDays, subMonths, startOfYear, isAfter } from "date-fns";
 
-export default function FollowsPage() {
-  const [followArtists, setFollowArtists] =
-    useState<FollowArtist[]>(mockFollowArtists);
-  const [followUsers, setFollowUsers] = useState<FollowUser[]>(mockFollowUsers);
-  const [selectedFollow, setSelectedFollow] = useState<
-    FollowArtist | FollowUser | null
-  >(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [followType, setFollowType] = useState<"artist" | "user">("artist");
+import { useFollowData } from "@/hooks/useFollowData";
+import HeaderSection from "@/components/follow/header-section";
+import OverView from "@/components/follow/over-view";
+import SelectDetails from "@/components/follow/select-details";
+import LeaderboardList from "@/components/follow/leaderboard-list";
+import FollowersListModal from "@/components/follow/followers-list-modal";
+import FollowerModal from "@/components/follow/follower-detail-modal";
 
-  const handleDeleteFollowArtist = (followId: number) => {
-    setFollowArtists(followArtists.filter((follow) => follow.id !== followId));
+export default function FollowsStatsPage() {
+  const [activeTab, setActiveTab] = useState<"artists" | "users">("artists");
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Filter State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [timeFilter, setTimeFilter] = useState<"7days" | "30days" | "6months" | "year">("30days");
+  const [visibleCount, setVisibleCount] = useState(10); // Pagination limit
+
+  // Modal State
+  const [showAllFollowersModal, setShowAllFollowersModal] = useState(false);
+  const [selectedFollowerDetail, setSelectedFollowerDetail] = useState(null);
+
+  const {
+    users,
+    artists,
+    followUsers,
+    followArtists,
+    setUsers,
+    setArtists,
+    setFollowUsers,
+    setFollowArtists,
+  } = useFollowData();
+
+  const getUserById = (id: number) => users.find((u) => u.id === id);
+  const getArtistById = (id: number) => artists.find((a) => a.id === id);
+  // --- LOGIC ---
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [searchQuery, timeFilter, activeTab]);
+
+  // Handle Delete Follow
+  const handleDeleteFollow = (recordId: number, type: "artist" | "user") => {
+    if (confirm("Bạn có chắc chắn muốn xóa lượt theo dõi này không?")) {
+      if (type === "artist") {
+        setFollowArtists(prev => prev.filter(f => f.id !== recordId));
+      } else {
+        setFollowUsers(prev => prev.filter(f => f.id !== recordId));
+      }
+    }
   };
 
-  const handleDeleteFollowUser = (followId: number) => {
-    setFollowUsers(followUsers.filter((follow) => follow.id !== followId));
+  // Filter Data by Time
+  const filterByTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    switch (timeFilter) {
+      case "7days": return isAfter(date, subDays(now, 7));
+      case "30days": return isAfter(date, subDays(now, 30));
+      case "6months": return isAfter(date, subMonths(now, 6));
+      case "year": return isAfter(date, startOfYear(now));
+      default: return true;
+    }
   };
 
-  const handleViewFollow = (
-    follow: FollowArtist | FollowUser,
-    type: "artist" | "user"
-  ) => {
-    setSelectedFollow(follow);
-    setFollowType(type);
-    setIsViewDialogOpen(true);
+  // 1. Calculate Top Artists
+  const topArtists = useMemo(() => {
+    const filteredFollows = followArtists.filter(f => filterByTime(f.createdAt));
+    const counts: Record<number, number> = {};
+
+    filteredFollows.forEach((f) => {
+      counts[f.artistId] = (counts[f.artistId] || 0) + 1;
+    });
+
+    let result = Object.entries(counts)
+      .map(([artistId, count]) => {
+        const artist = getArtistById(Number(artistId));
+        return { ...artist, followerCount: count, rank: 0 };
+      })
+      .filter(item => item.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) => b.followerCount - a.followerCount)
+      .map((item, index) => ({ ...item, rank: index + 1 }));
+
+    return result;
+  }, [followArtists, timeFilter, searchQuery]);
+
+  // 2. Calculate Top Users
+  const topUsers = useMemo(() => {
+    const filteredFollows = followUsers.filter(f => filterByTime(f.createdAt));
+    const counts: Record<number, number> = {};
+
+    filteredFollows.forEach((f) => {
+      counts[f.followeeId] = (counts[f.followeeId] || 0) + 1;
+    });
+
+    let result = Object.entries(counts)
+      .map(([userId, count]) => {
+        const user = getUserById(Number(userId));
+        return { ...user, followerCount: count, rank: 0 };
+      })
+      .filter(item => item.status === 'active')
+      .filter(item =>
+        item.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.username?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => b.followerCount - a.followerCount)
+      .map((item, index) => ({ ...item, rank: index + 1 }));
+
+    return result;
+  }, [followUsers, timeFilter, searchQuery]);
+
+  // 3. Stats
+  const totalArtistFollows = followArtists.length;
+  const totalUserFollows = followUsers.length;
+  const mostPopularArtist = topArtists[0];
+  const mostPopularUser = topUsers[0];
+
+  // Get Followers for Selected Item
+  const getFollowersOfSelected = (limit?: number) => {
+    if (!selectedItem) return [];
+    let list = [];
+
+    if (activeTab === "artists") {
+      list = followArtists
+        .filter(f => f.artistId === selectedItem.id)
+        .map(f => ({ ...f, follower: getUserById(f.followerId) }));
+    } else {
+      list = followUsers
+        .filter(f => f.followeeId === selectedItem.id)
+        .map(f => ({ ...f, follower: getUserById(f.followerId) }));
+    }
+
+    // Sort by newest
+    list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return limit ? list.slice(0, limit) : list;
   };
 
-  const getArtistById = (id: number) => {
-    return mockArtists.find((artist) => artist.id === id);
-  };
+  const followersList = getFollowersOfSelected(); // Full list for modal
+  const followersPreview = getFollowersOfSelected(10); // Preview list for sidebar
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản Lý Theo Dõi</h1>
-          <p className="text-gray-600">
-            Quản lý các mối quan hệ theo dõi (nghệ sĩ và người dùng)
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50/50 p-6 space-y-8 font-sans text-gray-900">
+
+      {/* HEADER SECTION */}
+      <HeaderSection timeFilter={timeFilter} setTimeFilter={setTimeFilter} />
+
+      {/* OVERVIEW CARDS */}
+      <OverView
+        totalArtistFollows={totalArtistFollows}
+        totalUserFollows={totalUserFollows}
+        mostPopularArtist={mostPopularArtist}
+        mostPopularUser={mostPopularUser}
+        timeFilter={timeFilter}
+      />
+
+      {/* MAIN CONTENT AREA */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* LEFT COLUMN: LEADERBOARD LIST */}
+        <LeaderboardList
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          topArtists={topArtists}
+          topUsers={topUsers}
+          visibleCount={visibleCount}
+          selectedItem={selectedItem}
+          setSelectedItem={setSelectedItem}
+          setVisibleCount={setVisibleCount}
+        />
+
+        {/* RIGHT COLUMN: SELECTED DETAILS */}
+        <SelectDetails
+          selectedItem={selectedItem}
+          setSelectedItem={setSelectedItem}
+          activeTab={activeTab}
+          timeFilter={timeFilter}
+          followersPreview={followersPreview}
+          setShowAllFollowersModal={setShowAllFollowersModal}
+          setSelectedFollowerDetail={setSelectedFollowerDetail}
+          format={format}
+        />
       </div>
 
-      <Tabs defaultValue="artists" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="artists">Theo Dõi Nghệ Sĩ</TabsTrigger>
-          <TabsTrigger value="users">Theo Dõi Người Dùng</TabsTrigger>
-        </TabsList>
+      {/* --- MODALS --- */}
+      {/* 1. Modal Xem Tất Cả Followers */}
+      <FollowersListModal
+        showAllFollowersModal={showAllFollowersModal}
+        setShowAllFollowersModal={setShowAllFollowersModal}
+        selectedItem={selectedItem}
+        followersList={followersList}
+        setSelectedFollowerDetail={setSelectedFollowerDetail}
+        handleDeleteFollow={handleDeleteFollow}
+        activeTab={activeTab}
+        format={format}
+      />
 
-        <TabsContent value="artists" className="space-y-4">
-          <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Người Theo Dõi</TableHead>
-                  <TableHead>Nghệ Sĩ</TableHead>
-                  <TableHead>Thời Gian</TableHead>
-                  <TableHead className="w-[70px]">Hành Động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {followArtists.map((follow) => {
-                  const follower = getUserById(follow.followerId);
-                  const artist = getArtistById(follow.artistId);
-
-                  return (
-                    <TableRow key={follow.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                            {follower?.avatarUrl ? (
-                              <img
-                                src={follower.avatarUrl}
-                                alt={follower.username}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <Users className="h-4 w-4 text-gray-600" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {follower?.username}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {follower?.fullName}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                            {artist?.imageUrl ? (
-                              <img
-                                src={artist.imageUrl}
-                                alt={artist.name}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <Music className="h-4 w-4 text-gray-600" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {artist?.name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Spotify ID: {artist?.spotifyId}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {format(
-                          new Date(follow.followedAt),
-                          "MMM dd, yyyy 'lúc' HH:mm"
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleViewFollow(follow, "artist")}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              Xem Chi Tiết
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() =>
-                                handleDeleteFollowArtist(follow.id)
-                              }
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Xóa Theo Dõi
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-4">
-          <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Người Theo Dõi</TableHead>
-                  <TableHead>Được Theo Dõi</TableHead>
-                  <TableHead>Thời Gian</TableHead>
-                  <TableHead className="w-[70px]">Hành Động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {followUsers.map((follow) => {
-                  const follower = getUserById(follow.followerId);
-                  const followee = getUserById(follow.followeeId);
-
-                  return (
-                    <TableRow key={follow.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                            {follower?.avatarUrl ? (
-                              <img
-                                src={follower.avatarUrl}
-                                alt={follower.username}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <Users className="h-4 w-4 text-gray-600" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {follower?.username}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {follower?.fullName}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                            {followee?.avatarUrl ? (
-                              <img
-                                src={followee.avatarUrl}
-                                alt={followee.username}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <Users className="h-4 w-4 text-gray-600" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {followee?.username}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {followee?.fullName}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {format(
-                          new Date(follow.followedAt),
-                          "MMM dd, yyyy 'lúc' HH:mm"
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleViewFollow(follow, "user")}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              Xem Chi Tiết
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => handleDeleteFollowUser(follow.id)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Xóa Theo Dõi
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* View Follow Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Chi Tiết Mối Quan Hệ Theo Dõi</DialogTitle>
-            <DialogDescription>
-              Xem thông tin chi tiết về mối quan hệ theo dõi
-            </DialogDescription>
-          </DialogHeader>
-          {selectedFollow && (
-            <div className="space-y-4">
-              <div className="border rounded-lg p-4 bg-gray-50">
-                <div className="flex items-center space-x-3 mb-3">
-                  <UserPlus className="h-6 w-6 text-green-500" />
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {followType === "artist"
-                        ? "Theo Dõi Nghệ Sĩ"
-                        : "Theo Dõi Người Dùng"}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {format(
-                        new Date(selectedFollow.followedAt),
-                        "MMM dd, yyyy 'lúc' HH:mm"
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Follower Info */}
-                <div className="mb-4">
-                  <h4 className="font-medium text-gray-900 mb-2">
-                    Người Theo Dõi
-                  </h4>
-                  {(() => {
-                    const follower = getUserById(selectedFollow.followerId);
-                    return follower ? (
-                      <div className="flex items-center space-x-3 p-3 bg-white rounded border">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                          {follower.avatarUrl ? (
-                            <img
-                              src={follower.avatarUrl}
-                              alt={follower.username}
-                              className="w-12 h-12 rounded-full"
-                            />
-                          ) : (
-                            <Users className="h-6 w-6 text-gray-600" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {follower.username}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {follower.fullName}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            ID: {follower.id}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        Không tìm thấy thông tin người theo dõi
-                      </p>
-                    );
-                  })()}
-                </div>
-
-                {/* Followee Info */}
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">
-                    {followType === "artist"
-                      ? "Nghệ Sĩ Được Theo Dõi"
-                      : "Người Dùng Được Theo Dõi"}
-                  </h4>
-                  {followType === "artist"
-                    ? (() => {
-                        const artist = getArtistById(
-                          (selectedFollow as FollowArtist).artistId
-                        );
-                        return artist ? (
-                          <div className="flex items-center space-x-3 p-3 bg-white rounded border">
-                            <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                              {artist.imageUrl ? (
-                                <img
-                                  src={artist.imageUrl}
-                                  alt={artist.name}
-                                  className="w-12 h-12 rounded-full"
-                                />
-                              ) : (
-                                <Music className="h-6 w-6 text-gray-600" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {artist.name}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                Spotify ID: {artist.spotifyId}
-                              </p>
-                              <p className="text-xs text-gray-400">
-                                ID: {artist.id}
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-gray-500">
-                            Không tìm thấy thông tin nghệ sĩ
-                          </p>
-                        );
-                      })()
-                    : (() => {
-                        const followee = getUserById(
-                          (selectedFollow as FollowUser).followeeId
-                        );
-                        return followee ? (
-                          <div className="flex items-center space-x-3 p-3 bg-white rounded border">
-                            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                              {followee.avatarUrl ? (
-                                <img
-                                  src={followee.avatarUrl}
-                                  alt={followee.username}
-                                  className="w-12 h-12 rounded-full"
-                                />
-                              ) : (
-                                <Users className="h-6 w-6 text-gray-600" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {followee.username}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {followee.fullName}
-                              </p>
-                              <p className="text-xs text-gray-400">
-                                ID: {followee.id}
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-gray-500">
-                            Không tìm thấy thông tin người dùng
-                          </p>
-                        );
-                      })()}
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* 2. Modal Chi Tiết Người Dùng */}
+      <FollowerModal
+        selectedFollowerDetail={selectedFollowerDetail}
+        setSelectedFollowerDetail={setSelectedFollowerDetail}
+        format={format}
+      />
     </div>
   );
 }

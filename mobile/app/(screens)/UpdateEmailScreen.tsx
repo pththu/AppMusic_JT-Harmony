@@ -91,7 +91,7 @@ export default function UpdateEmailScreen() {
         error("Lỗi", response.message || "Mã OTP không hợp lệ");
         return;
       }
-      success("Thành công", "Xác thực email thành công! Mật khẩu khởi tạo là: 12345678");
+      success("Thành công", "Xác thực email thành công!");
       updateUser(response.user);
       router.back();
     } catch (err) {

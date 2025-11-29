@@ -18,14 +18,41 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui";
 import { useRouter } from "next/navigation";
+import useAuthStore from "@/store/authStore";
+import { Logout } from "@/services/authApi";
+import toast from "react-hot-toast";
 
 export function Header() {
   const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    router.push("/login");
+  const handleLogout = async () => {
+
+    const response = await Logout();
+    console.log('response', response)
+    if (response.success) {
+      logout();
+      toast.success('Đăng xuất thành công!', {
+        duration: 3000, // ✅ Yêu cầu 1: Hiển thị trong 3 giây (3000ms)
+        // ✅ Yêu cầu 3: Thư viện tự xử lý hiệu ứng mượt (ẩn/hiện)
+
+        // Tùy chọn để điều chỉnh kiểu dáng
+        style: {
+          fontWeight: 600,
+          fontSize: '15px',
+        },
+      });
+      router.push("/login");
+    } else {
+      toast.error('Đăng xuất thất bại. Vui lòng thử lại.', {
+        duration: 3000,
+        style: {
+          fontWeight: 600,
+          fontSize: '15px',
+        },
+      });
+    }
+
   };
 
   return (
@@ -57,7 +84,7 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem>
+            {/* <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
               Hồ sơ cá nhân
             </DropdownMenuItem>
@@ -65,7 +92,7 @@ export function Header() {
               <Settings className="mr-2 h-4 w-4" />
               Cài đặt
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator /> */}
             <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Đăng xuất

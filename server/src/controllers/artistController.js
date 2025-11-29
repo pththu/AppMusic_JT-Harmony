@@ -1,11 +1,53 @@
-const { Artist } = require('../models');
+const { Artist, Genres } = require('../models');
 const spotify = require('../configs/spotify');
+const { redisClient } = require('../configs/redis');
 const Op = require('sequelize').Op;
+
+const formatArtist = (artist) => {
+  return {
+    id: artist.id,
+    name: artist.name,
+    spotifyId: artist.spotifyId,
+    imageUrl: artist.imageUrl,
+    shareCount: artist.shareCount,
+    totalFollowers: artist.totalFollowers
+  }
+}
+
+const formatArtistGenres = (artist) => {
+  return {
+    id: artist.id,
+    name: artist.name,
+    spotifyId: artist.spotifyId,
+    genres: [...artist.genres.map(genre => genre.name)],
+    imageUrl: artist.imageUrl,
+    shareCount: artist.shareCount,
+    totalFollowers: artist.totalFollowers
+  }
+}
 
 exports.getAllArtist = async (req, res) => {
   try {
-    const rows = await Artist.findAll();
-    res.json(rows);
+    const cacheKey = 'all_artists';
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return res.json(JSON.parse(cachedData));
+    }
+    const rows = await Artist.findAll({
+      include: [
+        { model: Genres, as: 'genres', through: { attributes: [] } }
+      ]
+    });
+
+    // const dataFormatted = rows.map(artist => formatArtist(artist));
+    const dataFormatted = rows.map(artist => formatArtistGenres(artist));
+    const response = {
+      message: 'Lấy tất cả nghệ sĩ thành công',
+      data: dataFormatted,
+      success: true
+    };
+    // await redisClient.set(cacheKey, JSON.stringify(response), { EX: 3600 });
+    res.json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -24,7 +66,8 @@ exports.getArtistById = async (req, res) => {
 exports.createArtist = async (req, res) => {
   try {
     const row = await Artist.create(req.body);
-    res.status(201).json(row);
+    const dataFormatted = formatArtist(row);
+    res.status(201).json(dataFormatted);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

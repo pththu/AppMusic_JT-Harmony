@@ -7,6 +7,9 @@ const Artist = require('../models/artist');
 const Album = require('../models/album');
 const Track = require('../models/track');
 const Playlist = require('../models/playlist');
+const FollowUser = require('../models/follow_user');
+const FollowArtist = require('../models/follow_artist');
+
 const Post = require('../models/post');
 const Like = require('../models/like');
 const Comment = require('../models/comment');
@@ -23,11 +26,14 @@ const artistData = require('../seeders/artists.json');
 const albumData = require('../seeders/albums.json');
 const trackData = require('../seeders/tracks.json');
 const playlistData = require('../seeders/playlists.json');
+const followUserData = require('../seeders/follow_user.json');
+const followArtistData = require('../seeders/follow_artist.json');
+
 const postData = require('../seeders/posts.json');
 const conversationData = require('../seeders/conversations.json');
 const conversationMemberSeedData = require('../seeders/conversationMembers.json');
 
-const mapArtist = async() => {
+const mapArtist = async () => {
     const artists = await Artist.findAll({ attributes: ['id', 'name'] });
     const artistMap = artists.reduce((map, artist) => {
         map[artist.name] = artist.id;
@@ -36,7 +42,7 @@ const mapArtist = async() => {
     return artistMap;
 }
 
-const mapAlbum = async() => {
+const mapAlbum = async () => {
     const albums = await Album.findAll({ attributes: ['id', 'name'] });
     const albumMap = albums.reduce((map, album) => {
         map[album.name] = album.id;
@@ -45,7 +51,7 @@ const mapAlbum = async() => {
     return albumMap;
 }
 
-const mapGenres = async() => {
+const mapGenres = async () => {
     const genres = await Genres.findAll({ attributes: ['id', 'name'] });
     const genreMap = genres.reduce((map, genre) => {
         map[genre.name] = genre.id;
@@ -54,7 +60,7 @@ const mapGenres = async() => {
     return genreMap;
 }
 
-const mapTrack = async() => {
+const mapTrack = async () => {
     const tracks = await Track.findAll({ attributes: ['id', 'name'] });
     const trackMap = tracks.reduce((map, track) => {
         map[track.name] = track.id;
@@ -68,7 +74,7 @@ const mapTrack = async() => {
  * Kiểm tra nếu bảng Role đã có dữ liệu (quan trọng để tránh trùng lặp)
  * Sử dụng bulkCreate để chèn tất cả data cùng lúc (hiệu suất cao)
  */
-const seedDataRole = async() => {
+const seedDataRole = async () => {
     try {
         const roleCount = await Role.count();
         if (roleCount === 0) {
@@ -90,7 +96,7 @@ const seedDataRole = async() => {
  * Sau đó ánh xạ (map) dữ liệu User để thay thế roleName bằng roleId 
  * và Xóa roleName khỏi object vì nó không có trong Model User
  */
-const seedDataUser = async() => {
+const seedDataUser = async () => {
     try {
         const userCount = await User.count();
         if (userCount === 0) {
@@ -120,7 +126,7 @@ const seedDataUser = async() => {
 /**
  * --- 3. SEED DATA CHO GENRES ---
  */
-const seedDataGenres = async() => {
+const seedDataGenres = async () => {
     try {
         const genresCount = await Genres.count();
         if (genresCount === 0) {
@@ -140,7 +146,7 @@ const seedDataGenres = async() => {
  * Trước tiên ánh xạ dữ liệu thô (artistData) sang cấu trúc model Artist
  * các trường không tồn tại trong model sẽ bị bỏ qua
  */
-const seedDataArtists = async() => {
+const seedDataArtists = async () => {
     try {
         const artistCount = await Artist.count();
         if (artistCount === 0) {
@@ -171,7 +177,7 @@ const seedDataArtists = async() => {
  * Bước 4: Duyệt qua dữ liệu thô (artistData) để tạo mảng dữ liệu cho bảng trung gian
  * Bước 5: Chèn dữ liệu vào bảng trung gian sử dụng bulkCreate
  */
-const seedDataArtistGenres = async() => {
+const seedDataArtistGenres = async () => {
     try {
         const junctionTable = sequelize.models.artist_genres;
 
@@ -213,7 +219,7 @@ const seedDataArtistGenres = async() => {
  * --- 6. SEED DATA CHO ALBUM ---
  * tuong tự như Artists
  */
-const seedDataAlbum = async() => {
+const seedDataAlbum = async () => {
     try {
         const albumCount = await Album.count();
 
@@ -241,7 +247,7 @@ const seedDataAlbum = async() => {
 /**
  * --- 7. SEED DATA CHO BẢNG TRUNG GIAN ARTIST_ALBUMS ---
  */
-const seedDataArtistAlbums = async() => {
+const seedDataArtistAlbums = async () => {
     try {
         const junctionTable = sequelize.models.artist_albums;
 
@@ -284,7 +290,7 @@ const seedDataArtistAlbums = async() => {
 /**
  * --- 8. SEED DATA CHO TRACK ---
  */
-const seedDataTrack = async() => {
+const seedDataTrack = async () => {
     try {
         const trackCount = await Track.count();
 
@@ -321,7 +327,7 @@ const seedDataTrack = async() => {
 /**
  * --- 9. SEED DATA CHO BẢNG TRUNG GIAN ARTIST_TRACKS ---
  */
-const seedDataArtistTracks = async() => {
+const seedDataArtistTracks = async () => {
     try {
         const junctionTable = sequelize.models.artist_tracks;
         const junctionCount = await junctionTable.count();
@@ -362,39 +368,39 @@ const seedDataArtistTracks = async() => {
 /**
  * --- 10. SEED DATA CHO PLAYLIST ---
  */
-// const seedDataPlaylist = async () => {
-//     try {
-//         const playlistCount = await Playlist.count();
+const seedDataPlaylist = async () => {
+    try {
+        const playlistCount = await Playlist.count();
 
-//         if (playlistCount === 0) {
-//             console.log('Start insert Playlists...');
+        if (playlistCount === 0) {
+            console.log('Start insert Playlists...');
 
-//             const playlistsToInsert = playlistData.map(playlist => ({
-//                 spotifyId: playlist.spotifyId,
-//                 name: playlist.name,
-//                 description: playlist.description,
-//                 imageUrl: playlist.imageUrl,
-//                 totalTracks: playlist.totalTracks,
-//                 shareCount: playlist.shareCount,
-//                 isPublic: playlist.isPublic
-//             }));
+            const playlistsToInsert = playlistData.map(playlist => ({
+                spotifyId: playlist.spotifyId,
+                name: playlist.name,
+                description: playlist.description,
+                imageUrl: playlist.imageUrl,
+                totalTracks: playlist.totalTracks,
+                shareCount: playlist.shareCount,
+                isPublic: playlist.isPublic
+            }));
 
-//             await Playlist.bulkCreate(playlistsToInsert, { ignoreDuplicates: true });
-//             console.log('✅ Finish insert Playlists.');
-//         } else {
-//             console.log('Pass insert Playlist.');
-//         }
-//
-//     } catch (error) {
-//         console.log('Error insert playlist', error);
-//     }
-// }
+            await Playlist.bulkCreate(playlistsToInsert, { ignoreDuplicates: true });
+            console.log('✅ Finish insert Playlists.');
+        } else {
+            console.log('Pass insert Playlist.');
+        }
+
+    } catch (error) {
+        console.log('Error insert playlist', error);
+    }
+}
 
 /**
  * --- 11. SEED DATA CHO POST ---
  * Luôn append thêm dữ liệu từ posts.json (không xoá dữ liệu cũ)
  */
-const seedDataPost = async() => {
+const seedDataPost = async () => {
     try {
         console.log('Start insert Posts (append)...');
 
@@ -431,7 +437,7 @@ const seedDataPost = async() => {
     }
 }
 
-const seedDataLike = async() => {
+const seedDataLike = async () => {
     try {
         console.log('Start insert Likes (append)...');
 
@@ -477,7 +483,7 @@ const seedDataLike = async() => {
     }
 }
 
-const seedDataComment = async() => {
+const seedDataComment = async () => {
     try {
         console.log('Start insert Comments (append)...');
 
@@ -569,7 +575,7 @@ const seedDataComment = async() => {
     }
 }
 
-const seedDataPostReport = async() => {
+const seedDataPostReport = async () => {
     try {
         console.log('Start insert PostReports (append)...');
 
@@ -612,7 +618,7 @@ const seedDataPostReport = async() => {
     }
 }
 
-const seedDataConversation = async() => {
+const seedDataConversation = async () => {
     try {
         console.log('Start insert Conversations (append)...');
 
@@ -628,7 +634,7 @@ const seedDataConversation = async() => {
     }
 }
 
-const seedDataConversationMember = async() => {
+const seedDataConversationMember = async () => {
     try {
         console.log('Start insert ConversationMembers (append)...');
 
@@ -658,7 +664,7 @@ const seedDataConversationMember = async() => {
     }
 }
 
-const seedDataMessage = async() => {
+const seedDataMessage = async () => {
     try {
         console.log('Start insert Messages (append)...');
 
@@ -740,34 +746,147 @@ const seedDataMessage = async() => {
     }
 }
 
+const seedDataFollowUser = async () => {
+    try {
+        console.log('Start insert FollowUser...');
+
+        // 1. Lấy tất cả user để tạo map (username -> id)
+        // Chỉ lấy id và username để tối ưu hiệu suất
+        const users = await User.findAll({
+            attributes: ['id', 'username']
+        });
+
+        // 2. Tạo Map để tra cứu nhanh: { "usernameA": 1, "usernameB": 2 }
+        const userMap = users.reduce((map, user) => {
+            map[user.username] = user.id;
+            return map;
+        }, {});
+
+        const followsToInsert = [];
+
+        for (const item of followUserData) {
+            const followerId = userMap[item.follower]; // Tìm ID người theo dõi
+            const followeeId = userMap[item.followee]; // Tìm ID người được theo dõi
+            console.log('followerId', followerId, 'followeeId', followeeId);
+
+            // Validation:
+            // - Cả 2 user phải tồn tại trong DB
+            // - Không cho phép tự follow chính mình (followerId !== followeeId)
+            if (followerId && followeeId && followerId !== followeeId) {
+                followsToInsert.push({
+                    followerId: followerId,
+                    followeeId: followeeId
+                });
+            }
+        }
+
+        // 4. Insert vào DB
+        if (followsToInsert.length > 0) {
+            // ignoreDuplicates: true giúp bỏ qua nếu cặp (follower, followee) đã tồn tại
+            // (Dựa trên primary key hoặc unique constraint trong model)
+            await FollowUser.bulkCreate(followsToInsert, { ignoreDuplicates: true });
+            console.log(`✅ Finish insert FollowUser: ${followsToInsert.length} records.`);
+        } else {
+            console.log('Pass insert FollowUser (No valid data found).');
+        }
+
+    } catch (error) {
+        console.log('Error insert FollowUser:', error);
+    }
+};
+
+/**
+ * --- SEED DATA CHO FOLLOW ARTIST ---
+ * Mapping từ username -> user ID
+ * Mapping từ spotifyId -> artist ID (để đảm bảo chính xác)
+ */
+const seedDataFollowArtist = async () => {
+    try {
+        console.log('Start insert FollowArtist...');
+
+        // 1. Lấy tất cả User để tạo map (username -> id)
+        const users = await User.findAll({
+            attributes: ['id', 'username']
+        });
+        const userMap = users.reduce((map, user) => {
+            map[user.username] = user.id;
+            return map;
+        }, {});
+
+        // 2. Lấy tất cả Artist để tạo map (spotifyId -> id)
+        // Việc này giúp tránh lỗi nếu ID trong DB khác với ID trong file JSON (do auto-increment)
+        const artists = await Artist.findAll({
+            attributes: ['id', 'spotifyId']
+        });
+        const artistMap = artists.reduce((map, artist) => {
+            map[artist.spotifyId] = artist.id;
+            return map;
+        }, {});
+
+        const followsToInsert = [];
+        for (const item of followArtistData) {
+            const userId = userMap[item.follower]; // Tìm ID người dùng (follower)
+
+            // Tìm ID nghệ sĩ: Ưu tiên tìm theo spotifyId cho chính xác, 
+            // nếu không thấy thì mới dùng artistId từ json làm fallback
+            const artistId = artistMap[item.artistSpotifyId] || item.artistId;
+            console.log('User:', item.follower, '->', userId, '| Artist:', item.artistSpotifyId, '->', artistId);
+
+            // Validation: Cả User và Artist phải tồn tại trong DB thực tế
+            if (userId && artistId) {
+                followsToInsert.push({
+                    followerId: userId, // Tên trường này phải khớp với Model FollowArtist của bạn (có thể là userId hoặc followerId)
+                    artistId: artistId,
+                    artistSpotifyId: item.artistSpotifyId,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
+        }
+
+        // 4. Insert vào DB
+        if (followsToInsert.length > 0) {
+            await FollowArtist.bulkCreate(followsToInsert, { ignoreDuplicates: true });
+            console.log(`✅ Finish insert FollowArtist: ${followsToInsert.length} records.`);
+        } else {
+            console.log('Pass insert FollowArtist (No valid data found).');
+        }
+
+    } catch (error) {
+        console.log('Error insert FollowArtist:', error);
+    }
+};
+
 /**
  * Phương thức để seeding dữ liệu vào database
  */
 async function seedDatabase() {
     try {
-        await seedDataRole();
-        await seedDataUser();
+        // await seedDataRole();
+        // await seedDataUser();
 
-        await seedDataGenres();
-        await seedDataArtists();
-        await seedDataArtistGenres(); /* Bảng trung gian */
+        // await seedDataGenres();
+        // await seedDataArtists();
+        // await seedDataArtistGenres(); /* Bảng trung gian */
 
-        await seedDataAlbum();
-        await seedDataArtistAlbums(); /* Bảng trung gian */
+        // await seedDataAlbum();
+        // await seedDataArtistAlbums(); /* Bảng trung gian */
 
-        /** còn album track - playlist - playlist tracks */
-        await seedDataTrack();
-        await seedDataArtistTracks(); /* Bảng trung gian */
+        // /** còn album track - playlist - playlist tracks */
+        // await seedDataTrack();
+        // await seedDataArtistTracks(); /* Bảng trung gian */
+        // await seedDataFollowUser();
+        // await seedDataFollowArtist();
 
-        // await seedDataPlaylist();
+        await seedDataPlaylist();
 
-        await seedDataPost();
-        await seedDataLike();
-        await seedDataComment();
-        await seedDataPostReport();
-        await seedDataConversation();
-        await seedDataConversationMember();
-        await seedDataMessage();
+        // await seedDataPost();
+        // await seedDataLike();
+        // await seedDataComment();
+        // await seedDataPostReport();
+        // await seedDataConversation();
+        // await seedDataConversationMember();
+        // await seedDataMessage();
 
         console.log('✅ Finish seeding database.');
 
