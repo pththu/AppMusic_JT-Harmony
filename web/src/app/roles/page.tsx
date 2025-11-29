@@ -26,29 +26,40 @@ import {
   Label,
   Textarea,
 } from "@/components/ui";
-import { mockRoles, type Role } from "@/lib/mock-data";
+import { useRoleData } from "@/hooks/useRoleData";
+import { CreateRole, DeleteRole, UpdateRole } from "@/services/userApi";
 
 export default function RolesPage() {
-  const [roles, setRoles] = useState<Role[]>(mockRoles);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [editingRole, setEditingRole] = useState(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
 
-  const handleCreateRole = () => {
-    const newRole: Role = {
-      id: Math.max(...roles.map((r) => r.id)) + 1,
+  const { roles, setRoles } = useRoleData();
+
+  const handleCreateRole = async () => {
+
+    const newRole = {
       name: formData.name,
       description: formData.description,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
-    setRoles([...roles, newRole]);
-    setFormData({ name: "", description: "" });
-    setIsCreateDialogOpen(false);
+    // Call API to create role
+    const response = await CreateRole({ name: newRole.name, description: newRole.description });
+    if (response.success) {
+      const newRole = {
+        id: response.data.id,
+        name: formData.name,
+        description: formData.description,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setRoles([...roles, newRole]);
+      setFormData({ name: "", description: "" });
+      setIsCreateDialogOpen(false);
+    };
   };
 
-  const handleEditRole = () => {
+  const handleEditRole = async () => {
     if (!editingRole) return;
     setRoles(
       roles.map((role) =>
@@ -57,16 +68,19 @@ export default function RolesPage() {
           : role
       )
     );
+    await UpdateRole(editingRole.id, { name: formData.name, description: formData.description });
     setFormData({ name: "", description: "" });
     setIsEditDialogOpen(false);
     setEditingRole(null);
+
   };
 
-  const handleDeleteRole = (roleId: number) => {
+  const handleDeleteRole = async (roleId) => {
     setRoles(roles.filter((role) => role.id !== roleId));
+    await DeleteRole(roleId);
   };
 
-  const openEditDialog = (role: Role) => {
+  const openEditDialog = (role) => {
     setEditingRole(role);
     setFormData({ name: role.name, description: role.description });
     setIsEditDialogOpen(true);

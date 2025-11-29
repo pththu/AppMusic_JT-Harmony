@@ -1811,6 +1811,67 @@ const getTracksFromRecommend = async (req, res) => {
   }
 }
 
+const getAllTrack = async (req, res) => {
+  try {
+    const cacheKey = `tracks:all`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('CACHE HIT (getAllTrack)');
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log('CACHE MISS (getAllTrack)');
+
+    const tracks = await Track.findAll({
+      include: [
+        {
+          model: Artist,
+          as: 'artists',
+          through: { attributes: [] }
+        },
+        { model: Album }
+      ],
+      logging: console.log
+    });
+
+    const dataFormated = [];
+    console.log('artist 2:', tracks[0].toJSON())
+    for (let track of tracks) {
+      const spotifyId = track?.spotifyId;
+      let tempId = track?.id || null;
+      let album = null;
+      let artist = [];
+      if (!track || !track?.name) {
+        track = await callSpotify(() => spotify.findTrackById(spotifyId));
+        if (tempId) {
+          track.tempId = tempId;
+        }
+      } else {
+        album = track.Album;
+      }
+      for (const a of track?.artists) {
+        artist.push(formatArtist(a, null));
+      }
+
+      // console.log('artist 1:', artist)
+
+
+      const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
+      dataFormated.push(itemFormat);
+    }
+
+    const response = {
+      message: 'Get all tracks successful',
+      data: dataFormated,
+      success: true
+    };
+
+    // await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS * 10 });
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get all tracks' });
+  }
+}
+
 module.exports = {
   findSpotifyPlaylist,
   findYoutubeVideo,
@@ -1819,6 +1880,7 @@ module.exports = {
   findVideoIdForTrack,
   findTrackById,
   findTrackByNameAndArtist,
+
   getTracksFromRecommend,
   getTracksFromPlaylist,
   getTracksFromAlbum,
@@ -1843,4 +1905,5 @@ module.exports = {
   searchAll,
   getSearchSuggestions,
   getCategoryContent,
+  getAllTrack,
 };

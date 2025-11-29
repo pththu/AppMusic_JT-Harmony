@@ -8,6 +8,7 @@ const Album = require('../models/album');
 const Track = require('../models/track');
 const Playlist = require('../models/playlist');
 const FollowUser = require('../models/follow_user');
+const FollowArtist = require('../models/follow_artist');
 
 const Post = require('../models/post');
 const Like = require('../models/like');
@@ -26,6 +27,7 @@ const albumData = require('../seeders/albums.json');
 const trackData = require('../seeders/tracks.json');
 const playlistData = require('../seeders/playlists.json');
 const followUserData = require('../seeders/follow_user.json');
+const followArtistData = require('../seeders/follow_artist.json');
 
 const postData = require('../seeders/posts.json');
 const conversationData = require('../seeders/conversations.json');
@@ -366,33 +368,33 @@ const seedDataArtistTracks = async () => {
 /**
  * --- 10. SEED DATA CHO PLAYLIST ---
  */
-// const seedDataPlaylist = async () => {
-//     try {
-//         const playlistCount = await Playlist.count();
+const seedDataPlaylist = async () => {
+    try {
+        const playlistCount = await Playlist.count();
 
-//         if (playlistCount === 0) {
-//             console.log('Start insert Playlists...');
+        if (playlistCount === 0) {
+            console.log('Start insert Playlists...');
 
-//             const playlistsToInsert = playlistData.map(playlist => ({
-//                 spotifyId: playlist.spotifyId,
-//                 name: playlist.name,
-//                 description: playlist.description,
-//                 imageUrl: playlist.imageUrl,
-//                 totalTracks: playlist.totalTracks,
-//                 shareCount: playlist.shareCount,
-//                 isPublic: playlist.isPublic
-//             }));
+            const playlistsToInsert = playlistData.map(playlist => ({
+                spotifyId: playlist.spotifyId,
+                name: playlist.name,
+                description: playlist.description,
+                imageUrl: playlist.imageUrl,
+                totalTracks: playlist.totalTracks,
+                shareCount: playlist.shareCount,
+                isPublic: playlist.isPublic
+            }));
 
-//             await Playlist.bulkCreate(playlistsToInsert, { ignoreDuplicates: true });
-//             console.log('✅ Finish insert Playlists.');
-//         } else {
-//             console.log('Pass insert Playlist.');
-//         }
-//
-//     } catch (error) {
-//         console.log('Error insert playlist', error);
-//     }
-// }
+            await Playlist.bulkCreate(playlistsToInsert, { ignoreDuplicates: true });
+            console.log('✅ Finish insert Playlists.');
+        } else {
+            console.log('Pass insert Playlist.');
+        }
+
+    } catch (error) {
+        console.log('Error insert playlist', error);
+    }
+}
 
 /**
  * --- 11. SEED DATA CHO POST ---
@@ -794,26 +796,89 @@ const seedDataFollowUser = async () => {
 };
 
 /**
+ * --- SEED DATA CHO FOLLOW ARTIST ---
+ * Mapping từ username -> user ID
+ * Mapping từ spotifyId -> artist ID (để đảm bảo chính xác)
+ */
+const seedDataFollowArtist = async () => {
+    try {
+        console.log('Start insert FollowArtist...');
+
+        // 1. Lấy tất cả User để tạo map (username -> id)
+        const users = await User.findAll({
+            attributes: ['id', 'username']
+        });
+        const userMap = users.reduce((map, user) => {
+            map[user.username] = user.id;
+            return map;
+        }, {});
+
+        // 2. Lấy tất cả Artist để tạo map (spotifyId -> id)
+        // Việc này giúp tránh lỗi nếu ID trong DB khác với ID trong file JSON (do auto-increment)
+        const artists = await Artist.findAll({
+            attributes: ['id', 'spotifyId']
+        });
+        const artistMap = artists.reduce((map, artist) => {
+            map[artist.spotifyId] = artist.id;
+            return map;
+        }, {});
+
+        const followsToInsert = [];
+        for (const item of followArtistData) {
+            const userId = userMap[item.follower]; // Tìm ID người dùng (follower)
+
+            // Tìm ID nghệ sĩ: Ưu tiên tìm theo spotifyId cho chính xác, 
+            // nếu không thấy thì mới dùng artistId từ json làm fallback
+            const artistId = artistMap[item.artistSpotifyId] || item.artistId;
+            console.log('User:', item.follower, '->', userId, '| Artist:', item.artistSpotifyId, '->', artistId);
+
+            // Validation: Cả User và Artist phải tồn tại trong DB thực tế
+            if (userId && artistId) {
+                followsToInsert.push({
+                    followerId: userId, // Tên trường này phải khớp với Model FollowArtist của bạn (có thể là userId hoặc followerId)
+                    artistId: artistId,
+                    artistSpotifyId: item.artistSpotifyId,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
+        }
+
+        // 4. Insert vào DB
+        if (followsToInsert.length > 0) {
+            await FollowArtist.bulkCreate(followsToInsert, { ignoreDuplicates: true });
+            console.log(`✅ Finish insert FollowArtist: ${followsToInsert.length} records.`);
+        } else {
+            console.log('Pass insert FollowArtist (No valid data found).');
+        }
+
+    } catch (error) {
+        console.log('Error insert FollowArtist:', error);
+    }
+};
+
+/**
  * Phương thức để seeding dữ liệu vào database
  */
 async function seedDatabase() {
     try {
-        await seedDataRole();
-        await seedDataUser();
+        // await seedDataRole();
+        // await seedDataUser();
 
-        await seedDataGenres();
-        await seedDataArtists();
-        await seedDataArtistGenres(); /* Bảng trung gian */
+        // await seedDataGenres();
+        // await seedDataArtists();
+        // await seedDataArtistGenres(); /* Bảng trung gian */
 
-        await seedDataAlbum();
-        await seedDataArtistAlbums(); /* Bảng trung gian */
+        // await seedDataAlbum();
+        // await seedDataArtistAlbums(); /* Bảng trung gian */
 
-        /** còn album track - playlist - playlist tracks */
-        await seedDataTrack();
-        await seedDataArtistTracks(); /* Bảng trung gian */
-        await seedDataFollowUser();
+        // /** còn album track - playlist - playlist tracks */
+        // await seedDataTrack();
+        // await seedDataArtistTracks(); /* Bảng trung gian */
+        // await seedDataFollowUser();
+        // await seedDataFollowArtist();
 
-        // await seedDataPlaylist();
+        await seedDataPlaylist();
 
         // await seedDataPost();
         // await seedDataLike();

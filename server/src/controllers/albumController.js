@@ -1,11 +1,24 @@
-const { Album } = require('../models');
+const { Album, Genres } = require('../models');
 const Op = require('sequelize').Op;
 const spotify = require('../configs/spotify');
+const { redisClient } = require('../configs/redis');
 
 exports.getAllAlbum = async (req, res) => {
   try {
+    // const cacheKey = 'all_albums';
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return res.json(JSON.parse(cachedData));
+    // }
     const rows = await Album.findAll();
-    res.json(rows);
+
+    const response = {
+      message: 'Lấy tất cả album thành công',
+      data: rows,
+      success: true
+    };
+    // await redisClient.set(cacheKey, JSON.stringify(response), { EX: 3600 });
+    res.status(200).json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

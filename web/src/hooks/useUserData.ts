@@ -1,9 +1,7 @@
 import { GetAllUser } from "@/services/userApi"
-import { set } from "date-fns";
 import { useCallback, useEffect, useState } from "react"
 
 export const useUserData = () => {
-
   const [users, setUsers] = useState([]);
 
   const fetchAllUsers = useCallback(async () => {

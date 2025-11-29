@@ -4,55 +4,46 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import useAuthStore from "@/store/authStore";
+import { userAgent } from "next/server";
+import toast from "react-hot-toast";
 
 export function AuthCheck({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const user = useAuthStore((state) => state.user);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isHydrated = useAuthStore?.persist?.hasHydrated();
+  const hasStorageData = typeof window !== 'undefined' && localStorage.getItem('auth-storage');
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const checkAuth = () => {
-      // Nếu đang ở trang login, không cần kiểm tra auth
-      if (pathname === "/login") {
-        setIsAuthenticated(false);
-        setIsLoading(false);
+    const performAuthCheck = () => {
+
+      if (!isHydrated && hasStorageData) {
         return;
       }
 
-      // Đọc từ Zustand persist (auth-storage) để đồng bộ với hệ thống auth hiện tại
-      let token: string | null = null;
-      let user: any = null;
-      try {
-        const persisted = localStorage.getItem("auth-storage");
-        if (persisted) {
-          const parsed = JSON.parse(persisted);
-          user = parsed?.state?.user ?? parsed?.user ?? null;
-          token =
-            parsed?.state?.token ??
-            user?.accessToken ??
-            parsed?.token ??
-            null;
-        }
-      } catch { }
+      if (isLoggedIn && user) {
+        console.log("user", user)
+        console.log('isLoggedIn', isLoggedIn)
+        const roleId = user.roleId;
+        console.log('role: ', roleId)
 
-      if (token && user) {
-        const roleId = user?.roleId ?? user?.role_id ?? user?.role?.id;
+        // Giả sử roleId = 1 là Admin
         if (roleId === 1) {
-          setIsAuthenticated(true);
+          setIsLoading(false);
         } else {
-          router.push("/login");
+          toast.error("Bạn không có quyền truy cập vào trang này.");
+          setIsLoading(false);
         }
       } else {
-        // Chưa đăng nhập, chuyển hướng đến login
-        router.push("/login");
+        router.replace("/login");
       }
-
-      setIsLoading(false);
     };
 
-    checkAuth();
-  }, [router, pathname]);
+    performAuthCheck();
+  }, [router, pathname, user, isLoggedIn]);
 
   if (isLoading) {
     return (
@@ -62,13 +53,12 @@ export function AuthCheck({ children }) {
     );
   }
 
-  // Nếu đang ở trang login, chỉ hiển thị trang login mà không có sidebar và header
   if (pathname === "/login") {
     return <>{children}</>;
   }
 
   // Nếu đã authenticated, hiển thị layout đầy đủ với sidebar và header
-  if (isAuthenticated) {
+  if (isLoggedIn && user) {
     return (
       <div className="flex h-screen bg-gray-50">
         <Sidebar />

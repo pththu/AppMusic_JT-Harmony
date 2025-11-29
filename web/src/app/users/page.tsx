@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { format, isAfter, subDays } from "date-fns";
-import { fi, vi } from "date-fns/locale";
+import { vi } from "date-fns/locale";
 import {
-  MoreHorizontal,
   Search,
   Plus,
   ArrowUpDown,
@@ -12,70 +11,18 @@ import {
   UserX,
   Lock,
   Users,
-  Eye,
-  Edit,
-  Trash2,
-  Calendar,
   LogIn,
-  ShieldPlus,
+  TrendingUp,
 } from "lucide-react";
-import {
-  Button,
-  Input,
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui";
-import { mockUsers, mockRoles, getRoleById, type User } from "@/lib/mock-data";
-import { useUserData } from "../../../hooks/useUserData";
+import { useRoleData } from "@/hooks/useRoleData";
+import { useUserData } from "@/hooks/useUserData";
+import { Badge, Button, DropdownAction, Input } from "@/components/ui";
+import StatCard from "@/components/user/stat-card";
+import { COLORS, ITEMS_PER_PAGE, ONLINE_THRESHOLD_DAYS, SortDirection, SortKey, User } from "@/constants";
+import ChartDay from "@/components/user/chart-day";
+import ChartStatus from "@/components/user/chart-status";
+import NotificationPane from "@/components/user/notification-pane";
 
-// Định nghĩa kiểu cho sắp xếp
-type SortKey = keyof User | 'roleName' | 'fullNameDisplay' | null;
-type SortDirection = 'asc' | 'desc';
-
-// Hằng số phân trang
-const ITEMS_PER_PAGE = 10;
-const ONLINE_THRESHOLD_DAYS = 7;
-// TỔNG SỐ NÚT TRÊN THANH PHÂN TRANG (TRƯỚC + SỐ/DẤU + SAU) = 7
-// => Số lượng mục ở giữa tối đa là 5
-const MAX_CENTER_ITEMS = 5;
-
-/**
- * Component hiển thị một thẻ thống kê
- */
-const StatCard = ({ title, value, icon: Icon, iconClass }: { title: string, value: number, icon: React.ElementType, iconClass: string }) => (
-  <Card className="flex-1 min-w-[150px] shadow-sm">
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium text-gray-500">{title}</CardTitle>
-      <Icon className={`h-4 w-4 ${iconClass}`} />
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-    </CardContent>
-  </Card>
-);
-
-/**
- * Hàm tính toán các mục phân trang ở giữa (tối đa 5 mục)
-// Nếu tổng số trang ít hơn hoặc bằng 5, hiển thị tất cả.
- */
 const getPaginationItems = (currentPage: number, totalPages: number): (number | '...')[] => {
   const MAX_ITEMS = 5;
 
@@ -85,7 +32,7 @@ const getPaginationItems = (currentPage: number, totalPages: number): (number | 
 
   const pages = new Set<number>();
 
-  pages.add(currentPage);   // thêm 3 nút trung tâm
+  pages.add(currentPage);   // thêm 3 nút trung tâm
   if (currentPage > 1) pages.add(currentPage - 1);
   if (currentPage < totalPages) pages.add(currentPage + 1);
 
@@ -106,11 +53,12 @@ const getPaginationItems = (currentPage: number, totalPages: number): (number | 
   return Array.from(finalItems);
 };
 
+// --- 4. MAIN PAGE COMPONENT ---
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
     key: null,
@@ -118,425 +66,301 @@ export default function UsersPage() {
   });
 
   const { users, setUsers } = useUserData();
+  const { roles, setRoles } = useRoleData();
 
-  const imageDefault = '';
-
-  // --- Logic Thống kê (Statistics Logic) ---
-  const userStats = useMemo(() => {
+  // --- Logic Thống kê & Biểu đồ ---
+  const { userStats, accessTrendData, statusDistributionData, recentNewUsers } = useMemo(() => {
     const totalUsers = users.length;
-    let activeUsers = 0;
-    let lockedUsers = 0;
-    let inactiveUsers = 0;
-    let onlineUsers = 0;
+    let activeUsers = 0, lockedUsers = 0, inactiveUsers = 0, onlineUsers = 0, bannedUsers = 0;
     const sevenDaysAgo = subDays(new Date(), ONLINE_THRESHOLD_DAYS);
+
+    const trendMap = new Map<string, number>();
+    for (let i = 6; i >= 0; i--) {
+      const date = subDays(new Date(), i);
+      trendMap.set(format(date, "dd/MM"), 0);
+    }
+
+    const recentJoiners = [];
 
     users.forEach(user => {
       switch (user.status) {
-        case 'active':
-          activeUsers++;
-          break;
-        case 'inactive':
-          inactiveUsers++;
-          break;
-        case 'banned':
-        case 'locked':
-          lockedUsers++;
-          break;
+        case 'active': activeUsers++; break;
+        case 'inactive': inactiveUsers++; break;
+        case 'banned': bannedUsers++; break;
+        case 'locked': lockedUsers++; break;
       }
 
-      if (
-        user.status === 'active' &&
-        user.lastLogin &&
-        isAfter(new Date(user.lastLogin), sevenDaysAgo)
-      ) {
+      if (user.status === 'active' && user.lastLogin && isAfter(new Date(user.lastLogin), sevenDaysAgo)) {
         onlineUsers++;
+        const loginDate = format(new Date(user.lastLogin), "dd/MM");
+        if (trendMap.has(loginDate)) {
+          trendMap.set(loginDate, (trendMap.get(loginDate) || 0) + 1);
+        }
+        if (isAfter(new Date(user.createdAt), sevenDaysAgo)) {
+          recentJoiners.push(user);
+        }
       }
     });
 
+    const accessTrendData = Array.from(trendMap.entries()).map(([date, count]) => ({
+      date,
+      count
+    }));
+
+    const statusDistributionData = [
+      { name: "Hoạt động", value: activeUsers, color: COLORS.active },
+      { name: "Không hoạt động", value: inactiveUsers, color: COLORS.inactive },
+      { name: "Đã khóa", value: lockedUsers, color: COLORS.locked },
+      { name: "Bị cấm", value: bannedUsers, color: COLORS.banned },
+    ].filter(item => item.value > 0);
+
+    recentJoiners.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
     return {
-      totalUsers,
-      activeUsers,
-      lockedUsers,
-      inactiveUsers,
-      onlineUsers,
+      userStats: { totalUsers, activeUsers, lockedUsers, inactiveUsers, bannedUsers, onlineUsers },
+      accessTrendData,
+      statusDistributionData,
+      recentNewUsers: recentJoiners
     };
   }, [users]);
 
-  // Hàm tiện ích để lấy Badge trạng thái
-  const getStatusBadge = (status: User["status"]) => {
-    const variants: Record<User["status"], string> = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-yellow-100 text-yellow-800",
-      banned: "bg-red-100 text-red-800",
-      locked: "bg-gray-100 text-gray-800",
-    };
+  const getRoleById = (id: number) => roles.find((r) => r.id === id);
+  // --- Logic Lọc & Sắp xếp ---
+  const processedUsers = useMemo(() => {
+    let result = [...users];
 
-    return (
-      <Badge className={variants[status]}>
-        {status === "active"
-          ? "Hoạt Động"
-          : status === "inactive"
-            ? "Không Hoạt Động"
-            : status === "banned"
-              ? "Bị Cấm"
-              : "Đã Khóa"}
-      </Badge>
-    );
-  };
+    if (searchTerm || statusFilter !== "all" || roleFilter !== "all") {
+      result = result.filter((user) => {
+        const matchesSearch = !searchTerm ||
+          user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+        const matchesRole = roleFilter === "all" || user.roleId?.toString() === roleFilter;
+        return matchesSearch && matchesStatus && matchesRole;
+      });
+    }
 
-  // --- Logic Lọc (Filtering Logic) ---
-  const filteredUsers = useMemo(() => {
-    return users?.filter((user) => {
-      const matchesSearch =
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === "all" || user.status === statusFilter;
-      const matchesRole =
-        roleFilter === "all" || user.roleId?.toString() === roleFilter;
-
-      return matchesSearch && matchesStatus && matchesRole;
-    }) || [];
-  }, [users, searchTerm, statusFilter, roleFilter]);
-
-  // --- Logic Sắp xếp (Sorting Logic) ---
-  const sortedUsers = useMemo(() => {
-    const sortableUsers = [...filteredUsers];
     if (sortConfig.key) {
-      sortableUsers.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
+      result.sort((a, b) => {
+        let aValue: any = a[sortConfig.key as keyof User];
+        let bValue: any = b[sortConfig.key as keyof User];
 
-        switch (sortConfig.key) {
-          case 'fullNameDisplay':
-            aValue = a.fullName || a.username;
-            bValue = b.fullName || b.username;
-            break;
-          case 'roleName':
-            aValue = getRoleById(Number(a.roleId))?.name || 'Unknown';
-            bValue = getRoleById(Number(b.roleId))?.name || 'Unknown';
-            break;
-          case 'createdAt':
-          case 'lastLogin':
-            aValue = new Date(a[sortConfig.key] || 0).getTime();
-            bValue = new Date(b[sortConfig.key] || 0).getTime();
-            break;
-          default:
-            aValue = a[sortConfig.key as keyof User];
-            bValue = b[sortConfig.key as keyof User];
-            break;
+        if (sortConfig.key === 'roleName') {
+          aValue = getRoleById(Number(a.roleId))?.name || '';
+          bValue = getRoleById(Number(b.roleId))?.name || '';
+        } else if (sortConfig.key === 'fullNameDisplay') {
+          aValue = a.fullName || a.username;
+          bValue = b.fullName || b.username;
+        } else if (sortConfig.key === 'createdAt' || sortConfig.key === 'lastLogin') {
+          aValue = new Date(aValue || 0).getTime();
+          bValue = new Date(bValue || 0).getTime();
         }
 
-        if (aValue === null || aValue === undefined) return sortConfig.direction === 'asc' ? 1 : -1;
-        if (bValue === null || bValue === undefined) return sortConfig.direction === 'asc' ? -1 : 1;
-
-
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          return sortConfig.direction === 'asc'
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
-        }
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
-    return sortableUsers;
-  }, [filteredUsers, sortConfig]);
+    return result;
+  }, [users, searchTerm, statusFilter, roleFilter, sortConfig]);
 
-  // --- Logic Phân trang (Pagination Logic) ---
-  const totalPages = Math.ceil(sortedUsers.length / ITEMS_PER_PAGE);
-  const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return sortedUsers.slice(startIndex, endIndex);
-  }, [sortedUsers, currentPage]);
+  const totalPages = Math.ceil(processedUsers.length / ITEMS_PER_PAGE);
+  const paginatedUsers = processedUsers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, roleFilter]);
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, statusFilter, roleFilter]);
 
   const requestSort = (key: SortKey) => {
-    let direction: SortDirection = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+    setSortConfig(current => ({
+      key,
+      direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+    }));
   };
 
-  const getHeaderClassName = (key: SortKey) => {
-    return sortConfig.key === key ? 'font-bold' : '';
-  };
-
-  const getSortIcon = (key: SortKey) => {
-    if (sortConfig.key !== key) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />;
-    return (
-      <ArrowUpDown
-        className={`ml-2 h-4 w-4 transition-transform ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`}
-      />
-    );
-  };
-
-  // Hàm xử lý xóa người dùng
   const handleDeleteUser = (userId: number | undefined) => {
-    if (userId) {
-      setUsers(users.filter((user) => user.id && user.id !== userId));
-    }
+    if (userId) setUsers(users.filter((user) => user.id && user.id !== userId));
   };
 
+  const getStatusBadge = (status: User["status"]) => {
+    const styles = {
+      active: "bg-green-100 text-green-800 hover:bg-green-200 border-green-200",
+      inactive: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200",
+      banned: "bg-red-100 text-red-800 hover:bg-red-200 border-red-200",
+      locked: "bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200",
+    };
+    const labels = { active: "Hoạt Động", inactive: "Không Hoạt Động", banned: "Bị Cấm", locked: "Đã Khóa" };
+    return <Badge className={styles[status]}>{labels[status]}</Badge>;
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-10 bg-gray-50/50 min-h-screen p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Quản Lý Người Dùng
-          </h1>
-          <p className="text-gray-600">
-            Quản lý tài khoản người dùng và quyền hạn
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Quản Lý Người Dùng</h1>
+          <p className="text-gray-600">Quản lý tài khoản, phân quyền và theo dõi hoạt động</p>
         </div>
+        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm flex items-center gap-2 transition-colors">
+          <TrendingUp className="w-4 h-4" /> Xuất Báo Cáo
+        </button>
       </div>
 
-      {/* --- Thống kê Người Dùng (Statistics) --- */}
+      {/* --- Section 1: Quick Stats Cards --- */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <StatCard
-          title="Tổng Số Người Dùng"
-          value={userStats.totalUsers}
-          icon={Users}
-          iconClass="text-blue-500"
+        <StatCard title="Tổng Số Người Dùng" value={userStats.totalUsers} icon={Users} iconClass="text-blue-500" />
+        <StatCard title="Hoạt Động" value={userStats.activeUsers} icon={UserCheck} iconClass="text-green-500" />
+        <StatCard title="Đã Khóa/Cấm" value={userStats.lockedUsers} icon={Lock} iconClass="text-red-500" />
+        <StatCard title="Không Hoạt Động" value={userStats.inactiveUsers} icon={UserX} iconClass="text-yellow-500" />
+        <StatCard title="Truy cập (7 ngày)" value={userStats.onlineUsers} icon={LogIn} iconClass="text-indigo-500" />
+      </div>
+
+      {/* --- Section 2: Charts & Notifications --- */}
+      <div className="grid gap-4 md:grid-cols-12">
+
+        {/* Chart 1: Truy cập (7 ngày) */}
+        <ChartDay accessTrendData={accessTrendData} />
+
+        {/* Chart 2: Chất lượng người dùng (Status) */}
+        <ChartStatus
+          statusDistributionData={statusDistributionData}
+          userStats={userStats}
         />
-        <StatCard
-          title="Hoạt Động"
-          value={userStats.activeUsers}
-          icon={UserCheck}
-          iconClass="text-green-500"
-        />
-        <StatCard
-          title="Đã Khóa/Cấm"
-          value={userStats.lockedUsers}
-          icon={Lock}
-          iconClass="text-red-500"
-        />
-        <StatCard
-          title="Không Hoạt Động"
-          value={userStats.inactiveUsers}
-          icon={UserX}
-          iconClass="text-yellow-500"
-        />
-        <StatCard
-          title="Truy cập trong vòng 7 ngày"
-          value={userStats.onlineUsers}
-          icon={LogIn}
-          iconClass="text-indigo-500"
+
+        {/* Notification Panel: Người dùng mới */}
+        <NotificationPane
+          recentNewUsers={recentNewUsers}
+          format={format}
         />
       </div>
 
-      {/* --- Filters --- */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:gap-4">
+      {/* --- Section 3: Filters & Table --- */}
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:gap-4 pt-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Tìm kiếm người dùng..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            onChange={(e: any) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-white"
           />
         </div>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Lọc theo trạng thái" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất Cả Trạng Thái</SelectItem>
-            <SelectItem value="active">Hoạt Động</SelectItem>
-            <SelectItem value="inactive">Không Hoạt Động</SelectItem>
-            <SelectItem value="banned">Bị Cấm</SelectItem>
-            <SelectItem value="locked">Đã Khóa</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Lọc theo vai trò" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất Cả Vai Trò</SelectItem>
-            {mockRoles.map((role) => (
-              <SelectItem key={role.id} value={role.id.toString()}>
-                {role.name}
-              </SelectItem>
+        <div className="relative">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-9 w-full sm:w-[180px] rounded-md border border-gray-200 bg-white px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600"
+          >
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Hoạt Động</option>
+            <option value="inactive">Không Hoạt Động</option>
+            <option value="banned">Bị Cấm</option>
+            <option value="locked">Đã Khóa</option>
+          </select>
+        </div>
+        <div className="relative">
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="h-9 w-full sm:w-[180px] rounded-md border border-gray-200 bg-white px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600"
+          >
+            <option value="all">Tất cả vai trò</option>
+            {roles.map((role) => (
+              <option key={role.id} value={role.id.toString()}>{role.name}</option>
             ))}
-          </SelectContent>
-        </Select>
+          </select>
+        </div>
       </div>
 
-      {/* --- Users Table --- */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead
-                className={`cursor-pointer ${getHeaderClassName('fullNameDisplay')}`}
-                onClick={() => requestSort('fullNameDisplay')}
-              >
-                <div className="flex items-center">
-                  Người Dùng {getSortIcon('fullNameDisplay')}
-                </div>
-              </TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead
-                className={`cursor-pointer ${getHeaderClassName('roleName')}`}
-                onClick={() => requestSort('roleName')}
-              >
-                <div className="flex items-center">
-                  Vai Trò {getSortIcon('roleName')}
-                </div>
-              </TableHead>
-              <TableHead
-                className={`cursor-pointer ${getHeaderClassName('status')}`}
-                onClick={() => requestSort('status')}
-              >
-                <div className="flex items-center">
-                  Trạng Thái {getSortIcon('status')}
-                </div>
-              </TableHead>
-              <TableHead
-                className={`cursor-pointer ${getHeaderClassName('lastLogin')}`}
-                onClick={() => requestSort('lastLogin')}
-              >
-                <div className="flex items-center">
-                  Đăng Nhập Cuối {getSortIcon('lastLogin')}
-                </div>
-              </TableHead>
-              <TableHead className="w-[70px]">Hành Động</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto shadow-sm">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+            <tr>
+              <th className="px-4 py-3 cursor-pointer hover:text-gray-700" onClick={() => requestSort('fullNameDisplay')}>
+                <div className="flex items-center">Người Dùng {sortConfig.key === 'fullNameDisplay' && <ArrowUpDown className="ml-2 h-4 w-4" />}</div>
+              </th>
+              <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3 cursor-pointer hover:text-gray-700" onClick={() => requestSort('roleName')}>
+                <div className="flex items-center">Vai Trò {sortConfig.key === 'roleName' && <ArrowUpDown className="ml-2 h-4 w-4" />}</div>
+              </th>
+              <th className="px-4 py-3 cursor-pointer hover:text-gray-700" onClick={() => requestSort('status')}>
+                <div className="flex items-center">Trạng Thái {sortConfig.key === 'status' && <ArrowUpDown className="ml-2 h-4 w-4" />}</div>
+              </th>
+              <th className="px-4 py-3 cursor-pointer hover:text-gray-700" onClick={() => requestSort('lastLogin')}>
+                <div className="flex items-center">Đăng Nhập Cuối {sortConfig.key === 'lastLogin' && <ArrowUpDown className="ml-2 h-4 w-4" />}</div>
+              </th>
+              <th className="px-4 py-3 w-[70px]">Hành Động</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
             {paginatedUsers.length > 0 ? (
               paginatedUsers.map((user) => (
-                <TableRow key={user.id!}>
-                  <TableCell>
+                <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-4 py-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
                         {user.avatarUrl ? (
-                          <img
-                            src={user.avatarUrl}
-                            alt={user.username}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
+                          <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-sm font-medium text-gray-600">
-                            {user.username.charAt(0).toUpperCase()}
-                          </span>
+                          <span className="text-sm font-medium text-gray-600">{user.username.charAt(0).toUpperCase()}</span>
                         )}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">
-                          {user.fullName || user.username}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          @{user.username}
-                        </div>
+                        <div className="font-medium text-gray-900">{user.fullName || user.username}</div>
+                        <div className="text-xs text-gray-500">@{user.username}</div>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>{user.email || "N/A"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
+                  </td>
+                  <td className="px-4 py-3">{user.email || "N/A"}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant="outline" className="font-normal bg-white text-gray-700 border-gray-300">
                       {getRoleById(Number(user.roleId))?.name || "Unknown"}
                     </Badge>
-                  </TableCell>
-                  <TableCell>{getStatusBadge(user.status)}</TableCell>
-                  <TableCell>
-                    {user.lastLogin
-                      ? format(new Date(user.lastLogin), "dd MMM, yyyy", { locale: vi })
-                      : "Chưa Từng"}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Xem Chi Tiết
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <ShieldPlus className="mr-2 h-4 w-4" />
-                          Bổ nhiệm làm quản trị viên
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                  <td className="px-4 py-3">{getStatusBadge(user.status)}</td>
+                  <td className="px-4 py-3">
+                    {user.lastLogin ? format(new Date(user.lastLogin), "dd MMM, yyyy", { locale: vi }) : "Chưa Từng"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <DropdownAction user={user} onDelete={handleDeleteUser} />
+                  </td>
+                </tr>
               ))
             ) : (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                  Không tìm thấy người dùng nào phù hợp.
-                </TableCell>
-              </TableRow>
+              <tr>
+                <td colSpan={6} className="text-center py-8 text-gray-500">
+                  <div className="flex flex-col items-center justify-center">
+                    <Users className="w-10 h-10 text-gray-300 mb-2" />
+                    <p>Không tìm thấy người dùng nào phù hợp.</p>
+                  </div>
+                </td>
+              </tr>
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
 
-      {/* --- Pagination --- */}
-      <div className="flex items-center justify-between">
+      {/* Pagination */}
+      <div className="flex items-center justify-between pt-2">
         <div className="text-sm text-gray-500">
-          Hiển thị {paginatedUsers.length}/{filteredUsers.length} người
-          dùng (Trang {currentPage}/{totalPages})
+          Hiển thị <strong>{paginatedUsers.length}</strong>/<strong>{processedUsers.length}</strong> người dùng (Trang {currentPage}/{totalPages || 1})
         </div>
-        <div className="flex space-x-2">
-          {/* Nút Trước: Quay về trang 1 */}
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(1)}
-            disabled={currentPage === 1}
-          >
-            Trước
-          </Button>
-
+        <div className="flex space-x-1">
+          <Button variant="outline" size="sm" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>Trước</Button>
           {getPaginationItems(currentPage, totalPages).map((item, index) => (
             item === '...' ? (
-              <span key={`ellipsis-${index}`} className="px-2 py-1 text-gray-500">...</span>
+              <span key={`e-${index}`} className="px-2 py-1 text-gray-500 text-sm flex items-center">...</span>
             ) : (
               <Button
                 key={item}
                 variant={currentPage === item ? "default" : "outline"}
-                onClick={() => handlePageChange(item)}
+                size="sm"
+                onClick={() => setCurrentPage(item as number)}
+                className={currentPage === item ? "bg-blue-600 text-white hover:bg-blue-700" : ""}
               >
                 {item}
               </Button>
             )
           ))}
-
-          {/* Nút Sau: Đi tới trang cuối cùng */}
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage === totalPages || totalPages === 0}
-          >
-            Sau
-          </Button>
+          <Button variant="outline" size="sm" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages || totalPages === 0}>Sau</Button>
         </div>
       </div>
     </div>

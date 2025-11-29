@@ -2,7 +2,10 @@ const express = require('express')
 const router = express.Router()
 const upload = require('../middlewares/upload')
 const playlistController = require('../controllers/playlistController');
-const { authenticateToken } = require('../middlewares/authentication');
+const { authenticateToken, authorizeRole } = require('../middlewares/authentication');
+
+// admin routes
+router.get('/', authenticateToken, authorizeRole, playlistController.getAllPlaylist);
 
 router.post('/new', authenticateToken, upload.single('image'), playlistController.createOne);
 router.post('/share', authenticateToken, playlistController.sharePlaylist);

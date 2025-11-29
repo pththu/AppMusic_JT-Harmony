@@ -5,6 +5,23 @@ const crypto = require('crypto');
 const cloudinary = require('../configs/cloudinary');
 const { redisClient } = require('../configs/redis');
 
+const formatUser = (user) => {
+    return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        avatarUrl: user.avatarUrl,
+        bio: user.bio,
+        gender: user.gender === true ? 'male' : 'female',
+        status: user.status,
+        roleId: user.roleId,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+    }
+}
+
 const GetAllUser = async (req, res) => {
     try {
         const cacheKey = 'all_users';
@@ -15,12 +32,14 @@ const GetAllUser = async (req, res) => {
         const rows = await User.findAll({
             where: { roleId: 2 }
         });
+
+        const dataFormatted = rows.map(user => formatUser(user));
         const response = {
             message: 'Lấy tất cả người dùng thành công',
-            data: rows,
+            data: dataFormatted,
             success: true
         };
-        await redisClient.set(cacheKey, JSON.stringify(response));
+        // await redisClient.set(cacheKey, JSON.stringify(response), { EX: 3600 });
         res.json(response);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -36,7 +55,6 @@ const GetUserById = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-
 
 const Search = async (req, res) => {
     try {

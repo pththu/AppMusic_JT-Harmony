@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,10 +45,8 @@ export default function LoginPage() {
       if (response.success) {
         const user = response.user;
 
-        login(user, "local", user.accessToken, user.refreshToken);
+        login(user, "local", user.accessToken);
 
-        // Chuyển hướng đến dashboard
-        // Đảm bảo persist đã ghi trước khi điều hướng
         await new Promise((r) => setTimeout(r, 0));
         router.replace("/dashboard");
       } else {
@@ -60,6 +59,12 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.replace("/");
+    }
+  }, [isLoggedIn, router]);
 
   return (
     <div className="h-screen flex flex-row items-center justify-center bg-[#a7f29b] py-12 px-4 sm:px-6 lg:px-8">

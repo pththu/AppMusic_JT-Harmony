@@ -114,6 +114,7 @@ const protectedRoutes = [
   "conversations",
   "upload", // Upload hình ảnh, file
   "tracks", // Xem bài hát (public), upload bài hát (private)
+  "roles", // Quản lý vai trò người dùng
 ];
 const publicRoutes = [
   'playlists', // Playlist cá nhân
@@ -141,11 +142,6 @@ protectedRoutes.forEach((route) => {
   );
 });
 
-// // 2. Xử lý các route public/ đặc biệt
-// publicRoutes.forEach((route) => {
-//   app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
-// });
-
 app.use(
   `${API_PREFIX}/admin/metrics`,
   authenticateToken,
@@ -158,10 +154,8 @@ async function startServer() {
   try {
     // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
     // await sequelize.sync({ alter: true });
-    // await sequelize.sync();
     // console.log('✅ Database synchronized successfully')
     // await seedDatabase();
-
     await connectRedis();
 
     server.listen(process.env.PORT || 3000, () => {

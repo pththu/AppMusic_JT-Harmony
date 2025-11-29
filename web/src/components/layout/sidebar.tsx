@@ -25,9 +25,10 @@ import { useState, useEffect } from "react";
 
 const navigation = [
   { name: "Bảng Điều Khiển", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Người Dùng", href: "/users", icon: Users,
+  {
+    name: "Người Dùng", href: "/users", icon: Users,
     subItems: [
-        { name: "Theo Dõi", href: "/follows", icon: UserPlus },
+      { name: "Theo Dõi", href: "/follows", icon: UserPlus },
     ],
   },
   { name: "Vai Trò", href: "/roles", icon: Shield },
@@ -50,15 +51,8 @@ const navigation = [
       { name: "Danh sách phát", href: "/music/playlists", icon: Music },
       { name: "Album", href: "/music/albums", icon: Music },
       { name: "Nghệ sĩ", href: "/music/artists", icon: Users },
-      { name: "Lịch sử nghe", href: "/listening-history", icon: Play },
     ],
-  },
-  {
-    name: "Cuộc Trò Chuyện",
-    href: "/conversations",
-    icon: MessageCircle,
-    subItems: [{ name: "Tin nhắn", href: "/messages", icon: MessageSquare }],
-  },
+  }
 ];
 
 export function Sidebar() {
