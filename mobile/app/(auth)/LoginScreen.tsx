@@ -49,8 +49,6 @@ export default function LoginScreen() {
         fetchFavoritesItem(userId),
         fetchArtistFollowed(userId),
         fetchMyPlaylists(userId),
-        fetchFollowers(userId),
-        fetchFollowees(userId)
       ])
       setWhenLogin();
       login(response.user, 'local', response.user?.accessToken);

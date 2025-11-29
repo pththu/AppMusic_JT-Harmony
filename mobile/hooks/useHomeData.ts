@@ -4,6 +4,8 @@ import { SearchTracks } from "@/services/searchService";
 import { shuffleData } from "@/utils/array"; // Cần import shuffleData từ utils
 import { GenerateFromActivity, GenerateFromFavorites, GenerateFromFollowedArtists, GenerateFromHistories, GenerateFromMood, GenerateFromTimeOfDay, GenerateTrackFromFavorites } from "@/services/recommendationService";
 import { useBoardingStore } from "@/store/boardingStore"; // Cần dùng store để set recommendations
+import { useAuthData } from "./useAuthData";
+import useAuthStore from "@/store/authStore";
 
 interface QueryParams {
   playlistForYou: string[];
@@ -53,6 +55,7 @@ export const useHomeData = (
     baseOnFollowedArtists: true,
   });
 
+  const user = useAuthStore(state => state.user);
   // recommend store -> gợi ý
   const setRecommendBasedOnActivity = useBoardingStore((state) => state.setRecommendBasedOnActivity);
   const setRecommendBasedOnMood = useBoardingStore((state) => state.setRecommendBasedOnMood);
@@ -61,6 +64,11 @@ export const useHomeData = (
   const setRecommendBasedOnHistories = useBoardingStore((state) => state.setRecommendBasedOnHistories);
   const setRecommendBasedOnTimeOfDay = useBoardingStore((state) => state.setRecommendBasedOnTimeOfDay);
   const setRecommendTrackBasedOnFavorites = useBoardingStore((state) => state.setRecommendTrackBasedOnFavorites);
+
+  const { 
+    fetchFollowees,
+    fetchFollowers
+  } = useAuthData();
 
   // fetch data recommend
   const fetchGenericRecommendation = useCallback(async (dataItems, keyStateName, setRecommendStore) => {
@@ -209,7 +217,9 @@ export const useHomeData = (
         fetchAlbumsForYou(),
         fetchTrendingPlaylists(),
         fetchTrendingAlbums(),
-        fetchArtistsForYou()
+        fetchArtistsForYou(),
+        fetchFollowers(user?.id),
+        fetchFollowees(user?.id)
       ]);
       GenerateFromTimeOfDay().then(response => {
         if (response.success) {

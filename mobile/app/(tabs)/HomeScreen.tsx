@@ -68,9 +68,9 @@ export default function HomeScreen() {
   const unreadNotificationCount = useNotificationStore((state) => state.unreadCount);
   const hasNotification = unreadNotificationCount > 0;
 
-  const hasHistories = useState(listenHistory.length > 0 ? true : false);
-  const hasFavorites = useState(favoriteItems.length > 0 ? true : false);
-  const hasFollowedArtists = useState(artistFollowed.length > 0 ? true : false);
+  const hasHistories = listenHistory?.length > 0 ? true : false;
+  const hasFavorites = favoriteItems?.length > 0 ? true : false;
+  const hasFollowedArtists = artistFollowed?.length > 0 ? true : false;
 
   const [isMoodModalVisible, setMoodModalVisible] = useState(false);
   const [isActivityModalVisible, setActivityModalVisible] = useState(false);

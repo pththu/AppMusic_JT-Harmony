@@ -83,6 +83,7 @@ exports.login = async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const { email, password } = req.body;
 
+    console.log(req.body)
     // Validate input
     if (!email || !password) {
       return res.status(200).json({ message: 'Email và mật khẩu không để trống', success: false });

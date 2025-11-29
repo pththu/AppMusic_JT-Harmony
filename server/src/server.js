@@ -9,9 +9,9 @@ const { API_PREFIX } = require("./configs/constants");
 const { authenticateToken, authorizeRole } = require("./middlewares/authentication");
 const seedDatabase = require("./utils/seeder");
 const { connectRedis } = require('./configs/redis');
-
 const dotenv = require("dotenv");
 const { Server } = require("socket.io");
+
 
 const chatEvents = require("./sockets/chatEvents");
 const notificationEvents = require("./sockets/notificationEvents");
@@ -27,6 +27,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
+      "http://localhost:3000",
       "http://localhost:3001",
       "http://192.168.32.101:3000",
       "exp://192.168.32.101:8081",
@@ -84,6 +85,7 @@ app.set("trust proxy", true);
 app.use(
   cors({
     origin: [
+      "http://localhost:3000",
       "http://localhost:3001",
       "http://192.168.32.101:3000",
       "http://192.168.1.28:3000",
@@ -112,6 +114,7 @@ const protectedRoutes = [
   "conversations",
   "upload", // Upload hình ảnh, file
   "tracks", // Xem bài hát (public), upload bài hát (private)
+  "roles", // Quản lý vai trò người dùng
 ];
 const publicRoutes = [
   'playlists', // Playlist cá nhân
@@ -139,11 +142,6 @@ protectedRoutes.forEach((route) => {
   );
 });
 
-// // 2. Xử lý các route public/ đặc biệt
-// publicRoutes.forEach((route) => {
-//   app.use(`${API_PREFIX}/${route}`, require(`./routes/${route}Route`));
-// });
-
 app.use(
   `${API_PREFIX}/admin/metrics`,
   authenticateToken,
@@ -155,15 +153,13 @@ app.use(
 async function startServer() {
   try {
     // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
-     await sequelize.sync({ alter: true });
-    // await sequelize.sync();
-     console.log('✅ Database synchronized successfully')
+    // await sequelize.sync({ alter: true });
+    // console.log('✅ Database synchronized successfully')
     // await seedDatabase();
-
     await connectRedis();
 
-    server.listen(process.env.PORT || 3001, () => {
-      console.log(`🚀 Server is running on port ${process.env.PORT || 3001}`);
+    server.listen(process.env.PORT || 3000, () => {
+      console.log(`🚀 Server is running on port ${process.env.PORT || 3000}`);
     });
   } catch (e) {
     console.error("❌ Server startup error:", e.message);

@@ -1,8 +1,13 @@
 const express = require('express')
 const router = express.Router()
 const controller = require('../controllers/followsController')
-const { authenticateToken } = require('../middlewares/authentication');
+const { authenticateToken, authorizeRole } = require('../middlewares/authentication');
 
+// admin routes
+router.get('/follow-artists', authenticateToken, authorizeRole, controller.GetAllFollowArtist);
+router.get('/follow-users', authenticateToken, authorizeRole, controller.GetAllFollowUser);
+
+// users routes
 router.get('/:userId/followed-artists', controller.GetArtistFollowedByUser);
 router.post('/artist/follower', controller.GetFollowerOfArtist);
 router.post('/follow-artist', authenticateToken, controller.CreateFollowArtist)

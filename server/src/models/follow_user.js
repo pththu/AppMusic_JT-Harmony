@@ -27,7 +27,8 @@ const FollowUser = sequelize.define(
     timestamps: true,
     indexes: [
       {
-        fields: ['follower_id', 'followee_id']
+        fields: ['follower_id', 'followee_id'],
+        unique: true
       }
     ]
   }
