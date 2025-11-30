@@ -19,8 +19,19 @@ export interface TimeseriesPoint { date: string; count: number }
 // - dateFrom: ngày bắt đầu (yyyy-MM-dd, hoặc dd/MM/yyyy/MM/DD/YYYY)
 // - dateTo: ngày kết thúc (bao gồm ngày này)
 export async function fetchSummary(params?: { dateFrom?: string; dateTo?: string }) {
-  const res = await axiosClient.get("/admin/metrics/summary", { params });
-  return res.data as SummaryRes;
+  try {
+    const res = await axiosClient.get("/admin/metrics/summary", { params });
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
 }
 
 // Lấy chuỗi thời gian (timeseries) cho 1 loại dữ liệu
@@ -29,21 +40,54 @@ export async function fetchSummary(params?: { dateFrom?: string; dateTo?: string
 // - dateFrom/dateTo: khoảng ngày lọc (Đến ngày được tính bao gồm)
 // - granularity: mức gộp theo 'day' | 'week' | 'month'
 export async function fetchTimeseries(kind: "posts" | "comments" | "likes" | "messages" | "conversations", params?: { dateFrom?: string; dateTo?: string; granularity?: Granularity }) {
-  const res = await axiosClient.get(`/admin/metrics/timeseries/${kind}`, { params });
-  return res.data as { kind: string; granularity: Granularity; data: TimeseriesPoint[] };
+  try {
+    const res = await axiosClient.get(`/admin/metrics/timeseries/${kind}`, { params });
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
 }
 
 // Lấy breakdown số lượng báo cáo theo trạng thái
 // Tham số: dateFrom/dateTo để lọc trong khoảng ngày
 export async function fetchReportsStatusBreakdown(params?: { dateFrom?: string; dateTo?: string }) {
-  const res = await axiosClient.get("/admin/metrics/reports/status-breakdown", { params });
-  return res.data as Array<{ status: string; count: number }>;
+  try {
+    const res = await axiosClient.get("/admin/metrics/reports/status-breakdown", { params });
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
 }
 
 // Lấy breakdown bài đăng có cover vs bài đăng gốc trong khoảng ngày
 export async function fetchPostsCoverBreakdown(params?: { dateFrom?: string; dateTo?: string }) {
-  const res = await axiosClient.get("/admin/metrics/posts/cover-breakdown", { params });
-  return res.data as Array<{ isCover: boolean; count: number }>;
+  try {
+    const res = await axiosClient.get("/admin/metrics/posts/cover-breakdown", { params });
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
 }
 
 // Lấy danh sách Top Posts
@@ -52,8 +96,19 @@ export async function fetchPostsCoverBreakdown(params?: { dateFrom?: string; dat
 // - limit: giới hạn số lượng trả về
 // - dateFrom/dateTo: lọc theo khoảng ngày
 export async function fetchTopPosts(params?: { by?: "likes" | "comments"; limit?: number; dateFrom?: string; dateTo?: string }) {
-  const res = await axiosClient.get("/admin/metrics/top/posts", { params });
-  return res.data as any[];
+  try {
+    const res = await axiosClient.get("/admin/metrics/top/posts", { params });
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
 }
 
 // Lấy danh sách Top Users
@@ -62,6 +117,17 @@ export async function fetchTopPosts(params?: { by?: "likes" | "comments"; limit?
 // - limit: giới hạn số lượng trả về
 // - dateFrom/dateTo: lọc theo khoảng ngày
 export async function fetchTopUsers(params?: { by?: "posts" | "comments"; limit?: number; dateFrom?: string; dateTo?: string }) {
-  const res = await axiosClient.get("/admin/metrics/top/users", { params });
-  return res.data as any[];
+  try {
+    const res = await axiosClient.get("/admin/metrics/top/users", { params });
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
 }

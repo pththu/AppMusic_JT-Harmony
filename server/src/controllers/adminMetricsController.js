@@ -16,7 +16,7 @@ function parseDateStr(s) {
       // If first token > 12 assume dd/MM/yyyy, else assume MM/DD/YYYY
       const dd = parseInt(a, 10) > 12 ? a : b;
       const mm = parseInt(a, 10) > 12 ? b : a;
-      const iso = `${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T00:00:00`;
+      const iso = `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}T00:00:00`;
       const d = new Date(iso);
       return isNaN(d.getTime()) ? null : d;
     }
@@ -70,6 +70,10 @@ exports.getSummary = async (req, res) => {
       countBetween(Conversation, "createdAt", start, end),
       countBetween(Message, "createdAt", start, end),
     ]);
+
+    if (posts === null || comments === null || likes === null || reports === null || conversations === null || messages === null) {
+      return res.status(500).json({ error: "Failed to fetch summary counts" });
+    }
     return res.status(200).json({ posts, comments, likes, reports, conversations, messages, range: { start, end } });
   } catch (e) {
     console.error("metrics summary error", e);
@@ -90,7 +94,7 @@ const tsMap = {
 async function timeseriesRaw(kind, start, end, granularity) {
   const m = tsMap[kind];
   if (!m) throw new Error('invalid kind');
-  const gran = ['day','week','month'].includes(granularity) ? granularity : 'day';
+  const gran = ['day', 'week', 'month'].includes(granularity) ? granularity : 'day';
   const sql = `
     SELECT DATE_TRUNC('${gran}', "${m.col}") AS bucket, COUNT(*)::int AS count
     FROM "${m.table}"
@@ -117,7 +121,7 @@ exports.getTimeseries = async (req, res) => {
     const { start, end } = parseRange(req.query);
     const granularity = parseGranularity(req.query.granularity);
     let data;
-    if (["posts","comments","likes","messages","conversations"].includes(kind)) {
+    if (["posts", "comments", "likes", "messages", "conversations"].includes(kind)) {
       data = await timeseriesRaw(kind, start, end, granularity);
     } else {
       return res.status(400).json({ error: "Invalid timeseries kind" });
@@ -139,6 +143,9 @@ exports.getReportsStatusBreakdown = async (req, res) => {
       group: ["status"],
       raw: true,
     });
+    if (!rows) {
+      return res.status(500).json({ error: "Failed to fetch reports breakdown" });
+    }
     return res.status(200).json(rows);
   } catch (e) {
     console.error("metrics reports breakdown error", e);
@@ -156,6 +163,9 @@ exports.getPostsCoverBreakdown = async (req, res) => {
       group: ["isCover"],
       raw: true,
     });
+    if (!rows) {
+      return res.status(500).json({ error: "Failed to fetch posts cover breakdown" });
+    }
     return res.status(200).json(rows);
   } catch (e) {
     console.error("metrics posts cover breakdown error", e);
@@ -174,7 +184,7 @@ exports.getTopPosts = async (req, res) => {
     if (by === "likes") order = [["heartCount", "DESC"]];
     else if (by === "comments") order = [["commentCount", "DESC"]];
     else return res.status(400).json({ error: "Invalid 'by' param" });
-    const rows = await Post.findAll({ where, order, limit, include: [{ model: User, as: "User", attributes: ["id","username","fullName","avatarUrl"] }] });
+    const rows = await Post.findAll({ where, order, limit, include: [{ model: User, as: "User", attributes: ["id", "username", "fullName", "avatarUrl"] }] });
     return res.status(200).json(rows);
   } catch (e) {
     console.error("metrics top posts error", e);
@@ -197,7 +207,7 @@ exports.getTopUsers = async (req, res) => {
         limit,
         raw: true,
       });
-      const users = await User.findAll({ where: { id: { [Op.in]: rows.map(r => r.userId) } }, attributes: ["id","username","fullName","avatarUrl"], raw: true });
+      const users = await User.findAll({ where: { id: { [Op.in]: rows.map(r => r.userId) } }, attributes: ["id", "username", "fullName", "avatarUrl"], raw: true });
       const data = rows.map(r => ({ ...r, User: users.find(u => u.id === r.userId) }));
       return res.status(200).json(data);
     } else if (by === "comments") {
@@ -209,7 +219,7 @@ exports.getTopUsers = async (req, res) => {
         limit,
         raw: true,
       });
-      const users = await User.findAll({ where: { id: { [Op.in]: rows.map(r => r.userId) } }, attributes: ["id","username","fullName","avatarUrl"], raw: true });
+      const users = await User.findAll({ where: { id: { [Op.in]: rows.map(r => r.userId) } }, attributes: ["id", "username", "fullName", "avatarUrl"], raw: true });
       const data = rows.map(r => ({ ...r, User: users.find(u => u.id === r.userId) }));
       return res.status(200).json(data);
     }
