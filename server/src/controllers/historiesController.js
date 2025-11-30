@@ -5,6 +5,7 @@ const spotify = require('../configs/spotify');
 const youtube = require('../configs/youtube');
 const Bottleneck = require('bottleneck');
 const { redisClient } = require('../configs/redis');
+const { formatUser, formatTrack, formatPlaylist, formatAlbum, formatArtist, formatHisoryListening } = require('../utils/formatter');
 
 const DEFAULT_TTL_SECONDS = 3600 * 2; // 2 giờ (cho dữ liệu Spotify ít đổi)
 const SHORT_TTL_SECONDS = 1800;
@@ -31,91 +32,35 @@ const callSpotify = async (fn) => {
   });
 }
 
-const formatTrack = (track, artist, album, videoId) => {
-  return {
-    id: track?.tempId || (track?.spotifyId && track.id ? track.id : null),
-    spotifyId: track?.spotifyId || (!track?.spotifyId ? track.id : null) || null,
-    videoId: videoId || null,
-    name: track?.name || null,
-    artists: artist || [
-      ...track?.artists?.map(artist => ({
-        spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
-        name: artist?.name || null,
-        imageUrl: artist?.images?.[0]?.uri || artist?.imageUrl || null
-      })) || [],
-    ],
-    album: {
-      spotifyId: track.album?.id || album?.spotifyId || null,
-      name: track.album?.name || album?.name || null,
-      imageUrl: track.album?.images?.[0]?.url || album?.imageUrl || null,
-    },
-    lyrics: track?.lyrics || null,
-    duration: track?.duration_ms || track?.duration || 0,
-    explicit: track?.explicit,
-    trackNumber: track?.track_number || track?.trackNumber || null,
-    discNumber: track?.disc_number || track?.discNumber || null,
-    imageUrl: track?.album?.images?.[0]?.url || album?.imageUrl || null,
-    playCount: track?.playCount || 0,
-    shareCount: track?.shareCount || 0,
-  }
-};
-
-const formatPlaylist = (playlist, owner) => {
-  return {
-    id: owner?.id ? playlist?.id : (!playlist?.spotifyId ? null : playlist?.id),
-    spotifyId: owner?.id ? null : (!playlist?.spotifyId ? playlist?.id : playlist?.spotifyId),
-    name: playlist.name,
-    owner: {
-      id: owner?.id || null,
-      spotifyId: owner?.spotifyId || (!owner?.spotifyId ? playlist?.owner?.id : null) || null,
-      name: playlist?.owner?.display_name || owner?.fullName || null,
-    },
-    description: playlist.description,
-    imageUrl: playlist?.images?.[0]?.url || playlist?.imageUrl || null,
-    totalTracks: playlist?.tracks?.total || playlist?.totalTracks || 0,
-    isPublic: playlist?.public || playlist?.isPublic || false,
-    type: playlist.type,
-  }
-}
-
-const formatAlbum = (album, artists) => {
-  return {
-    id: album?.spotifyId && album.id ? album.id : null,
-    spotifyId: album?.spotifyId || (!album?.spotifyId ? album.id : null) || null,
-    name: album.name,
-    artists: [
-      ...album?.artists?.map(artist => ({
-        spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
-        name: artist.name,
-        imageUrl: artist?.images?.[0]?.uri || artist?.imageUrl || null,
-      })) || artists || [],
-    ],
-    imageUrl: album?.images?.[0]?.url || album?.imageUrl || null,
-    releaseDate: album?.release_date ? new Date(album.release_date).toISOString() : null,
-    totalTracks: album?.total_tracks || album?.totalTracks || 0,
-    type: album.type,
-  }
-}
-
-const formatArtist = (artist, genres) => {
-  return {
-    id: artist?.spotifyId && artist.id ? artist.id : null,
-    spotifyId: artist?.spotifyId || (!artist?.spotifyId ? artist.id : null) || null,
-    name: artist.name,
-    genres: genres || artist?.genres,
-    imageUrl: artist?.images?.[0]?.url || artist?.imageUrl,
-    type: artist?.type,
-  }
-}
-
-
 const GetAllListeningHistories = async (req, res) => {
   try {
-    const histories = await ListeningHistory.findAll({
-      include: [{ model: User, as: 'User' }]
-    });
+    // const cacheKey = `histories:listening:all`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   console.log('CACHE HIT (getAllListeningHistories)');
+    //   return res.status(200).json(JSON.parse(cachedData));
+    // }
+
+    const histories = await ListeningHistory.findAll();
+
+    if (!histories || histories.length === 0) {
+      return res.status(200).json({
+        message: 'Listening histories retrieved successfully',
+        data: [],
+        success: true
+      });
+    }
+
+
     console.log(histories)
-    res.status(200).json({ message: 'Listening histories retrieved successfully', data: histories, success: true });
+    const response = {
+      message: 'Listening histories retrieved successfully',
+      data: histories,
+      success: true
+    };
+
+    // await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS });
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -276,34 +221,31 @@ const CreateOneListeningHistory = async (req, res) => {
 
     if (existingHistory) {
       console.log(1000000)
+      existingHistory.playCount += 1;
+      existingHistory.updatedAt = new Date();
       if (existingHistory.itemType === 'track') {
         existingHistory.durationListened = durationListened;
-        existingHistory.playCount += 1;
-        existingHistory.updatedAt = new Date();
-        await existingHistory.save();
-        return res.status(200).json({
-          message: 'Listening history updated successfully',
-          data: existingHistory,
-          success: true,
-          updated: true
-        });
-      } else {
-        return res.status(200).json({
-          message: 'Listening history already exists',
-          data: existingHistory,
-          success: false,
-          updated: false
-        });
       }
+      await existingHistory.save();
+      return res.status(200).json({
+        message: 'Listening history updated successfully',
+        data: existingHistory,
+        success: true,
+        updated: true
+      });
     }
 
     const history = await ListeningHistory.create({
-      userId: req.user.id,
+      userId: req?.user.id,
       itemType,
       itemId,
       itemSpotifyId,
       ... (durationListened !== undefined ? { durationListened } : {})
     });
+
+    if (!history) {
+      return res.status(500).json({ message: 'Không thể tạo lịch sử nghe' });
+    }
 
     switch (itemType) {
       case 'track':
