@@ -1,7 +1,7 @@
 const sequelize = require('../configs/database')
 
 // Import all models
-const User = require('./User');
+const User = require('./user');
 const Notification = require('./notification');
 const Post = require('./post');
 const Comment = require('./comment');
