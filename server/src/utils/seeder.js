@@ -1,22 +1,8 @@
 const sequelize = require('../configs/database');
 
-const User = require('../models/User');
-const Role = require('../models/role');
-const Genres = require('../models/genres');
-const Artist = require('../models/artist');
-const Album = require('../models/album');
-const Track = require('../models/track');
-const Playlist = require('../models/playlist');
-const FollowUser = require('../models/follow_user');
-const FollowArtist = require('../models/follow_artist');
-
-const Post = require('../models/post');
-const Like = require('../models/like');
-const Comment = require('../models/comment');
-const PostReport = require('../models/postReport');
-const Conversation = require('../models/conversation');
-const ConversationMember = require('../models/conversationMember');
-const Message = require('../models/message');
+const { Artist, Genres, Album, Track, Role, User, Playlist, FollowUser,
+    FollowArtist, Post, Like, Comment, PostReport,
+    Conversation, ConversationMember, Message } = require('../models');
 
 // Đọc file JSON trực tiếp
 const roleData = require('../seeders/roles.json');
@@ -69,7 +55,7 @@ const mapTrack = async () => {
     return trackMap;
 }
 
-const mapTrackBySpotifyId = async() => {
+const mapTrackBySpotifyId = async () => {
     const tracks = await Track.findAll({ attributes: ['id', 'spotifyId'] });
     const trackMap = tracks.reduce((map, track) => {
         map[track.spotifyId] = track.id;
