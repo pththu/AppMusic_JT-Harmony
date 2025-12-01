@@ -12,8 +12,7 @@ const { connectRedis } = require('./configs/redis');
 const dotenv = require("dotenv");
 const { Server } = require("socket.io");
 
-
-const initSocket = require("./server_socket");
+const initSocket = require("./socket_server");
 
 dotenv.config();
 
