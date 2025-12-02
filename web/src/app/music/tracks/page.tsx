@@ -21,14 +21,14 @@ import {
   ChevronsRight
 } from "lucide-react";
 import { Button, Input, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
-import { useMusicStore } from "@/store/musicStore";
 import StatCard from "@/components/music/track/stat-card";
 import DropdownMenu from "@/components/music/track/dropdown-menu";
 import SelectNative from "@/components/music/track/select-native";
-import { formatArtists } from "@/utils";
 import DetailModal from "@/components/music/track/detail-modal";
 import EditModal from "@/components/music/track/edit-modal";
 import ChartTopTrack from "@/components/music/track/chart-top-track";
+import { formatArtists } from "@/utils";
+import { useMusicStore } from "@/store";
 
 export default function TracksPage() {
   const { tracks, fetchTracks, setTracks } = useMusicStore();
@@ -157,8 +157,10 @@ export default function TracksPage() {
   };
 
   useEffect(() => {
-    fetchTracks();
-  }, [fetchTracks]);
+    if (tracks.length === 0) {
+      fetchTracks();
+    }
+  }, [fetchTracks, tracks.length]);
 
   return (
     <div className="space-y-6 pb-10 bg-gray-50/30 min-h-screen p-6 font-sans">

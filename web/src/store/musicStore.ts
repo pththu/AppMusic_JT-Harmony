@@ -1,5 +1,4 @@
-import { GetAllArtist } from "@/services/followApi";
-import { GetAllAlbum, GetAllPlaylist, GetAllTrack } from "@/services/musicApi";
+import { GetAllAlbum, GetAllPlaylist, GetAllTrack, GetAllArtist } from "@/services";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -74,7 +73,6 @@ export const useMusicStore = create<MusicState>()(
       fetchArtists: async () => {
         try {
           const response = await GetAllArtist();
-          console.log(response.data.slice(0, 3))
           if (response.success) {
             set({ artists: response.data });
           } else {

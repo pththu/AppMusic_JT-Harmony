@@ -33,49 +33,10 @@ import {
   Pie,
   Legend
 } from "recharts";
-import { useMusicStore } from "@/store/musicStore";
+import { useMusicStore } from "@/store";
 import { Badge, Button, Input } from "@/components/ui";
 
 // --- 1. SIMPLIFIED UI COMPONENTS (INLINED) ---
-
-// const Button = ({ children, variant = "default", size = "default", className = "", ...props }: any) => {
-//   const base = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
-//   const variants = {
-//     default: "bg-blue-600 text-white hover:bg-blue-700 shadow",
-//     ghost: "hover:bg-gray-100 text-gray-700",
-//     outline: "border border-gray-200 bg-white hover:bg-gray-100 text-gray-900",
-//     destructive: "bg-red-600 text-white hover:bg-red-700",
-//   };
-//   const sizes = {
-//     default: "h-9 px-4 py-2 text-sm",
-//     sm: "h-8 px-3 text-xs",
-//     icon: "h-9 w-9",
-//   };
-//   const finalClass = `${base} ${variants[variant as keyof typeof variants] || variants.default} ${sizes[size as keyof typeof sizes] || sizes.default} ${className}`;
-//   return <button className={finalClass} {...props}>{children}</button>;
-// };
-
-// const Input = ({ className = "", ...props }: any) => (
-//   <input
-//     className={`flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-//     {...props}
-//   />
-// );
-
-// const Badge = ({ children, variant = "default", className = "" }: any) => {
-//   const variants = {
-//     default: "border-transparent bg-blue-100 text-blue-700 hover:bg-blue-200",
-//     secondary: "border-transparent bg-gray-100 text-gray-700 hover:bg-gray-200",
-//     outline: "text-gray-700 border border-gray-200",
-//     purple: "border-transparent bg-purple-100 text-purple-700",
-//     orange: "border-transparent bg-orange-100 text-orange-700",
-//   };
-//   return (
-//     <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variants[variant as keyof typeof variants] || variants.default} ${className}`}>
-//       {children}
-//     </div>
-//   );
-// };
 
 const Card = ({ className = "", ...props }: any) => <div className={`rounded-xl border bg-white text-gray-950 shadow ${className}`} {...props} />;
 const CardContent = ({ className = "", ...props }: any) => <div className={`p-6 pt-0 ${className}`} {...props} />;
@@ -88,20 +49,6 @@ const TableBody = ({ className = "", ...props }: any) => <tbody className={`[&_t
 const TableRow = ({ className = "", ...props }: any) => <tr className={`border-b transition-colors hover:bg-gray-50/50 data-[state=selected]:bg-gray-100 ${className}`} {...props} />;
 const TableHead = ({ className = "", ...props }: any) => <th className={`h-10 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0 ${className}`} {...props} />;
 const TableCell = ({ className = "", ...props }: any) => <td className={`p-4 align-middle [&:has([role=checkbox])]:pr-0 ${className}`} {...props} />;
-
-// Custom Native Select
-// const SelectNative = ({ value, onChange, options, placeholder = "Select...", className = "" }: any) => (
-//   <select
-//     value={value}
-//     onChange={(e) => onChange(e.target.value)}
-//     className={`flex h-9 w-full items-center justify-between rounded-md border border-gray-200 bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-//   >
-//     <option value="all">{placeholder}</option>
-//     {options.map((opt: any) => (
-//       <option key={opt.value} value={opt.value}>{opt.label}</option>
-//     ))}
-//   </select>
-// );
 
 // Custom Modal
 const Modal = ({ isOpen, onClose, title, description, children, footer }: any) => {
@@ -449,7 +396,6 @@ export default function AlbumsPage() {
               processedAlbums.map((album, idx) => {
                 const idInfo = getAlbumIdDisplay(album);
                 const Icon = idInfo.icon;
-                
                 return (
                   <TableRow key={idx} className="group hover:bg-blue-50/30 transition-colors">
                     <TableCell className="font-medium">

@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import useAuthStore from "@/store/authStore";
-import { Login } from "@/services/authApi";
+import { useAuthStore } from "@/store";
+import { Login } from "@/services";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -23,8 +23,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const login = useAuthStore((state) => state.login);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +45,7 @@ export default function LoginPage() {
       if (response.success) {
         const user = response.user;
 
-        login(user, "local", user.accessToken);
+        login(user);
 
         await new Promise((r) => setTimeout(r, 0));
         router.replace("/dashboard");
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      // router.replace("/");
+      router.replace("/");
     }
   }, [isLoggedIn, router]);
 

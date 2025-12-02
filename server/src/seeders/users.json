@@ -118,7 +118,7 @@
     "roleName": "User",
     "lastLogin": "2025-11-27T01:15:30.000Z"
   },
-  {
+    {
     "facebookId": null,
     "googleId": null,
     "username": "user5500",
@@ -145,7 +145,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-15T19:22:55.000Z"
+    "lastLogin": "2025-11-28T15:35:00.000Z",
+    "createdAt": "2023-05-10T10:00:00.000Z",
+    "updatedAt": "2025-10-15T09:00:00.000Z"
   },
   {
     "facebookId": "1558009876543212",
@@ -173,7 +175,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-22T10:05:01.000Z"
+    "lastLogin": "2025-11-29T08:10:00.000Z",
+    "createdAt": "2023-01-20T12:00:00.000Z",
+    "updatedAt": "2025-11-05T10:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -201,7 +205,9 @@
     "streamQuality": "low",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-01T15:40:00.000Z"
+    "lastLogin": "2025-07-25T15:40:00.000Z",
+    "createdAt": "2024-08-01T08:00:00.000Z",
+    "updatedAt": "2025-06-01T10:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -228,7 +234,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T21:00:00.000Z"
+    "lastLogin": "2025-11-27T10:00:00.000Z",
+    "createdAt": "2023-03-15T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000001",
@@ -255,7 +263,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-25T11:30:00.000Z"
+    "lastLogin": "2025-11-28T12:30:00.000Z",
+    "createdAt": "2023-11-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -280,7 +290,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-18T16:00:00.000Z"
+    "lastLogin": "2025-11-29T05:00:00.000Z",
+    "createdAt": "2023-02-05T10:00:00.000Z",
+    "updatedAt": "2025-11-18T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -306,7 +318,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T00:10:45.000Z"
+    "lastLogin": "2025-11-29T10:15:00.000Z",
+    "createdAt": "2024-01-10T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -332,7 +346,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-23T14:50:20.000Z"
+    "lastLogin": "2025-11-29T00:40:00.000Z",
+    "createdAt": "2023-08-01T10:00:00.000Z",
+    "updatedAt": "2025-11-23T10:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -357,7 +373,9 @@
     "streamQuality": "low",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-05T09:12:00.000Z"
+    "lastLogin": "2025-06-30T09:12:00.000Z",
+    "createdAt": "2024-10-10T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000008",
@@ -384,7 +402,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T07:40:00.000Z"
+    "lastLogin": "2025-11-28T11:40:00.000Z",
+    "createdAt": "2023-07-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000010",
@@ -410,7 +430,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-24T18:00:00.000Z"
+    "lastLogin": "2025-11-29T06:00:00.000Z",
+    "createdAt": "2024-03-20T10:00:00.000Z",
+    "updatedAt": "2025-11-15T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -436,7 +458,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-21T02:00:00.000Z"
+    "lastLogin": "2025-11-28T09:00:00.000Z",
+    "createdAt": "2023-10-01T10:00:00.000Z",
+    "updatedAt": "2025-11-15T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000012",
@@ -463,7 +487,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-10T12:35:00.000Z"
+    "lastLogin": "2025-11-20T08:35:00.000Z",
+    "createdAt": "2024-05-15T10:00:00.000Z",
+    "updatedAt": "2025-11-05T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -488,7 +514,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T09:55:00.000Z"
+    "lastLogin": "2025-11-28T09:55:00.000Z",
+    "createdAt": "2023-04-10T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000014",
@@ -513,7 +541,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-19T06:00:00.000Z"
+    "lastLogin": "2025-11-28T14:00:00.000Z",
+    "createdAt": "2024-06-01T10:00:00.000Z",
+    "updatedAt": "2025-11-15T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -538,7 +568,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T02:30:15.000Z"
+    "lastLogin": "2025-11-29T11:30:00.000Z",
+    "createdAt": "2023-03-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000016",
@@ -565,7 +597,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-25T13:00:00.000Z"
+    "lastLogin": "2025-11-28T10:00:00.000Z",
+    "createdAt": "2024-02-14T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -590,7 +624,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T08:15:00.000Z"
+    "lastLogin": "2025-11-29T08:15:00.000Z",
+    "createdAt": "2023-09-01T10:00:00.000Z",
+    "updatedAt": "2025-11-27T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -615,7 +651,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-20T14:40:00.000Z"
+    "lastLogin": "2025-11-28T14:40:00.000Z",
+    "createdAt": "2023-06-20T10:00:00.000Z",
+    "updatedAt": "2025-11-15T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000020",
@@ -643,7 +681,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T22:10:00.000Z"
+    "lastLogin": "2025-11-29T02:10:00.000Z",
+    "createdAt": "2023-01-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -668,7 +708,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-25T17:35:00.000Z"
+    "lastLogin": "2025-11-28T13:35:00.000Z",
+    "createdAt": "2024-04-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000022",
@@ -693,7 +735,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T00:50:00.000Z"
+    "lastLogin": "2025-11-29T11:50:00.000Z",
+    "createdAt": "2024-07-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -719,7 +763,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-24T11:20:00.000Z"
+    "lastLogin": "2025-11-28T09:20:00.000Z",
+    "createdAt": "2023-05-05T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000026",
@@ -746,7 +792,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T15:05:00.000Z"
+    "lastLogin": "2025-11-28T16:05:00.000Z",
+    "createdAt": "2023-12-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000030",
@@ -774,7 +822,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T01:00:00.000Z"
+    "lastLogin": "2025-11-29T12:00:00.000Z",
+    "createdAt": "2024-09-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000031",
@@ -802,7 +852,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T09:45:00.000Z"
+    "lastLogin": "2025-11-28T14:45:00.000Z",
+    "createdAt": "2023-07-20T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -827,7 +879,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T03:00:00.000Z"
+    "lastLogin": "2025-11-29T13:00:00.000Z",
+    "createdAt": "2024-05-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": "100000000000000033",
@@ -857,7 +911,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T06:20:00.000Z"
+    "lastLogin": "2025-11-29T14:20:00.000Z",
+    "createdAt": "2023-02-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -883,7 +939,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T10:30:00.000Z"
+    "lastLogin": "2025-11-29T16:30:00.000Z",
+    "createdAt": "2024-03-05T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_2",
@@ -910,7 +968,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T08:45:00.000Z"
+    "lastLogin": "2025-11-28T17:45:00.000Z",
+    "createdAt": "2023-01-25T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -934,7 +994,9 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-02-28T10:00:00.000Z",
+    "updatedAt": "2024-10-10T09:00:00.000Z"
   },
   {
     "facebookId": "fb_4",
@@ -960,7 +1022,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-20T12:00:00.000Z"
+    "lastLogin": "2025-07-15T12:00:00.000Z",
+    "createdAt": "2023-04-20T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -983,7 +1047,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-06-15T10:00:00.000Z",
+    "updatedAt": "2025-05-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1010,7 +1076,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:00:00.000Z"
+    "lastLogin": "2025-11-29T10:00:00.000Z",
+    "createdAt": "2023-08-15T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_7",
@@ -1037,7 +1105,9 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-27T18:30:00.000Z"
+    "lastLogin": "2025-08-01T18:30:00.000Z",
+    "createdAt": "2024-01-05T10:00:00.000Z",
+    "updatedAt": "2025-07-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1060,7 +1130,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-25T11:20:00.000Z",
+    "createdAt": "2023-03-25T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_9",
@@ -1088,7 +1160,9 @@
     "streamQuality": "high",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-24T05:20:00.000Z"
+    "lastLogin": "2025-07-30T05:20:00.000Z",
+    "createdAt": "2024-09-15T10:00:00.000Z",
+    "updatedAt": "2025-07-15T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1113,7 +1187,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-15T09:10:00.000Z"
+    "lastLogin": "2025-06-20T09:10:00.000Z",
+    "createdAt": "2024-04-15T10:00:00.000Z",
+    "updatedAt": "2025-06-05T09:00:00.000Z"
   },
   {
     "facebookId": "fb_11",
@@ -1139,7 +1215,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T22:05:00.000Z"
+    "lastLogin": "2025-11-29T17:05:00.000Z",
+    "createdAt": "2024-11-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1163,8 +1241,11 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-06-01T10:00:00.000Z",
+    "updatedAt": "2024-05-15T09:00:00.000Z"
   },
+  
   {
     "facebookId": "fb_13",
     "googleId": null,
@@ -1188,7 +1269,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T00:15:00.000Z"
+    "lastLogin": "2025-11-29T09:15:00.000Z",
+    "createdAt": "2024-03-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1214,7 +1297,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-10T14:40:00.000Z"
+    "lastLogin": "2025-07-28T14:40:00.000Z",
+    "createdAt": "2023-05-10T10:00:00.000Z",
+    "updatedAt": "2025-07-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_15",
@@ -1242,7 +1327,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:30:00.000Z"
+    "lastLogin": "2025-11-29T10:30:00.000Z",
+    "createdAt": "2024-01-20T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1265,7 +1352,9 @@
     "streamQuality": "low",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-02-01T10:00:00.000Z",
+    "updatedAt": "2024-05-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_17",
@@ -1292,7 +1381,9 @@
     "streamQuality": "medium",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-23T19:00:00.000Z"
+    "lastLogin": "2025-06-25T19:00:00.000Z",
+    "createdAt": "2024-07-01T10:00:00.000Z",
+    "updatedAt": "2025-06-15T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1307,7 +1398,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Trương Đình A",
+    "fullName": "Trương Đình Anh",
     "avatarUrl": "https://i.pravatar.cc/150?img=18",
     "bio": null,
     "dob": "1999-08-16T00:00:00.000Z",
@@ -1317,7 +1408,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T07:12:00.000Z"
+    "lastLogin": "2025-11-29T08:12:00.000Z",
+    "createdAt": "2023-11-15T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_19",
@@ -1330,7 +1423,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Ngô Bích B",
+    "fullName": "Ngô Bích Bình",
     "avatarUrl": "https://i.pravatar.cc/150?img=19",
     "bio": null,
     "dob": "1990-12-05T00:00:00.000Z",
@@ -1340,7 +1433,9 @@
     "streamQuality": "low",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-04-01T10:00:00.000Z",
+    "updatedAt": "2024-12-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1357,7 +1452,7 @@
       "google",
       "local"
     ],
-    "fullName": "Hoàng Minh C",
+    "fullName": "Hoàng Minh Cường",
     "avatarUrl": "https://i.pravatar.cc/150?img=20",
     "bio": null,
     "dob": "1987-06-21T00:00:00.000Z",
@@ -1367,7 +1462,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T15:55:00.000Z"
+    "lastLogin": "2025-11-29T11:55:00.000Z",
+    "createdAt": "2023-01-28T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_21",
@@ -1383,7 +1480,7 @@
       "facebook",
       "local"
     ],
-    "fullName": "Trần Thanh D",
+    "fullName": "Trần Thanh Dũng",
     "avatarUrl": "https://i.pravatar.cc/150?img=21",
     "bio": null,
     "dob": "2002-05-13T00:00:00.000Z",
@@ -1393,7 +1490,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T11:00:00.000Z"
+    "lastLogin": "2025-11-29T12:00:00.000Z",
+    "createdAt": "2024-05-20T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1408,7 +1507,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Lê Văn E",
+    "fullName": "Lê Văn Em",
     "avatarUrl": "https://i.pravatar.cc/150?img=22",
     "bio": null,
     "dob": "1992-03-08T00:00:00.000Z",
@@ -1418,7 +1517,9 @@
     "streamQuality": "low",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-25T03:45:00.000Z"
+    "lastLogin": "2025-07-05T03:45:00.000Z",
+    "createdAt": "2023-07-07T10:00:00.000Z",
+    "updatedAt": "2025-06-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_23",
@@ -1436,7 +1537,7 @@
       "google",
       "local"
     ],
-    "fullName": "Phan Thị F",
+    "fullName": "Phan Thị Phương",
     "avatarUrl": "https://i.pravatar.cc/150?img=23",
     "bio": "Yêu thích sự kết hợp giữa Pop và Rap.",
     "dob": "1988-11-19T00:00:00.000Z",
@@ -1446,7 +1547,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:50:00.000Z"
+    "lastLogin": "2025-11-29T13:50:00.000Z",
+    "createdAt": "2023-08-05T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1459,7 +1562,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Bùi Xuân G",
+    "fullName": "Bùi Xuân Giang",
     "avatarUrl": "https://i.pravatar.cc/150?img=24",
     "bio": null,
     "dob": "1970-02-17T00:00:00.000Z",
@@ -1469,7 +1572,9 @@
     "streamQuality": "medium",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-09-10T10:00:00.000Z",
+    "updatedAt": "2025-05-15T09:00:00.000Z"
   },
   {
     "facebookId": "fb_25",
@@ -1484,7 +1589,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Đỗ Ngọc H",
+    "fullName": "Đỗ Ngọc Hân",
     "avatarUrl": "https://i.pravatar.cc/150?img=25",
     "bio": null,
     "dob": "1995-07-03T00:00:00.000Z",
@@ -1494,7 +1599,9 @@
     "streamQuality": "low",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-18T16:00:00.000Z"
+    "lastLogin": "2025-08-10T16:00:00.000Z",
+    "createdAt": "2024-02-14T10:00:00.000Z",
+    "updatedAt": "2025-07-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1510,7 +1617,7 @@
       "google",
       "local"
     ],
-    "fullName": "Vũ Văn I",
+    "fullName": "Vũ Văn Huy",
     "avatarUrl": "https://i.pravatar.cc/150?img=26",
     "bio": null,
     "dob": "1982-04-14T00:00:00.000Z",
@@ -1520,7 +1627,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T09:30:00.000Z"
+    "lastLogin": "2025-11-29T06:30:00.000Z",
+    "createdAt": "2023-12-25T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_27",
@@ -1537,7 +1646,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Nguyễn Thị J",
+    "fullName": "Nguyễn Thị Ngọc",
     "avatarUrl": "https://i.pravatar.cc/150?img=27",
     "bio": null,
     "dob": "1997-01-28T00:00:00.000Z",
@@ -1547,7 +1656,9 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-24T20:10:00.000Z"
+    "lastLogin": "2025-07-18T20:10:00.000Z",
+    "createdAt": "2023-06-05T10:00:00.000Z",
+    "updatedAt": "2025-07-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1560,7 +1671,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Trần Văn K",
+    "fullName": "Trần Văn Khoa",
     "avatarUrl": "https://i.pravatar.cc/150?img=28",
     "bio": null,
     "dob": "1960-10-02T00:00:00.000Z",
@@ -1570,7 +1681,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-27T21:00:00.000Z",
+    "createdAt": "2023-09-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_29",
@@ -1589,7 +1702,7 @@
       "google",
       "local"
     ],
-    "fullName": "Lê Thị L",
+    "fullName": "Lê Thị Linh",
     "avatarUrl": "https://i.pravatar.cc/150?img=29",
     "bio": "Yêu thích nhạc Pop từ Á sang Âu.",
     "dob": "2000-03-17T00:00:00.000Z",
@@ -1599,7 +1712,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T00:00:00.000Z"
+    "lastLogin": "2025-11-29T14:00:00.000Z",
+    "createdAt": "2023-03-05T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1615,7 +1730,7 @@
       "google",
       "local"
     ],
-    "fullName": "Đinh Văn M",
+    "fullName": "Đinh Văn Minh",
     "avatarUrl": "https://i.pravatar.cc/150?img=30",
     "bio": null,
     "dob": "1976-12-04T00:00:00.000Z",
@@ -1625,7 +1740,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-21T17:35:00.000Z"
+    "lastLogin": "2025-07-01T17:35:00.000Z",
+    "createdAt": "2024-06-20T10:00:00.000Z",
+    "updatedAt": "2025-06-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_31",
@@ -1642,7 +1759,7 @@
       "facebook",
       "local"
     ],
-    "fullName": "Phạm Quốc N",
+    "fullName": "Phạm Quốc Nam",
     "avatarUrl": "https://i.pravatar.cc/150?img=31",
     "bio": null,
     "dob": "1993-01-10T00:00:00.000Z",
@@ -1652,7 +1769,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T14:15:00.000Z"
+    "lastLogin": "2025-11-29T15:15:00.000Z",
+    "createdAt": "2024-08-15T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1666,7 +1785,7 @@
       "google",
       "local"
     ],
-    "fullName": "Trần Thanh O",
+    "fullName": "Trần Thanh Oanh",
     "avatarUrl": "https://i.pravatar.cc/150?img=32",
     "bio": null,
     "dob": "2001-04-20T00:00:00.000Z",
@@ -1676,7 +1795,9 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-07-20T10:00:00.000Z",
+    "createdAt": "2023-04-25T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_33",
@@ -1691,7 +1812,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Hồ Văn P",
+    "fullName": "Hồ Văn Phát",
     "avatarUrl": "https://i.pravatar.cc/150?img=33",
     "bio": null,
     "dob": "1985-06-25T00:00:00.000Z",
@@ -1701,7 +1822,9 @@
     "streamQuality": "low",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-20T09:00:00.000Z"
+    "lastLogin": "2025-06-15T09:00:00.000Z",
+    "createdAt": "2024-01-01T10:00:00.000Z",
+    "updatedAt": "2025-05-30T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1717,7 +1840,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Lê Thị Q",
+    "fullName": "Lê Thị Quỳnh",
     "avatarUrl": "https://i.pravatar.cc/150?img=34",
     "bio": null,
     "dob": "1977-11-03T00:00:00.000Z",
@@ -1727,7 +1850,9 @@
     "streamQuality": "medium",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-25T11:20:00.000Z"
+    "lastLogin": "2025-07-29T11:20:00.000Z",
+    "createdAt": "2023-09-20T10:00:00.000Z",
+    "updatedAt": "2025-07-15T09:00:00.000Z"
   },
   {
     "facebookId": "fb_35",
@@ -1755,7 +1880,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T02:05:00.000Z"
+    "lastLogin": "2025-11-29T14:05:00.000Z",
+    "createdAt": "2024-02-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1768,7 +1895,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Vũ Ánh S",
+    "fullName": "Vũ Ánh Sáng",
     "avatarUrl": "https://i.pravatar.cc/150?img=36",
     "bio": null,
     "dob": "1990-09-15T00:00:00.000Z",
@@ -1778,7 +1905,9 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-08-01T10:00:00.000Z",
+    "updatedAt": "2025-05-10T09:00:00.000Z"
   },
   {
     "facebookId": "fb_37",
@@ -1796,7 +1925,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Cao Minh T",
+    "fullName": "Cao Minh Thuận",
     "avatarUrl": "https://i.pravatar.cc/150?img=37",
     "bio": null,
     "dob": "1998-03-22T00:00:00.000Z",
@@ -1806,7 +1935,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T18:00:00.000Z"
+    "lastLogin": "2025-11-29T00:00:00.000Z",
+    "createdAt": "2023-06-20T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1821,7 +1952,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Bùi Thị U",
+    "fullName": "Bùi Thị Uyên",
     "avatarUrl": "https://i.pravatar.cc/150?img=38",
     "bio": null,
     "dob": "1980-05-09T00:00:00.000Z",
@@ -1831,7 +1962,9 @@
     "streamQuality": "high",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-12T05:30:00.000Z"
+    "lastLogin": "2025-06-28T05:30:00.000Z",
+    "createdAt": "2024-10-01T10:00:00.000Z",
+    "updatedAt": "2025-06-15T09:00:00.000Z"
   },
   {
     "facebookId": "fb_39",
@@ -1844,7 +1977,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Phan Quang V",
+    "fullName": "Phan Quang Vinh",
     "avatarUrl": "https://i.pravatar.cc/150?img=39",
     "bio": null,
     "dob": "1972-08-08T00:00:00.000Z",
@@ -1854,7 +1987,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-26T10:00:00.000Z",
+    "createdAt": "2023-02-28T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1870,7 +2005,7 @@
       "google",
       "local"
     ],
-    "fullName": "Lê Ngọc W",
+    "fullName": "Lê Ngọc Xuân",
     "avatarUrl": "https://i.pravatar.cc/150?img=40",
     "bio": null,
     "dob": "1996-02-14T00:00:00.000Z",
@@ -1880,7 +2015,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:00:00.000Z"
+    "lastLogin": "2025-07-22T01:00:00.000Z",
+    "createdAt": "2023-01-05T10:00:00.000Z",
+    "updatedAt": "2025-06-10T09:00:00.000Z"
   },
   {
     "facebookId": "fb_41",
@@ -1906,7 +2043,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T23:30:00.000Z"
+    "lastLogin": "2025-11-29T08:30:00.000Z",
+    "createdAt": "2024-05-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1919,7 +2058,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Nguyễn Thị Y",
+    "fullName": "Nguyễn Thị Yến",
     "avatarUrl": "https://i.pravatar.cc/150?img=42",
     "bio": null,
     "dob": "1968-07-04T00:00:00.000Z",
@@ -1929,8 +2068,11 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-03-20T10:00:00.000Z",
+    "updatedAt": "2024-11-01T09:00:00.000Z"
   },
+  
   {
     "facebookId": "fb_43",
     "googleId": "goog_43",
@@ -1947,7 +2089,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Trần Thanh Z",
+    "fullName": "Trần Thanh Duy",
     "avatarUrl": "https://i.pravatar.cc/150?img=43",
     "bio": null,
     "dob": "1994-09-19T00:00:00.000Z",
@@ -1957,7 +2099,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T02:00:00.000Z"
+    "lastLogin": "2025-11-29T10:00:00.000Z",
+    "createdAt": "2024-01-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -1972,7 +2116,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Hồ Thị A",
+    "fullName": "Hồ Thị Anh",
     "avatarUrl": "https://i.pravatar.cc/150?img=44",
     "bio": null,
     "dob": "1983-12-12T00:00:00.000Z",
@@ -1982,7 +2126,9 @@
     "streamQuality": "low",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-15T08:10:00.000Z"
+    "lastLogin": "2025-07-05T08:10:00.000Z",
+    "createdAt": "2023-03-20T10:00:00.000Z",
+    "updatedAt": "2025-06-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_45",
@@ -1995,7 +2141,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Vũ Văn B",
+    "fullName": "Vũ Văn Bảo",
     "avatarUrl": "https://i.pravatar.cc/150?img=45",
     "bio": null,
     "dob": "1975-02-28T00:00:00.000Z",
@@ -2005,7 +2151,9 @@
     "streamQuality": "medium",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-05-15T10:00:00.000Z",
+    "updatedAt": "2025-05-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2022,7 +2170,7 @@
       "google",
       "local"
     ],
-    "fullName": "Đinh Thị C",
+    "fullName": "Đinh Thị Chi",
     "avatarUrl": "https://i.pravatar.cc/150?img=46",
     "bio": null,
     "dob": "1999-05-23T00:00:00.000Z",
@@ -2032,7 +2180,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T16:40:00.000Z"
+    "lastLogin": "2025-11-29T15:40:00.000Z",
+    "createdAt": "2023-08-10T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_47",
@@ -2048,7 +2198,7 @@
       "facebook",
       "local"
     ],
-    "fullName": "Lê Quang D",
+    "fullName": "Lê Quang Đại",
     "avatarUrl": "https://i.pravatar.cc/150?img=47",
     "bio": null,
     "dob": "2002-01-01T00:00:00.000Z",
@@ -2058,7 +2208,9 @@
     "streamQuality": "low",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-26T10:00:00.000Z"
+    "lastLogin": "2025-07-28T10:00:00.000Z",
+    "createdAt": "2024-07-05T10:00:00.000Z",
+    "updatedAt": "2025-07-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2071,7 +2223,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Phan Thị E",
+    "fullName": "Phan Thị Em",
     "avatarUrl": "https://i.pravatar.cc/150?img=48",
     "bio": null,
     "dob": "1989-04-18T00:00:00.000Z",
@@ -2081,7 +2233,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-28T22:30:00.000Z",
+    "createdAt": "2023-02-15T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_49",
@@ -2098,7 +2252,7 @@
       "google",
       "local"
     ],
-    "fullName": "Bùi Văn F",
+    "fullName": "Bùi Văn Phúc",
     "avatarUrl": "https://i.pravatar.cc/150?img=49",
     "bio": null,
     "dob": "1991-08-30T00:00:00.000Z",
@@ -2108,7 +2262,9 @@
     "streamQuality": "high",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-24T04:55:00.000Z"
+    "lastLogin": "2025-07-15T04:55:00.000Z",
+    "createdAt": "2024-03-05T10:00:00.000Z",
+    "updatedAt": "2025-06-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2124,7 +2280,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Mai Kim G",
+    "fullName": "Mai Kim Giang",
     "avatarUrl": "https://i.pravatar.cc/150?img=50",
     "bio": null,
     "dob": "2000-06-16T00:00:00.000Z",
@@ -2134,7 +2290,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-22T19:25:00.000Z"
+    "lastLogin": "2025-06-29T19:25:00.000Z",
+    "createdAt": "2023-10-10T10:00:00.000Z",
+    "updatedAt": "2025-06-15T09:00:00.000Z"
   },
   {
     "facebookId": "fb_51",
@@ -2151,7 +2309,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Trương Đình H",
+    "fullName": "Trương Đình Hùng",
     "avatarUrl": "https://i.pravatar.cc/150?img=51",
     "bio": "Mê Rock thập niên 80.",
     "dob": "1973-10-05T00:00:00.000Z",
@@ -2161,7 +2319,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T02:08:00.000Z"
+    "lastLogin": "2025-11-29T10:08:00.000Z",
+    "createdAt": "2023-05-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2176,7 +2336,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Ngô Bích I",
+    "fullName": "Ngô Bích Hương",
     "avatarUrl": "https://i.pravatar.cc/150?img=52",
     "bio": null,
     "dob": "1981-11-11T00:00:00.000Z",
@@ -2186,7 +2346,9 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-21T13:30:00.000Z"
+    "lastLogin": "2025-08-05T13:30:00.000Z",
+    "createdAt": "2024-04-10T10:00:00.000Z",
+    "updatedAt": "2025-07-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_53",
@@ -2199,7 +2361,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Hoàng Minh J",
+    "fullName": "Hoàng Minh Nhật",
     "avatarUrl": "https://i.pravatar.cc/150?img=53",
     "bio": null,
     "dob": "1995-03-03T00:00:00.000Z",
@@ -2209,7 +2371,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-28T15:00:00.000Z",
+    "createdAt": "2023-07-20T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2226,7 +2390,7 @@
       "google",
       "local"
     ],
-    "fullName": "Trần Thanh K",
+    "fullName": "Trần Thanh Khánh",
     "avatarUrl": "https://i.pravatar.cc/150?img=54",
     "bio": null,
     "dob": "2000-08-01T00:00:00.000Z",
@@ -2236,7 +2400,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-23T06:40:00.000Z"
+    "lastLogin": "2025-06-18T06:40:00.000Z",
+    "createdAt": "2023-01-25T10:00:00.000Z",
+    "updatedAt": "2025-06-05T09:00:00.000Z"
   },
   {
     "facebookId": "fb_55",
@@ -2252,7 +2418,7 @@
       "facebook",
       "local"
     ],
-    "fullName": "Lê Văn L",
+    "fullName": "Lê Văn Long",
     "avatarUrl": "https://i.pravatar.cc/150?img=55",
     "bio": null,
     "dob": "1997-12-09T00:00:00.000Z",
@@ -2262,7 +2428,9 @@
     "streamQuality": "high",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-27T15:20:00.000Z"
+    "lastLogin": "2025-07-03T15:20:00.000Z",
+    "createdAt": "2024-06-01T10:00:00.000Z",
+    "updatedAt": "2025-06-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2275,7 +2443,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Đinh Thị M",
+    "fullName": "Đinh Thị Minh",
     "avatarUrl": "https://i.pravatar.cc/150?img=56",
     "bio": null,
     "dob": "1965-01-20T00:00:00.000Z",
@@ -2285,7 +2453,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-28T18:45:00.000Z",
+    "createdAt": "2023-04-15T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_57",
@@ -2303,7 +2473,7 @@
       "google",
       "local"
     ],
-    "fullName": "Cao Đức N",
+    "fullName": "Cao Đức Nam",
     "avatarUrl": "https://i.pravatar.cc/150?img=57",
     "bio": null,
     "dob": "1988-02-14T00:00:00.000Z",
@@ -2313,7 +2483,9 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:30:00.000Z"
+    "lastLogin": "2025-07-25T01:30:00.000Z",
+    "createdAt": "2024-02-10T10:00:00.000Z",
+    "updatedAt": "2025-07-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2326,7 +2498,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Mai Kim O",
+    "fullName": "Mai Kim Oanh",
     "avatarUrl": "https://i.pravatar.cc/150?img=58",
     "bio": null,
     "dob": "1970-05-15T00:00:00.000Z",
@@ -2336,7 +2508,9 @@
     "streamQuality": "high",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-11-20T10:00:00.000Z",
+    "updatedAt": "2024-12-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_59",
@@ -2353,7 +2527,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Phạm Quốc P",
+    "fullName": "Phạm Quốc Phi",
     "avatarUrl": "https://i.pravatar.cc/150?img=59",
     "bio": null,
     "dob": "1994-06-20T00:00:00.000Z",
@@ -2363,7 +2537,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T08:50:00.000Z"
+    "lastLogin": "2025-11-29T10:50:00.000Z",
+    "createdAt": "2023-03-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2378,7 +2554,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Trần Thị Q",
+    "fullName": "Trần Thị Quyên",
     "avatarUrl": "https://i.pravatar.cc/150?img=60",
     "bio": null,
     "dob": "2003-03-10T00:00:00.000Z",
@@ -2388,7 +2564,9 @@
     "streamQuality": "medium",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-26T20:45:00.000Z"
+    "lastLogin": "2025-08-01T20:45:00.000Z",
+    "createdAt": "2024-05-25T10:00:00.000Z",
+    "updatedAt": "2025-07-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_61",
@@ -2416,7 +2594,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T09:10:00.000Z"
+    "lastLogin": "2025-11-29T14:10:00.000Z",
+    "createdAt": "2023-10-05T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2431,7 +2611,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Trần Thị S",
+    "fullName": "Trần Thị Sen",
     "avatarUrl": "https://i.pravatar.cc/150?img=62",
     "bio": null,
     "dob": "1978-04-12T00:00:00.000Z",
@@ -2441,7 +2621,9 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-20T14:45:00.000Z"
+    "lastLogin": "2025-07-08T14:45:00.000Z",
+    "createdAt": "2023-01-10T10:00:00.000Z",
+    "updatedAt": "2025-06-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_63",
@@ -2454,7 +2636,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Lê Văn T",
+    "fullName": "Lê Văn Tuấn",
     "avatarUrl": "https://i.pravatar.cc/150?img=63",
     "bio": null,
     "dob": "1995-12-01T00:00:00.000Z",
@@ -2464,7 +2646,9 @@
     "streamQuality": "low",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-03-20T10:00:00.000Z",
+    "updatedAt": "2024-11-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2480,7 +2664,7 @@
       "google",
       "local"
     ],
-    "fullName": "Phạm Ánh U",
+    "fullName": "Phạm Ánh Uyên",
     "avatarUrl": "https://i.pravatar.cc/150?img=64",
     "bio": null,
     "dob": "1983-09-03T00:00:00.000Z",
@@ -2490,7 +2674,9 @@
     "streamQuality": "high",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-27T03:30:00.000Z"
+    "lastLogin": "2025-07-01T03:30:00.000Z",
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2025-06-15T09:00:00.000Z"
   },
   {
     "facebookId": "fb_65",
@@ -2506,7 +2692,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Hoàng Văn V",
+    "fullName": "Hoàng Văn Vinh",
     "avatarUrl": "https://i.pravatar.cc/150?img=65",
     "bio": null,
     "dob": "1998-05-18T00:00:00.000Z",
@@ -2516,7 +2702,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:55:00.000Z"
+    "lastLogin": "2025-11-29T11:55:00.000Z",
+    "createdAt": "2023-07-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2529,7 +2717,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Vũ Thị W",
+    "fullName": "Vũ Thị Vân",
     "avatarUrl": "https://i.pravatar.cc/150?img=66",
     "bio": null,
     "dob": "1970-02-28T00:00:00.000Z",
@@ -2539,7 +2727,9 @@
     "streamQuality": "low",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-09-01T10:00:00.000Z",
+    "updatedAt": "2025-05-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_67",
@@ -2557,7 +2747,7 @@
       "google",
       "local"
     ],
-    "fullName": "Đỗ Quang X",
+    "fullName": "Đỗ Quang Xương",
     "avatarUrl": "https://i.pravatar.cc/150?img=67",
     "bio": "Yêu thích Hip-Hop thập niên 90.",
     "dob": "1987-06-05T00:00:00.000Z",
@@ -2567,7 +2757,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T10:00:00.000Z"
+    "lastLogin": "2025-11-29T15:00:00.000Z",
+    "createdAt": "2023-02-20T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2582,7 +2774,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Lê Thị Y",
+    "fullName": "Lê Thị Yến",
     "avatarUrl": "https://i.pravatar.cc/150?img=68",
     "bio": null,
     "dob": "1994-10-15T00:00:00.000Z",
@@ -2592,7 +2784,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-18T12:00:00.000Z"
+    "lastLogin": "2025-07-12T12:00:00.000Z",
+    "createdAt": "2024-05-10T10:00:00.000Z",
+    "updatedAt": "2025-06-30T09:00:00.000Z"
   },
   {
     "facebookId": "fb_69",
@@ -2617,7 +2811,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-25T16:30:00.000Z"
+    "lastLogin": "2025-06-20T16:30:00.000Z",
+    "createdAt": "2023-09-25T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2631,7 +2827,7 @@
       "google",
       "local"
     ],
-    "fullName": "Nguyễn Thị A",
+    "fullName": "Nguyễn Thị An",
     "avatarUrl": "https://i.pravatar.cc/150?img=70",
     "bio": null,
     "dob": "1965-01-01T00:00:00.000Z",
@@ -2641,7 +2837,9 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-04-01T10:00:00.000Z",
+    "updatedAt": "2024-07-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_71",
@@ -2657,7 +2855,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Phạm Văn B",
+    "fullName": "Phạm Văn Bình",
     "avatarUrl": "https://i.pravatar.cc/150?img=71",
     "bio": null,
     "dob": "1980-11-05T00:00:00.000Z",
@@ -2667,7 +2865,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T23:45:00.000Z"
+    "lastLogin": "2025-11-29T10:45:00.000Z",
+    "createdAt": "2024-08-05T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2682,7 +2882,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Trần Thanh C",
+    "fullName": "Trần Thanh Chung",
     "avatarUrl": "https://i.pravatar.cc/150?img=72",
     "bio": null,
     "dob": "1997-03-17T00:00:00.000Z",
@@ -2692,7 +2892,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-26T08:20:00.000Z"
+    "lastLogin": "2025-11-28T12:20:00.000Z",
+    "createdAt": "2023-06-15T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_73",
@@ -2707,7 +2909,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Hồ Văn D",
+    "fullName": "Hồ Văn Đức",
     "avatarUrl": "https://i.pravatar.cc/150?img=73",
     "bio": null,
     "dob": "1975-08-22T00:00:00.000Z",
@@ -2717,7 +2919,9 @@
     "streamQuality": "high",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-01-28T10:00:00.000Z",
+    "updatedAt": "2024-05-10T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2743,7 +2947,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-10T05:00:00.000Z"
+    "lastLogin": "2025-06-30T05:00:00.000Z",
+    "createdAt": "2024-10-01T10:00:00.000Z",
+    "updatedAt": "2025-06-15T09:00:00.000Z"
   },
   {
     "facebookId": "fb_75",
@@ -2758,7 +2964,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Đỗ Quang F",
+    "fullName": "Đỗ Quang Phương",
     "avatarUrl": "https://i.pravatar.cc/150?img=75",
     "bio": null,
     "dob": "2001-09-19T00:00:00.000Z",
@@ -2768,7 +2974,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:35:00.000Z"
+    "lastLogin": "2025-11-29T10:35:00.000Z",
+    "createdAt": "2023-03-05T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2782,7 +2990,7 @@
       "google",
       "local"
     ],
-    "fullName": "Nguyễn Thị G",
+    "fullName": "Nguyễn Thị Giang",
     "avatarUrl": "https://i.pravatar.cc/150?img=76",
     "bio": null,
     "dob": "1969-12-31T00:00:00.000Z",
@@ -2792,7 +3000,9 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-06-01T10:00:00.000Z",
+    "updatedAt": "2025-05-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_77",
@@ -2808,7 +3018,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Trần Văn H",
+    "fullName": "Trần Văn Hùng",
     "avatarUrl": "https://i.pravatar.cc/150?img=77",
     "bio": null,
     "dob": "1985-05-10T00:00:00.000Z",
@@ -2818,7 +3028,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T19:00:00.000Z"
+    "lastLogin": "2025-11-29T12:00:00.000Z",
+    "createdAt": "2023-09-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2834,7 +3046,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Lê Thị I",
+    "fullName": "Lê Thị Hồng",
     "avatarUrl": "https://i.pravatar.cc/150?img=78",
     "bio": null,
     "dob": "2000-02-02T00:00:00.000Z",
@@ -2844,7 +3056,9 @@
     "streamQuality": "high",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-23T06:00:00.000Z"
+    "lastLogin": "2025-07-20T06:00:00.000Z",
+    "createdAt": "2024-03-01T10:00:00.000Z",
+    "updatedAt": "2025-06-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_79",
@@ -2861,7 +3075,7 @@
       "google",
       "local"
     ],
-    "fullName": "Phạm Văn J",
+    "fullName": "Phạm Văn Long",
     "avatarUrl": "https://i.pravatar.cc/150?img=79",
     "bio": null,
     "dob": "1993-11-29T00:00:00.000Z",
@@ -2871,7 +3085,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-28T02:00:00.000Z"
+    "lastLogin": "2025-07-07T02:00:00.000Z",
+    "createdAt": "2023-01-05T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2884,7 +3100,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Hồ Thị K",
+    "fullName": "Hồ Thị Kim",
     "avatarUrl": "https://i.pravatar.cc/150?img=80",
     "bio": null,
     "dob": "1972-06-16T00:00:00.000Z",
@@ -2894,7 +3110,9 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-05-15T10:00:00.000Z",
+    "updatedAt": "2025-05-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_81",
@@ -2910,7 +3128,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Vũ Văn L",
+    "fullName": "Vũ Văn Lâm",
     "avatarUrl": "https://i.pravatar.cc/150?img=81",
     "bio": null,
     "dob": "1988-07-28T00:00:00.000Z",
@@ -2920,8 +3138,11 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T11:40:00.000Z"
+    "lastLogin": "2025-11-29T16:40:00.000Z",
+    "createdAt": "2023-11-10T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
+  
   {
     "facebookId": null,
     "googleId": "goog_82",
@@ -2936,7 +3157,7 @@
       "google",
       "local"
     ],
-    "fullName": "Đinh Thị M",
+    "fullName": "Đinh Thị Mai",
     "avatarUrl": "https://i.pravatar.cc/150?img=82",
     "bio": null,
     "dob": "1996-04-10T00:00:00.000Z",
@@ -2946,7 +3167,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:15:00.000Z"
+    "lastLogin": "2025-11-29T09:15:00.000Z",
+    "createdAt": "2024-03-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_83",
@@ -2970,7 +3193,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-08-10T10:00:00.000Z",
+    "updatedAt": "2024-10-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -2986,7 +3211,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Trần Thị O",
+    "fullName": "Trần Thị Oanh",
     "avatarUrl": "https://i.pravatar.cc/150?img=84",
     "bio": null,
     "dob": "1991-10-24T00:00:00.000Z",
@@ -2996,7 +3221,9 @@
     "streamQuality": "high",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-26T14:20:00.000Z"
+    "lastLogin": "2025-07-03T14:20:00.000Z",
+    "createdAt": "2024-01-20T10:00:00.000Z",
+    "updatedAt": "2025-06-15T09:00:00.000Z"
   },
   {
     "facebookId": "fb_85",
@@ -3013,7 +3240,7 @@
       "google",
       "local"
     ],
-    "fullName": "Lê Văn P",
+    "fullName": "Lê Văn Phát",
     "avatarUrl": "https://i.pravatar.cc/150?img=85",
     "bio": null,
     "dob": "2003-05-15T00:00:00.000Z",
@@ -3023,7 +3250,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T02:05:00.000Z"
+    "lastLogin": "2025-11-29T10:05:00.000Z",
+    "createdAt": "2023-05-15T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3036,7 +3265,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Phạm Thị Q",
+    "fullName": "Phạm Thị Quyên",
     "avatarUrl": "https://i.pravatar.cc/150?img=86",
     "bio": null,
     "dob": "1960-08-08T00:00:00.000Z",
@@ -3046,7 +3275,9 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-07-01T10:00:00.000Z",
+    "updatedAt": "2025-05-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_87",
@@ -3072,7 +3303,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T07:30:00.000Z"
+    "lastLogin": "2025-11-29T11:30:00.000Z",
+    "createdAt": "2023-01-25T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3088,7 +3321,7 @@
       "google",
       "local"
     ],
-    "fullName": "Vũ Thị S",
+    "fullName": "Vũ Thị Sen",
     "avatarUrl": "https://i.pravatar.cc/150?img=88",
     "bio": null,
     "dob": "2000-12-12T00:00:00.000Z",
@@ -3098,7 +3331,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-19T10:00:00.000Z"
+    "lastLogin": "2025-06-22T10:00:00.000Z",
+    "createdAt": "2024-03-20T10:00:00.000Z",
+    "updatedAt": "2025-06-10T09:00:00.000Z"
   },
   {
     "facebookId": "fb_89",
@@ -3111,7 +3346,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Đỗ Quang T",
+    "fullName": "Đỗ Quang Tùng",
     "avatarUrl": "https://i.pravatar.cc/150?img=89",
     "bio": null,
     "dob": "1983-03-22T00:00:00.000Z",
@@ -3121,7 +3356,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-29T15:20:00.000Z",
+    "createdAt": "2023-09-01T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3137,7 +3374,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Bùi Thị U",
+    "fullName": "Bùi Thị Uyên",
     "avatarUrl": "https://i.pravatar.cc/150?img=90",
     "bio": null,
     "dob": "1999-06-05T00:00:00.000Z",
@@ -3147,7 +3384,9 @@
     "streamQuality": "high",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-28T00:10:00.000Z"
+    "lastLogin": "2025-07-25T00:10:00.000Z",
+    "createdAt": "2024-01-10T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_91",
@@ -3164,7 +3403,7 @@
       "google",
       "local"
     ],
-    "fullName": "Nguyễn Minh V",
+    "fullName": "Nguyễn Minh Vương",
     "avatarUrl": "https://i.pravatar.cc/150?img=91",
     "bio": null,
     "dob": "1980-03-13T00:00:00.000Z",
@@ -3174,7 +3413,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T22:50:00.000Z"
+    "lastLogin": "2025-11-29T08:50:00.000Z",
+    "createdAt": "2023-06-01T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3189,7 +3430,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Trần Thị W",
+    "fullName": "Trần Thị Xuân",
     "avatarUrl": "https://i.pravatar.cc/150?img=92",
     "bio": null,
     "dob": "1995-09-09T00:00:00.000Z",
@@ -3199,7 +3440,9 @@
     "streamQuality": "low",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-25T04:10:00.000Z"
+    "lastLogin": "2025-07-28T04:10:00.000Z",
+    "createdAt": "2024-04-15T10:00:00.000Z",
+    "updatedAt": "2025-07-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_93",
@@ -3212,7 +3455,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Lê Văn X",
+    "fullName": "Lê Văn Xương",
     "avatarUrl": "https://i.pravatar.cc/150?img=93",
     "bio": null,
     "dob": "1973-12-08T00:00:00.000Z",
@@ -3222,7 +3465,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-29T16:00:00.000Z",
+    "createdAt": "2023-02-28T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3239,7 +3484,7 @@
       "google",
       "local"
     ],
-    "fullName": "Phạm Ánh Y",
+    "fullName": "Phạm Ánh Yến",
     "avatarUrl": "https://i.pravatar.cc/150?img=94",
     "bio": null,
     "dob": "2001-01-20T00:00:00.000Z",
@@ -3249,7 +3494,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-22T17:00:00.000Z"
+    "lastLogin": "2025-07-08T17:00:00.000Z",
+    "createdAt": "2024-05-01T10:00:00.000Z",
+    "updatedAt": "2025-06-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_95",
@@ -3275,7 +3522,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-27T09:45:00.000Z"
+    "lastLogin": "2025-07-15T09:45:00.000Z",
+    "createdAt": "2023-01-01T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3288,7 +3537,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Vũ Thị A",
+    "fullName": "Vũ Thị Anh",
     "avatarUrl": "https://i.pravatar.cc/150?img=96",
     "bio": null,
     "dob": "1962-09-01T00:00:00.000Z",
@@ -3298,7 +3547,9 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-09-20T10:00:00.000Z",
+    "updatedAt": "2025-05-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_97",
@@ -3315,7 +3566,7 @@
       "google",
       "local"
     ],
-    "fullName": "Đỗ Quang B",
+    "fullName": "Đỗ Quang Bảo",
     "avatarUrl": "https://i.pravatar.cc/150?img=97",
     "bio": null,
     "dob": "1996-05-20T00:00:00.000Z",
@@ -3325,7 +3576,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T02:00:00.000Z"
+    "lastLogin": "2025-11-29T10:00:00.000Z",
+    "createdAt": "2023-07-05T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3340,7 +3593,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Bùi Thị C",
+    "fullName": "Bùi Thị Chi",
     "avatarUrl": "https://i.pravatar.cc/150?img=98",
     "bio": null,
     "dob": "2002-11-17T00:00:00.000Z",
@@ -3350,7 +3603,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T15:05:00.000Z"
+    "lastLogin": "2025-11-29T09:05:00.000Z",
+    "createdAt": "2024-02-20T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_99",
@@ -3363,7 +3618,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Nguyễn Minh D",
+    "fullName": "Nguyễn Minh Đức",
     "avatarUrl": "https://i.pravatar.cc/150?img=99",
     "bio": null,
     "dob": "1970-07-27T00:00:00.000Z",
@@ -3373,7 +3628,9 @@
     "streamQuality": "high",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-03-05T10:00:00.000Z",
+    "updatedAt": "2024-11-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3389,7 +3646,7 @@
       "google",
       "local"
     ],
-    "fullName": "Trần Thị E",
+    "fullName": "Trần Thị Em",
     "avatarUrl": "https://i.pravatar.cc/150?img=100",
     "bio": null,
     "dob": "1986-03-10T00:00:00.000Z",
@@ -3399,7 +3656,9 @@
     "streamQuality": "medium",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-24T00:30:00.000Z"
+    "lastLogin": "2025-07-20T00:30:00.000Z",
+    "createdAt": "2023-05-10T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_101",
@@ -3414,7 +3673,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Lê Văn F",
+    "fullName": "Lê Văn An",
     "avatarUrl": "https://i.pravatar.cc/150?img=101",
     "bio": null,
     "dob": "1998-08-05T00:00:00.000Z",
@@ -3424,7 +3683,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:45:00.000Z"
+    "lastLogin": "2025-11-29T09:45:00.000Z",
+    "createdAt": "2024-06-05T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3440,7 +3701,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Phạm Thị G",
+    "fullName": "Phạm Thị Giang",
     "avatarUrl": "https://i.pravatar.cc/150?img=102",
     "bio": null,
     "dob": "1975-04-20T00:00:00.000Z",
@@ -3450,7 +3711,9 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-26T16:00:00.000Z"
+    "lastLogin": "2025-08-01T16:00:00.000Z",
+    "createdAt": "2023-01-20T10:00:00.000Z",
+    "updatedAt": "2025-07-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_103",
@@ -3465,7 +3728,7 @@
       "google",
       "local"
     ],
-    "fullName": "Hồ Văn H",
+    "fullName": "Hồ Văn Hùng",
     "avatarUrl": "https://i.pravatar.cc/150?img=103",
     "bio": null,
     "dob": "1989-10-01T00:00:00.000Z",
@@ -3475,7 +3738,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-29T17:00:00.000Z",
+    "createdAt": "2024-07-20T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3490,7 +3755,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Vũ Thị I",
+    "fullName": "Vũ Thị Ý",
     "avatarUrl": "https://i.pravatar.cc/150?img=104",
     "bio": null,
     "dob": "2000-05-15T00:00:00.000Z",
@@ -3500,7 +3765,9 @@
     "streamQuality": "low",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-16T21:00:00.000Z"
+    "lastLogin": "2025-06-25T21:00:00.000Z",
+    "createdAt": "2023-03-25T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_105",
@@ -3517,7 +3784,7 @@
       "facebook",
       "local"
     ],
-    "fullName": "Đỗ Quang J",
+    "fullName": "Đỗ Quang Nhật",
     "avatarUrl": "https://i.pravatar.cc/150?img=105",
     "bio": null,
     "dob": "1992-07-07T00:00:00.000Z",
@@ -3527,7 +3794,9 @@
     "streamQuality": "high",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:30:00.000Z"
+    "lastLogin": "2025-07-07T01:30:00.000Z",
+    "createdAt": "2023-01-01T10:00:00.000Z",
+    "updatedAt": "2025-06-15T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3541,7 +3810,7 @@
       "google",
       "local"
     ],
-    "fullName": "Lê Thị K",
+    "fullName": "Lê Thị Kim",
     "avatarUrl": "https://i.pravatar.cc/150?img=106",
     "bio": null,
     "dob": "1968-01-25T00:00:00.000Z",
@@ -3551,7 +3820,9 @@
     "streamQuality": "medium",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-08-01T10:00:00.000Z",
+    "updatedAt": "2025-05-15T09:00:00.000Z"
   },
   {
     "facebookId": "fb_107",
@@ -3576,7 +3847,9 @@
     "streamQuality": "low",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-27T03:00:00.000Z"
+    "lastLogin": "2025-11-29T10:00:00.000Z",
+    "createdAt": "2023-04-10T10:00:00.000Z",
+    "updatedAt": "2025-11-20T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3592,7 +3865,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Hồ Thị M",
+    "fullName": "Hồ Thị Mai",
     "avatarUrl": "https://i.pravatar.cc/150?img=108",
     "bio": null,
     "dob": "1983-04-29T00:00:00.000Z",
@@ -3602,7 +3875,9 @@
     "streamQuality": "high",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-20T18:00:00.000Z"
+    "lastLogin": "2025-08-05T18:00:00.000Z",
+    "createdAt": "2024-01-28T10:00:00.000Z",
+    "updatedAt": "2025-07-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_109",
@@ -3619,7 +3894,7 @@
       "google",
       "local"
     ],
-    "fullName": "Vũ Văn N",
+    "fullName": "Vũ Văn Nam",
     "avatarUrl": "https://i.pravatar.cc/150?img=109",
     "bio": null,
     "dob": "2001-01-01T00:00:00.000Z",
@@ -3629,7 +3904,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T02:00:00.000Z"
+    "lastLogin": "2025-11-29T10:00:00.000Z",
+    "createdAt": "2023-06-25T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3644,7 +3921,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Đinh Thị O",
+    "fullName": "Đinh Thị Oanh",
     "avatarUrl": "https://i.pravatar.cc/150?img=110",
     "bio": null,
     "dob": "1977-09-12T00:00:00.000Z",
@@ -3654,7 +3931,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-26T10:30:00.000Z"
+    "lastLogin": "2025-07-29T10:30:00.000Z",
+    "createdAt": "2024-01-01T10:00:00.000Z",
+    "updatedAt": "2025-06-20T09:00:00.000Z"
   },
   {
     "facebookId": "fb_111",
@@ -3667,7 +3946,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Bùi Văn P",
+    "fullName": "Bùi Văn Phát",
     "avatarUrl": "https://i.pravatar.cc/150?img=111",
     "bio": null,
     "dob": "1985-06-19T00:00:00.000Z",
@@ -3677,7 +3956,9 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-03-01T10:00:00.000Z",
+    "updatedAt": "2024-05-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3693,7 +3974,7 @@
       "google",
       "local"
     ],
-    "fullName": "Nguyễn Thị Q",
+    "fullName": "Nguyễn Thị Quyên",
     "avatarUrl": "https://i.pravatar.cc/150?img=112",
     "bio": null,
     "dob": "1994-08-27T00:00:00.000Z",
@@ -3703,7 +3984,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:50:00.000Z"
+    "lastLogin": "2025-11-29T09:50:00.000Z",
+    "createdAt": "2024-06-10T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": "fb_113",
@@ -3718,7 +4001,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Trần Văn R",
+    "fullName": "Trần Văn Rạng",
     "avatarUrl": "https://i.pravatar.cc/150?img=113",
     "bio": null,
     "dob": "1981-03-05T00:00:00.000Z",
@@ -3728,7 +4011,9 @@
     "streamQuality": "low",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-20T09:15:00.000Z"
+    "lastLogin": "2025-06-18T09:15:00.000Z",
+    "createdAt": "2023-11-05T10:00:00.000Z",
+    "updatedAt": "2025-06-01T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3741,7 +4026,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Lê Thị S",
+    "fullName": "Lê Thị Sương",
     "avatarUrl": "https://i.pravatar.cc/150?img=114",
     "bio": null,
     "dob": "1967-12-01T00:00:00.000Z",
@@ -3751,7 +4036,9 @@
     "streamQuality": "high",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2024-03-20T10:00:00.000Z",
+    "updatedAt": "2025-05-10T09:00:00.000Z"
   },
   {
     "facebookId": "fb_115",
@@ -3769,7 +4056,7 @@
       "google",
       "local"
     ],
-    "fullName": "Phạm Văn T",
+    "fullName": "Phạm Văn Thái",
     "avatarUrl": "https://i.pravatar.cc/150?img=115",
     "bio": null,
     "dob": "1990-09-09T00:00:00.000Z",
@@ -3779,7 +4066,9 @@
     "streamQuality": "medium",
     "status": "active",
     "roleName": "User",
-    "lastLogin": "2025-11-28T02:08:00.000Z"
+    "lastLogin": "2025-11-29T10:08:00.000Z",
+    "createdAt": "2023-02-15T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3794,7 +4083,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Hồ Thị U",
+    "fullName": "Hồ Thị Uyên",
     "avatarUrl": "https://i.pravatar.cc/150?img=116",
     "bio": null,
     "dob": "2003-01-30T00:00:00.000Z",
@@ -3804,7 +4093,9 @@
     "streamQuality": "low",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": "2025-11-26T12:00:00.000Z"
+    "lastLogin": "2025-07-22T12:00:00.000Z",
+    "createdAt": "2024-05-10T10:00:00.000Z",
+    "updatedAt": "2025-07-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_117",
@@ -3819,7 +4110,7 @@
       "local",
       "facebook"
     ],
-    "fullName": "Vũ Văn V",
+    "fullName": "Vũ Văn Việt",
     "avatarUrl": "https://i.pravatar.cc/150?img=117",
     "bio": null,
     "dob": "1978-05-18T00:00:00.000Z",
@@ -3829,7 +4120,9 @@
     "streamQuality": "high",
     "status": "active",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": "2025-11-29T18:00:00.000Z",
+    "createdAt": "2023-01-05T10:00:00.000Z",
+    "updatedAt": "2025-11-25T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3844,7 +4137,7 @@
     "accountType": [
       "local"
     ],
-    "fullName": "Đinh Thị W",
+    "fullName": "Đinh Thị Vân",
     "avatarUrl": "https://i.pravatar.cc/150?img=118",
     "bio": null,
     "dob": "1991-02-14T00:00:00.000Z",
@@ -3854,7 +4147,9 @@
     "streamQuality": "medium",
     "status": "banned",
     "roleName": "User",
-    "lastLogin": "2025-11-17T07:40:00.000Z"
+    "lastLogin": "2025-07-30T07:40:00.000Z",
+    "createdAt": "2024-03-10T10:00:00.000Z",
+    "updatedAt": "2025-07-01T09:00:00.000Z"
   },
   {
     "facebookId": "fb_119",
@@ -3870,7 +4165,7 @@
     "accountType": [
       "facebook"
     ],
-    "fullName": "Bùi Văn X",
+    "fullName": "Bùi Văn Xuân",
     "avatarUrl": "https://i.pravatar.cc/150?img=119",
     "bio": null,
     "dob": "2000-11-29T00:00:00.000Z",
@@ -3880,7 +4175,9 @@
     "streamQuality": "low",
     "status": "locked",
     "roleName": "User",
-    "lastLogin": "2025-11-28T01:00:00.000Z"
+    "lastLogin": "2025-06-25T01:00:00.000Z",
+    "createdAt": "2023-09-05T10:00:00.000Z",
+    "updatedAt": "2025-06-15T09:00:00.000Z"
   },
   {
     "facebookId": null,
@@ -3894,7 +4191,7 @@
       "google",
       "local"
     ],
-    "fullName": "Nguyễn Thị Y",
+    "fullName": "Nguyễn Thị Yến",
     "avatarUrl": "https://i.pravatar.cc/150?img=120",
     "bio": null,
     "dob": "1984-06-25T00:00:00.000Z",
@@ -3904,998 +4201,11 @@
     "streamQuality": "high",
     "status": "inactive",
     "roleName": "User",
-    "lastLogin": null
+    "lastLogin": null,
+    "createdAt": "2023-02-01T10:00:00.000Z",
+    "updatedAt": "2024-10-01T09:00:00.000Z"
   },
-  {
-    "facebookId": "fb_121",
-    "googleId": "goog_121",
-    "username": "silver_arrow_121",
-    "email": "silver_arrow_121@example.com",
-    "favoritesGenres": [
-      "POP",
-      "V-POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "google",
-      "local"
-    ],
-    "fullName": "Trần Văn Z",
-    "avatarUrl": "https://i.pravatar.cc/150?img=121",
-    "bio": null,
-    "dob": "1997-03-01T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T02:05:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "golden_cup_122",
-    "email": "golden_cup_122@example.com",
-    "favoritesGenres": [
-      "DANCE"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Lê Thị A",
-    "avatarUrl": "https://i.pravatar.cc/150?img=122",
-    "bio": null,
-    "dob": "2000-10-10T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": "2025-11-27T10:15:00.000Z"
-  },
-  {
-    "facebookId": "fb_123",
-    "googleId": null,
-    "username": "thunder_bird_123",
-    "email": "thunder_bird_123@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook"
-    ],
-    "fullName": "Phạm Văn B",
-    "avatarUrl": "https://i.pravatar.cc/150?img=123",
-    "bio": null,
-    "dob": "1975-01-20T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": false,
-    "streamQuality": "low",
-    "status": "banned",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": null,
-    "googleId": "goog_124",
-    "username": "desert_rain_124",
-    "email": "desert_rain_124@example.com",
-    "favoritesGenres": [
-      "JAZZ"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "google",
-      "local"
-    ],
-    "fullName": "Hoàng Thị C",
-    "avatarUrl": "https://i.pravatar.cc/150?img=124",
-    "bio": null,
-    "dob": "1988-05-18T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "locked",
-    "roleName": "User",
-    "lastLogin": "2025-11-26T19:30:00.000Z"
-  },
-  {
-    "facebookId": "fb_125",
-    "googleId": null,
-    "username": "shadow_dancer_125",
-    "email": "shadow_dancer_125@example.com",
-    "favoritesGenres": [
-      "HIP-HOP",
-      "RAP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Vũ Văn D",
-    "avatarUrl": "https://i.pravatar.cc/150?img=125",
-    "bio": null,
-    "dob": "1994-04-04T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T01:59:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "crystal_light_126",
-    "email": "crystal_light_126@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Đỗ Thị E",
-    "avatarUrl": "https://i.pravatar.cc/150?img=126",
-    "bio": null,
-    "dob": "1965-06-16T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": false,
-    "streamQuality": "low",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": "fb_127",
-    "googleId": "goog_127",
-    "username": "green_leaf_127",
-    "email": "green_leaf_127@example.com",
-    "favoritesGenres": [
-      "ROCK"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "google",
-      "local"
-    ],
-    "fullName": "Bùi Văn F",
-    "avatarUrl": "https://i.pravatar.cc/150?img=127",
-    "bio": null,
-    "dob": "1992-09-25T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T00:40:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "night_owl_128",
-    "email": "night_owl_128@example.com",
-    "favoritesGenres": [
-      "INDIE"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Nguyễn Thị G",
-    "avatarUrl": "https://i.pravatar.cc/150?img=128",
-    "bio": null,
-    "dob": "1983-12-12T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "banned",
-    "roleName": "User",
-    "lastLogin": "2025-11-15T11:00:00.000Z"
-  },
-  {
-    "facebookId": "fb_129",
-    "googleId": null,
-    "username": "fast_rider_129",
-    "email": "fast_rider_129@example.com",
-    "favoritesGenres": [
-      "C-POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook"
-    ],
-    "fullName": "Trần Văn H",
-    "avatarUrl": "https://i.pravatar.cc/150?img=129",
-    "bio": null,
-    "dob": "2001-07-07T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "low",
-    "status": "locked",
-    "roleName": "User",
-    "lastLogin": "2025-11-24T05:30:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": "goog_130",
-    "username": "magic_lamp_130",
-    "email": "magic_lamp_130@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "google",
-      "local"
-    ],
-    "fullName": "Lê Thị I",
-    "avatarUrl": "https://i.pravatar.cc/150?img=130",
-    "bio": null,
-    "dob": "1960-02-14T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": true,
-    "notificationEnabled": false,
-    "streamQuality": "high",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": "fb_131",
-    "googleId": null,
-    "username": "iron_gate_131",
-    "email": "iron_gate_131@example.com",
-    "favoritesGenres": [
-      "TAMIL"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local",
-      "facebook"
-    ],
-    "fullName": "Phạm Văn J",
-    "avatarUrl": "https://i.pravatar.cc/150?img=131",
-    "bio": null,
-    "dob": "1989-11-22T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": "2025-11-27T23:00:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "wild_fire_132",
-    "email": "wild_fire_132@example.com",
-    "favoritesGenres": [
-      "J-POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Hoàng Thị K",
-    "avatarUrl": "https://i.pravatar.cc/150?img=132",
-    "bio": null,
-    "dob": "1996-02-08T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "low",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T01:00:00.000Z"
-  },
-  {
-    "facebookId": "fb_133",
-    "googleId": "goog_133",
-    "username": "green_giant_133",
-    "email": "green_giant_133@example.com",
-    "favoritesGenres": [
-      "K-POP",
-      "POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "google",
-      "local"
-    ],
-    "fullName": "Vũ Văn L",
-    "avatarUrl": "https://i.pravatar.cc/150?img=133",
-    "bio": null,
-    "dob": "1980-08-16T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "banned",
-    "roleName": "User",
-    "lastLogin": "2025-11-22T08:25:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "blue_light_134",
-    "email": "blue_light_134@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Đỗ Thị M",
-    "avatarUrl": "https://i.pravatar.cc/150?img=134",
-    "bio": null,
-    "dob": "1973-05-30T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": false,
-    "streamQuality": "medium",
-    "status": "locked",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": "fb_135",
-    "googleId": null,
-    "username": "desert_wind_135",
-    "email": "desert_wind_135@example.com",
-    "favoritesGenres": [
-      "ROCK"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook"
-    ],
-    "fullName": "Bùi Văn N",
-    "avatarUrl": "https://i.pravatar.cc/150?img=135",
-    "bio": null,
-    "dob": "2002-12-05T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "low",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-27T17:40:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": "goog_136",
-    "username": "star_trail_136",
-    "email": "star_trail_136@example.com",
-    "favoritesGenres": [
-      "JAZZ",
-      "INDIE"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "google",
-      "local"
-    ],
-    "fullName": "Nguyễn Thị O",
-    "avatarUrl": "https://i.pravatar.cc/150?img=136",
-    "bio": null,
-    "dob": "1999-04-14T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T02:00:00.000Z"
-  },
-  {
-    "facebookId": "fb_137",
-    "googleId": null,
-    "username": "golden_fish_137",
-    "email": "golden_fish_137@example.com",
-    "favoritesGenres": [
-      "HIP-HOP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "local"
-    ],
-    "fullName": "Trần Văn P",
-    "avatarUrl": "https://i.pravatar.cc/150?img=137",
-    "bio": null,
-    "dob": "1986-09-09T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-27T21:30:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "silent_ocean_138",
-    "email": "silent_ocean_138@example.com",
-    "favoritesGenres": [
-      "DANCE"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Lê Thị Q",
-    "avatarUrl": "https://i.pravatar.cc/150?img=138",
-    "bio": null,
-    "dob": "1995-12-01T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "low",
-    "status": "banned",
-    "roleName": "User",
-    "lastLogin": "2025-11-19T06:00:00.000Z"
-  },
-  {
-    "facebookId": "fb_139",
-    "googleId": "goog_139",
-    "username": "green_mountain_139",
-    "email": "green_mountain_139@example.com",
-    "favoritesGenres": [
-      "RAP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "google",
-      "local"
-    ],
-    "fullName": "Phạm Văn R",
-    "avatarUrl": "https://i.pravatar.cc/150?img=139",
-    "bio": null,
-    "dob": "1970-07-27T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "locked",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T01:35:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "dark_shadow_140",
-    "email": "dark_shadow_140@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Hoàng Thị S",
-    "avatarUrl": "https://i.pravatar.cc/150?img=140",
-    "bio": null,
-    "dob": "1963-03-03T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": false,
-    "streamQuality": "medium",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": "fb_141",
-    "googleId": null,
-    "username": "silver_moonlight_141",
-    "email": "silver_moonlight_141@example.com",
-    "favoritesGenres": [
-      "K-POP",
-      "C-POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "local"
-    ],
-    "fullName": "Nguyễn Minh T",
-    "avatarUrl": "https://i.pravatar.cc/150?img=141",
-    "bio": null,
-    "dob": "1998-07-03T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T02:00:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": "goog_142",
-    "username": "iron_heartbeat_142",
-    "email": "iron_heartbeat_142@example.com",
-    "favoritesGenres": [
-      "ROCK"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "google",
-      "local"
-    ],
-    "fullName": "Trần Văn U",
-    "avatarUrl": "https://i.pravatar.cc/150?img=142",
-    "bio": null,
-    "dob": "1985-04-12T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": "2025-11-26T18:45:00.000Z"
-  },
-  {
-    "facebookId": "fb_143",
-    "googleId": null,
-    "username": "ocean_deep_143",
-    "email": "ocean_deep_143@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook"
-    ],
-    "fullName": "Lê Thị V",
-    "avatarUrl": "https://i.pravatar.cc/150?img=143",
-    "bio": null,
-    "dob": "1970-11-20T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": false,
-    "streamQuality": "low",
-    "status": "banned",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "golden_star_144",
-    "email": "golden_star_144@example.com",
-    "favoritesGenres": [
-      "POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Phạm Văn W",
-    "avatarUrl": "https://i.pravatar.cc/150?img=144",
-    "bio": null,
-    "dob": "2003-01-01T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "locked",
-    "roleName": "User",
-    "lastLogin": "2025-11-27T03:10:00.000Z"
-  },
-  {
-    "facebookId": "fb_145",
-    "googleId": "goog_145",
-    "username": "green_land_145",
-    "email": "green_land_145@example.com",
-    "favoritesGenres": [
-      "V-POP",
-      "INDIE"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "google",
-      "local"
-    ],
-    "fullName": "Hoàng Thị X",
-    "avatarUrl": "https://i.pravatar.cc/150?img=145",
-    "bio": null,
-    "dob": "1994-06-19T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "low",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T02:02:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "desert_flower_146",
-    "email": "desert_flower_146@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Vũ Văn Y",
-    "avatarUrl": "https://i.pravatar.cc/150?img=146",
-    "bio": null,
-    "dob": "1968-02-14T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": false,
-    "streamQuality": "medium",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": "fb_147",
-    "googleId": "goog_147",
-    "username": "fast_comet_147",
-    "email": "fast_comet_147@example.com",
-    "favoritesGenres": [
-      "RAP",
-      "HIP-HOP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "google",
-      "local",
-      "facebook"
-    ],
-    "fullName": "Đỗ Thị Z",
-    "avatarUrl": "https://i.pravatar.cc/150?img=147",
-    "bio": null,
-    "dob": "1991-11-11T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T01:55:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "white_snow_148",
-    "email": "white_snow_148@example.com",
-    "favoritesGenres": [
-      "JAZZ"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Bùi Văn A",
-    "avatarUrl": "https://i.pravatar.cc/150?img=148",
-    "bio": null,
-    "dob": "1979-05-23T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "low",
-    "status": "banned",
-    "roleName": "User",
-    "lastLogin": "2025-11-13T10:20:00.000Z"
-  },
-  {
-    "facebookId": "fb_149",
-    "googleId": null,
-    "username": "magic_castle_149",
-    "email": "magic_castle_149@example.com",
-    "favoritesGenres": [
-      "DANCE"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook"
-    ],
-    "fullName": "Nguyễn Thị B",
-    "avatarUrl": "https://i.pravatar.cc/150?img=149",
-    "bio": null,
-    "dob": "2000-01-08T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "locked",
-    "roleName": "User",
-    "lastLogin": "2025-11-25T14:00:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": "goog_150",
-    "username": "iron_shield_150",
-    "email": "iron_shield_150@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "google",
-      "local"
-    ],
-    "fullName": "Trần Văn C",
-    "avatarUrl": "https://i.pravatar.cc/150?img=150",
-    "bio": null,
-    "dob": "1960-03-03T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": true,
-    "notificationEnabled": false,
-    "streamQuality": "high",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": "fb_151",
-    "googleId": null,
-    "username": "blue_dream_151",
-    "email": "blue_dream_151@example.com",
-    "favoritesGenres": [
-      "TAMIL"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Lê Thị D",
-    "avatarUrl": "https://i.pravatar.cc/150?img=151",
-    "bio": null,
-    "dob": "1993-09-19T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T00:10:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "star_catcher_152",
-    "email": "star_catcher_152@example.com",
-    "favoritesGenres": [
-      "POP",
-      "K-POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Phạm Văn E",
-    "avatarUrl": "https://i.pravatar.cc/150?img=152",
-    "bio": null,
-    "dob": "1987-12-05T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "low",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-27T08:50:00.000Z"
-  },
-  {
-    "facebookId": "fb_153",
-    "googleId": "goog_153",
-    "username": "green_river_153",
-    "email": "green_river_153@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "google",
-      "local"
-    ],
-    "fullName": "Hoàng Thị F",
-    "avatarUrl": "https://i.pravatar.cc/150?img=153",
-    "bio": null,
-    "dob": "2001-04-18T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": true,
-    "notificationEnabled": false,
-    "streamQuality": "high",
-    "status": "banned",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "dark_forest_154",
-    "email": "dark_forest_154@example.com",
-    "favoritesGenres": [
-      "J-POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Vũ Văn G",
-    "avatarUrl": "https://i.pravatar.cc/150?img=154",
-    "bio": null,
-    "dob": "1972-06-25T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "locked",
-    "roleName": "User",
-    "lastLogin": "2025-11-24T00:00:00.000Z"
-  },
-  {
-    "facebookId": "fb_155",
-    "googleId": null,
-    "username": "golden_eye_155",
-    "email": "golden_eye_155@example.com",
-    "favoritesGenres": [
-      "V-POP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook"
-    ],
-    "fullName": "Đỗ Thị H",
-    "avatarUrl": "https://i.pravatar.cc/150?img=155",
-    "bio": null,
-    "dob": "1990-11-03T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T01:05:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": "goog_156",
-    "username": "silver_bullet_156",
-    "email": "silver_bullet_156@example.com",
-    "favoritesGenres": [],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "google",
-      "local"
-    ],
-    "fullName": "Bùi Văn I",
-    "avatarUrl": "https://i.pravatar.cc/150?img=156",
-    "bio": null,
-    "dob": "1969-05-15T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": true,
-    "notificationEnabled": false,
-    "streamQuality": "low",
-    "status": "inactive",
-    "roleName": "User",
-    "lastLogin": null
-  },
-  {
-    "facebookId": "fb_157",
-    "googleId": null,
-    "username": "electric_shock_157",
-    "email": "electric_shock_157@example.com",
-    "favoritesGenres": [
-      "HIP-HOP",
-      "RAP"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "local"
-    ],
-    "fullName": "Nguyễn Thị J",
-    "avatarUrl": "https://i.pravatar.cc/150?img=157",
-    "bio": null,
-    "dob": "1995-10-28T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "medium",
-    "status": "active",
-    "roleName": "User",
-    "lastLogin": "2025-11-27T17:30:00.000Z"
-  },
-  {
-    "facebookId": null,
-    "googleId": null,
-    "username": "desert_moon_158",
-    "email": "desert_moon_158@example.com",
-    "favoritesGenres": [
-      "JAZZ"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "local"
-    ],
-    "fullName": "Trần Văn K",
-    "avatarUrl": "https://i.pravatar.cc/150?img=158",
-    "bio": null,
-    "dob": "1982-01-12T00:00:00.000Z",
-    "gender": true,
-    "emailVerified": false,
-    "notificationEnabled": true,
-    "streamQuality": "high",
-    "status": "banned",
-    "roleName": "User",
-    "lastLogin": "2025-11-21T05:00:00.000Z"
-  },
-  {
-    "facebookId": "fb_159",
-    "googleId": "goog_159",
-    "username": "green_velvet_159",
-    "email": "green_velvet_159@example.com",
-    "favoritesGenres": [
-      "DANCE"
-    ],
-    "completedOnboarding": true,
-    "password": "$2b$10$synthetic_hash...",
-    "accountType": [
-      "facebook",
-      "google",
-      "local"
-    ],
-    "fullName": "Lê Thị L",
-    "avatarUrl": "https://i.pravatar.cc/150?img=159",
-    "bio": null,
-    "dob": "2000-06-16T00:00:00.000Z",
-    "gender": false,
-    "emailVerified": true,
-    "notificationEnabled": true,
-    "streamQuality": "low",
-    "status": "locked",
-    "roleName": "User",
-    "lastLogin": "2025-11-28T02:00:00.000Z"
-  },
+  
   {
     "facebookId": null,
     "googleId": null,

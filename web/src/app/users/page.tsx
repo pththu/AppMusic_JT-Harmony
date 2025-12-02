@@ -15,13 +15,13 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useRoleData } from "@/hooks/useRoleData";
-import { useUserData } from "@/hooks/useUserData";
 import { Badge, Button, DropdownAction, Input } from "@/components/ui";
 import StatCard from "@/components/user/stat-card";
 import { COLORS, ITEMS_PER_PAGE, ONLINE_THRESHOLD_DAYS, SortDirection, SortKey, User } from "@/constants";
 import ChartDay from "@/components/user/chart-day";
 import ChartStatus from "@/components/user/chart-status";
 import NotificationPane from "@/components/user/notification-pane";
+import { useFollowStore, useUserStore} from "@/store";
 
 const getPaginationItems = (currentPage: number, totalPages: number): (number | '...')[] => {
   const MAX_ITEMS = 5;
@@ -65,7 +65,8 @@ export default function UsersPage() {
     direction: 'asc',
   });
 
-  const { users, setUsers } = useUserData();
+  const users = useUserStore((state) => state.users);
+  const setUsers = useUserStore((state) => state.setUsers);
   const { roles, setRoles } = useRoleData();
 
   // --- Logic Thống kê & Biểu đồ ---

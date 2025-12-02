@@ -35,7 +35,7 @@ const FavoriteItem = sequelize.define(
     indexes: [
       {
         unique: true,
-        fields: ['id', 'user_id']
+        fields: ['item_id', 'user_id']
       }
     ]
   }

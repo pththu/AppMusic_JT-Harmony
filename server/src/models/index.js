@@ -247,6 +247,7 @@ module.exports = {
     PlaylistTrack,
     FavoriteItem,
     ListeningHistory,
+    SearchHistory,
     Artist,
     Album,
     User,

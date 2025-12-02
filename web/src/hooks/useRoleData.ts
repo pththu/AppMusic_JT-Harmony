@@ -1,4 +1,4 @@
-import { GetAllRole } from "@/services/userApi"
+import { GetAllRole } from "@/services/userService"
 import { set } from "date-fns";
 import { useCallback, useEffect, useState } from "react"
 
