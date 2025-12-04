@@ -31,8 +31,8 @@ app.use(
       "http://192.168.1.14:3000",
       "http://192.168.32.101:3000",
       "http://192.168.1.28:3000",
-      'https://app-music-jt-harmony-web.vercel.app/',
-      'https://app-music-jt-harmony.vercel.app/',
+      'https://app-music-jt-harmony-web.vercel.app',
+      'https://app-music-jt-harmony.vercel.app',
     ],
     credentials: true,
   })
