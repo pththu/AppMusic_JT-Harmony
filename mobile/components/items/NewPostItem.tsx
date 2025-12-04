@@ -1,7 +1,6 @@
-import React, { use } from 'react';
+import React, { use, forwardRef } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     Image,
     ScrollView,
     Text,
@@ -14,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from '@/store/authStore';
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 interface NewPostItemProps {
     user: { id: number; avatarUrl?: string };
@@ -28,7 +28,11 @@ interface NewPostItemProps {
     addPost: () => Promise<void>;
 }
 
-const NewPostItem: React.FC<NewPostItemProps> = ({
+export interface NewPostItemRef {
+    focus: () => void;
+}
+
+const NewPostItem = forwardRef<NewPostItemRef, NewPostItemProps>(({
     user,
     newPostText,
     setNewPostText,
@@ -39,12 +43,23 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
     isUploading,
     handleSelectMedia,
     addPost,
-}) => {
+}, ref) => {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const isGuest = useAuthStore((state) => state.isGuest);
     const { navigate } = useNavigate();
+    const { error, info, warning } = useCustomAlert();
     const avatarDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png';
+
+    // Ref for the text input
+    const textInputRef = React.useRef<any>(null);
+
+    // Expose focus method via ref
+    React.useImperativeHandle(ref, () => ({
+        focus: () => {
+            textInputRef.current?.focus();
+        }
+    }));
 
     const canPost = (newPostText.trim() || selectedMediaAssets.length > 0) && !isUploading;
 
@@ -72,6 +87,7 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                 <View className="flex-1">
                     {/* 1. INPUT NỘI DUNG */}
                     <TextInput
+                        ref={textInputRef}
                         placeholder="Bạn đang nghĩ gì?"
                         placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
                         value={newPostText}
@@ -145,14 +161,6 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
                             <Icon name="image" size={20} color="white" />
                         )}
                     </TouchableOpacity>
-
-                    {/* NÚT CHỌN BÀI HÁT */}
-                    {/* <TouchableOpacity
-                        onPress={() => Alert.alert("Chọn Bài Hát", "Mở Modal chọn bài hát...")}
-                        className="flex-row items-center p-2 rounded-full border border-indigo-500"
-                    >
-                        <Icon name="headphones" size={20} color="#4F46E5" />
-                    </TouchableOpacity> */}
                 </View>
 
 
@@ -168,6 +176,8 @@ const NewPostItem: React.FC<NewPostItemProps> = ({
             </View>
         </View>
     );
-};
+});
+
+NewPostItem.displayName = 'NewPostItem';
 
 export default NewPostItem;

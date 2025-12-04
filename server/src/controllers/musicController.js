@@ -1140,33 +1140,58 @@ const getTracksForCover = async (req, res) => {
       order: [['playCount', 'DESC']]
     });
 
-    for (let track of tracks) {
-      const spotifyId = track?.spotifyId;
-      const idTemp = track?.id || null;
-      const playCount = track?.playCount || 0;
+    // Sử dụng Promise.all để xử lý bất đồng bộ
+    const trackPromises = tracks.map(async (track) => {
+      try {
+        const spotifyId = track?.spotifyId;
+        const idTemp = track?.id || null;
+        const playCount = track?.playCount || 0;
 
-      track = await callSpotify(() => spotify.findTrackById(spotifyId));
-      if (idTemp) {
-        track.tempId = idTemp;
-        track.playCount = playCount;
+        if (!spotifyId) {
+          console.warn(`Track ${track.id} missing spotifyId`);
+          return null;
+        }
+
+        const spotifyTrack = await callSpotify(() => spotify.findTrackById(spotifyId));
+        if (!spotifyTrack) {
+          console.warn(`Spotify track not found for ID: ${spotifyId}`);
+          return null;
+        }
+
+        spotifyTrack.tempId = idTemp;
+        spotifyTrack.playCount = playCount;
+        return formatTrack(spotifyTrack, null, null, spotifyTrack?.videoId || null);
+      } catch (error) {
+        console.error(`Error processing track ${track.id}:`, error.message);
+        return null; // Bỏ qua lỗi và tiếp tục với track tiếp theo
       }
-      const itemFormat = formatTrack(track, null, null, track?.videoId || null);
-      dataFormated.push(itemFormat);
-    }
+    });
 
-    console.log('dataFormated', dataFormated);
+    // Chờ tất cả các promise hoàn thành và lọc bỏ các giá trị null
+    const results = await Promise.all(trackPromises);
+    const validTracks = results.filter(track => track !== null);
 
     const response = {
       message: 'Get tracks for cover successful',
-      data: dataFormated,
+      data: validTracks,
       success: true
     };
 
-    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS * 10 });
+    // Chỉ cache nếu có dữ liệu hợp lệ
+    if (validTracks.length > 0) {
+      await redisClient.set(cacheKey, JSON.stringify(response), { 
+        EX: DEFAULT_TTL_SECONDS * 10 
+      });
+    }
+
     return res.status(200).json(response);
   } catch (error) {
-    console.log(11)
-    res.status(500).json({ message: error.message || "Failed to get tracks for cover" });
+    console.error('Error in getTracksForCover:', error);
+    res.status(500).json({ 
+      message: error.message || "Failed to get tracks for cover",
+      success: false,
+      error: error.toString()
+    });
   }
 }
 

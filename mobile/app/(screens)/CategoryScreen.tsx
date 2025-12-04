@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
-  ScrollView, // Bị thay thế bởi Animated.ScrollView
+  ScrollView,
   FlatList,
   TouchableOpacity,
   Image,

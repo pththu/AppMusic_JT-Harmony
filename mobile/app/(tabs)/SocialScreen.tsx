@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
-  Alert,
   ActivityIndicator,
   FlatList,
   RefreshControl,
@@ -11,6 +10,11 @@ import {
   useColorScheme,
   TextInput,
   Modal,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
@@ -35,8 +39,9 @@ import CoverItem from "../../components/items/CoverItem";
 import CommentModal from "../../components/modals/CommentModal";
 import LikeModal from "../../components/modals/LikeModal";
 import UploadCoverModal from "../../components/modals/UploadCoverModal";
-import NewPostCreator from "../../components/items/NewPostItem";
-import { createNewCover, fetchTopCovers } from "../../services/coverService";
+import NewPostCreator, { NewPostItemRef } from "../../components/items/NewPostItem";
+import SearchOverlay from "../../components/search/SearchOverlay";
+import { createNewCover, fetchAllCovers } from "../../services/coverService";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { FindTrackById } from "@/services/musicService";
 import { set } from "date-fns";
@@ -48,6 +53,16 @@ const SocialScreen = () => {
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
+  
+  // Ref for NewPostCreator
+  const newPostCreatorRef = useRef<NewPostItemRef>(null);
+  
+  // FAB animation value
+  const fabScale = useRef(new Animated.Value(1)).current;
+  
+  // Header animation values
+  const headerOpacity = useRef(new Animated.Value(1)).current;
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const [trackItem, setTrackItem] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -83,12 +98,62 @@ const SocialScreen = () => {
 
   // State cho Upload Cover Modal
   const [uploadCoverModalVisible, setUploadCoverModalVisible] = useState(false);
+  // State cho Options Menu
+  const [optionsMenuVisible, setOptionsMenuVisible] = useState(false);
+  // State cho NewPostCreator Modal
+  const [newPostModalVisible, setNewPostModalVisible] = useState(false);
+  // State cho Search Overlay
+  const [searchOverlayVisible, setSearchOverlayVisible] = useState(false);
   const [reShareModalVisible, setReShareModalVisible] = useState(false);
   const [reShareTargetPost, setReShareTargetPost] = useState<any | null>(null);
   const [reShareCaption, setReShareCaption] = useState("");
   const [isSharing, setIsSharing] = useState(false);
 
+  // State cho danh sách covers
+  const [covers, setCovers] = useState<any[]>([]);
+  const [coversLoading, setCoversLoading] = useState(true);
+
   // console.log("User: ", user);
+
+  // Header animation functions
+  const animateHeaderTransition = (toSearch: boolean) => {
+    Animated.parallel([
+      Animated.timing(headerOpacity, {
+        toValue: toSearch ? 0 : 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(headerTranslateY, {
+        toValue: toSearch ? -10 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handleSearchToggle = (showSearch: boolean) => {
+    animateHeaderTransition(showSearch);
+    setIsSearchVisible(showSearch);
+  };
+  const animateFABPress = () => {
+    Animated.sequence([
+      Animated.timing(fabScale, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fabScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handleFABPress = () => {
+    animateFABPress();
+    setOptionsMenuVisible(true);
+  };
 
   // Helper function để format thời gian
   const formatTime = (dateString) => {
@@ -118,55 +183,7 @@ const SocialScreen = () => {
     }
   }
 
-  // Hàm map dữ liệu bài đăng từ API về định dạng local
-  // const mapApiPostToLocal = (apiPost) => ({
-  //   id: apiPost.id,
-  //   userId: apiPost.userId,
-  //   User: apiPost.User || {
-  //     id: apiPost.userId,
-  //     avatarUrl: "",
-  //     username: "Anonymous",
-  //     fullName: "Anonymous",
-  //   },
-  //   uploadedAt: apiPost.uploadedAt,
-  //   content: apiPost.content,
-  //   fileUrl: apiPost.fileUrl,
-  //   heartCount: apiPost.heartCount,
-  //   commentCount: apiPost.commentCount,
-  //   shareCount: apiPost.shareCount,
-  //   isLiked: apiPost.isLiked,
-  //   songId: apiPost.songId,
-  //   avatarUrl: apiPost.User?.avatarUrl || "",
-  //   username: apiPost.User?.username || "Anonymous",
-  //   fullName: apiPost.User?.fullName || "Anonymous",
-  //   groupName: "",
-  //   time: formatTime(apiPost.uploadedAt),
-  //   contentText: apiPost.content,
-  //   images: Array.isArray(apiPost.fileUrl)
-  //     ? apiPost.fileUrl
-  //     : apiPost.fileUrl
-  //       ? [apiPost.fileUrl]
-  //       : [],
-  //   // Thông tin bài hát hiển thị trong PostItem
-  //   musicLink:
-  //     apiPost.OriginalSong && apiPost.OriginalSong.name
-  //       ? `${apiPost.OriginalSong.name}${Array.isArray(apiPost.OriginalSong.artists) &&
-  //         apiPost.OriginalSong.artists.length > 0
-  //         ? " - " + apiPost.OriginalSong.artists.map((a) => a.name).join(", ")
-  //         : ""
-  //       }`
-  //       : apiPost.songId
-  //         ? `Bài hát: ${trackItem.name} - ${trackItem.artists.map((a) => a.name).join(", ")}`
-  //         : "",
-  //   isOnline: false,
-  //   comments: [],
-  //   isCover: apiPost.isCover || false,
-  //   originalSongId: apiPost.originalSongId,
-  //   OriginalSong: apiPost.OriginalSong,
-  //   originalPost: apiPost.OriginalPost,
-  // });
-
-  const mapApiPostToLocal = async (apiPost) => { // <-- THÊM ASYNC
+  const mapApiPostToLocal = async (apiPost) => {
     let songNameAndArtists = "";
     let trackData = apiPost.OriginalSong;
 
@@ -233,18 +250,13 @@ const SocialScreen = () => {
   const handleUserPress = useCallback(
     (targetUserId: number) => {
       if (!targetUserId) {
-        Alert.alert("Lỗi", "Không tìm thấy ID người dùng.");
+        error("Lỗi", "Không tìm thấy ID người dùng.");
         return;
       }
       navigate("ProfileSocialScreen", { userId: targetUserId });
     },
     [navigate]
   );
-
-  // logic tải bài đăng vào hàm useCallback
-
-
-
 
   const handleSelectMedia = async () => {
     if (isUploading) return;
@@ -328,6 +340,9 @@ const SocialScreen = () => {
       setSelectedMediaAssets([]);
       setSelectedSongId(null);
       Keyboard.dismiss();
+      
+      // Đóng modal NewPostCreator
+      setNewPostModalVisible(false);
 
       // Sau khi đăng thành công, gọi lại loadPosts để đồng bộ với backend
       setLoading(true);
@@ -336,7 +351,7 @@ const SocialScreen = () => {
     } catch (err) {
       console.error("Lỗi khi tạo bài đăng:", err);
       const errorMessage = err.response?.data?.error || err.message || "Không thể tạo bài đăng.";
-      Alert.alert("Lỗi Đăng Bài", errorMessage);
+      error("Lỗi Đăng Bài", errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -447,7 +462,7 @@ const SocialScreen = () => {
             errorMessage = error.message;
           }
           
-          Alert.alert("Lỗi", errorMessage);
+          error("Lỗi", errorMessage);
         } finally {
           setIsUploading(false);
         }
@@ -824,7 +839,7 @@ const SocialScreen = () => {
       if ("message" in result) {
         // Trường hợp lỗi từ API
         if (result.status === "error") {
-          Alert.alert("Lỗi", result.message || "Không thể chia sẻ bài viết.");
+          error("Lỗi", result.message || "Không thể chia sẻ bài viết.");
         }
         return;
       }
@@ -855,7 +870,7 @@ const SocialScreen = () => {
       setLoading(false);
     } catch (error) {
       console.error("Lỗi khi chia sẻ bài đăng:", error);
-      Alert.alert("Lỗi", "Không thể chia sẻ bài viết.");
+      error("Lỗi", "Không thể chia sẻ bài viết.");
     } finally {
       setIsSharing(false);
     }
@@ -906,18 +921,11 @@ const SocialScreen = () => {
   const loadPosts = useCallback(async () => {
     try {
       let apiPosts;
-      if (activeTab === "covers") {
-        // Fetch only covers when covers tab is active
-        // console.log(1)
-        apiPosts = await fetchTopCovers();
+      // Fetch all posts (không phân biệt tab nữa vì covers có hàm riêng)
+      if (isGuest) {
+        apiPosts = await fetchPostsForGuest();
       } else {
-        // Fetch all posts when posts tab is active
-        // console.log(2)
-        if (isGuest) {
-          apiPosts = await fetchPostsForGuest();
-        } else {
-          apiPosts = await fetchPosts();
-        }
+        apiPosts = await fetchPosts();
       }
 
       if (apiPosts.success === false) {
@@ -926,22 +934,36 @@ const SocialScreen = () => {
       }
       // const mappedPosts = apiPosts.map(mapApiPostToLocal);
       const mappedPosts = await Promise.all(
-        apiPosts.map(mapApiPostToLocal) // Giả sử apiPosts chứa mảng bài đăng
+        apiPosts.map(mapApiPostToLocal)
       );
       setPosts(mappedPosts);
     } catch (err) {
       console.error("Error fetching posts:", err);
       error("Lỗi", "Không thể tải bài đăng từ server.");
     }
+  }, []);
+
+  // useEffect để tải dữ liệu khi component mount và khi activeTab thay đổi
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        if (activeTab === 'covers') {
+          await refreshCovers();
+        } else {
+          await loadPosts();
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
   }, [activeTab]);
 
-  // useEffect để tải bài đăng lần đầu
-  useEffect(() => {
-    setLoading(true);
-    loadPosts().finally(() => setLoading(false));
-  }, [loadPosts]);
-
-  // useEffect để lọc bài đăng khi searchQuery thay đổi (không cần lọc covers nữa vì đã fetch riêng)
+  // useEffect để lọc bài đăng khi searchQuery thay đổi
   useEffect(() => {
     let filtered = posts;
 
@@ -964,19 +986,68 @@ const SocialScreen = () => {
  */
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadPosts();
+    if (activeTab === 'covers') {
+      await refreshCovers();
+    } else {
+      await loadPosts();
+    }
     setIsRefreshing(false);
-  }, [loadPosts]);
+  }, [activeTab]);
 
+  // Hàm tải lại danh sách covers
+  const refreshCovers = useCallback(async () => {
+    try {
+      setCoversLoading(true);
+      const response = await fetchAllCovers();
+      console.log("Response from fetchAllCovers:", response);
+      
+      // Kiểm tra nếu response có lỗi (kiểu error response)
+      if (response && typeof response === 'object' && 'success' in response && response.success === false) {
+        throw new Error((response as any).message || "Không thể tải covers");
+      }
+      
+      // Lấy data từ response - có thể là response.data hoặc response trực tiếp
+      let allCovers;
+      if (Array.isArray(response)) {
+        allCovers = response;
+      } else if (response && typeof response === 'object' && 'data' in response) {
+        allCovers = (response as any).data;
+      } else {
+        allCovers = response;
+      }
+      
+      if (Array.isArray(allCovers) && allCovers.length > 0) {
+        console.log("All covers found:", allCovers.length);
+        // Map covers về đúng định dạng như posts
+        const mappedCovers = await Promise.all(allCovers.map(mapApiPostToLocal));
+        setCovers(mappedCovers);
+      } else {
+        console.log("No covers found or invalid data");
+        setCovers([]);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách covers:", error);
+      error("Lỗi", "Không thể tải danh sách covers. Vui lòng thử lại sau.");
+    } finally {
+      setCoversLoading(false);
+    }
+  }, [mapApiPostToLocal]);
+
+  // Hàm xử lý khi cover được đăng thành công
+  const handleCoverPosted = useCallback(() => {
+    refreshCovers(); // Tải lại danh sách covers
+    setUploadCoverModalVisible(false); // Đóng modal
+    success("Thành công", "Đăng cover thành công!");
+  }, [refreshCovers]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0E0C1F]">
       {/* Header (Title + Search) */}
-      <View className="px-3 pt-2 pb-1 border-b border-gray-200 dark:border-gray-800">
+      <View className="px-3 pt-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-sm">
         {isSearchVisible ? (
           <View className="flex-row items-center">
             <TouchableOpacity
-              onPress={() => setIsSearchVisible(false)}
+              onPress={() => handleSearchToggle(false)}
               className="mr-2"
             >
               <Icon
@@ -998,34 +1069,47 @@ const SocialScreen = () => {
           </View>
         ) : (
           <View className="flex-row justify-between items-center">
-            <Text className="text-2xl font-extrabold text-black dark:text-white">
-              Khám phá
-            </Text>
-            <View className="flex-row items-center">
-              <TouchableOpacity
-                onPress={() => setUploadCoverModalVisible(true)}
-                className="mr-3"
+            <View className="flex-1">
+              <Animated.View 
+                style={{
+                  opacity: headerOpacity,
+                  transform: [{ translateY: headerTranslateY }]
+                }}
               >
-                <Icon
-                  name="plus"
-                  size={24}
-                  color={colorScheme === "dark" ? "#fff" : "#000"}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setIsSearchVisible(true)}>
-                <Icon
-                  name="search"
-                  size={24}
-                  color={colorScheme === "dark" ? "#fff" : "#000"}
-                />
-              </TouchableOpacity>
+                <View className="flex-row items-center">
+                  {/* Avatar User */}
+                  <TouchableOpacity onPress={() => navigate("ProfileSocialScreen", { userId: user?.id })}>
+                    <Image
+                      source={{ uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png' }}
+                      className="w-10 h-10 rounded-full mr-3 border-2 border-emerald-500"
+                    />
+                  </TouchableOpacity>
+                  
+                  <View className="flex-1">
+                    <Text className="text-2xl font-extrabold text-black dark:text-white">
+                      Khám phá
+                    </Text>
+                    <Text className="text-sm text-gray-500 dark:text-gray-400">
+                      Khám phá covers và bài đăng từ cộng đồng
+                    </Text>
+                  </View>
+                </View>
+              </Animated.View>
             </View>
+            
+            <TouchableOpacity onPress={() => setSearchOverlayVisible(true)}>
+              <Icon
+                name="search"
+                size={24}
+                color={colorScheme === "dark" ? "#fff" : "#000"}
+              />
+            </TouchableOpacity>
           </View>
         )}
       </View>
 
       <FlatList
-        data={filteredPosts}
+        data={activeTab === 'covers' ? covers : filteredPosts}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         // Thao tác vuốt xuống để làm mới (Pull-to-Refresh)
@@ -1039,58 +1123,131 @@ const SocialScreen = () => {
         contentContainerStyle={{
           paddingBottom: 50, // Thêm padding dưới để tránh bị che bởi Tab Bar
         }}
-        // Thêm Header cho FlatList (Sử dụng NewPostCreator)
         ListHeaderComponent={
           <View className="p-3">
-            <NewPostCreator
-              user={user}
-              newPostText={newPostText}
-              setNewPostText={setNewPostText}
-              selectedMediaAssets={selectedMediaAssets}
-              setSelectedMediaAssets={setSelectedMediaAssets}
-              selectedSongId={selectedSongId}
-              setSelectedSongId={setSelectedSongId}
-              isUploading={isUploading}
-              handleSelectMedia={handleSelectMedia}
-              addPost={addPost}
-            />
-            <View className="flex-row items-center justify-between">
-              <TouchableOpacity
-                onPress={() => setActiveTab("posts")}
-                className={`px-3 py-1 rounded-l-lg ${activeTab === "posts"
-                  ? "bg-emerald-700"
-                  : "bg-gray-200 dark:bg-gray-700"
+            {/* Enhanced Tab Header */}
+            <View className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+              <View className="flex-row items-center">
+                {/* Posts Tab */}
+                <TouchableOpacity
+                  onPress={() => setActiveTab("posts")}
+                  className={`flex-1 py-3 px-4 rounded-l-xl justify-center items-center ${
+                    activeTab === "posts"
+                      ? "bg-emerald-500 dark:bg-emerald-600"
+                      : "bg-transparent"
                   }`}
-              >
-                <Text
-                  className={`text-sm font-medium ${activeTab === "posts"
-                    ? "text-white"
-                    : "text-black dark:text-white"
-                    }`}
                 >
-                  Bài đăng
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setActiveTab("covers")}
-                className={`px-3 py-1 rounded-r-lg ${activeTab === "covers"
-                  ? "bg-emerald-700"
-                  : "bg-gray-200 dark:bg-gray-700"
+                  <View className="flex-row items-center">
+                    <Icon 
+                      name="edit-3" 
+                      size={16} 
+                      color={activeTab === "posts" ? "#fff" : (colorScheme === "dark" ? "#9CA3AF" : "#6B7280")}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      className={`text-sm ${
+                        activeTab === "posts"
+                          ? "text-white font-bold"
+                          : "text-gray-600 dark:text-gray-400 font-medium"
+                      }`}
+                    >
+                      Bài đăng
+                    </Text>
+                  </View>
+                  {posts.length > 0 && (
+                    <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center">
+                      <Text className="text-white text-xs font-bold">
+                        {posts.length > 99 ? "99+" : posts.length.toString()}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                
+                {/* Divider */}
+                <View className="w-px bg-gray-200 dark:bg-gray-700 h-8" />
+                
+                {/* Covers Tab */}
+                <TouchableOpacity
+                  onPress={() => setActiveTab("covers")}
+                  className={`flex-1 py-3 px-4 rounded-r-xl justify-center items-center ${
+                    activeTab === "covers"
+                      ? "bg-emerald-500 dark:bg-emerald-600"
+                      : "bg-transparent"
                   }`}
-              >
-                <Text
-                  className={`text-sm font-medium ${activeTab === "covers"
-                    ? "text-white"
-                    : "text-black dark:text-white"
-                    }`}
                 >
-                  Covers/Sáng tác
-                </Text>
-              </TouchableOpacity>
+                  <View className="flex-row items-center">
+                    <Icon 
+                      name="music" 
+                      size={16} 
+                      color={activeTab === "covers" ? "#fff" : (colorScheme === "dark" ? "#9CA3AF" : "#6B7280")}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      className={`text-sm ${
+                        activeTab === "covers"
+                          ? "text-white font-bold"
+                          : "text-gray-600 dark:text-gray-400 font-medium"
+                      }`}
+                    >
+                      Covers/Sáng tác
+                    </Text>
+                  </View>
+                  {covers.length > 0 && (
+                    <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center">
+                      <Text className="text-white text-xs font-bold">
+                        {covers.length > 99 ? "99+" : covers.length.toString()}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+              
+              {/* Active Indicator */}
+              <View className="flex-row">
+                <View 
+                  className={`h-1 bg-emerald-500 transition-all duration-300 ${
+                    activeTab === "posts" ? "flex-1" : "w-0"
+                  }`}
+                />
+                <View 
+                  className={`h-1 bg-emerald-500 transition-all duration-300 ${
+                    activeTab === "covers" ? "flex-1" : "w-0"
+                  }`}
+                />
+              </View>
             </View>
           </View>
         }
         renderItem={({ item, index }) => {
+          if (activeTab === 'covers') {
+            return (
+              <View 
+                key={`cover-${item.id}-${index}`}
+                className="mb-4 px-3">
+                <CoverItem
+                  id={item.id}
+                  userId={item.userId}
+                  User={item.User}
+                  uploadedAt={item.uploadedAt}
+                  content={item.content}
+                  fileUrl={item.fileUrl}
+                  heartCount={item.heartCount}
+                  isLiked={item.isLiked}
+                  originalSongId={item.originalSongId}
+                  OriginalSong={item.OriginalSong}
+                  onUserPress={handleUserPress}
+                  onRefresh={onRefresh}
+                  onCommentPress={() => openCommentModal(item.id)}
+                  onSharePress={() => openReShare(item)}
+                  onVoteCountPress={openLikeModal}
+                  likeCount={item.heartCount}
+                  commentCount={item.commentCount}
+                  shareCount={item.shareCount}
+                  isLikedPost={item.isLiked}
+                />
+              </View>
+            );
+          }
           return (
             <View 
               key={`post-${item.id}-${index}-${item.uploadedAt}`}
@@ -1143,25 +1300,46 @@ const SocialScreen = () => {
             </View>
           );
         }}
-        // Hiển thị trạng thái Loading/Empty khi danh sách post rỗng
+        // Hiển thị trạng thái Loading/Empty khi danh sách rỗng
         ListEmptyComponent={
-          loading && posts.length === 0 ? (
+          loading ? (
             <View className="flex-1 justify-center items-center mt-10">
               <ActivityIndicator size="large" color="#4F46E5" />
               <Text className="mt-2 text-gray-600 dark:text-gray-400">
-                Đang tải bài đăng...
+                {activeTab === 'covers' ? 'Đang tải covers...' : 'Đang tải bài đăng...'}
               </Text>
             </View>
           ) : (
             <View className="flex-1 justify-center items-center mt-10">
               <Icon name="info" size={30} color="#9CA3AF" />
               <Text className="mt-2 text-gray-500 dark:text-gray-400 text-base font-semibold">
-                Chưa có bài đăng nào. Hãy là người đầu tiên!
+                {activeTab === 'covers' ? 'Chưa có cover nào' : 'Chưa có bài đăng nào. Hãy là người đầu tiên!'}
               </Text>
             </View>
           )
         }
       />
+      
+      {/* Floating Action Button */}
+      <Animated.View
+        className="absolute bottom-24 right-4"
+        style={{
+          transform: [{ scale: fabScale }],
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 8,
+        }}
+      >
+        <TouchableOpacity
+          onPress={handleFABPress}
+          className="w-14 h-14 bg-emerald-700 rounded-full items-center justify-center shadow-lg"
+          activeOpacity={0.8}
+        >
+          <Icon name="plus" size={24} color="#fff" />
+        </TouchableOpacity>
+      </Animated.View>
       <Modal
         visible={reShareModalVisible}
         transparent
@@ -1254,11 +1432,157 @@ const SocialScreen = () => {
         postId={selectedPostIdForLikes}
       />
 
+      {/* NewPostCreator Modal */}
+      <Modal
+        visible={newPostModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setNewPostModalVisible(false)}
+      >
+        {selectedMediaAssets.length > 0 ? (
+          // Khi có media, không dùng KeyboardAvoidingView để tránh giật
+          <TouchableOpacity 
+            className="flex-1 justify-end" 
+            activeOpacity={1}
+            onPress={() => setNewPostModalVisible(false)}
+          >
+            <View className="bg-white dark:bg-gray-900 rounded-t-3xl">
+              <View className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4 mt-4" />
+              <View className="px-4 pb-4">
+                <Text className="text-lg font-bold text-black dark:text-white mb-4 text-center">
+                  Đăng bài viết mới
+                </Text>
+                <ScrollView 
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  style={{ maxHeight: '85%' }}
+                >
+                  <NewPostCreator
+                    user={user}
+                    newPostText={newPostText}
+                    setNewPostText={setNewPostText}
+                    selectedMediaAssets={selectedMediaAssets}
+                    setSelectedMediaAssets={setSelectedMediaAssets}
+                    selectedSongId={selectedSongId}
+                    setSelectedSongId={setSelectedSongId}
+                    isUploading={isUploading}
+                    handleSelectMedia={handleSelectMedia}
+                    addPost={addPost}
+                  />
+                </ScrollView>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ) : (
+          // Khi không có media, dùng KeyboardAvoidingView để tránh bị bàn phím che
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+          >
+            <TouchableOpacity 
+              className="flex-1 justify-end" 
+              activeOpacity={1}
+              onPress={() => setNewPostModalVisible(false)}
+            >
+              <View className="bg-white dark:bg-gray-900 rounded-t-3xl">
+                <View className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4 mt-4" />
+                <View className="px-4 pb-4">
+                  <Text className="text-lg font-bold text-black dark:text-white mb-4 text-center">
+                    Đăng bài viết mới
+                  </Text>
+                  <ScrollView 
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    style={{ maxHeight: '75%' }}
+                  >
+                    <NewPostCreator
+                      user={user}
+                      newPostText={newPostText}
+                      setNewPostText={setNewPostText}
+                      selectedMediaAssets={selectedMediaAssets}
+                      setSelectedMediaAssets={setSelectedMediaAssets}
+                      selectedSongId={selectedSongId}
+                      setSelectedSongId={setSelectedSongId}
+                      isUploading={isUploading}
+                      handleSelectMedia={handleSelectMedia}
+                      addPost={addPost}
+                    />
+                  </ScrollView>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </KeyboardAvoidingView>
+        )}
+      </Modal>
+
+      {/* Search Overlay */}
+      <SearchOverlay
+        visible={searchOverlayVisible}
+        onClose={() => setSearchOverlayVisible(false)}
+        topOffset={0} // Cover entire header area
+      />
+
+      {/* Options Menu Modal */}
+      <Modal
+        visible={optionsMenuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOptionsMenuVisible(false)}
+      >
+        <TouchableOpacity 
+          className="flex-1 justify-end" 
+          activeOpacity={1}
+          onPress={() => setOptionsMenuVisible(false)}
+        >
+          <View className="bg-white dark:bg-gray-900 rounded-t-3xl p-4">
+            <View className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
+            <Text className="text-lg font-bold text-black dark:text-white mb-4 text-center">
+              Tạo mới
+            </Text>
+            
+            <TouchableOpacity
+              className="flex-row items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl mb-3"
+              onPress={() => {
+                setOptionsMenuVisible(false);
+                setNewPostModalVisible(true);
+              }}
+            >
+              <Icon name="edit-3" size={20} color="#4F46E5" style={{ marginRight: 12 }} />
+              <Text className="text-black dark:text-white font-medium">
+                Đăng bài viết
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className="flex-row items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl"
+              onPress={() => {
+                setOptionsMenuVisible(false);
+                setUploadCoverModalVisible(true);
+              }}
+            >
+              <Icon name="music" size={20} color="#4F46E5" style={{ marginRight: 12 }} />
+              <Text className="text-black dark:text-white font-medium">
+                Đăng cover
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className="mt-4 p-3"
+              onPress={() => setOptionsMenuVisible(false)}
+            >
+              <Text className="text-center text-gray-500 dark:text-gray-400 font-medium">
+                Hủy
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Upload Cover Modal */}
       <UploadCoverModal
         visible={uploadCoverModalVisible}
         onClose={() => setUploadCoverModalVisible(false)}
-        onCoverPosted={onRefresh}
+        onCoverPosted={handleCoverPosted}
       />
     </SafeAreaView>
   );

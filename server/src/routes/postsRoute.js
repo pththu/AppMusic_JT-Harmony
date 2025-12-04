@@ -16,6 +16,7 @@ router.get("/", optionalAuthenticateToken, postController.getAllPost); // Lấy 
 router.get("/user/:userId", postController.getPostsByUserId); // Lấy bài đăng theo User ID (public)
 
 // --- ROUTE COVER ---
+router.get("/covers", coverController.getAllCovers); // Lấy tất cả covers
 router.get("/covers/song/:songId", coverController.getCoversBySongId); // Lấy covers theo song ID
 router.get("/covers/top", coverController.getTopCovers); // Lấy top covers
 router.get("/covers/user/:userId", coverController.getCoversByUserId); // Lấy covers theo user ID
