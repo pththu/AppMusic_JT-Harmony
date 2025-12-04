@@ -10,6 +10,9 @@ exports.authenticateToken = async (req, res, next) => {
         console.log(1)
         let token;
         token = req.cookies['accessToken'];
+        console.log('req.cookies: ', req.cookies['accessToken'])
+
+        console.log('token', token)
 
         console.log(2)
         if (!token) {

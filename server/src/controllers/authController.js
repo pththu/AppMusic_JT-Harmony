@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { sendMail } = require('../utils/mailer');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
 const { formatUser } = require('../utils/formatter');
+const { sampleSize } = require('lodash');
 const Op = require('sequelize').Op;
 require('dotenv').config();
 
@@ -85,7 +86,7 @@ exports.login = async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const { email, password } = req.body;
 
-    console.log(req.body)
+    console.log('req.body:', req.body)
     // Validate input
     if (!email || !password) {
       return res.status(200).json({ message: 'Email và mật khẩu không để trống', success: false });
@@ -142,7 +143,8 @@ exports.login = async (req, res) => {
       accessToken,
       {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
+        sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000
       }
     );
@@ -151,8 +153,8 @@ exports.login = async (req, res) => {
       refreshToken,
       {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: true,
+        sameSite: 'none',
         maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
       }
     );

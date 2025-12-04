@@ -3,7 +3,6 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE;
 
-
 const axiosClient = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -137,9 +136,7 @@ axiosClient.interceptors.response.use(
 
           // Redirect to login
           if (typeof window !== 'undefined') {
-            setTimeout(() => {
-              window.location.href = '/login';
-            }, 10000);
+            window.location.href = '/login';
           }
 
           return Promise.reject(refreshError);
@@ -188,7 +185,8 @@ const axiosClientPublic = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE,
   headers: {
     "Content-Type": "application/json; charset=UTF-8",
-  }
+  },
+  withCredentials: true,
 })
 
 axiosClientPublic.interceptors.response.use(
