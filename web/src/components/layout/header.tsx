@@ -17,13 +17,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store";
+import { useAuthStore, useFavoritesStore, useFollowStore, useHistoryStore, useMusicStore, useUserStore } from "@/store";
 import { Logout } from "@/services";
 import toast from "react-hot-toast";
 
 export function Header() {
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
+  const clearUserData = useUserStore((state) => state.clearUserData);
+  const clearMusicData = useMusicStore((state) => state.clearMusicData);
+  const clearFollowData = useFollowStore((state) => state.clearFollowData);
+  const clearFavoritesData = useFavoritesStore((state) => state.clearFavoritesData);
+  const clearHistoryData = useHistoryStore((state) => state.clearHistoryData);
+
 
   const handleLogout = async () => {
 
@@ -32,6 +38,11 @@ export function Header() {
       console.log('response', response)
       if (response.success) {
         logout();
+        clearUserData();
+        clearMusicData();
+        clearFollowData();
+        clearFavoritesData();
+        clearHistoryData();
         toast.success('Đăng xuất thành công!', {
           duration: 3000, // ✅ Yêu cầu 1: Hiển thị trong 3 giây (3000ms)
           style: {

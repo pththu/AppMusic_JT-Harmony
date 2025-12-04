@@ -1,4 +1,4 @@
-import { GetAllAlbum, GetAllPlaylist, GetAllTrack, GetAllArtist } from "@/services";
+import { GetAllAlbum, GetAllPlaylist, GetAllTrack, GetAllArtist, GetDataAnalyticsSearch } from "@/services";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -8,15 +8,21 @@ interface MusicState {
   playlists: any[];
   albums: any[];
   artists: any[];
+  topKeywords: any[];
+  trendsOverTime: any[];
+
   setTracks: (tracks: any[]) => void;
   setPlaylists: (playlists: any[]) => void;
   setAlbums: (albums: any[]) => void;
   setArtists: (artists: any[]) => void;
+  setTopKeywords: (topKeywords: any[]) => void;
+  setTrendsOverTime: (trendsOverTime: any[]) => void;
 
   fetchTracks: () => Promise<void>;
   fetchPlaylists: () => Promise<void>;
   fetchAlbums: () => Promise<void>;
   fetchArtists: () => Promise<void>;
+  fetchDataAnalyticsSearch: (searchHistories: any[]) => Promise<void>;
 
   clearMusicData: () => void;
 }
@@ -28,11 +34,15 @@ export const useMusicStore = create<MusicState>()(
       playlists: [],
       albums: [],
       artists: [],
+      topKeywords: [],
+      trendsOverTime: [],
 
       setTracks: (tracks) => set({ tracks }),
       setPlaylists: (playlists) => set({ playlists }),
       setAlbums: (albums) => set({ albums }),
       setArtists: (artists) => set({ artists }),
+      setTopKeywords: (topKeywords) => set({ topKeywords }),
+      setTrendsOverTime: (trendsOverTime) => set({ trendsOverTime }),
 
       fetchTracks: async () => {
         try {
@@ -82,7 +92,29 @@ export const useMusicStore = create<MusicState>()(
           toast.error('Lỗi khi tải danh sách nghệ sĩ: ' + err.message);
         }
       },
-      clearMusicData: () => set({ tracks: [], playlists: [], albums: [], artists: [] }),
+      fetchDataAnalyticsSearch: async (searchHistories) => {
+        try {
+          const response = await GetDataAnalyticsSearch(searchHistories);
+          if (response.success) {
+            set({
+              topKeywords: response.data.topKeywords,
+              trendsOverTime: response.data.trendsOverTime
+            });
+          } else {
+            set({ topKeywords: [], trendsOverTime: [] });
+          }
+        } catch (error) {
+          toast.error('Lỗi khi tải dữ liệu phân tích tìm kiếm: ' + error.message);
+        }
+      },
+      clearMusicData: () => set({
+        tracks: [],
+        playlists: [],
+        albums: [],
+        artists: [],
+        topKeywords: [],
+        trendsOverTime: []
+      }),
     }),
     {
       name: "music-storage",

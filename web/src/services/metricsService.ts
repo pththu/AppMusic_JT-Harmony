@@ -131,3 +131,21 @@ export async function fetchTopUsers(params?: { by?: "posts" | "comments"; limit?
     }
   }
 }
+
+export const GetDataAnalyticsSearch = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/admin/metrics/behavior/search`, {
+      histories: payload
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}

@@ -52,11 +52,6 @@ const NotificationPane = ({
             </div>
           )}
         </div>
-        {recentNewUsers.length > 0 && (
-          <div className="mt-4 pt-2 border-t border-gray-100 text-center">
-            <button className="text-xs text-orange-600 font-medium hover:underline">Xem tất cả hoạt động</button>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

@@ -471,7 +471,11 @@ exports.refreshToken = async (req, res) => {
 exports.verifyToken = async (req, res) => {
   try {
     // Token đã được verify ở middleware
-    const user = req.currentUser;
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     return res.json({
       valid: true,

@@ -21,7 +21,7 @@ import { COLORS, ITEMS_PER_PAGE, ONLINE_THRESHOLD_DAYS, SortDirection, SortKey, 
 import ChartDay from "@/components/user/chart-day";
 import ChartStatus from "@/components/user/chart-status";
 import NotificationPane from "@/components/user/notification-pane";
-import { useFollowStore, useUserStore} from "@/store";
+import { useFollowStore, useUserStore } from "@/store";
 
 const getPaginationItems = (currentPage: number, totalPages: number): (number | '...')[] => {
   const MAX_ITEMS = 5;

@@ -46,6 +46,7 @@ export function AuthCheck({ children }: AuthCheckProps) {
 
         if (response.data.valid) {
           const userData = response.data.user;
+          console.log('user', userData)
 
           // Cập nhật user info nếu chưa có hoặc đã thay đổi
           if (!user || user.id !== userData.id) {
@@ -64,7 +65,8 @@ export function AuthCheck({ children }: AuthCheckProps) {
         }
 
       } catch (error: any) {
-        console.error('Auth verification failed:', error);
+        // console.error('Auth verification failed:', error);
+        toast.error('Lỗi xác thực: ' + error)
 
         // Axios interceptor sẽ tự động xử lý:
         // - Nếu TOKEN_EXPIRED: tự động refresh

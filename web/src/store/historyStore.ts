@@ -1,4 +1,4 @@
-import { GetAllListenHistories } from "@/services";
+import { GetAllListenHistories, GetAllSearchHistories } from "@/services";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -39,7 +39,8 @@ export const useHistoryStore = create<HistoryState>()(
       },
       fetchSearchHistories: async () => {
         try {
-          const response = await GetAllListenHistories();
+          const response = await GetAllSearchHistories();
+          console.log('response.data: ',response.data)
           if (response.success) {
             set({ searchHistories: response.data });
           } else {

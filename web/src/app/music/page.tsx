@@ -30,68 +30,6 @@ import {
 import { useMusicStore, useUserStore } from "@/store";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { useHistoryStore } from "@/store/historyStore";
-import { tr } from "date-fns/locale";
-
-// --- DỮ LIỆU ĐẦU VÀO GIẢ LẬP (MỞ RỘNG) ---
-const RAW_DATA = {
-  users: [
-    { id: 1132, username: "user3100", favoritesGenres: ["Pop Ballad", "K-Pop", "R&B"] },
-    { id: 1133, username: "user7916", favoritesGenres: ["V-Pop", "EDM", "Hip Hop"] }
-  ],
-  tracks: [
-    { id: 2392, name: "Euphoria", artists: [{ name: "BTS" }], duration: 228615 },
-    { id: 2393, name: "Trivia 起 : Just Dance", artists: [{ name: "BTS" }], duration: 225220 },
-    { id: 2394, name: "Chúng Ta Của Tương Lai", artists: [{ name: "Sơn Tùng M-TP" }], duration: 240000 },
-    { id: 2395, name: "Nấu ăn cho em", artists: [{ name: "Đen" }], duration: 260000 },
-    { id: 2396, name: "Seven", artists: [{ name: "Jung Kook" }], duration: 184000 }
-  ],
-  albums: [
-    { id: 209, name: "Love Yourself 結 'Answer'", totalTracks: 26 },
-    { id: 210, name: "Vi Nhất (Chill Mix)", totalTracks: 4 },
-    { id: 211, name: "Từng Ngày Như Mãi Mãi", totalTracks: 14 }
-  ],
-  artists: [
-    { id: 409, name: "BTS", genres: ["k-pop"] },
-    { id: 410, name: "Agust D", genres: ["k-pop", "k-rap"] },
-    { id: 411, name: "Sơn Tùng M-TP", genres: ["v-pop", "pop"] },
-    { id: 412, name: "Đen", genres: ["rap", "indie"] }
-  ],
-  playlists: [
-    { id: 15, name: "Nhạc Việt Top Hits", totalTracks: 139 },
-    { id: 16, name: "VPOP Nhạc Hay Nhất", totalTracks: 636 },
-    { id: 17, name: "VINAHOUSE MIX", totalTracks: 129 }
-  ],
-  // Lịch sử nghe (Mở rộng thời gian để test bộ lọc)
-  listenHistory: [
-    { id: 1, itemId: 2392, itemType: "track", durationListened: 200000, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() }, // 5 tiếng trước
-    { id: 2, itemId: 2392, itemType: "track", durationListened: 10000, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString() }, // 1 ngày
-    { id: 3, itemId: 2393, itemType: "track", durationListened: 225220, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString() },
-    { id: 4, itemId: 2394, itemType: "track", durationListened: 230000, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString() },
-    { id: 5, itemId: 409, itemType: "artist", durationListened: 0, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString() },
-    { id: 6, itemId: 2395, itemType: "track", durationListened: 260000, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 25).toISOString() }, // 25 ngày
-    { id: 7, itemId: 2396, itemType: "track", durationListened: 184000, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 40).toISOString() }, // 40 ngày
-    { id: 8, itemId: 2392, itemType: "track", durationListened: 220000, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 100).toISOString() } // 100 ngày
-  ],
-  // Lịch sử tìm kiếm
-  searchHistory: [
-    { id: 37, userId: 1134, query: "bangtan", searchedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 0.5).toISOString() },
-    { id: 38, userId: 1134, query: "bts", searchedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString() },
-    { id: 39, userId: 1134, query: "sơn tùng", searchedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString() },
-    { id: 40, userId: 1134, query: "lofi", searchedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 35).toISOString() }
-  ],
-  // Danh sách yêu thích (ĐÃ TÁCH THEO YÊU CẦU)
-  favoriteTracks: [
-    { id: 1, itemId: 2392, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString() },
-    { id: 2, itemId: 2396, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 40).toISOString() }
-  ],
-  favoritePlaylists: [
-    { id: 1, itemId: 16, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString() }
-  ],
-  favoriteAlbums: [
-    { id: 1, itemId: 210, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 50).toISOString() },
-    { id: 2, itemId: 209, createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString() }
-  ]
-};
 
 // --- UI COMPONENTS ---
 const Card = ({ children, className = "" }) => (
@@ -127,7 +65,8 @@ const analyzeData = ({
   tracks,
   artists,
   albums,
-  playlists
+  playlists,
+  users
 }) => {
   const now = new Date();
   const pastDate = new Date(now.getTime() - (timeRangeDays * 24 * 60 * 60 * 1000));
@@ -142,9 +81,8 @@ const analyzeData = ({
 
   // 2. FILTER DATA BY TIME RANGE
   const filteredHistory = listenHistories.filter(item => new Date(item.createdAt) >= pastDate);
-  const filteredSearches = searchHistories.filter(item => new Date(item.createdAt) >= pastDate);
+  const filteredSearches = searchHistories.filter(item => new Date(item.searchedAt) >= pastDate);
 
-  console.log('filteredSearches', filteredSearches)
   // Lọc Favorites từ 3 nguồn riêng biệt
   const filteredFavTracks = favoriteTracks.filter(item => new Date(item.createdAt) >= pastDate);
   const filteredFavPlaylists = favoritePlaylists.filter(item => new Date(item.createdAt) >= pastDate);
@@ -181,10 +119,10 @@ const analyzeData = ({
 
   filteredHistory.forEach(history => {
     if (history.itemType === 'track') {
-      const track = RAW_DATA.tracks.find(t => t.id === history.itemId);
+      const track = tracks.find(t => t.id === history.itemId);
       if (track) {
         const qualityPoint = getQualityScore(history.durationListened, track.duration);
-        if (!trackStats[track.name]) trackStats[track.name] = { count: 0, qualityCount: 0, artist: track.artists[0].name };
+        if (!trackStats[track.name]) trackStats[track.name] = { count: 0, qualityCount: 0, artist: track.artists?.map(a => a.name).join(', ') || 'N/A' };
         trackStats[track.name].count += 1;
         trackStats[track.name].qualityCount += qualityPoint;
 
@@ -193,12 +131,12 @@ const analyzeData = ({
         artistStats[artistName] += 1;
       }
     } else if (history.itemType === 'artist') {
-      const artist = RAW_DATA.artists.find(a => a.id === history.itemId);
+      const artist = artists.find(a => a.id === history.itemId);
       if (artist) {
         artistStats[artist.name] = (artistStats[artist.name] || 0) + 1;
       }
     } else if (history.itemType === 'album') {
-      const album = RAW_DATA.albums.find(a => a.id === history.itemId);
+      const album = albums.find(a => a.id === history.itemId);
       if (album) {
         albumStats[album.name] = (albumStats[album.name] || 0) + 1;
       }
@@ -255,10 +193,12 @@ const analyzeData = ({
   const peakHourStr = `${peakHourIndex}:00 - ${peakHourIndex + 1}:00`;
 
   const genreCounts = {};
-  RAW_DATA.users.forEach(user => user.favoritesGenres?.forEach(g => genreCounts[g] = (genreCounts[g] || 0) + 1));
+  users.forEach(user => user?.favoritesGenres?.forEach(g => genreCounts[g] = (genreCounts[g] || 0) + 1));
   const genreData = Object.entries(genreCounts).map(([name, value], i) => ({
-    name, value, color: ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"][i % 5]
+    name, value, color: ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#22c55e", "#ef4444"][i % 7]
   }));
+
+  const totalGenreCount = genreData.reduce((sum, g: any) => sum + g.value, 0);
 
   return {
     dbTotals,
@@ -270,8 +210,39 @@ const analyzeData = ({
     genreData,
     favoriteRate,
     topKeywords,
-    searchToPlayRatio
+    searchToPlayRatio,
+    totalGenreCount
   };
+};
+
+const renderCustomTooltip = ({ active, payload, label }, totalGenreCount) => {
+  if (active && payload && payload.length) {
+    // Lấy dữ liệu từ payload (chỉ cần phần tử đầu tiên)
+    const data = payload[0];
+    const genreName = data.name;
+    const rawValue = data.value;
+    const totalCount = totalGenreCount;
+
+    // Tính phần trăm
+    const percentage = totalCount > 0 ? ((rawValue / totalCount) * 100).toFixed(1) : 0;
+
+    return (
+      <div
+        style={{
+          backgroundColor: '#fff',
+          padding: '5px 10px',
+          border: '1px solid #ccc',
+          // ĐIỀU CHỈNH CỠ CHỮ NHỎ HƠN Ở ĐÂY
+          fontSize: '12px'
+        }}
+      >
+        <p style={{ margin: 0, fontWeight: 'bold' }}>{genreName}</p>
+        {/* HIỂN THỊ PHẦN TRĂM */}
+        <p style={{ margin: 0 }}>{`${percentage}% (${rawValue} )`}</p>
+      </div>
+    );
+  }
+  return null;
 };
 
 export default function MusicDashboard() {
@@ -293,7 +264,8 @@ export default function MusicDashboard() {
     genreData,
     favoriteRate,
     topKeywords,
-    searchToPlayRatio
+    searchToPlayRatio,
+    totalGenreCount
   } = useMemo(() => analyzeData({
     timeRangeDays: timeRange,
     listenHistories,
@@ -304,7 +276,8 @@ export default function MusicDashboard() {
     tracks,
     artists,
     albums,
-    playlists
+    playlists,
+    users
   }), [
     timeRange,
     listenHistories,
@@ -377,49 +350,6 @@ export default function MusicDashboard() {
         ))}
       </div>
 
-      {/* 2. Main Trend Chart - UPDATED TO LINE CHART */}
-      <Card className="shadow-md border-none overflow-hidden">
-        <CardHeader className="border-b border-gray-100 flex justify-between items-center">
-          <div>
-            <CardTitle>Xu Hướng Hoạt Động</CardTitle>
-            <CardDescription>Lượt nghe và tìm kiếm trong {timeRange} ngày qua</CardDescription>
-          </div>
-          <Calendar className="text-gray-400 w-5 h-5" />
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="h-[320px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dy={10} minTickGap={30} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                <Legend verticalAlign="top" height={36} />
-                <Line
-                  type="monotone"
-                  dataKey="plays"
-                  name="Lượt nghe"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 6, fill: "#3b82f6", strokeWidth: 2, stroke: "#fff" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="searches"
-                  name="Tìm kiếm"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 6, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 3. Behavior & Top Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Behavior Analytics Column */}
@@ -530,20 +460,25 @@ export default function MusicDashboard() {
 
             <Card className="shadow-md border-none">
               <CardHeader className="pb-2">
-                <CardTitle>Sở Thích (Genres)</CardTitle>
+                <CardTitle>Tỉ lệ yêu thích theo thể loại</CardTitle>
               </CardHeader>
               <CardContent className="flex items-center gap-4">
-                <div className="h-24 w-24">
+                <div className="h-28 w-28">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={genreData} innerRadius={30} outerRadius={45} paddingAngle={5} dataKey="value">
                         {genreData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                       </Pie>
+                      {/* <Tooltip /> */}
+                      <Tooltip
+                        content={(props: any) => renderCustomTooltip(props, totalGenreCount)}
+                      // Có thể bỏ qua 'contentStyle' vì style đã nằm trong custom component
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="flex-1 grid grid-cols-2 gap-1">
-                  {genreData.slice(0, 4).map((g, i) => (
+                  {genreData.sort((a: any, b: any) => b?.value - a?.value).slice(0, 4).map((g, i) => (
                     <div key={i} className="flex items-center text-xs">
                       <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: g.color }}></div>
                       <span className="truncate">{g.name}</span>
@@ -555,6 +490,51 @@ export default function MusicDashboard() {
           </div>
         </div>
       </div>
+
+      {/* 2. Main Trend Chart - UPDATED TO LINE CHART */}
+      <Card className="shadow-md border-none overflow-hidden">
+        <CardHeader className="border-b border-gray-100 flex justify-between items-center">
+          <div>
+            <CardTitle>Xu Hướng Hoạt Động</CardTitle>
+            <CardDescription>Lượt nghe và tìm kiếm trong {timeRange} ngày qua</CardDescription>
+          </div>
+          <Calendar className="text-gray-400 w-5 h-5" />
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="h-[320px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="#f3f4f6" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} dy={10} minTickGap={30} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                <Legend verticalAlign="top" height={36} />
+                <Line
+                  type="monotone"
+                  dataKey="plays"
+                  name="Lượt nghe"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 6, fill: "#3b82f6", strokeWidth: 2, stroke: "#fff" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="searches"
+                  name="Tìm kiếm"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 6, fill: "#10b981", strokeWidth: 2, stroke: "#fff" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. Behavior & Top Lists */}
+
     </div>
   );
 }
