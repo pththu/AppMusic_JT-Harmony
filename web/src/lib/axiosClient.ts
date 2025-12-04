@@ -137,7 +137,9 @@ axiosClient.interceptors.response.use(
 
           // Redirect to login
           if (typeof window !== 'undefined') {
-            window.location.href = '/login';
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 10000);
           }
 
           return Promise.reject(refreshError);
@@ -186,8 +188,7 @@ const axiosClientPublic = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE,
   headers: {
     "Content-Type": "application/json; charset=UTF-8",
-  },
-  withCredentials: true,
+  }
 })
 
 axiosClientPublic.interceptors.response.use(
