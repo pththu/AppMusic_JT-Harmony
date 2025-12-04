@@ -1250,7 +1250,7 @@ const SocialScreen = () => {
           }
           return (
             <View 
-              key={`post-${item.id}-${index}-${item.uploadedAt}`}
+              key={`post-${item?.id}-${index}-${item.uploadedAt}-${new Date().getTime().toString()}`}
               className="mb-4 px-3">
               {item.isCover ? (
                 <CoverItem

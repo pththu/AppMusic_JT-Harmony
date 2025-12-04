@@ -8,7 +8,6 @@ require('dotenv').config();
 exports.authenticateToken = async (req, res, next) => {
     try {
         let token;
-
         token = req.cookies['accessToken'];
 
         if (!token) {
@@ -54,7 +53,7 @@ exports.authenticateToken = async (req, res, next) => {
     }
 };
 
-exports.optionalAuthenticateToken = async(req, res, next) => {
+exports.optionalAuthenticateToken = async (req, res, next) => {
     let token;
 
     // 1. Lấy token từ Cookie ('accessToken')

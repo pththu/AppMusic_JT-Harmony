@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Music } from "lucide-react";
-import { apiClient } from "@/lib/api";
-import { authStore } from "@/store/authStore";
+import { Loader2 } from "lucide-react";
+import useAuthStore from "@/store/authStore";
+import { Login } from "@/services/authApi";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -23,6 +23,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const login = useAuthStore((state) => state.login);
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,24 +32,21 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await apiClient.login(email, password);
+      const payload = { email, password };
+      console.log('payload: ', payload)
+      const response = await Login(payload);
+      console.log('response', response)
 
-      if (response.error) {
+      if (!response.success) {
         setError("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
         return;
       }
 
-      if (response.data && (response.data as any).success) {
-        const payload = response.data as any;
-        const user = payload.user ?? payload.data?.user ?? null;
-        const accessToken = payload.accessToken ?? payload.access_token ?? payload.token;
-        const refreshToken = payload.refreshToken ?? payload.refresh_token ?? null;
+      if (response.success) {
+        const user = response.user;
 
-        // Lưu vào auth store
-        authStore.getState().login(user, "local", accessToken, refreshToken);
+        login(user, "local", user.accessToken);
 
-        // Chuyển hướng đến dashboard
-        // Đảm bảo persist đã ghi trước khi điều hướng
         await new Promise((r) => setTimeout(r, 0));
         router.replace("/dashboard");
       } else {
@@ -61,21 +60,23 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <div className="h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-green-100">
-            <Music className="h-6 w-6 text-green-600" />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Đăng nhập vào JT-Harmony Admin
-          </h2>
-        </div>
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.replace("/");
+    }
+  }, [isLoggedIn, router]);
 
-        <Card>
+  return (
+    <div className="h-screen flex flex-row items-center justify-center bg-[#a7f29b] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="items-start">
+        <img src="/logo.png" alt="JT-Harmony Logo" className="h-[50%] w-[90%]" />
+      </div>
+      <div className="max-w-lg w-full mb-2 mr-20">
+        <div className="w-full bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
           <CardHeader>
-            <CardTitle>Đăng nhập</CardTitle>
+            <h1 className="text-center text-4xl font-bold text-black mb-6">
+              Đăng nhập
+            </h1>
             <CardDescription>
               Sử dụng tài khoản admin để truy cập hệ thống
             </CardDescription>
@@ -130,13 +131,13 @@ export default function LoginPage() {
               </Button>
             </form>
           </CardContent>
-        </Card>
+        </div>
         {/* <div className="text-center">
           <p className="text-sm text-gray-600">
             Quên mật khẩu? Liên hệ quản trị viên hệ thống.
           </p>
         </div> */}
       </div>
-    </div>
+    </div >
   );
 }

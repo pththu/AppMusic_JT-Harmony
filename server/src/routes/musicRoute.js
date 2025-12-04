@@ -2,7 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const musicController = require('../controllers/musicController');
-const { authenticateToken } = require('../middlewares/authentication');
+const { authenticateToken, authorizeRole } = require('../middlewares/authentication');
+
+// admin routes
+router.get('/all-tracks', authenticateToken, authorizeRole, musicController.getAllTrack);
+
 
 // ====== PUBLIC ROUTES ======
 router.get('/track/:trackId', musicController.findTrackById);

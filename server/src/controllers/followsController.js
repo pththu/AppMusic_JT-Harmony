@@ -21,6 +21,49 @@ const formatArtist = (artist, genres) => {
     }
 }
 
+const GetAllFollowArtist = async (req, res) => {
+    try {
+        const cacheKey = 'all_follow_artists';
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            return res.json(JSON.parse(cachedData));
+        }
+        const rows = await FollowArtist.findAll();
+
+        const response = {
+            message: 'Lấy tất cả follow artist thành công',
+            data: rows,
+            success: true
+        };
+        // await redisClient.set(cacheKey, JSON.stringify(response), { EX: 3600 });
+        res.json(response);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+const GetAllFollowUser = async (req, res) => {
+    try {
+        const cacheKey = 'all_follow_users';
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            return res.json(JSON.parse(cachedData));
+        }
+
+        const rows = await FollowUser.findAll();
+
+        const response = {
+            message: 'Lấy tất cả follow user thành công',
+            data: rows,
+            success: true
+        };
+        // await redisClient.set(cacheKey, JSON.stringify(response), { EX: 3600 });
+        res.json(response);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 // ================= FOLLOW ARTIST CONTROLLER =================
 const GetFollowerOfArtist = async (req, res) => {
     try {
@@ -434,6 +477,8 @@ const GetUserProfileSocial = async (req, res) => {
 }
 
 module.exports = {
+    GetAllFollowArtist,
+    GetAllFollowUser,
     GetFollowerOfArtist,
     GetArtistFollowedByUser,
     CreateFollowArtist,

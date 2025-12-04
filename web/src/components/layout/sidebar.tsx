@@ -25,9 +25,10 @@ import { useState, useEffect } from "react";
 
 const navigation = [
   { name: "Bảng Điều Khiển", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Người Dùng", href: "/users", icon: Users,
+  {
+    name: "Người Dùng", href: "/users", icon: Users,
     subItems: [
-        { name: "Theo Dõi", href: "/follows", icon: UserPlus },
+      { name: "Theo Dõi", href: "/follows", icon: UserPlus },
     ],
   },
   { name: "Vai Trò", href: "/roles", icon: Shield },
@@ -50,15 +51,8 @@ const navigation = [
       { name: "Danh sách phát", href: "/music/playlists", icon: Music },
       { name: "Album", href: "/music/albums", icon: Music },
       { name: "Nghệ sĩ", href: "/music/artists", icon: Users },
-      { name: "Lịch sử nghe", href: "/listening-history", icon: Play },
     ],
-  },
-  {
-    name: "Cuộc Trò Chuyện",
-    href: "/conversations",
-    icon: MessageCircle,
-    subItems: [{ name: "Tin nhắn", href: "/messages", icon: MessageSquare }],
-  },
+  }
 ];
 
 export function Sidebar() {
@@ -116,15 +110,15 @@ export function Sidebar() {
       {/* Sidebar */}
       <div
         className={cn(
-          "flex h-full w-64 flex-col bg-white border-r border-gray-200",
+          "flex h-full w-64 flex-col bg-white border-r border-green-200",
           "lg:translate-x-0 lg:static lg:inset-0",
           "fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out",
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Logo */}
-        <div className="flex h-16 items-center px-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">JT-Harmony Admin</h1>
+        <div className="flex h-16 items-center px-6 border-b border-green-200">
+          <img src="/logo-white-black.png" alt="JT-Harmony Logo" className="h-full w-full" />
         </div>
 
         {/* Navigation */}

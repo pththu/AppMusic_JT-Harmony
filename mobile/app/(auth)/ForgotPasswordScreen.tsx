@@ -21,7 +21,7 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
-    if (!validateEmail(email)) {
+    if (validateEmail(email)) {
       error("Lỗi", "Email không hợp lệ");
       return;
     }
