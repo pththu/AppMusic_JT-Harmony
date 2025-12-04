@@ -37,20 +37,18 @@ export default function LoginPage() {
       const response = await Login(payload);
       console.log('response', response)
 
-      if (!response.success) {
-        setError("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
-        return;
-      }
-
       if (response.success) {
         const user = response.user;
 
+        console.log('user', user)
+
         login(user);
 
-        await new Promise((r) => setTimeout(r, 0));
+        await new Promise((r) => setTimeout(r, 2000));
         router.replace("/dashboard");
       } else {
-        setError("Đăng nhập thất bại. Vui lòng thử lại.");
+        setError("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
+        return;
       }
     } catch (err) {
       console.error("Login error:", err);
