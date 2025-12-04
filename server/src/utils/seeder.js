@@ -2,7 +2,9 @@ const sequelize = require('../configs/database');
 
 const { Artist, Genres, Album, Track, Role, User, Playlist, FollowUser,
     FollowArtist, Post, Like, Comment, PostReport,
-    Conversation, ConversationMember, Message } = require('../models');
+    Conversation, ConversationMember, Message, SearchHistory,
+    ListeningHistory,
+    FavoriteItem } = require('../models');
 
 // Đọc file JSON trực tiếp
 const roleData = require('../seeders/roles.json');
@@ -14,6 +16,9 @@ const trackData = require('../seeders/tracks.json');
 const playlistData = require('../seeders/playlists.json');
 const followUserData = require('../seeders/follow_user.json');
 const followArtistData = require('../seeders/follow_artist.json');
+const searchHistoryData = require('../seeders/search_history.json');
+const favoriteItemData = require('../seeders/favorite.json');
+const listeningHistoryData = require('../seeders/listen_history.json');
 
 const postData = require('../seeders/posts.json');
 const conversationData = require('../seeders/conversations.json');
@@ -737,6 +742,11 @@ const seedDataMessage = async () => {
 
 const seedDataFollowUser = async () => {
     try {
+        const followCount = await FollowUser.count();
+        if (followCount > 0) {
+            console.log('Pass insert FollowUser (data exists).');
+            return;
+        }
         console.log('Start insert FollowUser...');
 
         // 1. Lấy tất cả user để tạo map (username -> id)
@@ -756,7 +766,6 @@ const seedDataFollowUser = async () => {
         for (const item of followUserData) {
             const followerId = userMap[item.follower]; // Tìm ID người theo dõi
             const followeeId = userMap[item.followee]; // Tìm ID người được theo dõi
-            console.log('followerId', followerId, 'followeeId', followeeId);
 
             // Validation:
             // - Cả 2 user phải tồn tại trong DB
@@ -791,6 +800,11 @@ const seedDataFollowUser = async () => {
  */
 const seedDataFollowArtist = async () => {
     try {
+        const followCount = await FollowArtist.count();
+        if (followCount > 0) {
+            console.log('Pass insert FollowArtist (data exists).');
+            return;
+        }
         console.log('Start insert FollowArtist...');
 
         // 1. Lấy tất cả User để tạo map (username -> id)
@@ -819,7 +833,6 @@ const seedDataFollowArtist = async () => {
             // Tìm ID nghệ sĩ: Ưu tiên tìm theo spotifyId cho chính xác, 
             // nếu không thấy thì mới dùng artistId từ json làm fallback
             const artistId = artistMap[item.artistSpotifyId] || item.artistId;
-            console.log('User:', item.follower, '->', userId, '| Artist:', item.artistSpotifyId, '->', artistId);
 
             // Validation: Cả User và Artist phải tồn tại trong DB thực tế
             if (userId && artistId) {
@@ -846,37 +859,285 @@ const seedDataFollowArtist = async () => {
     }
 };
 
+const seedDataSearchHistory = async () => {
+    try {
+        const searchCount = await SearchHistory.count();
+        if (searchCount > 0) {
+            console.log('Pass insert SearchHistory (data exists).');
+            return;
+        }
+
+        console.log('Start inserting SearchHistory...');
+
+        // 1. Lấy tất cả User để tạo map (username -> id)
+        // Việc này giúp liên kết username trong JSON với userId thực tế trong DB
+        const users = await User.findAll({
+            attributes: ['id', 'username']
+        });
+        const userMap = users.reduce((map, user) => {
+            map[user.username] = user.id;
+            return map;
+        }, {});
+        // 
+
+        const historiesToInsert = [];
+
+        // Lặp qua dữ liệu JSON
+        for (const item of searchHistoryData) {
+            const userId = userMap[item.username]; // Tìm ID người dùng (userId) qua username
+
+            // Validation: User phải tồn tại trong DB thực tế
+            if (userId) {
+                // Tạo đối tượng để chèn
+                historiesToInsert.push({
+                    userId: userId, // Tên trường này phải khớp với Model SearchHistory của bạn
+                    query: item.query,
+                    searchedAt: item.searchedAt,
+                    createdAt: item.createdAt || new Date(), // Sử dụng createdAt từ JSON hoặc new Date()
+                    updatedAt: item.updatedAt || new Date()  // Sử dụng updatedAt từ JSON hoặc new Date()
+                });
+            } else {
+                console.log(`⚠️ Skip search history for unknown user: ${item.username}`);
+            }
+        }
+
+        // 2. Insert vào DB
+        if (historiesToInsert.length > 0) {
+            // Sử dụng bulkCreate để chèn hàng loạt.
+            // Có thể thêm { ignoreDuplicates: true } nếu bạn có unique index và muốn bỏ qua các bản ghi trùng lặp.
+            await SearchHistory.bulkCreate(historiesToInsert);
+            console.log(`✅ Finish inserting SearchHistory: ${historiesToInsert.length} records.`);
+        } else {
+            console.log('Pass inserting SearchHistory (No valid data found).');
+        }
+
+    } catch (error) {
+        console.error('Error inserting SearchHistory:', error);
+    }
+};
+
+const seedDataListeningHistory = async () => {
+    try {
+        const listenCount = await ListeningHistory.count();
+        if (listenCount > 0) {
+            console.log('Pass insert ListeningHistory (data exists).');
+            return;
+        }
+        console.log('Start inserting ListeningHistory...');
+
+        // 1. Lấy tất cả User để tạo map (username -> id)
+        const users = await User.findAll({ attributes: ['id', 'username'] });
+        const artists = await Artist.findAll({ attributes: ['id', 'spotifyId'] });
+        const tracks = await Track.findAll({ attributes: ['id', 'spotifyId'] });
+        const albums = await Album.findAll({ attributes: ['id', 'spotifyId'] });
+        const playlists = await Playlist.findAll({ attributes: ['id', 'spotifyId'] });
+        const userMap = users.reduce((map, user) => {
+            map[user.username] = user.id;
+            return map;
+        }, {});
+
+        const artistMap = artists.reduce((map, artist) => {
+            map[artist.spotifyId] = artist.id;
+            return map;
+        }, {});
+
+        const trackMap = tracks.reduce((map, track) => {
+            map[track.spotifyId] = track.id;
+            return map;
+        }, {});
+
+        const albumMap = albums.reduce((map, album) => {
+            map[album.spotifyId] = album.id;
+            return map;
+        }, {});
+
+        const playlistMap = playlists.reduce((map, playlist) => {
+            map[playlist.spotifyId] = playlist.id;
+            return map;
+        }, {});
+
+
+        const historiesToInsert = [];
+
+        // Lặp qua dữ liệu JSON và chuẩn bị dữ liệu chèn
+        for (const item of listeningHistoryData) {
+            const userId = userMap[item.username]; // Tìm ID người dùng (userId) qua username
+
+            let itemId = null;
+            // Tìm itemId dựa trên itemType và itemSpotifyId
+            if (item.itemType === 'artist') {
+                itemId = artistMap[item.itemSpotifyId];
+            } else if (item.itemType === 'track') {
+                itemId = trackMap[item.itemSpotifyId];
+            } else if (item.itemType === 'album') {
+                itemId = albumMap[item.itemSpotifyId];
+            } else if (item.itemType === 'playlist') {
+                itemId = playlistMap[item.itemSpotifyId];
+            }
+
+            // Validation: User phải tồn tại trong DB thực tế
+            if (userId) {
+                // Tạo đối tượng để chèn
+                historiesToInsert.push({
+                    userId: userId,
+                    itemId: itemId || null, // ID nội bộ của item (track, playlist, album...)
+                    itemSpotifyId: item.itemSpotifyId, // ID Spotify để đảm bảo tính duy nhất
+                    itemType: item.itemType, // Loại nội dung (track, playlist, album)
+                    durationListened: item.durationListened,
+                    playCount: item.playCount,
+                    createdAt: item.createdAt || new Date(),
+                    updatedAt: item.updatedAt || new Date()
+                });
+            } else {
+                console.log(`⚠️ Skip listening history for unknown user: ${item.username}`);
+            }
+        }
+
+        // 2. Insert vào DB
+        if (historiesToInsert.length > 0) {
+            // Sử dụng bulkCreate để chèn hàng loạt.
+            // Do Model có unique index trên ['user_id', 'item_spotify_id'], ta có thể thêm { ignoreDuplicates: true }
+            // để tránh lỗi nếu chạy lại seed data.
+            await ListeningHistory.bulkCreate(historiesToInsert, { ignoreDuplicates: true });
+            console.log(`✅ Finish inserting ListeningHistory: ${historiesToInsert.length} records.`);
+        } else {
+            console.log('Pass inserting ListeningHistory (No valid data found).');
+        }
+
+    } catch (error) {
+        console.error('Error inserting ListeningHistory:', error);
+    }
+};
+
+const seedDataFavoriteItem = async () => {
+    try {
+        const favoriteCount = await FavoriteItem.count();
+        if (favoriteCount > 0) {
+            console.log('Pass insert FavoriteItem (data exists).');
+            return;
+        }
+        console.log('Start inserting FavoriteItem...');
+
+        // 1. Lấy tất cả User, artists, track, album, playlist để tạo map
+        const users = await User.findAll({ attributes: ['id', 'username'] });
+        const artists = await Artist.findAll({ attributes: ['id', 'spotifyId'] });
+        const tracks = await Track.findAll({ attributes: ['id', 'spotifyId'] });
+        const albums = await Album.findAll({ attributes: ['id', 'spotifyId'] });
+        const playlists = await Playlist.findAll({ attributes: ['id', 'spotifyId'] });
+
+        const userMap = users.reduce((map, user) => {
+            map[user.username] = user.id;
+            return map;
+        }, {});
+
+        const artistMap = artists.reduce((map, artist) => {
+            map[artist.spotifyId] = artist.id;
+            return map;
+        }, {});
+
+        const trackMap = tracks.reduce((map, track) => {
+            map[track.spotifyId] = track.id;
+            return map;
+        }, {});
+
+        const albumMap = albums.reduce((map, album) => {
+            map[album.spotifyId] = album.id;
+            return map;
+        }, {});
+
+        const playlistMap = playlists.reduce((map, playlist) => {
+            map[playlist.spotifyId] = playlist.id;
+            return map;
+        }, {});
+
+        const itemsToInsert = [];
+
+        for (const item of favoriteItemData) {
+            const userId = userMap[item.username]; // Tìm ID người dùng (userId) qua username
+            let itemId = null;
+            // Tìm itemId dựa trên itemType và itemSpotifyId
+            if (item.itemType === 'artist') {
+                itemId = artistMap[item.itemSpotifyId];
+            } else if (item.itemType === 'track') {
+                itemId = trackMap[item.itemSpotifyId];
+            } else if (item.itemType === 'album') {
+                itemId = albumMap[item.itemSpotifyId];
+            } else if (item.itemType === 'playlist') {
+                itemId = playlistMap[item.itemSpotifyId];
+            }
+
+            // Validation: User phải tồn tại trong DB thực tế
+            if (userId) {
+                // Tạo đối tượng để chèn
+                itemsToInsert.push({
+                    userId: userId,
+                    itemId: itemId || null, // ID nội bộ của item (có thể là null nếu không tìm thấy)
+                    itemSpotifyId: item.itemSpotifyId, // ID Spotify (có thể là null)
+                    itemType: item.itemType, // Loại nội dung (playlist, track, album, v.v.)
+                    createdAt: item.createdAt || new Date(),
+                    updatedAt: item.updatedAt || new Date()
+                });
+            } else {
+                console.log(`⚠️ Skip favorite item for unknown user: ${item.username}`);
+            }
+        }
+
+        // 2. Insert vào DB
+        if (itemsToInsert.length > 0) {
+            // Sử dụng bulkCreate để chèn hàng loạt.
+            // Sử dụng { ignoreDuplicates: true } để tránh lỗi nếu có bản ghi trùng lặp 
+            // (dù index của bạn là trên ['id', 'user_id'], nhưng việc này là thực hành tốt cho seed data).
+            await FavoriteItem.bulkCreate(itemsToInsert, { ignoreDuplicates: true });
+            console.log(`✅ Finish inserting FavoriteItem: ${itemsToInsert.length} records.`);
+        } else {
+            console.log('Pass inserting FavoriteItem (No valid data found).');
+        }
+
+    } catch (error) {
+        console.error('Error inserting FavoriteItem:', error);
+    }
+};
+
+const useSeeder = async () => {
+    // await seedDataRole();
+    await seedDataUser();
+
+    await seedDataGenres();
+    await seedDataArtists();
+    await seedDataArtistGenres(); /* Bảng trung gian */
+
+    await seedDataAlbum();
+    await seedDataArtistAlbums(); /* Bảng trung gian */
+
+    /** còn album track - playlist - playlist tracks */
+    await seedDataTrack();
+    await seedDataArtistTracks(); /* Bảng trung gian */
+    await seedDataFollowUser();
+    await seedDataFollowArtist();
+
+    await seedDataPlaylist();
+    await seedDataSearchHistory();
+
+    // await seedDataPost();
+    // await seedDataLike();
+    // await seedDataComment();
+    // await seedDataPostReport();
+    // await seedDataConversation();
+    // await seedDataConversationMember();
+    // await seedDataMessage();
+
+    await seedDataFavoriteItem();
+    await seedDataListeningHistory();
+
+}
+
 /**
  * Phương thức để seeding dữ liệu vào database
  */
 async function seedDatabase() {
     try {
-        // await seedDataRole();
-        // await seedDataUser();
 
-        // await seedDataGenres();
-        // await seedDataArtists();
-        // await seedDataArtistGenres(); /* Bảng trung gian */
-
-        // await seedDataAlbum();
-        // await seedDataArtistAlbums(); /* Bảng trung gian */
-
-        // /** còn album track - playlist - playlist tracks */
-        // await seedDataTrack();
-        // await seedDataArtistTracks(); /* Bảng trung gian */
-        // await seedDataFollowUser();
-        // await seedDataFollowArtist();
-
-        await seedDataPlaylist();
-
-        // await seedDataPost();
-        // await seedDataLike();
-        // await seedDataComment();
-        // await seedDataPostReport();
-        // await seedDataConversation();
-        // await seedDataConversationMember();
-        // await seedDataMessage();
-
+        await useSeeder();
         console.log('✅ Finish seeding database.');
 
     } catch (error) {

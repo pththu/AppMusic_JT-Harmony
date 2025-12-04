@@ -1,15 +1,14 @@
 import CustomTextInput from "@/components/custom/CustomTextInput";
+import { useAuthData } from "@/hooks/useAuthData";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
 import { Login } from "@/routes/ApiRouter";
 import useAuthStore from "@/store/authStore";
-import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useColorScheme } from "react-native";
 import { useBoardingStore } from "@/store/boardingStore";
-import { useAuthData } from "@/hooks/useAuthData";
 import { validateForm } from "@/utils";
+import React, { useState } from "react";
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();

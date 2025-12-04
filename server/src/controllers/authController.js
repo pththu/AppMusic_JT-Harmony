@@ -3,7 +3,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { sendMail } = require('../utils/mailer');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
+const { formatUser } = require('../utils/formatter');
 const Op = require('sequelize').Op;
+require('dotenv').config();
 
 exports.register = async (req, res) => {
   try {
@@ -135,7 +137,25 @@ exports.login = async (req, res) => {
     const refreshToken = generateRefreshToken(user.id, user.username);
 
     // cookie
-    res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie(
+      'accessToken',
+      accessToken,
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      }
+    );
+
+    res.cookie('refreshToken',
+      refreshToken,
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      }
+    );
 
     user.accessToken = accessToken;
     user.refreshToken = refreshToken;
@@ -145,7 +165,10 @@ exports.login = async (req, res) => {
 
     return res.status(200).json({
       message: "Đăng nhập thành công",
-      user,
+      user: formatUser(user),
+      accessToken,
+      refreshToken,
+      expiresIn: 7 * 24 * 60 * 60,
       success: true,
     });
   } catch (err) {
@@ -336,12 +359,21 @@ exports.me = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      console.log('req', req)
+      console.log('Unauthorized access attempt to logout');
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     const user = await User.findOne({ where: { id: req.user.id } });
+    console.log(user)
     if (!user) return res.status(200).json({ message: 'Không tìm thấy người dùng', success: false });
     user.accessToken = null;
     user.refreshToken = null;
     user.expiry = null;
+
     res.clearCookie("accessToken");
+    res.clearCookie('refreshToken');
+
     await user.save();
     return res.status(200).json({ message: "Đã đăng xuất", success: true });
   } catch (err) {
@@ -351,44 +383,114 @@ exports.logout = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    let refreshToken;
+    refreshToken = req.cookies['refreshToken'];
 
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    console.log(decoded)
-
-    const user = await User.findByPk(decoded.id);
-    if (!user) return res.status(401).json({ error: 'User not found' });
-    if (!user.refreshToken) return res.status(400).json({ error: 'Refresh token required' });
-
-    if (new Date() > new Date(user.expiry)) {
-      const newRefreshToken = jwt.sign(
-        { id: user.id, username: user.username },
-        process.env.REFRESH_TOKEN_SECRET || 'secret',
-        { expiresIn: process.env.REFRESH_TOKEN_LIFE || '30d' }
-      );
-
-      user.refreshToken = newRefreshToken;
-      user.expiry = jwt.decode(newRefreshToken).exp;
+    if (!refreshToken) {
+      refreshToken = req.body.refreshToken;
     }
 
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    if (!refreshToken) {
+      return res.status(401).json({
+        error: 'Refresh token required',
+        code: 'REFRESH_TOKEN_MISSING'
+      });
+    }
 
-    const newAccessToken = jwt.sign(
-      { id: user.id, username: user.username },
-      process.env.ACCESS_TOKEN_SECRET || 'secret',
-      { expiresIn: process.env.ACCESS_TOKEN_LIFE || '7d' }
-    );
+    let decoded;
+
+    try {
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          error: 'Refresh token expired',
+          code: 'REFRESH_TOKEN_EXPIRED'
+        });
+      }
+      return res.status(401).json({
+        error: 'Invalid refresh token',
+        code: 'REFRESH_TOKEN_INVALID'
+      });
+    }
+
+    const user = await User.findByPk(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    if (user.refreshToken !== refreshToken) {
+      return res.status(401).json({
+        error: 'Invalid refresh token',
+        code: 'REFRESH_TOKEN_MISMATCH'
+      });
+    }
+
+    if (user.expiry && new Date() > new Date(user.expiry)) {
+      return res.status(401).json({
+        error: 'Refresh token expired',
+        code: 'REFRESH_TOKEN_EXPIRED'
+      });
+    }
+
+    const newAccessToken = generateAccessToken(user.id, user.username);
+
+    // Tăng security bằng cách refresh token cũng được thay mới
+    // let newRefreshToken = refreshToken;
+    // let newExpiry = user.expiry;
+
+    // Nếu refresh token gần hết hạn (< 7 ngày), tạo mới
+    // const daysUntilExpiry = (new Date(user.expiry) - new Date()) / (1000 * 60 * 60 * 24);
+
+    // if (daysUntilExpiry < 7) {
+    //   newRefreshToken = generateRefreshToken(user.id, user.username);
+    //   const refreshDecoded = jwt.decode(newRefreshToken);
+    //   newExpiry = new Date(refreshDecoded.exp * 1000);
+    // }
 
     res.cookie('accessToken', newAccessToken, { httpOnly: true, secure: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
     user.accessToken = newAccessToken;
     await user.save();
-    return res.json(
-      { message: "Token refreshed successfully" }
-    )
+
+    return res.json({
+      message: 'Token refreshed successfully',
+      accessToken: newAccessToken,
+    })
   } catch (err) {
     if (err.name === 'TokenExpiredError') return res.status(401).json({ error: 'Token expired' });
     if (err.name === 'JsonWebTokenError') return res.status(401).json({ error: 'Invalid token' });
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+exports.verifyToken = async (req, res) => {
+  try {
+    // Token đã được verify ở middleware
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.json({
+      valid: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        roleId: user.roleId,
+        fullName: user.fullName,
+        avatar: user.avatar,
+      }
+    });
+
+  } catch (error) {
+    console.error('Verify token error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

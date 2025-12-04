@@ -32,7 +32,7 @@ import {
   Pie,
   Legend
 } from "recharts";
-import { useMusicStore } from "@/store/musicStore";
+import { useMusicStore } from "@/store";
 
 // --- 1. SIMPLIFIED UI COMPONENTS (INLINED) ---
 

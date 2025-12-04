@@ -16,7 +16,7 @@ const ChartStatus = ({
         <CardDescription>Phân bố trạng thái tài khoản</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px] w-full relative">
+        <div className="h-[200px] w-full relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -37,7 +37,7 @@ const ChartStatus = ({
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none pb-8">
-            <div className="text-2xl font-bold text-gray-900">{userStats.totalUsers}</div>
+            <div className="text-xl font-bold text-gray-900">{userStats.totalUsers}</div>
             <div className="text-xs text-gray-500">Users</div>
           </div>
         </div>

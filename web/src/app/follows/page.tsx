@@ -2,14 +2,13 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { format, subDays, subMonths, startOfYear, isAfter } from "date-fns";
-
-import { useFollowData } from "@/hooks/useFollowData";
 import HeaderSection from "@/components/follow/header-section";
 import OverView from "@/components/follow/over-view";
 import SelectDetails from "@/components/follow/select-details";
 import LeaderboardList from "@/components/follow/leaderboard-list";
 import FollowersListModal from "@/components/follow/followers-list-modal";
 import FollowerModal from "@/components/follow/follower-detail-modal";
+import { useFollowStore, useMusicStore, useUserStore } from "@/store";
 
 export default function FollowsStatsPage() {
   const [activeTab, setActiveTab] = useState<"artists" | "users">("artists");
@@ -22,18 +21,15 @@ export default function FollowsStatsPage() {
 
   // Modal State
   const [showAllFollowersModal, setShowAllFollowersModal] = useState(false);
+  const followArtists = useFollowStore((state) => state.followArtists);
   const [selectedFollowerDetail, setSelectedFollowerDetail] = useState(null);
-
-  const {
-    users,
-    artists,
-    followUsers,
-    followArtists,
-    setUsers,
-    setArtists,
-    setFollowUsers,
-    setFollowArtists,
-  } = useFollowData();
+  const followUsers = useFollowStore((state) => state.followUsers);
+  const users = useUserStore((state) => state.users);
+  const artists = useMusicStore((state) => state.artists);
+  const setFollowArtists = useFollowStore((state) => state.setFollowArtists);
+  const setFollowUsers = useFollowStore((state) => state.setFollowUsers);
+  const fetchFollowArtists = useFollowStore((state) => state.fetchFollowArtists);
+  const fetchFollowUsers = useFollowStore((state) => state.fetchFollowUsers);
 
   const getUserById = (id: number) => users.find((u) => u.id === id);
   const getArtistById = (id: number) => artists.find((a) => a.id === id);
@@ -48,9 +44,11 @@ export default function FollowsStatsPage() {
   const handleDeleteFollow = (recordId: number, type: "artist" | "user") => {
     if (confirm("Bạn có chắc chắn muốn xóa lượt theo dõi này không?")) {
       if (type === "artist") {
-        setFollowArtists(prev => prev.filter(f => f.id !== recordId));
+        const updatedFollows = followArtists.filter(f => f.id !== recordId);
+        setFollowArtists(updatedFollows);
       } else {
-        setFollowUsers(prev => prev.filter(f => f.id !== recordId));
+        const updatedFollows = followUsers.filter(f => f.id !== recordId);
+        setFollowUsers(updatedFollows);
       }
     }
   };
@@ -143,6 +141,11 @@ export default function FollowsStatsPage() {
 
   const followersList = getFollowersOfSelected(); // Full list for modal
   const followersPreview = getFollowersOfSelected(10); // Preview list for sidebar
+
+  useEffect(() => {
+    fetchFollowArtists();
+    fetchFollowUsers();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50/50 p-6 space-y-8 font-sans text-gray-900">

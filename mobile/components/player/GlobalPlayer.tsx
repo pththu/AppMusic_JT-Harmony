@@ -1,13 +1,13 @@
 // components/player/GlobalPlayer.js
-import React, { useEffect, useRef, useState } from "react";
-import YoutubePlayer from "react-native-youtube-iframe";
-import { usePlayerStore } from "@/store/playerStore";
-import { GetVideoId } from "@/services/musicService";
 import { SaveToListeningHistory } from "@/services/historiesService";
-import { AppState } from "react-native";
-import { useHistoriesStore } from "@/store/historiesStore";
+import { GetVideoId } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
+import { useHistoriesStore } from "@/store/historiesStore";
+import { usePlayerStore } from "@/store/playerStore";
 import { useSegments } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
+import YoutubePlayer from "react-native-youtube-iframe";
 
 const GUEST_SONG_PLAY_LIMIT = 3;
 
@@ -43,7 +43,6 @@ export default function GlobalPlayer() {
   const [videoIdTemp, setVideoIdTemp] = useState('');
 
   const isAuthScreen = segments[0] === "(auth)";
-
   const isVisible = !!currentTrack && !isAuthScreen;
 
   const saveTrackToListeningHistory = (track, duration) => {
@@ -223,6 +222,8 @@ export default function GlobalPlayer() {
         try {
           const response = await GetVideoId(trackForThisEffect?.spotifyId);
           if (response.success) {
+            console.log('response.success: ', response.data);
+            setVideoIdTemp(response.data.videoId || '');
             const updatedTrack = {
               ...trackForThisEffect,
               videoId: response.data.videoId,
@@ -345,7 +346,7 @@ export default function GlobalPlayer() {
     <YoutubePlayer
       ref={playerRef}
       height={0}
-      videoId={currentTrack?.videoId}
+      videoId={currentTrack?.videoId ? currentTrack.videoId : videoIdTemp}
       play={isPlaying}
       onChangeState={onPlayerStateChange}
       onReady={onPlayerReady}

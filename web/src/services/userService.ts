@@ -83,9 +83,9 @@ const GetAllUser = async () => {
 }
 
 export {
-  GetAllRole,
   CreateRole,
-  DeleteRole,
-  UpdateRole,
+  GetAllRole,
   GetAllUser,
+  UpdateRole,
+  DeleteRole,
 }

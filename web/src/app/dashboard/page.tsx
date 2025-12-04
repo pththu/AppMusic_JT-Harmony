@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, Button } from "@/components/ui";
 import { useEffect, useState } from "react";
-import { fetchSummary, fetchTimeseries, fetchPostsCoverBreakdown, fetchReportsStatusBreakdown, fetchTopPosts, fetchTopUsers, type SummaryRes, type Granularity } from "@/services/metricsAdminApi";
+import { fetchSummary, fetchTimeseries, fetchPostsCoverBreakdown, fetchReportsStatusBreakdown, fetchTopPosts, fetchTopUsers, type SummaryRes, type Granularity } from "@/services/metricsService";
 
 import {
   PieChart,
@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import { format, subDays } from "date-fns";
 import { FileText, MessageCircle, Heart, Flag, MessageSquare, Mail } from "lucide-react";
+import { useFollowStore, useUserStore, useMusicStore } from "@/store";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState(null);
@@ -34,6 +35,13 @@ export default function DashboardPage() {
   const [reportsBreakdown, setReportsBreakdown] = useState([]);
   const [topPosts, setTopPosts] = useState([]);
   const [topUsers, setTopUsers] = useState([]);
+
+  // store
+  const fetchUsers = useUserStore((state) => state.fetchUsers);
+  const fetchArtists = useMusicStore((state) => state.fetchArtists);
+  const fetchTracks = useMusicStore((state) => state.fetchTracks);
+  const fetchAlbums = useMusicStore((state) => state.fetchAlbums);
+  const fetchPlaylists = useMusicStore((state) => state.fetchPlaylists);
 
   // Header filters
   const [dateFrom, setDateFrom] = useState<string>(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
@@ -108,6 +116,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadAll();
+    fetchUsers();
+    fetchArtists();
+    fetchTracks();
+    fetchAlbums();
+    fetchPlaylists();
   }, []);
 
   return (

@@ -219,11 +219,22 @@ const getFormattedPlaylist = async (favorite) => {
 
 const GetAll = async (req, res) => {
   try {
-    const favorites = await FavoriteItem.findAll({
-      include: [{ model: User, as: 'User' }]
-    });
-    console.log(favorites)
-    res.status(200).json({ message: 'Favorites retrieved successfully', data: favorites });
+    // const cacheKey = `favorites:all`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return res.status(200).json(JSON.parse(cachedData));
+    // }
+    const favorites = await FavoriteItem.findAll();
+
+    const response = {
+      message: 'Favorites retrieved successfully',
+      data: favorites,
+      success: true
+    }
+
+    // await redisClient.set(cacheKey, JSON.stringify(response), { EX: ITEM_CACHE_TTL_SECONDS });
+
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -523,7 +534,10 @@ const CreateOne = async (req, res) => {
 
     const cacheKeyGrouped = `favorites:grouped:${req.user.id}`;
     const cacheKeyPlaylists = `favorites:playlists:${req.user.id}`;
+    const cacheKeyAll = 'favorites:all';
     await redisClient.del(cacheKeyGrouped);
+    await redisClient.del(cacheKeyAll);
+
     if (itemType === 'playlist') {
       await redisClient.del(cacheKeyPlaylists);
     }
