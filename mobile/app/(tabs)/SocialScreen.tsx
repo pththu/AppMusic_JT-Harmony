@@ -51,13 +51,13 @@ const SocialScreen = () => {
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
-  
+
   // Ref for NewPostCreator
   const newPostCreatorRef = useRef<NewPostItemRef>(null);
-  
+
   // FAB animation value
   const fabScale = useRef(new Animated.Value(1)).current;
-  
+
   // Header animation values
   const headerOpacity = useRef(new Animated.Value(1)).current;
   const headerTranslateY = useRef(new Animated.Value(0)).current;
@@ -321,7 +321,7 @@ const SocialScreen = () => {
 
       // GỌI API TẠO BÀI ĐĂNG
       const apiPost = await createNewPost(content, fileUrlsToSend, songId);
-      
+
       // Kiểm tra lỗi từ API
       if (!apiPost || (apiPost as any).status === 'error') {
         throw new Error((apiPost as any)?.message || 'Không thể tạo bài đăng');
@@ -338,7 +338,7 @@ const SocialScreen = () => {
       setSelectedMediaAssets([]);
       setSelectedSongId(null);
       Keyboard.dismiss();
-      
+
       // Đóng modal NewPostCreator
       setNewPostModalVisible(false);
 
@@ -426,15 +426,15 @@ const SocialScreen = () => {
         try {
           // Thêm hiệu ứng loading
           setIsUploading(true);
-          
+
           // Gọi API xóa bài viết
           const result = await deletePost(postId);
-          
+
           // Kiểm tra kết quả trả về từ API
           if (result && 'message' in result) {
             if (result.message === 'Post deleted successfully') {
               // Xóa bài viết khỏi state nếu xóa thành công
-              setPosts(prevPosts => 
+              setPosts(prevPosts =>
                 prevPosts.filter(post => post.id !== postId)
               );
               success("Bài viết đã được xóa thành công!");
@@ -444,14 +444,14 @@ const SocialScreen = () => {
           } else {
             // Xử lý trường hợp không có thông báo từ server
             // Vẫn cập nhật UI để đảm bảo trải nghiệm người dùng mượt mà
-            setPosts(prevPosts => 
+            setPosts(prevPosts =>
               prevPosts.filter(post => post.id !== postId)
             );
             success("Bài viết đã được xóa thành công!");
           }
         } catch (error) {
           console.error("Lỗi khi xóa bài viết:", error);
-          
+
           // Hiển thị thông báo lỗi chi tiết hơn
           let errorMessage = "Đã xảy ra lỗi khi xóa bài viết";
           if (error.response?.data?.message) {
@@ -459,7 +459,7 @@ const SocialScreen = () => {
           } else if (error.message) {
             errorMessage = error.message;
           }
-          
+
           error("Lỗi", errorMessage);
         } finally {
           setIsUploading(false);
@@ -957,7 +957,7 @@ const SocialScreen = () => {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, [activeTab]);
 
@@ -998,12 +998,12 @@ const SocialScreen = () => {
       setCoversLoading(true);
       const response = await fetchAllCovers();
       console.log("Response from fetchAllCovers:", response);
-      
+
       // Kiểm tra nếu response có lỗi (kiểu error response)
       if (response && typeof response === 'object' && 'success' in response && response.success === false) {
         throw new Error((response as any).message || "Không thể tải covers");
       }
-      
+
       // Lấy data từ response - có thể là response.data hoặc response trực tiếp
       let allCovers;
       if (Array.isArray(response)) {
@@ -1013,7 +1013,7 @@ const SocialScreen = () => {
       } else {
         allCovers = response;
       }
-      
+
       if (Array.isArray(allCovers) && allCovers.length > 0) {
         console.log("All covers found:", allCovers.length);
         // Map covers về đúng định dạng như posts
@@ -1068,7 +1068,7 @@ const SocialScreen = () => {
         ) : (
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
-              <Animated.View 
+              <Animated.View
                 style={{
                   opacity: headerOpacity,
                   transform: [{ translateY: headerTranslateY }]
@@ -1082,7 +1082,7 @@ const SocialScreen = () => {
                       className="w-10 h-10 rounded-full mr-3 border-2 border-emerald-500"
                     />
                   </TouchableOpacity>
-                  
+
                   <View className="flex-1">
                     <Text className="text-2xl font-extrabold text-black dark:text-white">
                       Khám phá
@@ -1094,7 +1094,7 @@ const SocialScreen = () => {
                 </View>
               </Animated.View>
             </View>
-            
+
             <TouchableOpacity onPress={() => setSearchOverlayVisible(true)}>
               <Icon
                 name="search"
@@ -1129,25 +1129,23 @@ const SocialScreen = () => {
                 {/* Posts Tab */}
                 <TouchableOpacity
                   onPress={() => setActiveTab("posts")}
-                  className={`flex-1 py-3 px-4 rounded-l-xl justify-center items-center ${
-                    activeTab === "posts"
+                  className={`flex-1 py-3 px-4 rounded-l-xl justify-center items-center ${activeTab === "posts"
                       ? "bg-emerald-500 dark:bg-emerald-600"
                       : "bg-transparent"
-                  }`}
+                    }`}
                 >
                   <View className="flex-row items-center">
-                    <Icon 
-                      name="edit-3" 
-                      size={16} 
+                    <Icon
+                      name="edit-3"
+                      size={16}
                       color={activeTab === "posts" ? "#fff" : (colorScheme === "dark" ? "#9CA3AF" : "#6B7280")}
                       style={{ marginRight: 6 }}
                     />
                     <Text
-                      className={`text-sm ${
-                        activeTab === "posts"
+                      className={`text-sm ${activeTab === "posts"
                           ? "text-white font-bold"
                           : "text-gray-600 dark:text-gray-400 font-medium"
-                      }`}
+                        }`}
                     >
                       Bài đăng
                     </Text>
@@ -1160,32 +1158,30 @@ const SocialScreen = () => {
                     </View>
                   )}
                 </TouchableOpacity>
-                
+
                 {/* Divider */}
                 <View className="w-px bg-gray-200 dark:bg-gray-700 h-8" />
-                
+
                 {/* Covers Tab */}
                 <TouchableOpacity
                   onPress={() => setActiveTab("covers")}
-                  className={`flex-1 py-3 px-4 rounded-r-xl justify-center items-center ${
-                    activeTab === "covers"
+                  className={`flex-1 py-3 px-4 rounded-r-xl justify-center items-center ${activeTab === "covers"
                       ? "bg-emerald-500 dark:bg-emerald-600"
                       : "bg-transparent"
-                  }`}
+                    }`}
                 >
                   <View className="flex-row items-center">
-                    <Icon 
-                      name="music" 
-                      size={16} 
+                    <Icon
+                      name="music"
+                      size={16}
                       color={activeTab === "covers" ? "#fff" : (colorScheme === "dark" ? "#9CA3AF" : "#6B7280")}
                       style={{ marginRight: 6 }}
                     />
                     <Text
-                      className={`text-sm ${
-                        activeTab === "covers"
+                      className={`text-sm ${activeTab === "covers"
                           ? "text-white font-bold"
                           : "text-gray-600 dark:text-gray-400 font-medium"
-                      }`}
+                        }`}
                     >
                       Covers/Sáng tác
                     </Text>
@@ -1199,18 +1195,16 @@ const SocialScreen = () => {
                   )}
                 </TouchableOpacity>
               </View>
-              
+
               {/* Active Indicator */}
               <View className="flex-row">
-                <View 
-                  className={`h-1 bg-emerald-500 transition-all duration-300 ${
-                    activeTab === "posts" ? "flex-1" : "w-0"
-                  }`}
+                <View
+                  className={`h-1 bg-emerald-500 transition-all duration-300 ${activeTab === "posts" ? "flex-1" : "w-0"
+                    }`}
                 />
-                <View 
-                  className={`h-1 bg-emerald-500 transition-all duration-300 ${
-                    activeTab === "covers" ? "flex-1" : "w-0"
-                  }`}
+                <View
+                  className={`h-1 bg-emerald-500 transition-all duration-300 ${activeTab === "covers" ? "flex-1" : "w-0"
+                    }`}
                 />
               </View>
             </View>
@@ -1219,7 +1213,7 @@ const SocialScreen = () => {
         renderItem={({ item, index }) => {
           if (activeTab === 'covers') {
             return (
-              <View 
+              <View
                 key={`cover-${item.id}-${index}`}
                 className="mb-4 px-3">
                 <CoverItem
@@ -1247,7 +1241,7 @@ const SocialScreen = () => {
             );
           }
           return (
-            <View 
+            <View
               key={`post-${item?.id}-${index}-${item.uploadedAt}-${new Date().getTime().toString()}`}
               className="mb-4 px-3">
               {item.isCover ? (
@@ -1279,6 +1273,7 @@ const SocialScreen = () => {
                   onPostUpdate={(type, value) =>
                     updatePostState(item.id, type, value)
                   }
+                  fileUrl={item?.fileUrl}
                   onCommentPress={() => openCommentModal(item.id)}
                   onSharePress={() => openReShare(item)}
                   userId={item.userId || item.User?.id}
@@ -1317,7 +1312,7 @@ const SocialScreen = () => {
           )
         }
       />
-      
+
       {/* Floating Action Button */}
       <Animated.View
         className="absolute bottom-24 right-4"
@@ -1439,8 +1434,8 @@ const SocialScreen = () => {
       >
         {selectedMediaAssets.length > 0 ? (
           // Khi có media, không dùng KeyboardAvoidingView để tránh giật
-          <TouchableOpacity 
-            className="flex-1 justify-end" 
+          <TouchableOpacity
+            className="flex-1 justify-end"
             activeOpacity={1}
             onPress={() => setNewPostModalVisible(false)}
           >
@@ -1450,7 +1445,7 @@ const SocialScreen = () => {
                 <Text className="text-lg font-bold text-black dark:text-white mb-4 text-center">
                   Đăng bài viết mới
                 </Text>
-                <ScrollView 
+                <ScrollView
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   style={{ maxHeight: '85%' }}
@@ -1473,12 +1468,12 @@ const SocialScreen = () => {
           </TouchableOpacity>
         ) : (
           // Khi không có media, dùng KeyboardAvoidingView để tránh bị bàn phím che
-          <KeyboardAvoidingView 
+          <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1 }}
           >
-            <TouchableOpacity 
-              className="flex-1 justify-end" 
+            <TouchableOpacity
+              className="flex-1 justify-end"
               activeOpacity={1}
               onPress={() => setNewPostModalVisible(false)}
             >
@@ -1488,7 +1483,7 @@ const SocialScreen = () => {
                   <Text className="text-lg font-bold text-black dark:text-white mb-4 text-center">
                     Đăng bài viết mới
                   </Text>
-                  <ScrollView 
+                  <ScrollView
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     style={{ maxHeight: '75%' }}
@@ -1527,8 +1522,8 @@ const SocialScreen = () => {
         animationType="fade"
         onRequestClose={() => setOptionsMenuVisible(false)}
       >
-        <TouchableOpacity 
-          className="flex-1 justify-end" 
+        <TouchableOpacity
+          className="flex-1 justify-end"
           activeOpacity={1}
           onPress={() => setOptionsMenuVisible(false)}
         >
@@ -1537,7 +1532,7 @@ const SocialScreen = () => {
             <Text className="text-lg font-bold text-black dark:text-white mb-4 text-center">
               Tạo mới
             </Text>
-            
+
             <TouchableOpacity
               className="flex-row items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl mb-3"
               onPress={() => {
@@ -1550,7 +1545,7 @@ const SocialScreen = () => {
                 Đăng bài viết
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               className="flex-row items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl"
               onPress={() => {
@@ -1563,7 +1558,7 @@ const SocialScreen = () => {
                 Đăng cover
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               className="mt-4 p-3"
               onPress={() => setOptionsMenuVisible(false)}
