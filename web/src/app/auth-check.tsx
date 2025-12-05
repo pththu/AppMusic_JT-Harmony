@@ -4,60 +4,112 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
-import useAuthStore from "@/store/authStore";
-import { userAgent } from "next/server";
+import axiosClient from "@/lib/axiosClient";
 import toast from "react-hot-toast";
+import { useAuthStore } from "@/store";
 
-export function AuthCheck({ children }) {
+interface AuthCheckProps {
+  children: React.ReactNode;
+}
+
+export function AuthCheck({ children }: AuthCheckProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const isHydrated = useAuthStore?.persist?.hasHydrated();
-  const hasStorageData = typeof window !== 'undefined' && localStorage.getItem('auth-storage');
+  const login = useAuthStore((state) => state.login);
+  const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    const performAuthCheck = () => {
+  // Public routes không cần authentication
+  const publicRoutes = ['/login', '/register', '/forgot-password'];
+  const isPublicRoute = publicRoutes.includes(pathname);
 
-      if (!isHydrated && hasStorageData) {
+  // Wait for hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    const verifyAuth = async () => {
+      if (isPublicRoute) {
+        setIsLoading(false);
         return;
       }
 
-      if (isLoggedIn && user) {
-        console.log("user", user)
-        console.log('isLoggedIn', isLoggedIn)
-        const roleId = user.roleId;
-        console.log('role: ', roleId)
+      // 2. Verify token với server (token trong cookie)
+      try {
+        const response = await axiosClient.get('/auth/verify');
 
-        // Giả sử roleId = 1 là Admin
-        if (roleId === 1) {
-          setIsLoading(false);
-        } else {
-          toast.error("Bạn không có quyền truy cập vào trang này.");
+        if (response.data.valid) {
+          const userData = response.data.user;
+          console.log('user', userData)
+
+          // Cập nhật user info nếu chưa có hoặc đã thay đổi
+          if (!user || user.id !== userData.id) {
+            login(userData);
+          }
+
+          // Kiểm tra role (chỉ admin được vào)
+          if (userData.roleId !== 1) {
+            toast.error("Bạn không có quyền truy cập vào trang này.");
+            logout();
+            router.replace("/login");
+            return;
+          }
+
           setIsLoading(false);
         }
-      } else {
-        router.replace("/login");
+
+      } catch (error: any) {
+        // console.error('Auth verification failed:', error);
+        toast.error('Lỗi xác thực: ' + error)
+
+        // Axios interceptor sẽ tự động xử lý:
+        // - Nếu TOKEN_EXPIRED: tự động refresh
+        // - Nếu refresh thành công: retry verify
+        // - Nếu refresh thất bại: logout + redirect
+
+        // Chỉ handle các lỗi không phải 401 (401 đã được interceptor xử lý)
+        if (error.response?.status !== 401) {
+          console.error('Unexpected error:', error);
+          logout();
+          router.replace("/login");
+        }
+
+        setIsLoading(false);
       }
     };
 
-    performAuthCheck();
-  }, [router, pathname, user, isLoggedIn]);
+    verifyAuth();
+  }, [isHydrated, pathname, isPublicRoute]);
 
+  // Wait for hydration
+  if (!isHydrated) {
+    return null;
+  }
+
+  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang xác thực...</p>
+        </div>
       </div>
     );
   }
 
-  if (pathname === "/login") {
+  // Public routes - render without layout
+  if (isPublicRoute) {
     return <>{children}</>;
   }
 
-  // Nếu đã authenticated, hiển thị layout đầy đủ với sidebar và header
+  // Protected routes - render with layout
   if (isLoggedIn && user) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -70,6 +122,6 @@ export function AuthCheck({ children }) {
     );
   }
 
-  // Nếu chưa authenticated và không phải trang login, sẽ chuyển hướng trong useEffect
+  // Fallback - đang trong quá trình redirect
   return null;
 }

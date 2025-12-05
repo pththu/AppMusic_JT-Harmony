@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, Button } from "@/components/ui";
 import { useEffect, useState } from "react";
-import { fetchSummary, fetchTimeseries, fetchPostsCoverBreakdown, fetchReportsStatusBreakdown, fetchTopPosts, fetchTopUsers, type SummaryRes, type Granularity } from "@/services/metricsAdminApi";
+import { fetchSummary, fetchTimeseries, fetchPostsCoverBreakdown, fetchReportsStatusBreakdown, fetchTopPosts, fetchTopUsers, type SummaryRes, type Granularity } from "@/services/metricsService";
 
 import {
   PieChart,
@@ -21,19 +21,27 @@ import {
 } from "recharts";
 import { format, subDays } from "date-fns";
 import { FileText, MessageCircle, Heart, Flag, MessageSquare, Mail } from "lucide-react";
+import { useFollowStore, useUserStore, useMusicStore } from "@/store";
 
 export default function DashboardPage() {
-  const [summary, setSummary] = useState<SummaryRes | null>(null);
+  const [summary, setSummary] = useState(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
-  const [tsPosts, setTsPosts] = useState<Array<{ date: string; count: number }>>([]);
-  const [tsComments, setTsComments] = useState<Array<{ date: string; count: number }>>([]);
-  const [tsLikes, setTsLikes] = useState<Array<{ date: string; count: number }>>([]);
-  const [tsMessages, setTsMessages] = useState<Array<{ date: string; count: number }>>([]);
-  const [tsConvs, setTsConvs] = useState<Array<{ date: string; count: number }>>([]);
-  const [coverBreakdown, setCoverBreakdown] = useState<Array<{ isCover: boolean; count: number }>>([]);
-  const [reportsBreakdown, setReportsBreakdown] = useState<Array<{ status: string; count: number }>>([]);
-  const [topPosts, setTopPosts] = useState<any[]>([]);
-  const [topUsers, setTopUsers] = useState<any[]>([]);
+  const [tsPosts, setTsPosts] = useState([]);
+  const [tsComments, setTsComments] = useState([]);
+  const [tsLikes, setTsLikes] = useState([]);
+  const [tsMessages, setTsMessages] = useState([]);
+  const [tsConvs, setTsConvs] = useState([]);
+  const [coverBreakdown, setCoverBreakdown] = useState([]);
+  const [reportsBreakdown, setReportsBreakdown] = useState([]);
+  const [topPosts, setTopPosts] = useState([]);
+  const [topUsers, setTopUsers] = useState([]);
+
+  // store
+  const fetchUsers = useUserStore((state) => state.fetchUsers);
+  const fetchArtists = useMusicStore((state) => state.fetchArtists);
+  const fetchTracks = useMusicStore((state) => state.fetchTracks);
+  const fetchAlbums = useMusicStore((state) => state.fetchAlbums);
+  const fetchPlaylists = useMusicStore((state) => state.fetchPlaylists);
 
   // Header filters
   const [dateFrom, setDateFrom] = useState<string>(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
@@ -85,14 +93,22 @@ export default function DashboardPage() {
         fetchTopPosts({ by: 'likes', dateFrom, dateTo, limit: 5 }),
         fetchTopUsers({ by: 'posts', dateFrom, dateTo, limit: 5 }),
       ]);
-      setSummary(sum);
-      setTsPosts(p.data || []);
-      setTsComments(c.data || []);
-      setTsLikes(l.data || []);
-      setCoverBreakdown(cb || []);
-      setReportsBreakdown(rb || []);
-      setTopPosts(tp || []);
-      setTopUsers(tu || []);
+      // setSummary(sum);
+      // setTsPosts(p.data || []);
+      // setTsComments(c.data || []);
+      // setTsLikes(l.data || []);
+      // setCoverBreakdown(cb || []);
+      // setReportsBreakdown(rb || []);
+      // setTopPosts(tp || []);
+      // setTopUsers(tu || []);
+      setSummary([]);
+      setTsPosts([]);
+      setTsComments([]);
+      setTsLikes([]);
+      setCoverBreakdown([]);
+      setReportsBreakdown([]);
+      setTopPosts([]);
+      setTopUsers([]);
     } finally {
       setLoadingAll(false);
     }
@@ -100,6 +116,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadAll();
+    fetchUsers();
+    fetchArtists();
+    fetchTracks();
+    fetchAlbums();
+    fetchPlaylists();
   }, []);
 
   return (
@@ -230,13 +251,13 @@ export default function DashboardPage() {
               <div className="h-[300px] flex items-center justify-center text-gray-500">Đang tải...</div>
             ) : (
               <>{
-                coverBreakdown.length === 0 ? (
+                coverBreakdown?.length === 0 ? (
                   <div className="h-[300px] flex items-center justify-center text-gray-500">Không có dữ liệu</div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
-                      <Pie data={coverBreakdown.map(d => ({ name: d.isCover ? 'Cover' : 'Original', value: d.count }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
-                        {coverBreakdown.map((_, i) => (
+                      <Pie data={coverBreakdown?.map(d => ({ name: d?.isCover ? 'Cover' : 'Original', value: d?.count }))} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
+                        {coverBreakdown?.map((_, i) => (
                           <Cell key={i} fill={["#34d399", "#60a5fa"][i % 2]} />
                         ))}
                       </Pie>

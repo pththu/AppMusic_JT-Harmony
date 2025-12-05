@@ -13,6 +13,7 @@ router.post('/reset-password', authController.resetPassword);
 router.post('/verify-otp', authController.verifyOtpEmail);
 router.post('/send-otp', authController.sendOtpEmail);
 router.post('/is-email-exist', authController.isEmailExist);
+router.get('/verify', authenticateToken, authController.verifyToken);
 
 // Protected routes
 router.get('/me', authenticateToken, authController.me);

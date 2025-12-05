@@ -14,37 +14,54 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui";
 import { useRouter } from "next/navigation";
-import useAuthStore from "@/store/authStore";
-import { Logout } from "@/services/authApi";
+import { useAuthStore, useFavoritesStore, useFollowStore, useHistoryStore, useMusicStore, useUserStore } from "@/store";
+import { Logout } from "@/services";
 import toast from "react-hot-toast";
 
 export function Header() {
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
+  const clearUserData = useUserStore((state) => state.clearUserData);
+  const clearMusicData = useMusicStore((state) => state.clearMusicData);
+  const clearFollowData = useFollowStore((state) => state.clearFollowData);
+  const clearFavoritesData = useFavoritesStore((state) => state.clearFavoritesData);
+  const clearHistoryData = useHistoryStore((state) => state.clearHistoryData);
+
 
   const handleLogout = async () => {
 
-    const response = await Logout();
-    console.log('response', response)
-    if (response.success) {
-      logout();
-      toast.success('Đăng xuất thành công!', {
-        duration: 3000, // ✅ Yêu cầu 1: Hiển thị trong 3 giây (3000ms)
-        // ✅ Yêu cầu 3: Thư viện tự xử lý hiệu ứng mượt (ẩn/hiện)
-
-        // Tùy chọn để điều chỉnh kiểu dáng
-        style: {
-          fontWeight: 600,
-          fontSize: '15px',
-        },
-      });
-      router.push("/login");
-    } else {
-      toast.error('Đăng xuất thất bại. Vui lòng thử lại.', {
+    try {
+      const response = await Logout();
+      console.log('response', response)
+      if (response.success) {
+        logout();
+        clearUserData();
+        clearMusicData();
+        clearFollowData();
+        clearFavoritesData();
+        clearHistoryData();
+        toast.success('Đăng xuất thành công!', {
+          duration: 3000, // ✅ Yêu cầu 1: Hiển thị trong 3 giây (3000ms)
+          style: {
+            fontWeight: 600,
+            fontSize: '20px',
+          },
+        });
+        router.push("/login");
+      } else {
+        toast.error('Đăng xuất thất bại. Vui lòng thử lại.', {
+          duration: 3000,
+          style: {
+            fontWeight: 600,
+            fontSize: '15px',
+          },
+        });
+      }
+    } catch (error) {
+      toast.error('Lỗi khi đăng xuất: ' + error.message, {
         duration: 3000,
         style: {
           fontWeight: 600,
@@ -52,7 +69,6 @@ export function Header() {
         },
       });
     }
-
   };
 
   return (

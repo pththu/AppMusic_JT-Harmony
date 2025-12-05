@@ -1,15 +1,14 @@
 import CustomTextInput from "@/components/custom/CustomTextInput";
-import GenderSelector from "@/components/GenderSelector";
+import { useTheme } from "@/components/ThemeContext"; // Import useTheme
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { UpdateProfile } from "@/routes/ApiRouter";
+import useAuthStore from "@/store/authStore";
 import dayjs from "dayjs";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import DateTimePicker, { DateType } from "react-native-ui-datepicker";
 import Icon from "react-native-vector-icons/Ionicons";
-import useAuthStore from "@/store/authStore";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { UpdateProfile } from "@/routes/ApiRouter";
-import { useTheme } from "@/components/ThemeContext"; // Import useTheme
 
 export default function EditProfileScreen() {
   const { theme } = useTheme(); // Lấy theme hiện tại
@@ -116,7 +115,6 @@ export default function EditProfileScreen() {
         </Text>
       </View>
 
-      {/* CustomTextInput (Giả định CustomTextInput đã hỗ trợ Dark Mode) */}
       <CustomTextInput
         placeholder="Username"
         value={username}
@@ -136,7 +134,7 @@ export default function EditProfileScreen() {
       {/* Ngày sinh Input */}
       <Text className={labelColor}>Ngày sinh</Text>
       <TouchableOpacity
-        className={`${dateInputBg} rounded-md p-3 mb-4`} // Cập nhật màu nền
+        className={`${dateInputBg} rounded-md p-3 mb-4 mt-3`} // Cập nhật màu nền
         onPress={() => setShowDatePicker(true)}
       >
         <Text className={dateInputText}> {/* Cập nhật màu chữ */}
@@ -184,6 +182,15 @@ export default function EditProfileScreen() {
           </View>
         )
       }
+
+      <CustomTextInput
+        placeholder="Bio"
+        value={bio}
+        onChangeText={setBio}
+        iconName="description"
+        multiline
+        numberOfLines={3}
+      />
 
       <TouchableOpacity
         // className="bg-[#089b0d] rounded-full py-4 items-center"

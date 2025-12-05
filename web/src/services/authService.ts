@@ -27,6 +27,7 @@ export const Logout = async () => {
   } catch (error) {
     if (error.response) {
       const { status, data } = error.response;
+      console.log('err: ', error)
       return {
         success: false,
         status: status,

@@ -32,7 +32,7 @@ import {
   Pie,
   Legend
 } from "recharts";
-import { useMusicStore } from "@/store/musicStore";
+import { useMusicStore } from "@/store";
 
 // --- 1. SIMPLIFIED UI COMPONENTS (INLINED) ---
 
@@ -186,94 +186,6 @@ type Playlist = {
   createdAt: string;
 };
 
-const MOCK_PLAYLISTS: Playlist[] = [
-  {
-    id: null,
-    spotifyId: "7DgPQwzEoUVfQYBiMLER9Z",
-    name: "Top 100 Most Popular Rock Songs",
-    owner: {
-      id: null,
-      spotifyId: "27d103o3ymbwx8jp9ctithyau",
-      name: "Redlist - Biggest Songs"
-    },
-    description: "Find our playlist with these keywords: classic rock hits...",
-    imageUrl: "https://api.dicebear.com/7.x/identicon/svg?seed=Rock",
-    totalTracks: 100,
-    isPublic: true,
-    type: "playlist",
-    shareCount: 1205,
-    createdAt: new Date(Date.now() - 10000000).toISOString()
-  },
-  {
-    id: null,
-    spotifyId: "1GXRoQWlxTNQiMNkOe7RqA",
-    name: "Hard Rock /Metal",
-    owner: {
-      id: null,
-      spotifyId: "roddmar",
-      name: "rodney martin"
-    },
-    description: "The ideal compilation of Hard Rock and Heavy Metal...",
-    imageUrl: "https://api.dicebear.com/7.x/identicon/svg?seed=Metal",
-    totalTracks: 294,
-    isPublic: true,
-    type: "playlist",
-    shareCount: 850,
-    createdAt: new Date(Date.now() - 50000000).toISOString()
-  },
-  {
-    id: 101,
-    spotifyId: null, // Local DB playlist
-    name: "My Chill Mix",
-    owner: {
-      id: 55,
-      spotifyId: null,
-      name: "Local User A"
-    },
-    description: "Just for coding",
-    imageUrl: null,
-    totalTracks: 25,
-    isPublic: false,
-    type: "playlist",
-    shareCount: 0,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 102,
-    spotifyId: "37i9dQZF1DXcBWIGoYBM5M",
-    name: "Today's Top Hits",
-    owner: {
-      id: null,
-      spotifyId: "spotify",
-      name: "Spotify"
-    },
-    description: "Jung Kook is on top of the Hottest 50!",
-    imageUrl: "https://api.dicebear.com/7.x/identicon/svg?seed=Hits",
-    totalTracks: 50,
-    isPublic: true,
-    type: "playlist",
-    shareCount: 54000,
-    createdAt: new Date(Date.now() - 2000000).toISOString()
-  },
-  {
-    id: 103,
-    spotifyId: null,
-    name: "Workout 2024",
-    owner: {
-      id: 55,
-      spotifyId: null,
-      name: "Local User A"
-    },
-    description: null,
-    imageUrl: null,
-    totalTracks: 15,
-    isPublic: false,
-    type: "playlist",
-    shareCount: 2,
-    createdAt: new Date(Date.now() - 80000000).toISOString()
-  }
-];
-
 // --- 3. UTILS & HELPER COMPONENTS ---
 
 const getPlaylistIdDisplay = (p: Playlist) => {
@@ -311,7 +223,6 @@ const StatCard = ({ title, value, subtext, icon: Icon, colorClass }: any) => (
 // --- 5. MAIN PAGE COMPONENT ---
 
 export default function PlaylistsPage() {
-  // const [playlists, setPlaylists] = useState<Playlist[]>(MOCK_PLAYLISTS);
   const { playlists, setPlaylists, fetchPlaylists } = useMusicStore();
 
   // Dialog States

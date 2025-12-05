@@ -34,7 +34,7 @@ import {
   CardContent,
   Label,
 } from "@/components/ui";
-import { fetchPostReports, updatePostReport, type PostReportItem } from "@/services/reportAdminApi";
+import { fetchPostReports, updatePostReport, type PostReportItem } from "@/services";
 
 export default function ReportsPage() {
   const router = useRouter();

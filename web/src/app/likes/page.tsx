@@ -36,7 +36,7 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui";
-import { getPostLikesAdmin, removePostLikeAdmin, getAllLikesAdmin } from "@/services/postAdminApi";
+import { getPostLikesAdmin, removePostLikeAdmin, getAllLikesAdmin } from "@/services/postService";
 
 type LikeItem = {
   id: number;
