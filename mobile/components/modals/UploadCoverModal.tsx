@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  TextInput,
-  ActivityIndicator,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
-  useColorScheme,
-} from "react-native";
-import Icon from "react-native-vector-icons/Feather";
-import * as ImagePicker from "expo-image-picker";
+import CustomButton from "@/components/custom/CustomButton";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
 import { createNewCover } from "@/services/coverService";
 import { GetTracksForCover } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
-import CustomButton from "@/components/custom/CustomButton";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useColorScheme,
+  View,
+} from "react-native";
+import Icon from "react-native-vector-icons/Feather";
 
 interface UploadCoverModalProps {
   visible: boolean;

@@ -1,50 +1,48 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { UploadMultipleFile } from "@/routes/ApiRouter";
+import { FindTrackById } from "@/services/musicService";
+import useAuthStore from "@/store/authStore";
+import * as ImagePicker from "expo-image-picker";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
-  RefreshControl,
+  Image,
   Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  RefreshControl,
+  ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   useColorScheme,
-  TextInput,
-  Modal,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Animated,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
-import {
-  fetchPosts,
-  fetchCommentsByPostId,
-  createNewComment,
-  createNewPost,
-  togglePostLike,
-  toggleCommentLike,
-  updatePost,
-  deletePost,
-  sharePost,
-  fetchPostsForGuest,
-} from "../../services/socialApi";
-import useAuthStore from "@/store/authStore";
-import * as ImagePicker from "expo-image-picker";
-import { UploadMultipleFile } from "@/routes/ApiRouter";
-import { useNavigate } from "@/hooks/useNavigate";
-import PostItem from "../../components/items/PostItem";
 import CoverItem from "../../components/items/CoverItem";
+import NewPostCreator, { NewPostItemRef } from "../../components/items/NewPostItem";
+import PostItem from "../../components/items/PostItem";
 import CommentModal from "../../components/modals/CommentModal";
 import LikeModal from "../../components/modals/LikeModal";
 import UploadCoverModal from "../../components/modals/UploadCoverModal";
-import NewPostCreator, { NewPostItemRef } from "../../components/items/NewPostItem";
 import SearchOverlay from "../../components/search/SearchOverlay";
-import { createNewCover, fetchAllCovers } from "../../services/coverService";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { FindTrackById } from "@/services/musicService";
-import { set } from "date-fns";
+import { fetchAllCovers } from "../../services/coverService";
+import {
+  createNewComment,
+  createNewPost,
+  deletePost,
+  fetchCommentsByPostId,
+  fetchPosts,
+  fetchPostsForGuest,
+  sharePost,
+  toggleCommentLike,
+  updatePost
+} from "../../services/socialApi";
 
 const SocialScreen = () => {
   const colorScheme = useColorScheme();

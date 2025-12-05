@@ -43,6 +43,13 @@ export default ({ config }) => ({
       },
     ],
     [
+      "expo-video",
+      {
+        "supportsBackgroundPlayback": true,
+        "supportsPictureInPicture": true
+      }
+    ],
+    [
       "expo-build-properties",
       {
         android: {
