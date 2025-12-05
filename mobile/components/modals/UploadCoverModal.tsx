@@ -6,7 +6,6 @@ import {
   Modal,
   FlatList,
   TextInput,
-  Alert,
   ActivityIndicator,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
@@ -69,7 +68,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
   const handleSelectMedia = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Lỗi", "Cần quyền truy cập thư viện.");
+      error("Lỗi", "Cần quyền truy cập thư viện.");
       return;
     }
 
@@ -81,23 +80,36 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
       });
 
       if (!result.canceled) {
-        setSelectedMedia(result.assets[0]);
+        const asset = result.assets[0];
+        // Check file size using asset.fileSize or approximate from uri
+        const fileSize = asset.fileSize || 0;
+        if (fileSize > 50 * 1024 * 1024) {
+          error("File quá lớn", "Kích thước file không được vượt quá 50MB");
+          return;
+        }
+        setSelectedMedia(asset);
       }
     } catch (error) {
       console.error("Error selecting media:", error);
-      Alert.alert("Lỗi", "Không thể chọn media.");
+      error("Lỗi", "Không thể chọn media.");
     }
   };
 
   const handlePostCover = async () => {
     // Kiểm tra điều kiện đăng bài với thông báo rõ ràng
     if (!selectedSong) {
-      Alert.alert("Thiếu thông tin", "Vui lòng chọn bài hát gốc.");
+      error("Thiếu thông tin", "Vui lòng chọn bài hát gốc.");
       return;
     }
 
     if (!selectedMedia) {
-      Alert.alert("Thiếu file media", "Vui lòng chọn file audio/video để tải lên.");
+      error("Thiếu file media", "Vui lòng chọn file audio/video để tải lên.");
+      return;
+    }
+
+    const fileType = selectedMedia.mimeType || selectedMedia.type;
+    if (!fileType || (!fileType.startsWith('audio/') && !fileType.startsWith('video/'))) {
+      error("Định dạng không hỗ trợ", "Vui lòng chọn file audio hoặc video");
       return;
     }
 
@@ -105,21 +117,13 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
       setIsUploading(true);
       
       // Hiển thị thông báo đang tải lên
-      Alert.alert(
-        "Đang xử lý",
-        "Đang tải lên file media của bạn, vui lòng đợi...",
-        [],
-        { cancelable: false }
-      );
+      info("Đang xử lý", "Đang tải lên file media của bạn, vui lòng đợi...");
 
       // Thực hiện upload file
       const uploadResult = await UploadMultipleFile([selectedMedia]);
       
       if (!uploadResult.success) {
-        Alert.alert(
-          "Lỗi khi tải lên",
-          `Không thể tải lên file media: ${uploadResult.message || 'Vui lòng thử lại sau'}`
-        );
+        error("Lỗi khi tải lên", `Không thể tải lên file media: ${uploadResult.message || 'Vui lòng thử lại sau'}`);
         return;
       }
 
@@ -142,23 +146,15 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
 
       // Kiểm tra kết quả tạo cover
       if (!coverResult || (coverResult as any).status === 'error') {
-        throw new Error(coverResult?.message || 'Không thể tạo cover');
+        const errorMessage = (coverResult as any)?.message || 'Không thể tạo cover';
+        throw new Error(errorMessage);
       }
 
       // Thông báo thành công và đóng modal
-      Alert.alert(
-        "Thành công",
-        "Cover của bạn đã được đăng thành công!",
-        [
-          {
-            text: "Đóng",
-            onPress: () => {
-              onCoverPosted?.();
-              handleClose();
-            }
-          }
-        ]
-      );
+      success("Thành công", "Cover của bạn đã được đăng thành công!", () => {
+        onCoverPosted?.();
+        handleClose();
+      });
       
     } catch (error) {
       console.error("Lỗi khi đăng cover:", error);
@@ -171,7 +167,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         errorMessage = error.message;
       }
       
-      Alert.alert("Lỗi", errorMessage);
+      error("Lỗi", errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -261,12 +257,12 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         value={coverText}
         onChangeText={setCoverText}
         multiline
-        textAlignVertical="top" // Đảm bảo text bắt đầu từ trên cùng
+        textAlignVertical="top"
       />
 
       {/* Button post */}
       <CustomButton
-        title={isUploading ? "Đang đăng cover..." : "Đăng Cover"}
+        title={isUploading ? "Đang đăng cover..." : "Đăng"}
         onPress={() => {
           if (isUploading || !selectedSong || !selectedMedia) return;
           handlePostCover();
@@ -357,7 +353,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         >
           <TouchableWithoutFeedback>
             {/* Main content container */}
-            <View className="bg-white dark:bg-[#171431] rounded-t-3xl p-6 flex-1 max-h-[85%]">
+            <View className="bg-white dark:bg-[#171431] rounded-t-3xl p-6 flex-1 max-h-[60%]">
               {isUploading && (
                 <View className="absolute inset-0 bg-black/40 z-10 justify-center items-center rounded-t-3xl">
                   <ActivityIndicator size="large" color="#22c55e" />

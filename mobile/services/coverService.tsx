@@ -42,6 +42,26 @@ export const fetchCoversBySongId = async (songId) => {
 };
 
 /**
+ * Lấy danh sách tất cả covers
+ * Endpoint: GET /api/v1/posts/covers
+ */
+export const fetchAllCovers = async () => {
+  try {
+    const response = await api.get("/posts/covers");
+    return response.data.data as Cover[];
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+};
+
+/**
  * Lấy danh sách top covers
  * Endpoint: GET /api/v1/posts/covers/top
  */

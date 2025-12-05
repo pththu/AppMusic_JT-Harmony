@@ -268,6 +268,82 @@ exports.getCoversByUserId = async (req, res) => {
   }
 };
 
+exports.getAllCovers = async (req, res) => {
+  try {
+    const covers = await Post.findAll({
+      where: { isCover: true },
+      attributes: [
+        "id",
+        "userId",
+        "content",
+        "fileUrl",
+        "heartCount",
+        "shareCount",
+        "uploadedAt",
+        "commentCount",
+        "songId",
+        "isCover",
+        "originalSongId",
+      ],
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: ["id", "username", "avatarUrl", "fullName"],
+        },
+        {
+          model: Track,
+          as: "OriginalSong",
+          attributes: ["id", "name", "spotifyId"],
+          include: [
+            {
+              model: require("../models/artist"),
+              as: "artists",
+              attributes: ["id", "name"],
+              through: { attributes: [] }, // Exclude junction table attributes
+            },
+          ],
+        },
+      ],
+      order: [["uploadedAt", "DESC"]], // Mới nhất lên đầu
+    });
+
+    // Map kết quả và xử lý dữ liệu
+    const coversWithExtras = await Promise.all(
+      covers.map(async (cover) => {
+        const coverJson = cover.toJSON();
+
+        // Parse fileUrl từ JSON string thành array
+        let parsedFileUrls = [];
+        try {
+          if (coverJson.fileUrl) {
+            parsedFileUrls = JSON.parse(coverJson.fileUrl);
+            if (!Array.isArray(parsedFileUrls)) {
+              parsedFileUrls = [coverJson.fileUrl];
+            }
+          }
+        } catch (e) {
+          parsedFileUrls = coverJson.fileUrl ? [coverJson.fileUrl] : [];
+        }
+
+        return {
+          ...coverJson,
+          fileUrl: parsedFileUrls,
+        };
+      })
+    );
+
+    res.status(200).json({
+      message: "Lấy tất cả covers thành công",
+      success: true,
+      data: coversWithExtras,
+    })
+  } catch (error) {
+    console.error("Lỗi khi tải tất cả covers:", error.message, error.stack);
+    res.status(500).json({ error: "Server Error: " + error.message });
+  }
+};
+
 exports.voteCover = async (req, res) => {
   try {
     const { id } = req.params;

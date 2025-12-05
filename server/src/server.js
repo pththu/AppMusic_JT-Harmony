@@ -27,6 +27,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
+      "http://192.168.1.12:3000",
       "http://192.168.1.14:3001",
       "http://192.168.1.14:3000",
       "http://192.168.32.101:3000",
@@ -98,6 +99,7 @@ async function startServer() {
   try {
     // Đồng bộ cơ sở dữ liệu (tạo bảng nếu chưa có, cập nhật cấu trúc)
     // await sequelize.sync({ alter: true });
+    // await sequelize.sync();
     // console.log('✅ Database synchronized successfully')
     // await seedDatabase();
     await connectRedis();
