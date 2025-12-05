@@ -729,26 +729,33 @@ exports.createPost = async (req, res) => {
     const hasContent =
       content && typeof content === "string" && content.trim().length > 0;
     const hasFile = Array.isArray(fileUrls) && fileUrls.length > 0;
+    console.log(1)
 
     if (!hasContent && !hasFile) {
+      console.log(2)
       return res.status(400).json({
         message: "Nội dung bài đăng không hợp lệ.",
         error: "Bài đăng phải có ít nhất Văn bản hoặc Ảnh/Video đính kèm.",
       });
     }
 
+    console.log(3)
     // Chuyển đổi và kiểm tra ID (nếu client gửi songId/originalSongId là số)
     if (songId) songId = parseInt(songId, 10);
     if (originalSongId) originalSongId = parseInt(originalSongId, 10);
 
+    console.log(4)
     // Kiểm tra originalSongId nếu là cover
     if (isCover) {
+      console.log(5)
       if (!originalSongId || isNaN(originalSongId)) {
+        console.log(6)
         return res.status(400).json({
           message: "ID bài hát gốc không hợp lệ.",
           error: "Cover phải có originalSongId là một số hợp lệ.",
         });
       }
+      console.log(7)
       const track = await Track.findByPk(originalSongId);
       if (!track) {
         return res.status(400).json({
@@ -756,9 +763,11 @@ exports.createPost = async (req, res) => {
           error: "Không thể tạo cover cho bài hát không hợp lệ.",
         });
       }
+      console.log(8)
       songId = null; // Đảm bảo songId là null cho cover
     } else {
       // Không phải cover: cố gắng resolve bài hát theo songId hoặc trackSpotifyId
+      console.log(9)
       let track = null;
 
       if (trackSpotifyId) {
