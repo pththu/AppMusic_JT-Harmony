@@ -8,12 +8,10 @@ import {
   Trash2,
   Disc,
   Music,
-  Calendar,
   Edit,
   Plus,
   Search,
   ArrowUpDown,
-  TrendingUp,
   Share2,
   Globe,
   Database,
@@ -256,9 +254,9 @@ export default function AlbumsPage() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản Lý Album</h1>
           <p className="text-gray-500">Quản lý kho album nhạc, thống kê số lượng bài hát và chia sẻ.</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
+        {/* <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
           <Plus className="mr-2 h-4 w-4" /> Thêm Album Mới
-        </Button>
+        </Button> */}
       </div>
 
       {/* --- SECTION 1: STATISTICS & CHARTS --- */}

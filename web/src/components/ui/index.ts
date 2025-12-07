@@ -8,6 +8,7 @@ export {
   CardFooter,
   CardHeader,
   CardTitle,
+  StatCard,
 } from "./card";
 export {
   Dialog,

@@ -20,18 +20,20 @@ import {
   ChevronLeft,
   ChevronsRight
 } from "lucide-react";
-import { Button, Input, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
-import StatCard from "@/components/music/track/stat-card";
+import { Button, Input, StatCard, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
 import DropdownMenu from "@/components/music/track/dropdown-menu";
 import SelectNative from "@/components/music/track/select-native";
 import DetailModal from "@/components/music/track/detail-modal";
 import EditModal from "@/components/music/track/edit-modal";
 import ChartTopTrack from "@/components/music/track/chart-top-track";
 import { formatArtists } from "@/utils";
-import { useMusicStore } from "@/store";
+import { useHistoryStore, useMusicStore } from "@/store";
+import { useRouter } from "next/navigation";
 
 export default function TracksPage() {
+  const router = useRouter();
   const { tracks, fetchTracks, setTracks } = useMusicStore();
+  const { listenHistories, fetchListenHistories } = useHistoryStore();
 
   // Dialog States
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -55,12 +57,14 @@ export default function TracksPage() {
     const totalPlays = tracks.reduce((acc, curr) => acc + curr.playCount, 0);
     const totalShares = tracks.reduce((acc, curr) => acc + curr.shareCount, 0);
 
+    console.log('totalPlays: ', totalPlays)
+
     const topTracksData = [...tracks]
       .sort((a, b) => b.playCount - a.playCount)
       .slice(0, 10)
       .map(t => ({
         name: t.name.length > 15 ? t.name.substring(0, 15) + '...' : t.name,
-        plays: t.playCount + 5,
+        plays: t.playCount,
         fullTitle: t.name
       }));
 
@@ -157,10 +161,9 @@ export default function TracksPage() {
   };
 
   useEffect(() => {
-    if (tracks.length === 0) {
-      fetchTracks();
-    }
-  }, [fetchTracks, tracks.length]);
+    if (tracks.length === 0) fetchTracks();
+    if (listenHistories.length === 0) fetchListenHistories();
+  }, [fetchTracks, tracks.length, fetchListenHistories, listenHistories.length]);
 
   return (
     <div className="space-y-6 pb-10 bg-gray-50/30 min-h-screen p-6 font-sans">
@@ -171,9 +174,9 @@ export default function TracksPage() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản Lý Bài Hát</h1>
           <p className="text-gray-500">Quản lý kho nhạc, thống kê lượt nghe và chia sẻ.</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
-          <Plus className="mr-2 h-4 w-4" /> Thêm Bài Hát Mới
-        </Button>
+        {/* <Button variant="default" size="sm" onClick={() => router.push('/music/add-track')}>
+          <Plus className="h-4 w-4 mr-2" /> Thêm Bài Hát
+        </Button> */}
       </div>
 
       {/* --- SECTION 1: STATISTICS & CHARTS --- */}

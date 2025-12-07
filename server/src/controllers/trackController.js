@@ -113,3 +113,19 @@ exports.shareTrack = async (req, res) => {
     res.status(500).json({ message: error.message || "Internal server error" });
   }
 }
+
+exports.createTrack = async (req, res) => {
+  try {
+    const row = await Track.create(req.body);
+    if (!row) {
+      return res.status(500).json({ error: 'Failed to create track' });
+    }
+    res.status(201).json({
+      message: 'Track created successfully',
+      data: row,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || "Internal server error" });
+  }
+}

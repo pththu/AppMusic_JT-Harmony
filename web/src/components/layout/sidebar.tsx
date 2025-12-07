@@ -29,16 +29,15 @@ const navigation = [
     name: "Người Dùng", href: "/users", icon: Users,
     subItems: [
       { name: "Theo Dõi", href: "/follows", icon: UserPlus },
+      { name: "Vai Trò", href: "/roles", icon: Shield },
     ],
   },
-  { name: "Vai Trò", href: "/roles", icon: Shield },
   {
     name: "Bài Đăng",
     href: "/posts",
     icon: FileText,
     subItems: [
       { name: "Bình Luận", href: "/comments", icon: MessageSquare },
-      { name: "Likes", href: "/likes", icon: Heart },
       { name: "Báo Cáo", href: "/reports", icon: Flag },
     ],
   },
@@ -51,6 +50,7 @@ const navigation = [
       { name: "Danh sách phát", href: "/music/playlists", icon: Music },
       { name: "Album", href: "/music/albums", icon: Music },
       { name: "Nghệ sĩ", href: "/music/artists", icon: Users },
+      // { name: "Thêm bài hát", href: "/music/add-track", icon: FileText },
     ],
   }
 ];
@@ -98,14 +98,6 @@ export function Sidebar() {
           )}
         </button>
       </div>
-
-      {/* Mobile overlay */}
-      {isMobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
 
       {/* Sidebar */}
       <div

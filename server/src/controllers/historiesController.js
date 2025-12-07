@@ -300,8 +300,7 @@ const CreateOneListeningHistory = async (req, res) => {
 
 const GetAllSearchHistories = async (req, res) => {
   try {
-    const histories = await SearchHistory.findAll({
-    });
+    const histories = await SearchHistory.findAll();
     res.status(200).json({
       message: 'Search histories retrieved successfully',
       data: histories,

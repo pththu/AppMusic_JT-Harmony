@@ -107,13 +107,116 @@ const Search = async (req, res) => {
 const CreateUser = async (req, res) => {
     try {
         const payload = { ...req.body };
+        console.log('payload', payload)
+
+        const isEmailExist = await User.findOne({ where: { email: payload.email } });
+        if (isEmailExist) {
+            return res.status(200).json({ message: 'Email đã được sử dụng', success: false });
+        }
+
+        const isUsernameExist = await User.findOne({ where: { username: payload.username } });
+        if (isUsernameExist) {
+            return res.status(200).json({ message: 'Username đã được sử dụng', success: false });
+        }
+
+        if (!payload.username) {
+            payload.username = 'user' + crypto.randomBytes(2).toString('hex');
+        }
+
+        if (!payload.fullName) {
+            console.log('full')
+            res.status(400).json({ error: 'Full name is required' });
+            return;
+        }
+
+        if (!payload.avatarUrl) {
+            payload.avatarUrl = 'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg';
+        }
+
+        if (payload.gender === 'male' || !payload.gender) {
+            payload.gender = true;
+        } else if (payload.gender === 'female') {
+            payload.gender = false;
+        }
+
         if (payload.password) {
             payload.password = await bcrypt.hash(payload.password, 10);
+        } else {
+            payload.password = await bcrypt.hash('sapassword', 10);
         }
+
+        if (!payload.accountType) {
+            console.log('accountType is required');
+            res.status(400).json({ error: 'Account type is required' });
+            return;
+        }
+
+        if (payload.accountType.includes('local') && !payload.email) {
+            console.log('Email is required for local account type');
+            res.status(400).json({ error: 'Email is required for local account type' });
+            return;
+        } else {
+            payload.emailVerified = true;
+        }
+
+        if (payload.accountType.includes('google') && !payload.googleId) {
+            console.log('Google ID is required for google account type');
+            res.status(400).json({ error: 'Google ID is required for google account type' });
+            return;
+        } else {
+            payload.emailVerified = true;
+        }
+
+        if (payload.accountType.includes('google') && !payload.accountType.includes('local')) {
+            payload.accountType.push('local');
+        }
+
+        if (payload.accountType.includes('facebook') && !payload.facebookId) {
+            console.log('Facebook ID is required for facebook account type');
+            res.status(400).json({ error: 'Facebook ID is required for facebook account type' });
+            return;
+        } else {
+            payload.emailVerified = false;
+        }
+
+        if (!payload.notificationEnabled) {
+            payload.notificationEnabled = false;
+        }
+
+        if (!payload.streamQuality) {
+            payload.streamQuality = 'low';
+        }
+
+        if (!payload.status) {
+            payload.status = 'active';
+        }
+
+        if (!payload.roleId) {
+            payload.roleId = 2; // default user role
+        }
+
+        if (!payload.favoritesGenres) {
+            payload.favoritesGenres = [];
+            payload.completedOnboarding = false;
+        } else {
+            payload.completedOnboarding = true;
+        }
+
         const row = await User.create(payload);
-        res.status(201).json(row);
+
+        if (!row) {
+            console.log('tao nguoi dung that bai')
+            res.status(500).json({ error: 'Tạo người dùng thất bại' });
+        }
+        await redisClient.del('all_users');
+        res.status(200).json({
+            message: 'Tạo người dùng thành công',
+            data: formatUser(row),
+            success: true
+        });
     } catch (err) {
-        res.status(500).json({ error: err.message + "Lỗi r" });
+        console.log('Lỗi tạo người dùng:', err);
+        res.status(500).json({ error: err.message + " Lỗi tạo người dùng" });
     }
 };
 
@@ -180,11 +283,31 @@ const DeleteUser = async (req, res) => {
     try {
         const deleted = await User.destroy({ where: { id: req.params.id } });
         if (!deleted) return res.status(404).json({ error: 'User not found' });
-        return res.json({ message: 'User deleted' });
+        return res.status(200).json({
+            message: 'User deleted',
+            success: true
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
+
+const DeleteUsers = async (req, res) => {
+    try {
+        const userIds = req.body;
+        console.log('userIds', userIds)
+
+        // delete multiple users
+        const deleted = await User.destroy({ where: { id: userIds } });
+        if (!deleted) return res.status(404).json({ error: 'No users found to delete' });
+        return res.status(200).json({
+            message: 'Users deleted',
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
 
 const LinkSocialAccount = async (req, res) => {
     try {
@@ -391,37 +514,6 @@ const GetUserProfileSocial = async (req, res) => {
             return res.status(404).json({ error: 'Người dùng không tồn tại' });
         }
 
-        // // 1. Tính toán số lượng người theo dõi (Follower Count)
-        // const followerCount = await Follow.count({
-        //     where: {
-        //         userFolloweeId: userId
-        //     }
-        // });
-
-        // // 2. Tính toán số lượng đang theo dõi (Following Count)
-        // const followingCount = await Follow.count({
-        //     where: {
-        //         followerId: userId // Những người người này đang theo dõi
-        //     }
-        // });
-
-        // // 3. Kiểm tra trạng thái Theo dõi (Is Following)
-        // const isFollowing = await Follow.findOne({
-        //     where: {
-        //         followerId: currentUserId, // Người dùng hiện tại
-        //         // ✅ SỬ DỤNG userFolloweeId: đang theo dõi người dùng này
-        //         userFolloweeId: userId,
-        //         artistFolloweeId: null, // Đảm bảo chỉ kiểm tra việc theo dõi User
-        //     }
-        // });
-
-        // const profileData = {
-        //     ...user.toJSON(),
-        //     followerCount: followerCount,
-        //     followingCount: followingCount,
-        //     isFollowing: !!isFollowing // Chuyển thành boolean
-        // };
-
         const profileData = {
             ...user.toJSON(),
             followerCount: 0,
@@ -434,55 +526,6 @@ const GetUserProfileSocial = async (req, res) => {
         console.error('Lỗi khi lấy Profile Social:', err.message);
         res.status(500).json({ error: err.message });
     }
-};
-
-// ----------------------------------------------------------------------
-// Toggle Theo dõi/Hủy theo dõi
-// POST /api/v1/users/:userId/follow
-// ----------------------------------------------------------------------
-exports.toggleFollow = async (req, res) => {
-    // const targetUserId = req.params.userId;
-    // const currentUserId = req.user.id;
-
-    // if (parseInt(targetUserId) === currentUserId) {
-    //     return res.status(400).json({ error: 'Không thể tự theo dõi chính mình' });
-    // }
-
-    // try {
-    //     // Tìm hoặc tạo bản ghi Follow
-    //     const [follow, created] = await Follow.findOrCreate({
-    //         where: {
-    //             followerId: currentUserId,
-    //             userFolloweeId: targetUserId
-    //         },
-    //         defaults: {
-    //             followerId: currentUserId,
-    //             userFolloweeId: targetUserId,
-    //             // ✅ CẦN THIẾT: Gán artistFolloweeId = null (Hoặc giá trị mặc định của bạn)
-    //             artistFolloweeId: null,
-    //             // ✅ CẦN THIẾT: Gán followedAt (Nếu không để defaultValue)
-    //             followedAt: new Date(),
-    //         }
-    //     });
-
-    //     let isFollowing;
-
-    //     if (!created) {
-    //         // Đã tồn tại -> Hủy theo dõi
-    //         await follow.destroy();
-    //         isFollowing = false;
-    //     } else {
-    //         // Mới tạo -> Đã theo dõi
-    //         isFollowing = true;
-    //     }
-
-    //     // Trả về trạng thái mới cho client
-    //     res.json({ message: isFollowing ? 'Theo dõi thành công' : 'Hủy theo dõi thành công', isFollowing });
-
-    // } catch (err) {
-    //     console.error('Lỗi khi Toggle Follow:', err);
-    //     res.status(500).json({ error: err.message });
-    // }
 };
 
 const SearchUsers = async (req, res) => {
@@ -574,6 +617,52 @@ const UpdateCompletedOnboarding = async (req, res) => {
     }
 };
 
+const BannedUser = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        if (!userId) return res.status(400).json({ error: 'UserId is required' });
+
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        if (user.status === 'banned') {
+            return res.status(400).json({ error: 'User is already banned' });
+        }
+
+        user.status = 'banned';
+        await user.save();
+
+        return res.status(200).json({
+            message: 'User has been banned successfully',
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+const UnLockedUser = async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        if (!userId) return res.status(400).json({ error: 'UserId is required' });
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        if (user.status !== 'locked') {
+            return res.status(400).json({ error: 'User is not locked' });
+        }
+
+        user.status = 'active';
+        await user.save();
+        return res.status(200).json({
+            message: 'User has been unlocked successfully',
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     GetAllUser,
     GetUserById,
@@ -586,8 +675,11 @@ module.exports = {
     UpdateInforUser,
     ChangePassword,
     DeleteUser,
+    DeleteUsers,
     ChangeAvatar,
     GetUserProfileSocial,
     SearchUsers,
-    UpdateCompletedOnboarding
+    UpdateCompletedOnboarding,
+    BannedUser,
+    UnLockedUser,
 }
