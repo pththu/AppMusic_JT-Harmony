@@ -10,6 +10,7 @@ router.get('/', authenticateToken, controller.getAllComment)
 
 // --- ADMIN ROUTES ---
 router.get('/admin', authenticateToken, authorizeRole, controller.getCommentsAdmin)
+router.get('/all', authenticateToken, authorizeRole, controller.GetAllComments)
 
 router.get('/:id', authenticateToken, controller.getCommentById)
 router.get('/byPostGuest/:postId', controller.getCommentsByPostIdForGuest)

@@ -56,8 +56,20 @@ export async function updatePostAdmin(id: number, payload: UpdatePostPayload) {
 }
 
 export async function deletePostAdmin(id: number) {
-  const res = await axiosClient.delete(`/posts/remove/${id}`);
-  return res.data as { message: string };
+  try {
+    const response = await axiosClient.delete(`/posts/remove/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+
 }
 
 export async function getPostLikesAdmin(postId: number, params?: { userId?: number; dateFrom?: string; dateTo?: string; limit?: number; offset?: number }) {
@@ -74,3 +86,41 @@ export async function getAllLikesAdmin(params?: { postId?: number; userId?: numb
   const res = await axiosClient.get('/posts/likes/admin', { params });
   return res.data as Array<{ id: number; userId: number; postId: number; likedAt: string; User?: PostLikeUser }>;
 }
+
+// ===========================
+const GetAllPosts = async () => {
+  try {
+    const response = await axiosClient.get('/posts/all-posts');
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+const CreatePost = async (payload) => {
+  try {
+    const response = await axiosClient.post('/posts', payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export {
+  GetAllPosts,
+  CreatePost
+};

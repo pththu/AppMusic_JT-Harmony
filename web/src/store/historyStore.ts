@@ -40,7 +40,6 @@ export const useHistoryStore = create<HistoryState>()(
       fetchSearchHistories: async () => {
         try {
           const response = await GetAllSearchHistories();
-          console.log('response.data: ',response.data)
           if (response.success) {
             set({ searchHistories: response.data });
           } else {

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
+import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import {
   MoreHorizontal,
   Eye,
   Trash2,
-  MessageSquare,
   Edit,
   Plus,
 } from "lucide-react";
@@ -44,101 +43,245 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import { mockUsers, mockPosts, getUserById, getPostById, type Comment as MockComment } from "@/lib/mock-data";
-import { fetchAllComments, deleteCommentAdmin, type AdminComment } from "@/services/commentService";
+import { CreateComment, deleteCommentAdmin } from "@/services/commentService";
+import { usePostStore, useUserStore } from "@/store";
+import EditDialog from "@/components/comment/edit-dialog";
+import ViewDetailDialog from "@/components/comment/view-detail-dialog";
+import AddDialog from "@/components/comment/add-dialog";
+import toast from "react-hot-toast";
+
+// Hàm tiện ích phân trang
+const getPaginationItems = (currentPage: number, totalPages: number): (number | '...')[] => {
+  const MAX_ITEMS = 5;
+
+  if (totalPages <= MAX_ITEMS) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  const pages = new Set<number>();
+
+  pages.add(currentPage);
+  if (currentPage > 1) pages.add(currentPage - 1);
+  if (currentPage < totalPages) pages.add(currentPage + 1);
+
+  const sortedPages = Array.from(pages).sort((a, b) => a - b);
+  const finalItems: (number | '...')[] = [];
+
+  if (sortedPages[0] > 1) {
+    finalItems.push('...');
+  }
+  for (const element of sortedPages) {
+    finalItems.push(element);
+  }
+  if (sortedPages[sortedPages.length - 1] < totalPages) {
+    finalItems.push('...');
+  }
+
+  return finalItems;
+};
 
 export default function CommentsPage() {
   const router = useRouter();
-  const [comments, setComments] = useState<(AdminComment | any)[]>([]);
+  // Lấy data từ Store
+  const { comments, posts, setComments, fetchComments, fetchPosts } = usePostStore();
+  const { users, fetchUsers } = useUserStore();
+
+  // Client-side Filtered State
+  const [filteredComments, setFilteredComments] = useState<any[]>([]);
+
+  // UI States
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [visibleCols, setVisibleCols] = useState({
-    id: true,
-    content: true,
-    user: true,
-    type: true,
-    commentedAt: true,
-  });
   const [selectedComment, setSelectedComment] = useState<any | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingComment, setEditingComment] = useState<any | null>(null);
-  const [formData, setFormData] = useState({
-    content: "",
-    postId: 1,
-    parentId: undefined as number | undefined,
-    userId: 1,
-    fileUrl: "",
-  });
-  // Server-side filters
+
+  // Pagination
+  const ITEMS_PER_PAGE = 50;
+  const [page, setPage] = useState<number>(1);
+
+  // Filter States
   const [filterPostId, setFilterPostId] = useState<string>("");
-  const [filterUserId, setFilterUserId] = useState<string>("");
+  const [filterUserQuery, setFilterUserQuery] = useState<string>(""); // Thay thế filterUserId
   const [q, setQ] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
-  const [limit, setLimit] = useState<string>("50");
-  const [page, setPage] = useState<number>(1);
-  const [loading, setLoading] = useState(false);
 
-  const handleDeleteComment = async (commentId: number) => {
-    await deleteCommentAdmin(commentId);
-    setComments((prev) => prev.filter((comment) => comment.id !== commentId));
-    setSelectedIds((prev) => prev.filter((id) => id !== commentId));
+  // Form Data
+  const [formData, setFormData] = useState({
+    content: "",
+    postId: posts.length > 0 ? posts[0].id : 1,
+    parentId: undefined as number | undefined,
+    userId: users.length > 0 ? users[0].id : 1,
+    fileUrl: "",
+  });
+
+  // --- Initial Fetch ---
+  useEffect(() => {
+    if (comments.length === 0) fetchComments();
+    if (users.length === 0) fetchUsers();
+    if (posts.length === 0) fetchPosts();
+  }, []);
+
+  // Sync filteredComments with Store
+  useEffect(() => {
+    setFilteredComments(comments);
+  }, [comments]);
+
+  // --- Filter Logic (Client Side) ---
+  const handleApplyFilter = () => {
+    let result = [...comments];
+
+    // 1. Filter by Content
+    if (q.trim()) {
+      const lowerQ = q.toLowerCase();
+      result = result.filter((c) => c.content?.toLowerCase().includes(lowerQ));
+    }
+
+    // 2. Filter by Post ID
+    if (filterPostId.trim()) {
+      const pid = parseInt(filterPostId, 10);
+      if (!isNaN(pid)) {
+        result = result.filter((c) => c.postId === pid);
+      }
+    }
+
+    // 3. Filter by User Info (Username, Email, FullName)
+    if (filterUserQuery.trim()) {
+      const lowerQuery = filterUserQuery.toLowerCase();
+      result = result.filter((c) => {
+        const author = users.find((u) => u.id === c.userId);
+        if (!author) return false;
+
+        const matchUsername = author.username?.toLowerCase().includes(lowerQuery);
+        const matchEmail = author.email?.toLowerCase().includes(lowerQuery);
+        const matchFullName = author.fullName?.toLowerCase().includes(lowerQuery);
+
+        return matchUsername || matchEmail || matchFullName;
+      });
+    }
+
+    // 4. Filter by Date
+    if (dateFrom || dateTo) {
+      const start = dateFrom ? startOfDay(parseISO(dateFrom)) : new Date(0);
+      const end = dateTo ? endOfDay(parseISO(dateTo)) : new Date();
+
+      result = result.filter((c) => {
+        const cDate = new Date(c.commentedAt);
+        return cDate >= start && cDate <= end;
+      });
+    }
+
+    setFilteredComments(result);
   };
 
-  const resetFilters = async () => {
+  const resetFilters = () => {
     setFilterPostId("");
-    setFilterUserId("");
+    setFilterUserQuery("");
     setQ("");
     setDateFrom("");
     setDateTo("");
-    setLimit("50");
-    setPage(1);
-    await loadComments(1);
+    setFilteredComments(comments);
   };
 
-  const handleViewComment = (comment: any) => {
-    setSelectedComment(comment);
-    setIsViewDialogOpen(true);
+  // --- Sort & Pagination ---
+  const sortedComments = useMemo(() => {
+    return [...filteredComments].sort((a: any, b: any) => {
+      const av = new Date(a.commentedAt).getTime();
+      const bv = new Date(b.commentedAt).getTime();
+      if (av === bv) return 0;
+      return sortDir === "asc" ? av - bv : bv - av;
+    });
+  }, [filteredComments, sortDir]);
+
+  const totalPages = Math.ceil(sortedComments.length / ITEMS_PER_PAGE);
+
+  const paginatedComments = useMemo(() => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    return sortedComments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedComments, page]);
+
+
+  // --- Actions ---
+  const handleDeleteComment = async (commentId: number) => {
+    const response = await deleteCommentAdmin(commentId);
+
+    if (!response.success) {
+      toast.error('Lỗi khi xóa bình luận: ' + response.message);
+      return;
+    }
+
+    const newComments = comments.filter((comment) => comment.id !== commentId);
+    setComments(newComments);
+    setFilteredComments(prev => prev.filter(c => c.id !== commentId));
+    setSelectedIds((prev) => prev.filter((id) => id !== commentId));
+    toast.success('Xóa bình luận thành công');
   };
 
-  const handleAddComment = () => {
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    const idsToDelete = [...selectedIds];
+    await Promise.all(idsToDelete.map((id) => deleteCommentAdmin(id)));
+
+    toast.success('Xóa các bình luận đã chọn thành công');
+    // Update Store
+    const newComments = comments.filter((comment) => !idsToDelete.includes(comment.id));
+    setComments(newComments);
+
+    // Update Local
+    setFilteredComments(prev => prev.filter(c => !idsToDelete.includes(c.id)));
+    setSelectedIds([]);
+  };
+
+  const handleAddComment = async () => {
     const newComment: any = {
-      id: Math.max(...comments.map((c) => c.id)) + 1,
       content: formData.content,
-      postId: formData.postId,
-      parentId: formData.parentId,
+      postId: formData.postId || null,
+      parentId: formData.parentId || null,
       userId: formData.userId,
-      fileUrl: formData.fileUrl || undefined,
+      fileUrl: formData.fileUrl || null,
       commentedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setComments([...comments, newComment]);
+
+    const response = await CreateComment(newComment);
+    if (!response.success) {
+      toast.error('Lỗi khi tạo bình luận: ' + response.message);
+      return;
+    }
+
+    setComments([{
+      id: response.data.id,
+      ...newComment
+    }, ...comments]);
     setFormData({
       content: "",
-      postId: 1,
+      postId: posts.length > 0 ? posts[0].id : 1,
       parentId: undefined,
-      userId: 1,
+      userId: users.length > 0 ? users[0].id : 1,
       fileUrl: "",
     });
+    toast.success('Tạo bình luận thành công');
     setIsAddDialogOpen(false);
   };
 
   const handleEditComment = () => {
     if (!editingComment) return;
-    setComments(
-      comments.map((comment) =>
-        comment.id === editingComment.id
-          ? {
-            ...comment,
-            content: formData.content,
-            fileUrl: formData.fileUrl || undefined,
-          }
-          : comment
-      )
+    const updatedData = {
+      ...editingComment,
+      content: formData.content,
+      fileUrl: formData.fileUrl || undefined,
+    };
+
+    const newComments = comments.map((comment) =>
+      comment.id === editingComment.id ? updatedData : comment
     );
+    setComments(newComments);
+    setFilteredComments(prev => prev.map(c => c.id === editingComment.id ? updatedData : c));
+
     setFormData({
       content: "",
       postId: 1,
@@ -148,6 +291,12 @@ export default function CommentsPage() {
     });
     setIsEditDialogOpen(false);
     setEditingComment(null);
+  };
+
+  // --- Helper Functions ---
+  const handleViewComment = (comment: any) => {
+    setSelectedComment(comment);
+    setIsViewDialogOpen(true);
   };
 
   const openEditDialog = (comment: any) => {
@@ -166,14 +315,6 @@ export default function CommentsPage() {
     return comment.parentId ? "Phản hồi" : "Bình luận";
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    const idsToDelete = [...selectedIds];
-    await Promise.all(idsToDelete.map((id) => deleteCommentAdmin(id)));
-    setComments((prev) => prev.filter((comment) => !idsToDelete.includes(comment.id)));
-    setSelectedIds([]);
-  };
-
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -190,42 +331,6 @@ export default function CommentsPage() {
     }
   };
 
-  const loadComments = async (targetPage?: number) => {
-    setLoading(true);
-    try {
-      const params: any = {};
-      if (filterPostId) params.postId = parseInt(filterPostId, 10);
-      if (filterUserId) params.userId = parseInt(filterUserId, 10);
-      if (q) params.q = q;
-      if (dateFrom) params.dateFrom = dateFrom;
-      if (dateTo) params.dateTo = dateTo;
-      const limitNum = parseInt(limit, 10) || 50;
-      const currentPage = targetPage && targetPage > 0 ? targetPage : (page > 0 ? page : 1);
-      const offsetNum = (currentPage - 1) * limitNum;
-      params.limit = limitNum;
-      params.offset = offsetNum;
-      const data = await fetchAllComments(params);
-      setComments(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error('Failed to load comments admin:', e);
-      setComments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadComments(1);
-  }, []);
-
-  const sortedComments = comments.slice().sort((a: any, b: any) => {
-    const av = new Date(a.commentedAt).getTime();
-    const bv = new Date(b.commentedAt).getTime();
-    if (av === bv) return 0;
-    const res = av > bv ? 1 : -1;
-    return sortDir === "asc" ? res : -res;
-  });
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -236,80 +341,6 @@ export default function CommentsPage() {
           <p className="text-gray-600">Quản lý bình luận và phản hồi</p>
         </div>
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                Cột
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.id}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, id: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">ID</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.content}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, content: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Bình luận</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.user}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, user: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Người dùng</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.type}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, type: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Loại</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.commentedAt}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, commentedAt: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Thời gian</span>
-                </label>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -317,119 +348,11 @@ export default function CommentsPage() {
                 Thêm Bình Luận
               </Button>
             </DialogTrigger>
-            <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Thêm Bình Luận Mới</DialogTitle>
-              <DialogDescription>
-                Thêm bình luận mới vào hệ thống.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="content" className="text-right">
-                  Nội Dung
-                </Label>
-                <Textarea
-                  id="content"
-                  value={formData.content}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    setFormData({ ...formData, content: e.target.value })
-                  }
-                  className="col-span-3"
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="postId" className="text-right">
-                  Bài Đăng
-                </Label>
-                <Select
-                  value={formData.postId.toString()}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, postId: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockPosts.map((post) => (
-                      <SelectItem key={post.id} value={post.id.toString()}>
-                        {post.content.substring(0, 50)}...
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="parentId" className="text-right">
-                  Phản Hồi Cho
-                </Label>
-                <Select
-                  value={formData.parentId?.toString() || ""}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      parentId: value ? parseInt(value) : undefined,
-                    })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Không phản hồi" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {comments.map((comment) => (
-                      <SelectItem
-                        key={comment.id}
-                        value={comment.id.toString()}
-                      >
-                        {comment.content.substring(0, 30)}...
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="userId" className="text-right">
-                  Người Dùng
-                </Label>
-                <Select
-                  value={formData.userId.toString()}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, userId: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        {user.username}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="fileUrl" className="text-right">
-                  URL File
-                </Label>
-                <Input
-                  id="fileUrl"
-                  value={formData.fileUrl}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setFormData({ ...formData, fileUrl: e.target.value })
-                  }
-                  className="col-span-3"
-                  placeholder="URL của file đính kèm (tùy chọn)"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleAddComment}>Thêm Bình Luận</Button>
-            </DialogFooter>
-            </DialogContent>
+            <AddDialog
+              formData={formData}
+              setFormData={setFormData}
+              handleAddComment={handleAddComment}
+            />
           </Dialog>
         </div>
       </div>
@@ -443,37 +366,39 @@ export default function CommentsPage() {
           <div className="flex items-end gap-3 flex-wrap">
             <div>
               <Label className="text-sm font-medium">ID bài đăng</Label>
-              <Input value={filterPostId} onChange={(e)=>setFilterPostId(e.target.value)} className="w-32" />
+              <Input value={filterPostId} onChange={(e) => setFilterPostId(e.target.value)} className="w-32" />
+            </div>
+            {/* Filter User updated */}
+            <div>
+              <Label className="text-sm font-medium">Người dùng</Label>
+              <Input
+                value={filterUserQuery}
+                onChange={(e) => setFilterUserQuery(e.target.value)}
+                placeholder="Tên, Email hoặc Username"
+                className="w-56"
+              />
             </div>
             <div>
-              <Label className="text-sm font-medium">ID người dùng</Label>
-              <Input value={filterUserId} onChange={(e)=>setFilterUserId(e.target.value)} className="w-32" />
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Tìm kiếm</Label>
-              <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Nội dung" className="w-56" />
+              <Label className="text-sm font-medium">Tìm kiếm (Nội dung)</Label>
+              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nội dung" className="w-56" />
             </div>
             <div>
               <Label className="text-sm font-medium">Từ ngày</Label>
-              <Input type="date" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} />
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium">Đến ngày</Label>
-              <Input type="date" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Limit</Label>
-              <Input value={limit} onChange={(e)=>setLimit(e.target.value)} className="w-24" />
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
             <div className="flex items-center gap-2 ml-auto">
-              <Button onClick={() => loadComments(page)} disabled={loading}>{loading ? 'Đang tải...' : 'Áp dụng'}</Button>
-              <Button variant="outline" onClick={resetFilters} disabled={loading}>Đặt lại</Button>
+              <Button onClick={handleApplyFilter}>Áp dụng</Button>
+              <Button variant="outline" onClick={resetFilters}>Đặt lại</Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Comments Table */}
+      {/* Bulk Action */}
       {selectedIds.length > 0 && (
         <div className="flex items-center justify-between text-sm bg-yellow-50 border border-yellow-200 rounded p-2">
           <span>
@@ -498,6 +423,7 @@ export default function CommentsPage() {
         </div>
       )}
 
+      {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         <Table>
           <TableHeader>
@@ -506,344 +432,199 @@ export default function CommentsPage() {
                 <input
                   type="checkbox"
                   className="h-4 w-4"
-                  onChange={() => toggleSelectAllCurrentPage(sortedComments)}
+                  onChange={() => toggleSelectAllCurrentPage(paginatedComments)}
                   checked={
-                    sortedComments.length > 0 &&
-                    sortedComments.every((comment: any) => selectedIds.includes(comment.id))
+                    paginatedComments.length > 0 &&
+                    paginatedComments.every((comment: any) => selectedIds.includes(comment.id))
                   }
                 />
               </TableHead>
               <TableHead className="w-[60px] text-center">STT</TableHead>
-              {visibleCols.id && (
-                <TableHead className="w-[80px] text-center">ID</TableHead>
-              )}
-              {visibleCols.content && <TableHead>Bình Luận</TableHead>}
-              {visibleCols.user && <TableHead>Người Dùng</TableHead>}
-              {visibleCols.type && <TableHead>Loại</TableHead>}
-              {visibleCols.commentedAt && (
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))}
-                >
-                  Thời Gian
-                </TableHead>
-              )}
+              <TableHead className="w-[80px] text-center">ID</TableHead>
+              <TableHead>Bình Luận</TableHead>
+              <TableHead>Người Dùng</TableHead>
+              <TableHead>Loại</TableHead>
+              <TableHead
+                className="cursor-pointer select-none"
+                onClick={() => setSortDir((prev) => (prev === "asc" ? "desc" : "asc"))}
+              >
+                Thời Gian
+              </TableHead>
               <TableHead className="w-[70px]">Hành Động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedComments.map((comment, index) => {
-              const author = (comment as any).User || null;
-              const replies = comments.filter((c) => c.parentId === comment.id);
-              const limitNum = parseInt(limit, 10) || 50;
-              const currentPage = page > 0 ? page : 1;
-              const offsetNum = (currentPage - 1) * limitNum;
-              return (
-                <TableRow key={comment.id}>
-                  <TableCell className="text-center">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
-                      checked={selectedIds.includes(comment.id)}
-                      onChange={() => toggleSelect(comment.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-center text-sm text-gray-500">{offsetNum + index + 1}</TableCell>
-                  {visibleCols.id && (
-                    <TableCell className="text-center text-xs text-gray-500">{comment.id}</TableCell>
-                  )}
-                  {visibleCols.content && (
-                    <TableCell>
-                    <button
-                      type="button"
-                      className="max-w-xs text-left"
-                      onClick={() => handleViewComment(comment)}
-                    >
-                      <p className="text-sm text-gray-900 truncate underline decoration-dotted">
-                        {comment.content}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Post ID: {comment.postId}
-                      </p>
-                      {comment.fileUrl && (
-                        <p className="text-xs text-green-600 mt-1">
-                          Có file đính kèm
-                        </p>
-                      )}
-                      {replies.length > 0 && (
-                        <Badge variant="outline" className="mt-1">
-                          {replies.length} phản hồi
-                        </Badge>
-                      )}
-                    </button>
-                  </TableCell>
-                  )}
-                  {visibleCols.user && (
-                    <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                        {author?.avatarUrl ? (
-                          <img
-                            src={author.avatarUrl}
-                            alt={author.username}
-                            className="w-6 h-6 rounded-full"
-                          />
-                        ) : (
-                          <span className="text-xs font-medium text-gray-600">
-                            {author?.username?.charAt(0)?.toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <span className="text-sm block">{author?.fullName || author?.username}</span>
-                        <span className="text-xs text-gray-500 block">ID: {author?.id}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  )}
-                  {visibleCols.type && (
-                    <TableCell>
-                    <Badge variant="outline">{getCommentType(comment)}</Badge>
-                  </TableCell>
-                  )}
-                  {visibleCols.commentedAt && (
-                    <TableCell>
-                      {format(new Date(comment.commentedAt), "MMM dd, yyyy")}
+            {paginatedComments.length > 0 ? (
+              paginatedComments.map((comment, index) => {
+                // Find user from store instead of rely on comment.User
+                const author = users.find(u => u.id === comment.userId);
+                const replies = comments.filter((c) => c.parentId === comment.id);
+                const itemNumber = (page - 1) * ITEMS_PER_PAGE + index + 1;
+
+                return (
+                  <TableRow key={comment.id}>
+                    <TableCell className="text-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={selectedIds.includes(comment.id)}
+                        onChange={() => toggleSelect(comment.id)}
+                      />
                     </TableCell>
-                  )}
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleViewComment(comment)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          Xem Chi Tiết
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => openEditDialog(comment)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Chỉnh Sửa
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDeleteComment(comment.id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Xóa Bình Luận
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    <TableCell className="text-center text-sm text-gray-500">{itemNumber}</TableCell>
+                    <TableCell className="text-center text-xs text-gray-500">{comment.id}</TableCell>
+                    <TableCell>
+                      <button
+                        type="button"
+                        className="max-w-xs text-left"
+                        onClick={() => handleViewComment(comment)}
+                      >
+                        <p className="text-sm text-gray-900 truncate underline decoration-dotted">
+                          {comment.content}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Post ID: {comment.postId}
+                        </p>
+                        {comment.fileUrl && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Có file đính kèm
+                          </p>
+                        )}
+                        {replies.length > 0 && (
+                          <Badge variant="outline" className="mt-1">
+                            {replies.length} phản hồi
+                          </Badge>
+                        )}
+                      </button>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                          {author?.avatarUrl ? (
+                            <img
+                              src={author.avatarUrl}
+                              alt={author.username}
+                              className="w-6 h-6 rounded-full"
+                            />
+                          ) : (
+                            <span className="text-xs font-medium text-gray-600">
+                              {author?.username?.charAt(0)?.toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-sm block">{author?.fullName || author?.username || "Unknown"}</span>
+                          <span className="text-xs text-gray-500 block">@{author?.username}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{getCommentType(comment)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(comment.commentedAt), "dd/MM/yyyy 'lúc' HH:mm")}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleViewComment(comment)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Xem Chi Tiết
+                          </DropdownMenuItem>
+                          {/* <DropdownMenuItem
+                            onClick={() => openEditDialog(comment)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Chỉnh Sửa
+                          </DropdownMenuItem> */}
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDeleteComment(comment.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Xóa Bình Luận
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-4">Không tìm thấy bình luận nào.</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
 
+      {/* Updated Pagination */}
       <div className="flex items-center justify-between px-2 sm:px-0">
-        <div className="text-sm text-gray-600">Trang {page}</div>
-        <div className="flex items-center gap-2">
+        <div className="text-sm text-gray-600">
+          Hiển thị <strong>{paginatedComments.length}</strong> trên tổng số <strong>{sortedComments.length}</strong> bình luận (Trang {page}/{totalPages || 1})
+        </div>
+        <div className="flex space-x-1">
           <Button
             variant="outline"
             size="sm"
-            disabled={page <= 1 || loading}
-            onClick={async () => {
-              if (page <= 1) return;
-              const nextPage = page - 1;
-              await loadComments(nextPage);
-              setPage(nextPage);
-            }}
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
           >
-            Prev
+            Trước
           </Button>
+
+          {getPaginationItems(page, totalPages).map((item, index) => (
+            item === '...' ? (
+              <span key={`e-${index}`} className="px-2 py-1 text-gray-500 text-sm flex items-center">...</span>
+            ) : (
+              <Button
+                key={item}
+                variant={page === item ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPage(item as number)}
+                className={page === item ? "bg-blue-600 text-white hover:bg-blue-700" : ""}
+              >
+                {item}
+              </Button>
+            )
+          ))}
+
           <Button
             variant="outline"
             size="sm"
-            disabled={loading}
-            onClick={async () => {
-              const nextPage = page + 1;
-              await loadComments(nextPage);
-              setPage(nextPage);
-            }}
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages || totalPages === 0}
           >
-            Next
+            Sau
           </Button>
         </div>
       </div>
 
       {/* View Comment Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Chi Tiết Bình Luận</DialogTitle>
-            <DialogDescription>
-              Xem thông tin bình luận và các phản hồi
-            </DialogDescription>
-          </DialogHeader>
-          {selectedComment && (
-            <div className="space-y-4">
-              {/* Comment Info */}
-              <div className="border rounded-lg p-4 bg-gray-50">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    {(() => {
-                      const author = getUserById(selectedComment.userId);
-                      return author?.avatarUrl ? (
-                        <img
-                          src={author.avatarUrl}
-                          alt={author.username}
-                          className="w-10 h-10 rounded-full"
-                        />
-                      ) : (
-                        <span className="text-sm font-medium text-gray-600">
-                          {author?.username.charAt(0).toUpperCase()}
-                        </span>
-                      );
-                    })()}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium text-gray-900">
-                        {getUserById(selectedComment.userId)?.username}
-                      </span>
-                      <Badge variant="outline">
-                        {getCommentType(selectedComment)}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {format(
-                        new Date(selectedComment.commentedAt),
-                        "MMM dd, yyyy 'lúc' HH:mm"
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <p className="text-gray-900 mb-2">{selectedComment.content}</p>
-                {selectedComment.fileUrl && (
-                  <div className="text-sm text-green-600">
-                    File đính kèm: {selectedComment.fileUrl}
-                  </div>
-                )}
-              </div>
-
-              {/* Replies */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">
-                  Phản Hồi (
-                  {
-                    comments.filter((c) => c.parentId === selectedComment.id)
-                      .length
-                  }
-                  )
-                </h4>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {comments
-                    .filter((c) => c.parentId === selectedComment.id)
-                    .map((reply: any) => {
-                      const replyAuthor = reply.User || null;
-                      return (
-                        <div
-                          key={reply.id}
-                          className="border rounded p-3 bg-white ml-6"
-                        >
-                          <div className="flex items-center space-x-2 mb-2">
-                            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                              {replyAuthor?.avatarUrl ? (
-                                <img
-                                  src={replyAuthor.avatarUrl}
-                                  alt={replyAuthor.username}
-                                  className="w-6 h-6 rounded-full"
-                                />
-                              ) : (
-                                <span className="text-xs font-medium text-gray-600">
-                                  {replyAuthor?.username?.charAt(0)?.toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-sm font-medium">
-                              {replyAuthor?.fullName || replyAuthor?.username}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {format(
-                                new Date(reply.commentedAt),
-                                "MMM dd, yyyy"
-                              )}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-900">
-                            {reply.content}
-                          </p>
-                          {reply.fileUrl && (
-                            <p className="text-xs text-green-600 mt-1">
-                              File: {reply.fileUrl}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  {comments.filter((c) => c.parentId === selectedComment.id)
-                    .length === 0 && (
-                      <p className="text-sm text-gray-500 text-center py-4">
-                        Chưa có phản hồi nào
-                      </p>
-                    )}
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ViewDetailDialog
+        isViewDialogOpen={isViewDialogOpen}
+        setIsViewDialogOpen={setIsViewDialogOpen}
+        selectedComment={selectedComment}
+        getCommentType={getCommentType}
+        format={format}
+      />
 
       {/* Edit Comment Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Chỉnh Sửa Bình Luận</DialogTitle>
-            <DialogDescription>Cập nhật nội dung bình luận.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-content" className="text-right">
-                Nội Dung
-              </Label>
-              <Textarea
-                id="edit-content"
-                value={formData.content}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setFormData({ ...formData, content: e.target.value })
-                }
-                className="col-span-3"
-                rows={3}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-fileUrl" className="text-right">
-                URL File
-              </Label>
-              <Input
-                id="edit-fileUrl"
-                value={formData.fileUrl}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, fileUrl: e.target.value })
-                }
-                className="col-span-3"
-                placeholder="URL của file đính kèm (tùy chọn)"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleEditComment}>Cập Nhật Bình Luận</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditDialog
+        isEditDialogOpen={isEditDialogOpen}
+        setIsEditDialogOpen={setIsEditDialogOpen}
+        formData={formData}
+        setFormData={setFormData}
+        handleEditComment={handleEditComment}
+      />
     </div>
   );
 }

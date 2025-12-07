@@ -5,14 +5,17 @@ const userController = require('../controllers/userController')
 const { authorizeRole, authenticateToken } = require('../middlewares/authentication')
 
 // admin authorization
+router.post('/', authenticateToken, authorizeRole, userController.CreateUser)
 router.get('/', authenticateToken, authorizeRole, userController.GetAllUser);
 router.delete('/remove/:id', authenticateToken, authorizeRole, userController.DeleteUser)
+router.post('/delete-multiple', authenticateToken, authorizeRole, userController.DeleteUsers)
+router.put('/banned/:userId', authenticateToken, authorizeRole, userController.BannedUser)
+router.put('/unlock-user/:userId', authenticateToken, authorizeRole, userController.UnLockedUser)
 
 // public routes
 router.get('/search', userController.Search)
 
 // router.get('/:id', userController.GetUserById)
-// router.post('/', userController.CreateUser)
 
 // protected routes
 router.post('/link-social-account', authenticateToken, userController.LinkSocialAccount)
@@ -28,7 +31,5 @@ router.put('/completed-onboarding', authenticateToken, userController.UpdateComp
 router.get('/:userId/profile', authenticateToken, userController.GetUserProfileSocial);
 router.get('/search', authenticateToken, userController.SearchUsers);
 router.post('/search-all', userController.Search);
-
-
 
 module.exports = router

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
+import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import {
   MoreHorizontal,
   Trash2,
@@ -16,8 +16,6 @@ import {
   Button,
   Input,
   Label,
-  Textarea,
-  Badge,
   Table,
   TableBody,
   TableCell,
@@ -29,27 +27,79 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
   Card,
   CardHeader,
   CardTitle,
   CardContent,
 } from "@/components/ui";
-import { type Post as MockPost } from "@/lib/mock-data";
-import { fetchPostsAdmin, updatePostAdmin, deletePostAdmin, type AdminPost } from "@/services";
-import { getUserById, mockUsers, mockTracks, getCommentsByPostId } from "@/lib/mock-data";
+import { updatePostAdmin, deletePostAdmin, CreatePost } from "@/services";
+import toast from "react-hot-toast";
+import { useMusicStore, usePostStore, useUserStore } from "@/store";
+import EditDialog from "@/components/post/edit-dialog";
+import PreviewDialog from "@/components/post/preview-dialog";
+import AddDialog from "@/components/post/add-dialog";
+
+// Hàm tiện ích phân trang
+const getPaginationItems = (currentPage: number, totalPages: number): (number | '...')[] => {
+  const MAX_ITEMS = 5;
+
+  if (totalPages <= MAX_ITEMS) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  const pages = new Set<number>();
+
+  pages.add(currentPage);
+  if (currentPage > 1) pages.add(currentPage - 1);
+  if (currentPage < totalPages) pages.add(currentPage + 1);
+
+  const sortedPages = Array.from(pages).sort((a, b) => a - b);
+  const finalItems: (number | '...')[] = [];
+
+  if (sortedPages[0] > 1) {
+    finalItems.push('...');
+  }
+  for (const element of sortedPages) {
+    finalItems.push(element);
+  }
+  if (sortedPages[sortedPages.length - 1] < totalPages) {
+    finalItems.push('...');
+  }
+
+  return finalItems;
+};
 
 export default function PostsPage() {
   const router = useRouter();
-  const [posts, setPosts] = useState<(AdminPost | any)[]>([]);
+  const { users, fetchUsers } = useUserStore();
+  const { tracks, fetchTracks } = useMusicStore();
+  const { posts, setPosts, fetchPosts } = usePostStore();
+  
+  const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
+  
   const [sortKey, setSortKey] = useState<"createdAt" | "likeCount" | "commentCount">("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  const [previewPost, setPreviewPost] = useState<any | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<any | null>(null);
+
+  // Filter states
+  const [q, setQ] = useState<string>("");
+  // [CHANGE] Đổi tên state từ filterUserId thành filterUserQuery
+  const [filterUserQuery, setFilterUserQuery] = useState<string>(""); 
+  const [filterIsCover, setFilterIsCover] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  
+  const [limit, setLimit] = useState<string>("50");
+  const [page, setPage] = useState<number>(1);
+
   const [visibleCols, setVisibleCols] = useState({
     id: true,
     author: true,
@@ -58,74 +108,196 @@ export default function PostsPage() {
     comments: true,
     createdAt: true,
   });
-  const [previewPost, setPreviewPost] = useState<any | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     content: "",
-    userId: 1, // Default to first user for demo
+    userId: 1,
     fileUrl: "",
     songId: undefined as number | undefined,
     isCover: false,
     originalSongId: undefined as number | undefined,
   });
-  // Server-side filters
-  const [q, setQ] = useState<string>("");
-  const [filterUserId, setFilterUserId] = useState<string>("");
-  const [filterIsCover, setFilterIsCover] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [limit, setLimit] = useState<string>("50");
-  const [page, setPage] = useState<number>(1);
 
-  const loadPosts = async (targetPage?: number) => {
-    try {
-      const params: any = {};
-      if (q) params.q = q;
-      if (filterUserId) params.userId = parseInt(filterUserId, 10);
-      if (filterIsCover === "cover") params.isCover = true;
-      if (filterIsCover === "original") params.isCover = false;
-      if (dateFrom) params.dateFrom = dateFrom;
-      if (dateTo) params.dateTo = dateTo;
-      const limitNum = parseInt(limit, 10) || 50;
-      const currentPage = targetPage && targetPage > 0 ? targetPage : (page > 0 ? page : 1);
-      const offsetNum = (currentPage - 1) * limitNum;
-      params.limit = limitNum;
-      params.offset = offsetNum;
-      const data = await fetchPostsAdmin(params);
-      setPosts(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error('Failed to load admin posts:', e);
-      setPosts([]);
+  useEffect(() => {
+    if (posts.length === 0) fetchPosts(); 
+    if (users.length === 0) fetchUsers();
+    if (tracks.length === 0) fetchTracks();
+  }, []);
+
+  useEffect(() => {
+    setFilteredPosts(posts);
+  }, [posts]);
+
+  // --- Client-side Filter Logic ---
+  const handleApplyFilter = () => {
+    let result = [...posts];
+
+    // 1. Filter by Content
+    if (q.trim()) {
+      const lowerQ = q.toLowerCase();
+      result = result.filter(p => p.content?.toLowerCase().includes(lowerQ));
     }
+
+    // 2. [CHANGE] Filter by User Info (Username, Email, FullName)
+    if (filterUserQuery.trim()) {
+      const lowerQuery = filterUserQuery.toLowerCase();
+      result = result.filter(p => {
+        // Tìm user tương ứng với post này trong danh sách users (đã fetch từ store)
+        const author = users.find(u => u.id === p.userId);
+        
+        if (!author) return false; // Nếu không tìm thấy tác giả, loại bỏ post này
+
+        // Kiểm tra xem query có nằm trong username, email hoặc fullName không
+        const matchUsername = author.username?.toLowerCase().includes(lowerQuery);
+        const matchEmail = author.email?.toLowerCase().includes(lowerQuery);
+        const matchFullName = author.fullName?.toLowerCase().includes(lowerQuery);
+
+        return matchUsername || matchEmail || matchFullName;
+      });
+    }
+
+    // 3. Filter by Type
+    if (filterIsCover !== "all") {
+      const isCoverBool = filterIsCover === "cover";
+      result = result.filter(p => !!p.isCover === isCoverBool);
+    }
+
+    // 4. Filter by Date
+    if (dateFrom || dateTo) {
+      const start = dateFrom ? startOfDay(parseISO(dateFrom)) : new Date(0);
+      const end = dateTo ? endOfDay(parseISO(dateTo)) : new Date();
+
+      result = result.filter(p => {
+        const pDate = new Date(p.createdAt);
+        return pDate >= start && pDate <= end;
+      });
+    }
+
+    setFilteredPosts(result);
+    setPage(1);
   };
 
-  const resetFilters = async () => {
+  const resetFilters = () => {
     setQ("");
-    setFilterUserId("");
+    setFilterUserQuery(""); // [CHANGE] Reset user query
     setFilterIsCover("all");
     setDateFrom("");
     setDateTo("");
     setLimit("50");
     setPage(1);
-    await loadPosts(1);
+    setFilteredPosts(posts);
   };
 
+  // --- Sorting & Pagination Logic ---
+  const sortedPosts = useMemo(() => {
+    return [...filteredPosts].sort((a: any, b: any) => {
+      let av: any;
+      let bv: any;
+      if (sortKey === "createdAt") {
+        av = new Date(a.createdAt).getTime();
+        bv = new Date(b.createdAt).getTime();
+      } else if (sortKey === "likeCount") {
+        av = (a.likeCount ?? a.heartCount) ?? 0;
+        bv = (b.likeCount ?? b.heartCount) ?? 0;
+      } else {
+        av = a.commentCount ?? 0;
+        bv = b.commentCount ?? 0;
+      }
+      if (av === bv) return 0;
+      return sortDir === "asc" ? (av > bv ? 1 : -1) : (av > bv ? -1 : 1);
+    });
+  }, [filteredPosts, sortKey, sortDir]);
+
+  const limitNum = parseInt(limit, 10) || 50;
+  const totalPages = Math.ceil(sortedPosts.length / limitNum);
+  
+  const paginatedPosts = useMemo(() => {
+    const startIndex = (page - 1) * limitNum;
+    return sortedPosts.slice(startIndex, startIndex + limitNum);
+  }, [sortedPosts, page, limitNum]);
+
+
+  // --- Actions ---
   const handleDeletePost = async (postId: number) => {
-    await deletePostAdmin(postId);
-    setPosts((prev) => prev.filter((post) => post.id !== postId));
+    const response = await deletePostAdmin(postId);
+    if (!response.success) {
+      toast.error('Lỗi khi xóa bài đăng: ' + response.message);
+      return;
+    }
+    const newPostsAll = posts.filter((post) => post.id !== postId);
+    setPosts(newPostsAll);
     setSelectedIds((prev) => prev.filter((id) => id !== postId));
+    toast.success('Xóa bài đăng thành công');
   };
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
     const idsToDelete = [...selectedIds];
     await Promise.all(idsToDelete.map((id) => deletePostAdmin(id)));
-    setPosts((prev) => prev.filter((post) => !idsToDelete.includes(post.id)));
+    const newPostsAll = posts.filter((post) => !idsToDelete.includes(post.id));
+    setPosts(newPostsAll);
     setSelectedIds([]);
+    toast.success('Xóa các bài đăng đã chọn thành công');
+  };
+
+  const handleAddPost = async () => {
+    const newPost: any = {
+      userId: formData.userId,
+      content: formData.content,
+      fileUrl: formData.fileUrl || undefined,
+      heartCount: 0,
+      likeCount: 0,
+      shareCount: 0,
+      uploadedAt: new Date().toISOString(),
+      commentCount: 0,
+      songId: formData.songId,
+      isCover: formData.isCover,
+      originalSongId: formData.originalSongId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const response = await CreatePost(newPost);
+    if (!response.success) {
+      toast.error('Lỗi khi thêm bài đăng: ' + response.message);
+      return;
+    }
+    const createdPost = { id: response.data.id, ...newPost };
+    setPosts([createdPost, ...posts]);
+    setFormData({
+      content: "",
+      userId: users.length > 0 ? users[0].id : 1,
+      fileUrl: "",
+      songId: undefined,
+      isCover: false,
+      originalSongId: undefined,
+    });
+    toast.success('Thêm bài đăng thành công');
+    setIsAddDialogOpen(false);
+  };
+
+  const handleEditPost = async () => {
+    if (!editingPost) return;
+    await updatePostAdmin(editingPost.id, {
+      content: formData.content,
+      fileUrls: formData.fileUrl ? [formData.fileUrl] : [],
+      songId: formData.songId ?? null,
+      isCover: formData.isCover,
+      originalSongId: formData.originalSongId ?? null,
+    });
+    const updatedData = { ...editingPost, content: formData.content, updatedAt: new Date().toISOString() };
+    const newPosts = posts.map((post) => post.id === editingPost.id ? updatedData : post);
+    setPosts(newPosts);
+    setFormData({
+      content: "",
+      userId: 1,
+      fileUrl: "",
+      songId: undefined,
+      isCover: false,
+      originalSongId: undefined,
+    });
+    setIsEditDialogOpen(false);
+    setEditingPost(null);
   };
 
   const toggleSelect = (id: number) => {
@@ -144,63 +316,6 @@ export default function PostsPage() {
     }
   };
 
-  const handleAddPost = () => {
-    const newPost: any = {
-      id: Math.max(...posts.map((p) => p.id)) + 1,
-      userId: formData.userId,
-      content: formData.content,
-      fileUrl: formData.fileUrl || undefined,
-      heartCount: 0,
-      likeCount: 0,
-      shareCount: 0,
-      uploadedAt: new Date().toISOString(),
-      commentCount: 0,
-      songId: formData.songId,
-      isCover: formData.isCover,
-      originalSongId: formData.originalSongId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setPosts([...posts, newPost]);
-    setFormData({
-      content: "",
-      userId: 1,
-      fileUrl: "",
-      songId: undefined,
-      isCover: false,
-      originalSongId: undefined,
-    });
-    setIsAddDialogOpen(false);
-  };
-
-  const handleEditPost = async () => {
-    if (!editingPost) return;
-    await updatePostAdmin(editingPost.id, {
-      content: formData.content,
-      fileUrls: formData.fileUrl ? [formData.fileUrl] : [],
-      songId: formData.songId ?? null,
-      isCover: formData.isCover,
-      originalSongId: formData.originalSongId ?? null,
-    });
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === editingPost.id
-          ? { ...post, content: formData.content, updatedAt: new Date().toISOString() }
-          : post
-      )
-    );
-    setFormData({
-      content: "",
-      userId: 1,
-      fileUrl: "",
-      songId: undefined,
-      isCover: false,
-      originalSongId: undefined,
-    });
-    setIsEditDialogOpen(false);
-    setEditingPost(null);
-  };
-
   const openEditDialog = (post: any) => {
     setEditingPost(post);
     setFormData({
@@ -215,6 +330,7 @@ export default function PostsPage() {
   };
 
   const truncateContent = (content: string, maxLength: number = 100) => {
+    if (!content) return "";
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + "...";
   };
@@ -223,28 +339,6 @@ export default function PostsPage() {
     setPreviewPost(post);
     setIsPreviewOpen(true);
   };
-
-  useEffect(() => {
-    loadPosts(1);
-  }, []);
-
-  const sortedPosts = (Array.isArray(posts) ? posts : []).slice().sort((a: any, b: any) => {
-    let av: any;
-    let bv: any;
-    if (sortKey === "createdAt") {
-      av = new Date(a.createdAt).getTime();
-      bv = new Date(b.createdAt).getTime();
-    } else if (sortKey === "likeCount") {
-      av = (a.likeCount ?? a.heartCount) ?? 0;
-      bv = (b.likeCount ?? b.heartCount) ?? 0;
-    } else {
-      av = a.commentCount ?? 0;
-      bv = b.commentCount ?? 0;
-    }
-    if (av === bv) return 0;
-    const res = av > bv ? 1 : -1;
-    return sortDir === "asc" ? res : -res;
-  });
 
   const handleSort = (key: "createdAt" | "likeCount" | "commentCount") => {
     setSortKey((prevKey) => {
@@ -267,93 +361,6 @@ export default function PostsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                Cột
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.id}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, id: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">ID</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.author}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, author: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Tác giả</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.content}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, content: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Nội dung</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.likes}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, likes: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Lượt thích</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.comments}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, comments: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Bình luận</span>
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={visibleCols.createdAt}
-                    onChange={(e) =>
-                      setVisibleCols((prev) => ({ ...prev, createdAt: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Ngày tạo</span>
-                </label>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -361,140 +368,11 @@ export default function PostsPage() {
                 Thêm Bài Đăng
               </Button>
             </DialogTrigger>
-            <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Thêm Bài Đăng Mới</DialogTitle>
-              <DialogDescription>
-                Thêm bài đăng mới vào hệ thống.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="content" className="text-right">
-                  Nội Dung
-                </Label>
-                <Textarea
-                  id="content"
-                  value={formData.content}
-                  onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
-                  }
-                  className="col-span-3"
-                  rows={4}
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="userId" className="text-right">
-                  Người Dùng
-                </Label>
-                <select
-                  id="userId"
-                  value={formData.userId}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      userId: parseInt(e.target.value),
-                    })
-                  }
-                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  {mockUsers.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.fullName || user.username}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="fileUrl" className="text-right">
-                  URL File
-                </Label>
-                <Input
-                  id="fileUrl"
-                  value={formData.fileUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fileUrl: e.target.value })
-                  }
-                  className="col-span-3"
-                  placeholder="https://example.com/file.mp3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="songId" className="text-right">
-                  Bài Hát
-                </Label>
-                <select
-                  id="songId"
-                  value={formData.songId || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      songId: e.target.value
-                        ? parseInt(e.target.value)
-                        : undefined,
-                    })
-                  }
-                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Không chọn</option>
-                  {mockTracks.map((track) => (
-                    <option key={track.id} value={track.id}>
-                      {track.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="isCover" className="text-right">
-                  Loại
-                </Label>
-                <select
-                  id="isCover"
-                  value={formData.isCover ? "cover" : "original"}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      isCover: e.target.value === "cover",
-                    })
-                  }
-                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="original">Gốc</option>
-                  <option value="cover">Cover</option>
-                </select>
-              </div>
-              {formData.isCover && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="originalSongId" className="text-right">
-                    Bài Gốc
-                  </Label>
-                  <select
-                    id="originalSongId"
-                    value={formData.originalSongId || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        originalSongId: e.target.value
-                          ? parseInt(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    className="col-span-3 px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="">Không chọn</option>
-                    {mockTracks.map((track) => (
-                      <option key={track.id} value={track.id}>
-                        {track.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button onClick={handleAddPost}>Thêm Bài Đăng</Button>
-            </DialogFooter>
-            </DialogContent>
+            <AddDialog
+              formData={formData}
+              setFormData={setFormData}
+              handleAddPost={handleAddPost}
+            />
           </Dialog>
         </div>
       </div>
@@ -507,18 +385,24 @@ export default function PostsPage() {
         <CardContent>
           <div className="flex items-end gap-3 flex-wrap">
             <div>
-              <Label className="text-sm font-medium">Tìm kiếm</Label>
-              <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Nội dung" className="w-56" />
+              <Label className="text-sm font-medium">Tìm kiếm (Nội dung)</Label>
+              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nội dung bài đăng" className="w-56" />
             </div>
+            {/* [CHANGE] Cập nhật UI Input User */}
             <div>
-              <Label className="text-sm font-medium">ID người dùng</Label>
-              <Input value={filterUserId} onChange={(e)=>setFilterUserId(e.target.value)} className="w-32" />
+              <Label className="text-sm font-medium">Người dùng</Label>
+              <Input 
+                value={filterUserQuery} 
+                onChange={(e) => setFilterUserQuery(e.target.value)} 
+                placeholder="Tên, Email hoặc Username" 
+                className="w-56" 
+              />
             </div>
             <div>
               <Label className="text-sm font-medium">Loại</Label>
               <select
                 value={filterIsCover}
-                onChange={(e)=>setFilterIsCover(e.target.value)}
+                onChange={(e) => setFilterIsCover(e.target.value)}
                 className="px-3 py-2 border rounded-md"
               >
                 <option value="all">Tất cả</option>
@@ -528,24 +412,25 @@ export default function PostsPage() {
             </div>
             <div>
               <Label className="text-sm font-medium">Từ ngày</Label>
-              <Input type="date" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} />
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium">Đến ngày</Label>
-              <Input type="date" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} />
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium">Limit</Label>
-              <Input value={limit} onChange={(e)=>setLimit(e.target.value)} className="w-24" />
+              <Input value={limit} onChange={(e) => setLimit(e.target.value)} className="w-24" />
             </div>
             <div className="flex items-center gap-2 ml-auto">
-              <Button onClick={() => loadPosts(page)}>Áp dụng</Button>
+              <Button onClick={handleApplyFilter}>Áp dụng</Button>
               <Button variant="outline" onClick={resetFilters}>Đặt lại</Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Bulk Action Bar */}
       {selectedIds.length > 0 && (
         <div className="flex items-center justify-between text-sm bg-yellow-50 border border-yellow-200 rounded p-2">
           <span>
@@ -570,6 +455,7 @@ export default function PostsPage() {
         </div>
       )}
 
+      {/* Table Section */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         <Table>
           <TableHeader>
@@ -578,10 +464,10 @@ export default function PostsPage() {
                 <input
                   type="checkbox"
                   className="h-4 w-4"
-                  onChange={() => toggleSelectAllCurrentPage(sortedPosts)}
+                  onChange={() => toggleSelectAllCurrentPage(paginatedPosts)}
                   checked={
-                    sortedPosts.length > 0 &&
-                    sortedPosts.every((post: any) => selectedIds.includes(post.id))
+                    paginatedPosts.length > 0 &&
+                    paginatedPosts.every((post: any) => selectedIds.includes(post.id))
                   }
                 />
               </TableHead>
@@ -619,327 +505,191 @@ export default function PostsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedPosts.map((post: any, index: number) => {
-              const author = post.User || post.user || null;
-              const limitNum = parseInt(limit, 10) || 50;
-              const currentPage = page > 0 ? page : 1;
-              const offsetNum = (currentPage - 1) * limitNum;
-              return (
-                <TableRow key={post.id}>
-                  <TableCell className="text-center">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
-                      checked={selectedIds.includes(post.id)}
-                      onChange={() => toggleSelect(post.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-center text-sm text-gray-500">
-                    {offsetNum + index + 1}
-                  </TableCell>
-                  {visibleCols.id && (
-                    <TableCell className="text-center text-xs text-gray-500">{post.id}</TableCell>
-                  )}
-                  {visibleCols.author && (
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                          {author?.avatarUrl ? (
-                            <img
-                              src={author.avatarUrl}
-                              alt={author.username}
-                              className="w-8 h-8 rounded-full"
-                            />
-                          ) : (
-                            <span className="text-sm font-medium text-gray-600">
-                              {author?.username.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {author?.fullName || author?.username}
+            {paginatedPosts.length > 0 ? (
+              paginatedPosts.map((post: any, index: number) => {
+                const author = users.find((u) => u.id === post.userId);
+                const itemNumber = (page - 1) * limitNum + index + 1;
+
+                return (
+                  <TableRow key={post.id}>
+                    <TableCell className="text-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={selectedIds.includes(post.id)}
+                        onChange={() => toggleSelect(post.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-sm text-gray-500">
+                      {itemNumber}
+                    </TableCell>
+                    {visibleCols.id && (
+                      <TableCell className="text-center text-xs text-gray-500">{post.id}</TableCell>
+                    )}
+                    {visibleCols.author && (
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            {author?.avatarUrl ? (
+                              <img
+                                src={author.avatarUrl}
+                                alt={author.username}
+                                className="w-8 h-8 rounded-full"
+                              />
+                            ) : (
+                              <span className="text-sm font-medium text-gray-600">
+                                {author?.username?.charAt(0).toUpperCase()}
+                              </span>
+                            )}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            @{author?.username} · ID: {author?.id}
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {author?.fullName || author?.username || "Unknown"}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              @{author?.username}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
-                  )}
-                  {visibleCols.content && (
-                    <TableCell>
-                      <button
-                        type="button"
-                        className="max-w-xs text-left"
-                        onClick={() => openPreviewDialog(post)}
-                      >
-                        <p className="text-sm text-gray-900 truncate underline decoration-dotted">
-                          {truncateContent(post.content)}
-                        </p>
-                      </button>
-                    </TableCell>
-                  )}
-                  {visibleCols.likes && (
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <Heart className="h-4 w-4 text-red-500" />
-                        <span className="text-sm">{post.likeCount ?? post.heartCount ?? 0}</span>
-                      </div>
-                    </TableCell>
-                  )}
-                  {visibleCols.comments && (
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <MessageSquare className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">{post.commentCount}</span>
-                      </div>
-                    </TableCell>
-                  )}
-                  {visibleCols.createdAt && (
-                    <TableCell>
-                      {format(new Date(post.createdAt), "MMM dd, yyyy")}
-                    </TableCell>
-                  )}
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/posts/${post.id}`)}
+                      </TableCell>
+                    )}
+                    {visibleCols.content && (
+                      <TableCell>
+                        <button
+                          type="button"
+                          className="max-w-xs text-left"
+                          onClick={() => openPreviewDialog(post)}
                         >
-                          <Eye className="mr-2 h-4 w-4" />
-                          Xem Chi Tiết
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/comments?postId=${post.id}`)}
-                        >
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Xem Bình Luận
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/likes?postId=${post.id}`)}
-                        >
-                          <Heart className="mr-2 h-4 w-4" />
-                          Xem Likes
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEditDialog(post)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Chỉnh Sửa
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDeletePost(post.id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Xóa Bài Đăng
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                          <p className="text-sm text-gray-900 truncate underline decoration-dotted">
+                            {truncateContent(post.content)}
+                          </p>
+                        </button>
+                      </TableCell>
+                    )}
+                    {visibleCols.likes && (
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Heart className="h-4 w-4 text-red-500" />
+                          <span className="text-sm">{post.likeCount ?? post.heartCount ?? 0}</span>
+                        </div>
+                      </TableCell>
+                    )}
+                    {visibleCols.comments && (
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <MessageSquare className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">{post.commentCount}</span>
+                        </div>
+                      </TableCell>
+                    )}
+                    {visibleCols.createdAt && (
+                      <TableCell>
+                        {format(new Date(post.createdAt), "dd/MM/yyyy")}
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/posts/${post.id}`)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Xem Chi Tiết
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/comments?postId=${post.id}`)}
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Xem Bình Luận
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditDialog(post)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Chỉnh Sửa
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDeletePost(post.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Xóa Bài Đăng
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-4">
+                  Không tìm thấy bài đăng nào.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
 
+      {/* Pagination */}
       <div className="flex items-center justify-between px-2 sm:px-0">
         <div className="text-sm text-gray-600">
-          Trang {page}
+          Hiển thị <strong>{paginatedPosts.length}</strong> trên tổng số <strong>{sortedPosts.length}</strong> bài đăng (Trang {page}/{totalPages || 1})
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={async () => {
-              if (page <= 1) return;
-              const nextPage = page - 1;
-              await loadPosts(nextPage);
-              setPage(nextPage);
-            }}
-          >
-            Prev
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={async () => {
-              const nextPage = page + 1;
-              await loadPosts(nextPage);
-              setPage(nextPage);
-            }}
-          >
-            Next
-          </Button>
+        <div className="flex space-x-1">
+            <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setPage(Math.max(1, page - 1))} 
+                disabled={page === 1}
+            >
+                Trước
+            </Button>
+            
+            {getPaginationItems(page, totalPages).map((item, index) => (
+                item === '...' ? (
+                <span key={`e-${index}`} className="px-2 py-1 text-gray-500 text-sm flex items-center">...</span>
+                ) : (
+                <Button
+                    key={item}
+                    variant={page === item ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPage(item as number)}
+                    className={page === item ? "bg-blue-600 text-white hover:bg-blue-700" : ""}
+                >
+                    {item}
+                </Button>
+                )
+            ))}
+
+            <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setPage(Math.min(totalPages, page + 1))} 
+                disabled={page === totalPages || totalPages === 0}
+            >
+                Sau
+            </Button>
         </div>
       </div>
 
-      {/* Preview Post Dialog */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Preview Bài Đăng</DialogTitle>
-            <DialogDescription>Xem nhanh nội dung bài đăng.</DialogDescription>
-          </DialogHeader>
-          {previewPost && (
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">ID: {previewPost.id}</p>
-                <p className="text-base text-gray-900 whitespace-pre-wrap">
-                  {previewPost.content}
-                </p>
-              </div>
-              {previewPost.fileUrl && (
-                <div className="text-sm text-green-700 break-all">
-                  File: {previewPost.fileUrl}
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Post Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Chỉnh Sửa Bài Đăng</DialogTitle>
-            <DialogDescription>Cập nhật thông tin bài đăng.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-content" className="text-right">
-                Nội Dung
-              </Label>
-              <Textarea
-                id="edit-content"
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData({ ...formData, content: e.target.value })
-                }
-                className="col-span-3"
-                rows={4}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-userId" className="text-right">
-                Người Dùng
-              </Label>
-              <select
-                id="edit-userId"
-                value={formData.userId}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    userId: parseInt(e.target.value),
-                  })
-                }
-                className="col-span-3 px-3 py-2 border border-gray-300 rounded-md"
-              >
-                {mockUsers.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.fullName || user.username}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-fileUrl" className="text-right">
-                URL File
-              </Label>
-              <Input
-                id="edit-fileUrl"
-                value={formData.fileUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, fileUrl: e.target.value })
-                }
-                className="col-span-3"
-                placeholder="https://example.com/file.mp3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-songId" className="text-right">
-                Bài Hát
-              </Label>
-              <select
-                id="edit-songId"
-                value={formData.songId || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    songId: e.target.value
-                      ? parseInt(e.target.value)
-                      : undefined,
-                  })
-                }
-                className="col-span-3 px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Không chọn</option>
-                {mockTracks.map((track) => (
-                  <option key={track.id} value={track.id}>
-                    {track.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-isCover" className="text-right">
-                Loại
-              </Label>
-              <select
-                id="edit-isCover"
-                value={formData.isCover ? "cover" : "original"}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    isCover: e.target.value === "cover",
-                  })
-                }
-                className="col-span-3 px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="original">Gốc</option>
-                <option value="cover">Cover</option>
-              </select>
-            </div>
-            {formData.isCover && (
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-originalSongId" className="text-right">
-                  Bài Gốc
-                </Label>
-                <select
-                  id="edit-originalSongId"
-                  value={formData.originalSongId || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      originalSongId: e.target.value
-                        ? parseInt(e.target.value)
-                        : undefined,
-                    })
-                  }
-                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Không chọn</option>
-                  {mockTracks.map((track) => (
-                    <option key={track.id} value={track.id}>
-                      {track.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button onClick={handleEditPost}>Cập Nhật Bài Đăng</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <PreviewDialog
+        isPreviewOpen={isPreviewOpen}
+        setIsPreviewOpen={setIsPreviewOpen}
+        previewPost={previewPost}
+      />
+      <EditDialog
+        isEditDialogOpen={isEditDialogOpen}
+        setIsEditDialogOpen={setIsEditDialogOpen}
+        formData={formData}
+        setFormData={setFormData}
+        handleEditPost={handleEditPost}
+      />
     </div>
   );
 }

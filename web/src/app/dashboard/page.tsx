@@ -14,7 +14,16 @@ import {
   BrainCircuit,
   Users as UsersIcon,
   Music,
-  Share2
+  Share2,
+  Calendar,
+  ArrowRightLeft,
+  Smile,
+  Meh,
+  Frown,
+  Video,
+  ImageIcon,
+  Heart,
+  MessageCircle
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -36,184 +45,42 @@ import {
   Legend,
   Cell
 } from "recharts";
-import { format, subDays, getHours, isSameDay, parseISO } from "date-fns";
-
-// --- TYPES (Updated for Follows/Artists) ---
-interface User {
-  id: number;
-  username: string;
-  status: 'active' | 'inactive' | 'locked' | 'banned';
-  createdAt: string;
-  lastLogin: string | null;
-  favoritesGenres: string[];
-}
-
-interface ListenHistory {
-  id: number;
-  userId: number;
-  itemType: 'track' | 'album';
-  createdAt: string;
-}
-
-interface SearchHistory {
-  id: number;
-  query: string;
-  searchedAt: string;
-}
-
-interface Track {
-  id: number;
-  name: string;
-  artists: { name: string }[];
-}
-
-interface Artist {
-  id: number;
-  name: string;
-}
-
-// Tách biệt Interface Follow User
-interface FollowUser {
-  id: number;
-  followerId: number;
-  followeeId: number; // ID người được theo dõi
-  createdAt: string;
-}
-
-// Tách biệt Interface Follow Artist
-interface FollowArtist {
-  id: number;
-  followerId: number;
-  artistId: number; // ID nghệ sĩ được theo dõi
-  createdAt: string;
-}
-
-// --- UI COMPONENTS ---
-const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>{children}</div>
-);
-
-const CardHeader = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`p-6 pb-2 ${className}`}>{children}</div>
-);
-
-const CardTitle = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <h3 className={`font-semibold text-gray-900 ${className}`}>{children}</h3>
-);
-
-const CardDescription = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <p className={`text-sm text-gray-500 ${className}`}>{children}</p>
-);
-
-const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`p-6 pt-2 ${className}`}>{children}</div>
-);
-
-const Badge = ({ children, variant = "default" }: { children: React.ReactNode, variant?: "success" | "warning" | "danger" | "default" }) => {
-  const styles = {
-    success: "bg-green-100 text-green-700 border-green-200",
-    warning: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    danger: "bg-red-100 text-red-700 border-red-200",
-    default: "bg-gray-100 text-gray-700 border-gray-200",
-  };
-  return <span className={`px-2 py-0.5 rounded text-xs font-medium border ${styles[variant]}`}>{children}</span>;
-};
-
-// --- MOCK DATA GENERATORS ---
-const generateMockDatabase = () => {
-  const now = new Date();
-
-  // 1. Mock Users
-  const users: User[] = Array.from({ length: 500 }).map((_, i) => {
-    const isInactive = Math.random() > 0.8;
-    return {
-      id: 3000 + i,
-      username: `user_${i}`,
-      status: isInactive ? 'inactive' : 'active',
-      createdAt: subDays(now, Math.floor(Math.random() * 30)).toISOString(),
-      lastLogin: isInactive ? null : subDays(now, Math.floor(Math.random() * 5)).toISOString(),
-      favoritesGenres: Math.random() > 0.5 ? ['POP', 'DANCE'] : ['K-POP']
-    };
-  });
-
-  // 2. Mock Listen History
-  const listenHistory: ListenHistory[] = Array.from({ length: 2500 }).map((_, i) => ({
-    id: 7000 + i,
-    userId: 3000 + Math.floor(Math.random() * 500),
-    itemType: Math.random() > 0.8 ? 'album' : 'track',
-    createdAt: (() => {
-      const date = subDays(now, Math.floor(Math.random() * 7));
-      const hour = Math.random() > 0.7 ? 20 + Math.floor(Math.random() * 3) : Math.floor(Math.random() * 24);
-      date.setHours(hour, Math.floor(Math.random() * 60));
-      return date.toISOString();
-    })()
-  }));
-
-  // 3. Mock Search History
-  const searchHistory: SearchHistory[] = Array.from({ length: 1200 }).map((_, i) => ({
-    id: 5000 + i,
-    query: "BTS",
-    searchedAt: subDays(now, Math.floor(Math.random() * 7)).toISOString()
-  }));
-
-  // 4. Mock Tracks & Artists
-  const tracks: Track[] = Array.from({ length: 200 }).map((_, i) => ({
-    id: 5000 + i,
-    name: `Song ${i}`,
-    artists: [{ name: "Artist" }]
-  }));
-
-  const artists: Artist[] = Array.from({ length: 60 }).map((_, i) => ({
-    id: 100 + i,
-    name: `Artist ${i}`
-  }));
-
-  // 5. Mock Follow Users (Table: follow_users)
-  const followUsers: FollowUser[] = Array.from({ length: 900 }).map((_, i) => ({
-    id: 37000 + i,
-    followerId: 3000 + Math.floor(Math.random() * 500),
-    followeeId: 3000 + Math.floor(Math.random() * 500),
-    createdAt: subDays(now, Math.floor(Math.random() * 30)).toISOString()
-  }));
-
-  // 6. Mock Follow Artists (Table: follow_artists)
-  const followArtists: FollowArtist[] = Array.from({ length: 600 }).map((_, i) => ({
-    id: 13000 + i,
-    followerId: 3000 + Math.floor(Math.random() * 500),
-    artistId: 100 + Math.floor(Math.random() * 60),
-    createdAt: subDays(now, Math.floor(Math.random() * 30)).toISOString()
-  }));
-
-  return { users, listenHistory, searchHistory, tracks, artists, followUsers, followArtists };
-};
+import { format, subDays, getHours, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, eachMonthOfInterval, subMonths, isSameMonth } from "date-fns";
+import { useFollowStore, useHistoryStore, useMusicStore, usePostStore, useUserStore } from "@/store";
+import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
 // --- DASHBOARD COMPONENT ---
 export default function AnalyticalDashboard() {
   const [loading, setLoading] = useState(true);
-  const [db, setDb] = useState<{
-    users: User[];
-    listenHistory: ListenHistory[];
-    searchHistory: SearchHistory[];
-    tracks: Track[];
-    artists: Artist[];
-    followUsers: FollowUser[];
-    followArtists: FollowArtist[];
-  } | null>(null);
+  const [growthRange, setGrowthRange] = useState<'7d' | '30d' | '6m' | '1y'>('7d');
+  const { users, fetchUsers } = useUserStore();
+  const { tracks, artists, fetchArtists, fetchTracks } = useMusicStore();
+  const { followArtists, followUsers, fetchFollowUsers, fetchFollowArtists } = useFollowStore();
+  const { listenHistories, searchHistories, fetchListenHistories, fetchSearchHistories } = useHistoryStore();
+  const { posts, fetchPosts } = usePostStore();
 
   useEffect(() => {
     setTimeout(() => {
-      setDb(generateMockDatabase());
+      if (users.length === 0) fetchUsers();
+      if (artists.length === 0) fetchArtists();
+      if (tracks.length === 0) fetchTracks();
+      if (followArtists.length === 0) fetchFollowArtists();
+      if (followUsers.length === 0) fetchFollowUsers();
+      if (listenHistories.length === 0) fetchListenHistories();
+      if (searchHistories.length === 0) fetchSearchHistories();
+      if (posts.length === 0) fetchPosts();
       setLoading(false);
     }, 800);
   }, []);
 
   const analytics = useMemo(() => {
-    if (!db) return null;
+    if (!users || !tracks || !artists || !followArtists || !followUsers || !listenHistories || !searchHistories || !posts) return null;
 
     // 1. Hourly Activity (Heatmap)
     const hourlyCounts = new Array(24).fill(0);
-    db.listenHistory.forEach(h => hourlyCounts[getHours(parseISO(h.createdAt))]++);
-    db.searchHistory.forEach(s => hourlyCounts[getHours(parseISO(s.searchedAt))]++);
+    listenHistories.forEach(h => hourlyCounts[getHours(parseISO(h.createdAt))]++);
+    searchHistories.forEach(s => hourlyCounts[getHours(parseISO(s.searchedAt))]++);
+    posts.forEach(p => hourlyCounts[getHours(parseISO(p.createdAt))]++);
 
     const hourlyData = hourlyCounts.map((count, hour) => ({
       hour: `${hour}:00`,
@@ -225,77 +92,166 @@ export default function AnalyticalDashboard() {
     const peakHourIndex = hourlyCounts.indexOf(maxActivity);
     hourlyData[peakHourIndex].isPeak = true;
 
-    // 2. User Growth
-    const last7Days = Array.from({ length: 7 }).map((_, i) => subDays(new Date(), 6 - i));
-    const growthData = last7Days.map(date => {
-      const dayUsers = db.users.filter(u => isSameDay(parseISO(u.createdAt), date));
-      const newCount = dayUsers.length;
-      const churnCount = dayUsers.filter(u => u.status === 'inactive').length;
+    const now = new Date();
+    let timePoints: Date[] = [];
+    let isMonthly = false;
+
+    // 2. User Growth Logic (Dynamic Time Range)
+    if (growthRange === '7d') {
+      timePoints = eachDayOfInterval({ start: subDays(now, 6), end: now });
+    } else if (growthRange === '30d') {
+      timePoints = eachDayOfInterval({ start: subDays(now, 29), end: now });
+    } else if (growthRange === '6m') {
+      timePoints = eachMonthOfInterval({ start: subMonths(now, 5), end: now });
+      isMonthly = true;
+    } else if (growthRange === '1y') {
+      timePoints = eachMonthOfInterval({ start: subMonths(now, 11), end: now });
+      isMonthly = true;
+    }
+
+    const growthData = timePoints.map(date => {
+      let dayUsers = [];
+      let label = "";
+
+      if (isMonthly) {
+        label = format(date, "MM/yyyy");
+        dayUsers = users.filter(u => isSameMonth(parseISO(u.createdAt), date));
+      } else {
+        label = format(date, "dd/MM");
+        dayUsers = users.filter(u => isSameDay(parseISO(u.createdAt), date));
+      }
+
+      const active = dayUsers.filter(u => u.status === 'active').length;
+      const banned = dayUsers.filter(u => u.status === 'banned').length;
+      const locked = dayUsers.filter(u => u.status === 'locked').length;
+      const inactive = dayUsers.filter(u => u.status === 'inactive').length;
+      const total = dayUsers.length;
+
       return {
-        date: format(date, "dd/MM"),
-        newUsers: newCount,
-        churnedUsers: churnCount,
-        netGrowth: newCount - churnCount
+        date: label,
+        active,
+        banned,
+        locked,
+        inactive,
+        total
       };
     });
-    const totalNetGrowth = growthData.reduce((acc, curr) => acc + curr.netGrowth, 0);
 
-    // 3. Productivity Score (Mức độ năng suất)
-    // Tính dựa trên tổng lượng Action trên mỗi User Active
-    const activeUsers = db.users.filter(u => u.status === 'active').length;
-    // Tổng hợp actions từ tất cả các nguồn
-    const totalActions = db.listenHistory.length + db.searchHistory.length + db.followUsers.length + db.followArtists.length;
+    const totalActiveGrowth = growthData.reduce((acc, curr) => acc + curr.active, 0);
 
-    // Giả sử benchmark năng suất là 20 actions/user/tuần là 100 điểm
+    // 3. Productivity Score
+    const activeUsers = users.filter(u => u.status === 'active').length;
+    const totalActions = listenHistories.length + searchHistories.length + followUsers.length + followArtists.length;
     const productivityRaw = totalActions / (activeUsers || 1);
     const productivityScore = Math.min(Math.round((productivityRaw / 15) * 100), 100);
 
     // 4. Information Balance (Cân bằng thông tin)
-    // Radar Chart: Users, Artists, User Follows, Artist Follows, Tracks, Engagement
-    const userCount = db.users.length;
-    const artistCount = db.artists.length;
-    // Dữ liệu follow lấy từ 2 mảng riêng biệt
-    const userFollowsCount = db.followUsers.length;
-    const artistFollowsCount = db.followArtists.length;
+    const userCount = users.length;
+    const artistCount = artists.length;
+    const userFollowsCount = followUsers.length;
+    const artistFollowsCount = followArtists.length;
 
-    // Chuẩn hóa về thang 100 để vẽ biểu đồ
+    // Tỷ lệ Follow
+    const totalFollows = userFollowsCount + artistFollowsCount;
+    const userFollowRatio = totalFollows > 0 ? (userFollowsCount / totalFollows) * 100 : 0;
+    const artistFollowRatio = totalFollows > 0 ? (artistFollowsCount / totalFollows) * 100 : 0;
+    const followLean = userFollowRatio > artistFollowRatio ? 'Users' : 'Artists';
+
+    // Radar Data
     const radarData = [
       { subject: 'Users', A: Math.min((userCount / 600) * 100, 100), fullMark: 100 },
       { subject: 'Artists', A: Math.min((artistCount / 100) * 100, 100), fullMark: 100 },
-      { subject: 'Follow (User)', A: Math.min((userFollowsCount / (userCount * 2)) * 100, 100), fullMark: 100 }, // Avg 2 follows/user is good
+      { subject: 'Follow (User)', A: Math.min((userFollowsCount / (userCount * 2)) * 100, 100), fullMark: 100 },
       { subject: 'Follow (Artist)', A: Math.min((artistFollowsCount / (userCount * 2)) * 100, 100), fullMark: 100 },
-      { subject: 'Tracks', A: Math.min((db.tracks.length / 300) * 100, 100), fullMark: 100 },
-      { subject: 'Engagement', A: Math.min((db.listenHistory.length / (userCount * 10)) * 100, 100), fullMark: 100 },
+      { subject: 'Tracks', A: Math.min((tracks.length / 300) * 100, 100), fullMark: 100 },
     ];
+
+    // 5. Quality of Users (Chất lượng người dùng)
+    const userStatusCount = {
+      active: users.filter(u => u.status === 'active').length,
+      inactive: users.filter(u => u.status === 'inactive').length,
+      locked: users.filter(u => u.status === 'locked').length,
+      banned: users.filter(u => u.status === 'banned').length,
+    };
+
+    const qualityUserRates = {
+      active: userStatusCount.active > 0 ? (userStatusCount.active / users.length) * 100 : 0,
+      inactive: userStatusCount.inactive > 0 ? (userStatusCount.inactive / users.length) * 100 : 0,
+      locked: userStatusCount.locked > 0 ? (userStatusCount.locked / users.length) * 100 : 0,
+      banned: userStatusCount.banned > 0 ? (userStatusCount.banned / users.length) * 100 : 0,
+    };
+
+    // 6. Post Analytics
+    const postStats = {
+      total: posts.length,
+      totalHearts: posts.reduce((sum, p) => sum + (p.heartCount || 0), 0),
+      totalComments: posts.reduce((sum, p) => sum + (p.commentCount || 0), 0),
+      totalShares: posts.reduce((sum, p) => sum + (p.shareCount || 0), 0),
+      covers: posts.filter(p => p.isCover).length,
+      // Kiểm tra fileUrl để biết là video hay ảnh (dựa trên sample data bạn đưa: có chứa "/videos/" hoặc "/images/")
+      videos: posts.filter(p => p.fileUrl && p.fileUrl.includes('/videos/')).length,
+      images: posts.filter(p => p.fileUrl && p.fileUrl.includes('/images/')).length,
+    };
+
+    const postGrowthData = timePoints.map(date => {
+      let dayPosts = [];
+      let label = "";
+
+      if (isMonthly) {
+        label = format(date, "MM/yyyy");
+        dayPosts = posts.filter(p => isSameMonth(parseISO(p.createdAt), date));
+      } else {
+        label = format(date, "dd/MM");
+        dayPosts = posts.filter(p => isSameDay(parseISO(p.createdAt), date));
+      }
+
+      const postCount = dayPosts.length;
+      const heartCount = dayPosts.reduce((sum, p) => sum + (p.heartCount || 0), 0);
+      const commentCount = dayPosts.reduce((sum, p) => sum + (p.commentCount || 0), 0);
+
+      return {
+        date: label,
+        posts: postCount,
+        engagement: heartCount + commentCount, // Tổng tương tác
+        hearts: heartCount
+      };
+    });
 
     return {
       hourlyData,
       peakHour: { hour: `${peakHourIndex}:00`, activity: maxActivity },
       growthData,
-      totalNetGrowth,
+      totalActiveGrowth,
       productivityScore,
+      qualityUserRates,
       radarData,
+      followStats: {
+        total: totalFollows,
+        userRatio: userFollowRatio.toFixed(1),
+        artistRatio: artistFollowRatio.toFixed(1),
+        lean: followLean
+      },
       stats: {
         activeUsers,
         totalActions,
         userFollows: userFollowsCount,
         artistFollows: artistFollowsCount
-      }
+      },
+      postStats,
+      postGrowthData
     };
-  }, [db]);
+  }, [users, artists, listenHistories, searchHistories, followUsers, followArtists, tracks, posts, growthRange]);
 
-  const getProductivityStatus = (score: number) => {
-    if (score >= 80) return { label: "Hiệu suất cao", color: "text-purple-600", icon: Zap };
-    if (score >= 60) return { label: "Tích cực", color: "text-blue-600", icon: Activity };
-    if (score >= 40) return { label: "Trung bình", color: "text-yellow-600", icon: CheckCircle2 };
-    return { label: "Thấp", color: "text-gray-500", icon: AlertTriangle };
-  };
+  const getUserQualityStatus = (rate: number) => {
+    if (rate >= 80) return { label: "Rất Tốt", color: "text-green-600", icon: Smile };
+    if (rate >= 60) return { label: "Tốt", color: "text-blue-600", icon: TrendingUp };
+    if (rate >= 40) return { label: "Trung Bình", color: "text-yellow-600", icon: Meh };
+    return { label: "Kém", color: "text-red-600", icon: Frown };
+  }
 
   if (loading || !analytics) {
     return <div className="flex h-screen items-center justify-center text-gray-500 animate-pulse">Đang đồng bộ dữ liệu database...</div>;
   }
-
-  const ProdIcon = getProductivityStatus(analytics.productivityScore).icon;
 
   return (
     <div className="space-y-6 min-h-screen bg-slate-50 p-6 pb-20 font-sans text-slate-900">
@@ -310,71 +266,30 @@ export default function AnalyticalDashboard() {
             Tổng hợp dữ liệu tương tác từ {analytics.stats.activeUsers} người dùng tích cực
           </p>
         </div>
-
-        {/* PRODUCTIVITY SCORECARD */}
-        <div className="bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mức Độ Năng Suất</p>
-            <div className={`text-2xl font-black ${getProductivityStatus(analytics.productivityScore).color} flex items-center gap-2`}>
-              {analytics.productivityScore}/100
-              <ProdIcon className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="h-8 w-px bg-slate-200 mx-2"></div>
-          <div className="text-sm">
-            <p className="text-slate-500">Trạng thái:</p>
-            <p className={`font-medium ${getProductivityStatus(analytics.productivityScore).color}`}>
-              {getProductivityStatus(analytics.productivityScore).label}
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* SECTION 1: KEY EVALUATIONS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
         {/* Insight 1: Activity Peak */}
         <Card className="border-l-4 border-l-indigo-500">
-          <CardContent className="pt-6">
+          <CardContent className="">
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-indigo-50 rounded-lg">
                 <Clock className="w-6 h-6 text-indigo-600" />
               </div>
-              <Badge variant="success">Peak Time</Badge>
+              <Badge variant="default">Peak Time</Badge>
             </div>
             <h3 className="text-lg font-semibold text-slate-900">Khung Giờ Vàng</h3>
             <p className="text-3xl font-bold mt-2 text-indigo-900">{analytics.peakHour.hour}</p>
             <p className="text-sm text-slate-600 mt-2">
               Đỉnh điểm hoạt động với <span className="font-bold">{analytics.peakHour.activity}</span> tương tác.
-              <br />Thời điểm tốt nhất để đẩy thông báo.
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Insight 2: Retention Analysis */}
-        <Card className={`border-l-4 ${analytics.totalNetGrowth > 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className={`p-2 rounded-lg ${analytics.totalNetGrowth > 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                <UsersIcon className={`w-6 h-6 ${analytics.totalNetGrowth > 0 ? 'text-green-600' : 'text-red-600'}`} />
-              </div>
-              <Badge variant={analytics.totalNetGrowth > 0 ? 'success' : 'danger'}>
-                {analytics.totalNetGrowth > 0 ? 'Tích cực' : 'Tiêu cực'}
-              </Badge>
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900">Tăng Trưởng Ròng</h3>
-            <p className={`text-3xl font-bold mt-2 ${analytics.totalNetGrowth > 0 ? 'text-green-700' : 'text-red-700'}`}>
-              {analytics.totalNetGrowth > 0 ? '+' : ''}{analytics.totalNetGrowth}
-            </p>
-            <p className="text-sm text-slate-600 mt-2">
-              User mới trừ đi User Inactive. Hệ thống đang {analytics.totalNetGrowth > 0 ? 'mở rộng' : 'thu hẹp'} quy mô.
             </p>
           </CardContent>
         </Card>
 
         {/* Insight 3: Connection Volume */}
         <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="pt-6">
+          <CardContent className="">
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-blue-50 rounded-lg">
                 <Share2 className="w-6 h-6 text-blue-600" />
@@ -383,69 +298,179 @@ export default function AnalyticalDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-slate-900">Mạng Lưới Kết Nối</h3>
             <p className="text-3xl font-bold mt-2 text-blue-800">
-              {analytics.stats.userFollows + analytics.stats.artistFollows}
+              {analytics.followStats.total}
             </p>
             <p className="text-sm text-slate-600 mt-2">
-              Tổng lượt theo dõi (User & Artist). Thể hiện độ gắn kết của cộng đồng.
+              Tổng lượt theo dõi (User & Artist).
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-1 shadow-md border-none flex flex-col">
+          <CardHeader>
+            <CardTitle>Cân Bằng Thông Tin</CardTitle>
+            <CardDescription>Tỷ lệ Follow User vs Artist</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col">
+            {/* COMPARISON BAR */}
+            <div className="mb-6 bg-slate-50 p-4 rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-semibold text-slate-500">XU HƯỚNG</span>
+                <Badge variant={analytics.followStats.lean === 'Users' ? 'default' : 'secondary'}>
+                  Nghiêng về {analytics.followStats.lean}
+                </Badge>
+              </div>
+              <div className="h-4 w-full bg-slate-200 rounded-full overflow-hidden flex">
+                <div
+                  className="h-full bg-blue-500 transition-all duration-500"
+                  style={{ width: `${analytics.followStats.userRatio}%` }}
+                  title="Follow Users"
+                />
+                <div
+                  className="h-full bg-green-500 transition-all duration-500"
+                  style={{ width: `${analytics.followStats.artistRatio}%` }}
+                  title="Follow Artists"
+                />
+              </div>
+              <div className="flex justify-between mt-2 text-xs font-medium">
+                <div className="text-blue-600">{analytics.followStats.userRatio}% Users</div>
+                <div className="text-green-600">{analytics.followStats.artistRatio}% Artists</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* SECTION 2: CHARTS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Radar Chart: Information Balance */}
-        <Card className="lg:col-span-1 shadow-md border-none">
-          <CardHeader>
-            <CardTitle>Cân Bằng Thông Tin</CardTitle>
-            <CardDescription>Phân bố Users, Artists và Follows</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <div className="h-[300px] w-full max-w-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analytics.radarData}>
-                  <PolarGrid stroke="#e2e8f0" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                  <Radar
-                    name="Hiện tại"
-                    dataKey="A"
-                    stroke="#4f46e5"
-                    strokeWidth={2}
-                    fill="#6366f1"
-                    fillOpacity={0.4}
-                  />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
+        <Card className="lg:col-span-3 shadow-md border-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <div>
+              <CardTitle>Biến Động Người Dùng</CardTitle>
+              <CardDescription>Phân loại theo trạng thái tài khoản khi đăng ký</CardDescription>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Composed Chart: Growth vs Churn */}
-        <Card className="lg:col-span-2 shadow-md border-none">
-          <CardHeader>
-            <CardTitle>Biến Động Người Dùng (7 Ngày)</CardTitle>
-            <CardDescription>So sánh người dùng mới đăng ký và người dùng ngừng hoạt động</CardDescription>
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              {(['7d', '30d', '6m', '1y'] as const).map(range => (
+                <button
+                  key={range}
+                  onClick={() => setGrowthRange(range)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${growthRange === range
+                    ? 'bg-white text-indigo-600 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                >
+                  {range === '7d' ? '7 Ngày' : range === '30d' ? '30 Ngày' : range === '6m' ? '6 Tháng' : '1 Năm'}
+                </button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={analytics.growthData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                   <CartesianGrid stroke="#f1f5f9" vertical={false} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dy={10} />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} dy={10} minTickGap={30} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
                   <Tooltip
                     cursor={{ fill: '#f8fafc' }}
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend verticalAlign="top" height={36} />
-                  <Bar dataKey="newUsers" name="Đăng ký mới" barSize={20} fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="churnedUsers" name="Inactive" barSize={20} fill="#ef4444" radius={[4, 4, 0, 0]} />
-                  <Line type="monotone" dataKey="netGrowth" name="Tăng trưởng ròng" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#fff', strokeWidth: 2 }} />
+                  <Bar dataKey="active" name="Hoạt động" stackId="a" barSize={growthRange === '1y' || growthRange === '6m' ? 30 : 20} fill="#22c55e" radius={[0, 0, 4, 4]} />
+                  <Bar dataKey="banned" name="Bị khóa (Admin)" stackId="a" barSize={growthRange === '1y' || growthRange === '6m' ? 30 : 20} fill="#ef4444" />
+                  <Bar dataKey="locked" name="Tự khóa" stackId="a" barSize={growthRange === '1y' || growthRange === '6m' ? 30 : 20} fill="#eab308" radius={[4, 4, 0, 0]} />
+
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* SECTION 3.5: POST ANALYTICS (MỚI) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Cột 1: Thống kê tổng quan & Phân loại nội dung */}
+        <div className="space-y-6">
+          <Card className="shadow-md border-none">
+            <CardHeader>
+              <CardTitle>Tổng Quan Bài Đăng</CardTitle>
+              <CardDescription>Phân tích loại nội dung</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-indigo-50 p-4 rounded-xl flex flex-col items-center justify-center text-center">
+                  <Video className="w-6 h-6 text-indigo-600 mb-2" />
+                  <span className="text-2xl font-bold text-indigo-900">{analytics.postStats.videos}</span>
+                  <span className="text-xs text-indigo-600 font-medium">Video</span>
+                </div>
+                <div className="bg-pink-50 p-4 rounded-xl flex flex-col items-center justify-center text-center">
+                  <ImageIcon className="w-6 h-6 text-pink-600 mb-2" />
+                  <span className="text-2xl font-bold text-pink-900">{analytics.postStats.images}</span>
+                  <span className="text-xs text-pink-600 font-medium">Hình ảnh</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="flex items-center gap-2 text-slate-600"><Music className="w-4 h-4" /> Cover Âm Nhạc</span>
+                  <span className="font-bold">{analytics.postStats.covers} bài</span>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2">
+                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${(analytics.postStats.covers / (analytics.postStats.total || 1)) * 100}%` }}></div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 flex justify-center items-center gap-1">
+                      <Heart className="w-3 h-3" /> Hearts</p>
+                    <p className="font-bold text-slate-800">{analytics.postStats.totalHearts}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 flex justify-center items-center gap-1">
+                      <MessageCircle className="w-3 h-3" /> Comments</p>
+                    <p className="font-bold text-slate-800">{analytics.postStats.totalComments}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1 flex justify-center items-center gap-1"><Share2 className="w-3 h-3" /> Shares</p>
+                    <p className="font-bold text-slate-800">{analytics.postStats.totalShares}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cột 2 & 3: Biểu đồ xu hướng đăng bài & Tương tác */}
+        <Card className="md:col-span-2 shadow-md border-none">
+          <CardHeader>
+            <CardTitle>Hiệu Suất Nội Dung</CardTitle>
+            <CardDescription>Số lượng bài đăng và tương tác theo thời gian ({growthRange})</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={analytics.postGrowthData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                  <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} label={{ value: 'Bài đăng', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 10 }} />
+                  <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#f43f5e', fontSize: 12 }} label={{ value: 'Tương tác', angle: 90, position: 'insideRight', fill: '#f43f5e', fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    labelStyle={{ fontWeight: 'bold', color: '#1e293b' }}
+                  />
+                  <Legend verticalAlign="top" height={36} />
+
+                  {/* Cột hiển thị số lượng bài post */}
+                  <Bar yAxisId="left" dataKey="posts" name="Số bài đăng" barSize={30} fill="#6366f1" radius={[4, 4, 0, 0]} />
+
+                  {/* Đường hiển thị tương tác (Tim + Comment) */}
+                  <Area yAxisId="right" type="monotone" dataKey="engagement" name="Tương tác (Tim+Cmt)" stroke="#f43f5e" fillOpacity={1} fill="url(#colorEngagement)" strokeWidth={2} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -457,8 +482,8 @@ export default function AnalyticalDashboard() {
       <Card className="shadow-md border-none">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Biểu Đồ Nhiệt: Hoạt Động Theo Giờ</CardTitle>
-            <CardDescription>Phân tích mật độ request trong 24h từ Log History</CardDescription>
+            <CardTitle>Biểu Đồ Hoạt Động Theo Giờ</CardTitle>
+            <CardDescription>Phân tích mật độ request trong 24h</CardDescription>
           </div>
           <BarChart3 className="text-slate-400 w-5 h-5" />
         </CardHeader>
@@ -492,7 +517,7 @@ export default function AnalyticalDashboard() {
                   {analytics.hourlyData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={entry.isPeak ? '#4f46e5' : '#cbd5e1'}
+                      fill={entry.isPeak ? '#4f46e5' : '#7BBCF4'}
                     />
                   ))}
                 </Bar>
@@ -510,18 +535,22 @@ export default function AnalyticalDashboard() {
               <Zap className="w-6 h-6 text-yellow-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold">Báo Cáo Tự Động Từ Cơ Sở Dữ Liệu</h3>
+              <h3 className="text-xl font-bold">Báo cáo phân tích từ tổng quan dữ Liệu</h3>
               <div className="mt-4 space-y-3 text-slate-300 text-sm leading-relaxed">
                 <p>
-                  • <strong>Hiệu suất hệ thống:</strong> Đạt mức <span className="text-white font-bold">{analytics.productivityScore}/100</span>.
-                  Tổng cộng <strong>{analytics.stats.totalActions}</strong> hành động (nghe nhạc, tìm kiếm, follow) được thực hiện bởi {analytics.stats.activeUsers} user active.
+                  • Tổng cộng <strong>{analytics.stats.totalActions}</strong> hành động (nghe nhạc, tìm kiếm, follow) được thực hiện bởi {analytics.stats.activeUsers} user active.
                 </p>
                 <p>
-                  • <strong>Mạng lưới thông tin:</strong> Biểu đồ Radar cho thấy sự cân bằng giữa Users và Artists.
-                  Tỷ lệ <strong>{analytics.stats.userFollows}</strong> follow user so với <strong>{analytics.stats.artistFollows}</strong> follow artist cho thấy cộng đồng quan tâm nhiều hơn đến tương tác xã hội/nghệ sĩ.
+                  • Hệ thống đang nghiêng về <strong>{analytics.followStats.lean === 'Users' ? 'Kết nối xã hội' : 'Nội dung nghệ sĩ'}</strong> với tỷ lệ {analytics.followStats.lean === 'Users' ? analytics.followStats.userRatio : analytics.followStats.artistRatio}%.
                 </p>
                 <p>
-                  • <strong>Khuyến nghị:</strong> Tận dụng khung giờ vàng <strong>{analytics.peakHour.hour}</strong> để tối ưu hóa việc phân phối nội dung mới, giúp tăng thêm chỉ số Engagement.
+                  • <strong>Khuyến nghị:</strong> Tận dụng khung giờ vàng <strong>{analytics.peakHour.hour}</strong> để tối ưu hóa việc phân phối nội dung mới, giúp tiếp cận người dùng hiệu quả hơn.
+                </p>
+                <p>
+                  • Chất lượng người dùng hiện đang ở mức <strong>{getUserQualityStatus(analytics.qualityUserRates.active).label}</strong> với {analytics.qualityUserRates.active.toFixed(1)}% user active. Cần duy trì và nâng cao trải nghiệm người dùng để giữ chân nhóm này.
+                </p>
+                <p>
+                  • Tổng số bài đăng là <strong>{analytics.postStats.total}</strong> với mức tương tác đáng kể. Nên tiếp tục khuyến khích người dùng tạo nội dung đa dạng để duy trì sự sôi động trên nền tảng.
                 </p>
               </div>
             </div>

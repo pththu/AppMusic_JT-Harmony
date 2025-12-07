@@ -445,32 +445,6 @@ async function checkIsLiked(userId, postId) {
   }
 }
 
-// Hàm này kiểm tra xem người dùng đã thích comment cụ thể chưa
-// async function checkCommentIsLiked(userId, commentId) {
-//     if (!userId) return false;
-//     try {
-//         const like = await CommentLike.findOne({
-//             where: { userId: userId, commentId: commentId },
-//         });
-//         return !!like;
-//     } catch (e) {
-//         console.error("Lỗi khi kiểm tra isLiked cho Comment:", e.message);
-//         return false;
-//     }
-// }
-
-// ĐẾM LIKE CHO COMMENT
-// async function getCommentLikeCount(commentId) {
-//     try {
-//         return await CommentLike.count({
-//             where: { commentId: commentId },
-//         });
-//     } catch (e) {
-//         console.error("Lỗi khi đếm Like Comment:", e.message);
-//         return 0;
-//     }
-// }
-
 // --- HÀM LẤY TẤT CẢ BÀI ĐĂNG ---
 exports.getAllPost = async (req, res) => {
   //  Kiểm tra xác thực
@@ -707,12 +681,18 @@ exports.createPost = async (req, res) => {
   console.log("createPost called with body:", req.body);
   try {
     //  Kiểm tra xác thực
-    const userId = req.user && req.user.id;
+    let userId = req.user && req.user.id;
+    const user = await User.findByPk(userId);
     if (!userId) {
       return res
         .status(401)
         .json({ error: "User not authenticated or missing ID" });
     }
+
+    if (user.roleId === 1) {
+      userId = req.body.userId;
+    }
+
     console.log("Tạo bài đăng: User ID từ token:", userId);
 
     const { content, fileUrls, isCover, trackSpotifyId } = req.body;
@@ -1127,19 +1107,32 @@ exports.updatePost = async (req, res) => {
 // --- HÀM XÓA BÀI ĐĂNG ---
 exports.deletePost = async (req, res) => {
   try {
-    const postId = parseInt(req.params.id, 10);
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(401).json({ error: "User not found" });
+    const postId = req.params.id;
     const post = await Post.findByPk(postId);
     if (!post) return res.status(404).json({ error: "Post not found" });
 
-    const admin = isAdmin(req);
-    const currentUserId = req.user && req.user.id;
-    if (!admin && (!currentUserId || post.userId !== currentUserId)) {
-      return res.status(403).json({ error: "Forbidden: Not allowed to delete this post" });
+    let admin = false;
+    if (user.roleId === 1) {
+      admin = true;
     }
 
-    await post.destroy();
-    res.json({ message: "Post deleted successfully" });
+    console.log('is admin: ', admin)
+    const currentUserId = req.user.id;
+    if (!admin && (post.userId !== currentUserId)) {
+      console.log(3)
+      return res.status(403).json({ error: "Forbidden: Not allowed to delete this post" });
+    }
+    const row = await Post.destroy({ where: { id: postId } });
+    if (!row) {
+      console.log(1)
+      return res.status(500).json({ error: "Failed to delete post" });
+    }
+    console.log(2)
+    res.status(200).json({ message: "Post deleted successfully", success: true });
   } catch (error) {
+    console.log(12345)
     res.status(500).json({ error: error.message });
   }
 };
@@ -1380,3 +1373,15 @@ exports.hidePost = async (req, res) => {
   }
 };
 
+exports.GetAllPost = async (req, res) => {
+  try {
+    const posts = await Post.findAll();
+    res.status(200).json({
+      message: "Lấy tất cả bài đăng thành công!",
+      success: true,
+      data: posts,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}

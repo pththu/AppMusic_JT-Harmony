@@ -1,10 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const artistController = require('../controllers/artistController');
-const { authorizeRole } = require('../middlewares/authentication');
+const { authorizeRole, authenticateToken } = require('../middlewares/authentication');
 
 // admin routes
-router.get('/', authorizeRole, artistController.getAllArtist);
+router.get('/', authenticateToken, authorizeRole, artistController.getAllArtist);
+router.post('/', authenticateToken, authorizeRole, artistController.createArtist);
 
 
 // users routes

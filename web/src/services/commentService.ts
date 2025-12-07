@@ -32,6 +32,55 @@ export async function fetchAllComments(params?: CommentFilters) {
 }
 
 export async function deleteCommentAdmin(id: number) {
-  const res = await axiosClient.delete(`/comments/remove/${id}`);
-  return res.data as { message: string };
+  try {
+    const res = await axiosClient.delete(`/comments/remove/${id}`);
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
 }
+
+const GetAllComments = async () => {
+  try {
+    const response = await axiosClient.get('/comments/all');
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+const CreateComment = async (payload) => {
+  try {
+    const response = await axiosClient.post('/comments', payload);
+    console.log('response: ', response);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export {
+  GetAllComments,
+  CreateComment
+};

@@ -241,7 +241,7 @@ function DropdownMenuSubContent({
   )
 }
 
-const DropdownAction = ({ user, onDelete }) => {
+const DropdownAction = ({ user, onDelete, onPermission, setSelectedFollowerDetail }) => {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef(null);
 
@@ -257,20 +257,47 @@ const DropdownAction = ({ user, onDelete }) => {
 
   return (
     <div className="relative" ref={ref}>
-      <Button variant="ghost" size="icon" className="h-8 w-8 p-0" onClick={() => setIsOpen(!isOpen)}>
+      <Button variant="ghost" size="icon" className="h-8 w-16 p-0" onClick={() => setIsOpen(!isOpen)}>
         <MoreHorizontal className="h-4 w-4" />
       </Button>
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg z-50 py-1">
-          <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsOpen(false)}>
+        <div className="absolute right-0 mt-2 w-56 rounded-md border border-gray-200 bg-white shadow-lg z-50 py-1">
+          <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => {
+              setSelectedFollowerDetail(user);
+              setIsOpen(false);
+            }}
+          >
             <Eye className="mr-2 h-4 w-4" /> Xem Chi Tiết
           </button>
-          <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsOpen(false)}>
-            <ShieldPlus className="mr-2 h-4 w-4" /> Phân quyền
-          </button>
+          {user.status !== 'banned' && (
+            <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              onClick={() => {
+                if (user.status === 'locked') {
+                  onPermission('unlock', user.id);
+                } else {
+                  onPermission('ban', user.id);
+                }
+                setIsOpen(false)
+              }}
+            >
+              {user.status === 'locked' ? (
+                <>
+                  <ShieldPlus className="mr-2 h-4 w-4" /> Mở Khóa Người Dùng
+                </>
+              ) : (
+                <>
+                  <ShieldPlus className="mr-2 h-4 w-4" /> Cấm Người Dùng
+                </>
+              )}
+            </button>
+          )}
           <button
             className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-            onClick={() => { onDelete(user.id); setIsOpen(false); }}
+            onClick={() => {
+              onDelete(user.id);
+              setIsOpen(false);
+            }}
           >
             <Trash2 className="mr-2 h-4 w-4" /> Xóa Người Dùng
           </button>

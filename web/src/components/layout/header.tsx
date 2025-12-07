@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui";
 import { useRouter } from "next/navigation";
-import { useAuthStore, useFavoritesStore, useFollowStore, useHistoryStore, useMusicStore, useUserStore } from "@/store";
+import { useAuthStore, useFavoritesStore, useFollowStore, useHistoryStore, useMusicStore, usePostStore, useUserStore } from "@/store";
 import { Logout } from "@/services";
 import toast from "react-hot-toast";
 
@@ -29,7 +29,7 @@ export function Header() {
   const clearFollowData = useFollowStore((state) => state.clearFollowData);
   const clearFavoritesData = useFavoritesStore((state) => state.clearFavoritesData);
   const clearHistoryData = useHistoryStore((state) => state.clearHistoryData);
-
+  const clearPosts = usePostStore((state) => state.clearPosts);
 
   const handleLogout = async () => {
 
@@ -43,6 +43,7 @@ export function Header() {
         clearFollowData();
         clearFavoritesData();
         clearHistoryData();
+        clearPosts();
         toast.success('Đăng xuất thành công!', {
           duration: 3000, // ✅ Yêu cầu 1: Hiển thị trong 3 giây (3000ms)
           style: {
@@ -83,9 +84,9 @@ export function Header() {
 
       {/* Actions */}
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="sm" className="hidden lg:flex">
+        {/* <Button variant="ghost" size="sm" className="hidden lg:flex">
           <Bell className="h-5 w-5" />
-        </Button>
+        </Button> */}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -94,7 +95,7 @@ export function Header() {
                 <span className="text-sm font-medium text-white">A</span>
               </div>
               <span className="text-sm font-medium text-gray-900 hidden sm:block">
-                Admin
+                Quản Trị Viên
               </span>
               <ChevronDown className="h-4 w-4 text-gray-500" />
             </Button>

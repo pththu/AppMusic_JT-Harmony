@@ -4,5 +4,6 @@ export { useMusicStore } from "./musicStore";
 export { useAuthStore } from "./authStore";
 export { useFavoritesStore } from "./favoritesStore";
 export { useHistoryStore } from "./historyStore";
+export { usePostStore } from "./postStore";
 
 export type { AuthState } from "./authStore";
