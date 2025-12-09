@@ -1,5 +1,4 @@
 import axiosClient, { axiosPublicClient } from "@/config/axiosClient";
-import { id } from "date-fns/locale";
 
 // get
 export const GetPlaylistsForYou = async (payload) => {
@@ -129,7 +128,6 @@ export const GetTracks = async (payload) => {
 export const GetVideoId = async (payload) => {
   try {
     const response = await axiosClient.get(`/music/track/${payload}/video-id`);
-    console.log('tim video id', response.data);
     return response.data;
   } catch (error) {
     console.log(error);
@@ -313,7 +311,6 @@ export const RemoveTrackFromPlaylist = async (payload) => {
   }
 }
 
-// đang test
 export const GetTracksForCover = async () => {
   try {
     const response = await axiosPublicClient.get(`/music/track-for-cover`);

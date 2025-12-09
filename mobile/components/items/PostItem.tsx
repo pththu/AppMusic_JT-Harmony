@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-    Alert,
     Image,
     Linking,
     ScrollView,
@@ -19,6 +18,8 @@ import PostOptionsModal from "../modals/PostOptionsModal";
 import ReportReasonModal from "../modals/ReportReasonModal";
 import useAuthStore from "@/store/authStore";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { FindTrackById } from "@/services/musicService";
 
 // Lấy kích thước màn hình để tính toán chiều rộng ảnh
 const { width: screenWidth } = Dimensions.get('window');
@@ -59,6 +60,7 @@ const PostItem = ({
     content,
     images,
     musicLink = null,
+    songId = null,
     heartCount,
     commentCount,
     shareCount,
@@ -77,6 +79,7 @@ const PostItem = ({
 }) => {
     const colorScheme = useColorScheme();
     const { info, success, error, warning } = useCustomAlert();
+    const { navigate } = useNavigate();
     const isGuest = useAuthStore((state) => state.isGuest);
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [currentLikeCount, setCurrentLikeCount] = useState(heartCount);
@@ -97,6 +100,25 @@ const PostItem = ({
 
     // State cho modal options
     const [optionsModalVisible, setOptionsModalVisible] = useState(false);
+
+    // Xử lý khi nhấn vào music link để chuyển đến SongScreen
+    const handleMusicPress = async () => {
+        if (!songId) return;
+        
+        try {
+            // Tìm thông tin bài hát theo ID
+            const response = await FindTrackById(songId);
+            if (response.success && response.data) {
+                // Chuyển đến SongScreen với thông tin bài hát
+                navigate('SongScreen', { songId: songId });
+            } else {
+                error('Lỗi', 'Không tìm thấy thông tin bài hát.');
+            }
+        } catch (err) {
+            console.error('Lỗi khi tìm bài hát:', err);
+            error('Lỗi', 'Không thể mở bài hát.');
+        }
+    };
 
     // State cho report modal
     const [reportModalVisible, setReportModalVisible] = useState(false);
@@ -231,7 +253,7 @@ const PostItem = ({
                 }
             } catch (error) {
                 console.error('Lỗi khi ẩn bài viết:', error);
-                Alert.alert('Lỗi', 'Không thể ẩn bài viết. Vui lòng thử lại.');
+                error('Lỗi', 'Không thể ẩn bài viết. Vui lòng thử lại.');
             }
             setIsTemporarilyHidden(false);
         }, 10000); // 10 giây
@@ -458,14 +480,17 @@ const PostItem = ({
 
             {/* Music Link (Nâng cấp) */}
             {musicLink ? (
-                <View
+                <TouchableOpacity
+                    onPress={handleMusicPress}
                     className="flex-row items-center bg-indigo-500/10 p-3 rounded-lg mb-3 border border-indigo-200 dark:border-indigo-900"
+                    activeOpacity={0.8}
                 >
                     <Icon name="music" size={18} color="#6366F1" />
                     <Text className="ml-2 text-indigo-600 dark:text-indigo-400 font-medium flex-1" numberOfLines={1}>
                         {musicLink}
                     </Text>
-                </View>
+                    <Icon name="chevron-right" size={16} color="#6366F1" />
+                </TouchableOpacity>
             ) : null}
 
             {/* Interaction Stats Bar */}

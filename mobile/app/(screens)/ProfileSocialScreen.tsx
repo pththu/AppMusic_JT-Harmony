@@ -11,6 +11,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Pressable,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
@@ -23,6 +24,7 @@ import {
   deletePost,
   Post as PostType,
   Comment,
+  sharePost
 } from "../../services/socialApi";
 import { Cover } from "../../services/coverService";
 import useAuthStore from "@/store/authStore";
@@ -39,8 +41,6 @@ import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { FollowUser, UnfollowUser } from "@/services/followService";
 import { useLocalSearchParams } from "expo-router";
 import { useProfileSocialData } from "@/hooks/useProfileSocialData";
-import { is } from "date-fns/locale";
-
 
 export default function ProfileSocialScreen() {
   const params = useLocalSearchParams();
@@ -84,6 +84,12 @@ export default function ProfileSocialScreen() {
   const [editingPost, setEditingPost] = useState(null); // Bài đăng đang chỉnh sửa
   const [editContent, setEditContent] = useState(""); // Nội dung chỉnh sửa
 
+  // STATES CHO RE-SHARE MODAL
+  const [reShareModalVisible, setReShareModalVisible] = useState(false); // Hiển thị modal re-share
+  const [reShareTargetPost, setReShareTargetPost] = useState<any | null>(null); // Bài đăng đang chia sẻ
+  const [reShareCaption, setReShareCaption] = useState(""); // Nội dung chia sẻ
+  const [isSharing, setIsSharing] = useState(false); // Trạng thái đang chia sẻ
+
   const isCurrentUserProfile = currentUser && currentUser.id === userId;
 
   // Hàm tải dữ liệu profile và bài đăng
@@ -111,7 +117,7 @@ export default function ProfileSocialScreen() {
     }
     if (!profile) return;
     try {
-      // 1. Gọi API để tạo/lấy Conversation ID
+      // Gọi API để tạo/lấy Conversation ID
       const result = await createOrGetPrivateConversation(userId);
       if ("status" in result && result.status === "error") {
         error("Lỗi", result.message);
@@ -119,7 +125,7 @@ export default function ProfileSocialScreen() {
       }
       const { conversationId } = result as { conversationId: number };
 
-      // 2. Chuyển hướng đến màn hình Chat với ID vừa nhận
+      // Chuyển hướng đến màn hình Chat với ID vừa nhận
       (navigation as any).navigate("ChatScreen", {
         conversationId: conversationId,
         // Truyền thông tin người chat cùng để hiển thị trên header
@@ -138,13 +144,11 @@ export default function ProfileSocialScreen() {
   // HÀM XỬ LÝ KHI NHẤN VÀO USER
   const handleUserPress = useCallback(
     (targetUserId: number) => {
-      // // Nếu nhấn vào ảnh của chính mình, nó sẽ reload màn hình.
-      // navigate('ProfileSocial', { userId: targetUserId });
+      // Nếu nhấn vào ảnh của chính mình, nó sẽ reload màn hình.
     },
     [navigate]
   );
 
-  // --- LOGIC CẬP NHẬT BÀI ĐĂNG  ---
   // Hàm cập nhật bài đăng trong danh sách
   const updatePostState = useCallback(
     (
@@ -161,7 +165,6 @@ export default function ProfileSocialScreen() {
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
           if (post.id === postId) {
-            // Cập nhật giá trị
             const newValue =
               typeof value === "function" ? value(post[type]) : value;
             return {
@@ -426,6 +429,51 @@ export default function ProfileSocialScreen() {
     setFollowModalVisible(false);
   };
 
+  // HÀM XỬ LÝ RE-SHARE
+const openReShare = (post: any) => {
+  setReShareTargetPost(post);
+  setReShareCaption("");
+  setReShareModalVisible(true);
+};
+
+const closeReShareModal = () => {
+  if (isSharing) return;
+  setReShareModalVisible(false);
+  setReShareCaption("");
+  setReShareTargetPost(null);
+};
+
+const handleShare = async () => {
+  if (!reShareTargetPost || isSharing) return;
+
+  setIsSharing(true);
+  try {
+    const result = await sharePost(reShareTargetPost.id, reShareCaption);
+    
+    // Kiểm tra xem có newPost trong result không (success case)
+    if ('newPost' in result) {
+      // Cập nhật số lượt share trong danh sách
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.id === reShareTargetPost.id
+            ? { ...post, shareCount: String(Number(post.shareCount) + 1) }
+            : post
+        )
+      );
+      success("Thành công", "Đã chia sẻ bài viết");
+      closeReShareModal();
+    } else {
+      // Error case - có message và status field
+      throw new Error(result.status === 'error' ? result.message : "Không thể chia sẻ bài viết");
+    }
+  } catch (error) {
+    console.error("Lỗi khi chia sẻ bài viết:", error);
+    error("Lỗi", error.message || "Đã xảy ra lỗi khi chia sẻ bài viết");
+  } finally {
+    setIsSharing(false);
+  }
+};
+
   const renderProfileHeader = () => {
     if (!profile) return null;
 
@@ -437,7 +485,7 @@ export default function ProfileSocialScreen() {
         {/* KHỐI THÔNG TIN CƠ BẢN: Avatar, Tên, Username */}
         <View className="px-4 pt-4">
           <View className="flex-row items-start mb-4">
-            {/* Avatar (Tăng kích thước và thêm viền nổi bật) */}
+            {/* Avatar */}
             <Image
               source={{
                 uri: profile.avatarUrl || "https://via.placeholder.com/150",
@@ -456,7 +504,7 @@ export default function ProfileSocialScreen() {
             </View>
           </View>
 
-          {/* Tiểu sử (Bio) */}
+          {/* Tiểu sử */}
           {profile.bio ? (
             <Text className={`text-base ${textPrimary} mb-4 leading-snug`}>
               {profile.bio}
@@ -680,9 +728,7 @@ export default function ProfileSocialScreen() {
                   updatePostState(post.id, type, value)
                 }
                 onCommentPress={() => openCommentModal(post.id)}
-                onSharePress={() =>
-                  Alert.alert("Chia sẻ", "Tính năng chưa phát triển")
-                }
+                onSharePress={() => openReShare(post)}
                 onUserPress={
                   post.User?.id === userId ? undefined : handleUserPress
                 }
@@ -789,6 +835,61 @@ export default function ProfileSocialScreen() {
           </View>
         </View>
       )}
+      {/* RE-SHARE MODAL */}
+      <Modal
+        visible={reShareModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeReShareModal}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="w-11/12 bg-white dark:bg-gray-900 rounded-2xl p-4">
+            <Text className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              Chia sẻ bài viết
+            </Text>
+            
+            {reShareTargetPost && (
+              <View className="mb-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <Text className="text-gray-700 dark:text-gray-300">
+                  {reShareTargetPost.content}
+                </Text>
+              </View>
+            )}
+
+            <TextInput
+              className="border border-gray-300 dark:border-gray-700 rounded-lg p-3 mb-4 text-gray-900 dark:text-white bg-white dark:bg-gray-800"
+              placeholder="Thêm mô tả của bạn..."
+              placeholderTextColor="#9CA3AF"
+              value={reShareCaption}
+              onChangeText={setReShareCaption}
+              multiline
+              numberOfLines={3}
+            />
+
+            <View className="flex-row justify-end">
+              <TouchableOpacity
+                onPress={closeReShareModal}
+                disabled={isSharing}
+                className="px-4 py-2 rounded-lg mr-2 bg-gray-300 dark:bg-gray-700"
+              >
+                <Text className="text-gray-800 dark:text-gray-200">Hủy</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                onPress={handleShare}
+                disabled={isSharing}
+                className="px-4 py-2 rounded-lg bg-blue-500"
+              >
+                {isSharing ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white font-medium">Chia sẻ</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

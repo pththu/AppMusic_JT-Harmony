@@ -44,7 +44,6 @@ import SearchOverlay from "../../components/search/SearchOverlay";
 import { createNewCover, fetchAllCovers } from "../../services/coverService";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { FindTrackById } from "@/services/musicService";
-import { set } from "date-fns";
 
 const SocialScreen = () => {
   const colorScheme = useColorScheme();
@@ -54,48 +53,36 @@ const SocialScreen = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
   
-  // Ref for NewPostCreator
-  const newPostCreatorRef = useRef<NewPostItemRef>(null);
-  
   // FAB animation value
   const fabScale = useRef(new Animated.Value(1)).current;
   
-  // Header animation values
-  const headerOpacity = useRef(new Animated.Value(1)).current;
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
-
-  const [trackItem, setTrackItem] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   // State cho New Post Creator
   const [newPostText, setNewPostText] = useState("");
-  const [selectedMediaAssets, setSelectedMediaAssets] = useState<any[]>([]); //  Lưu trữ expo assets cho preview và upload
-  const [selectedSongId, setSelectedSongId] = useState<number | null>(null); // ID bài hát đính kèm
-  const [isUploading, setIsUploading] = useState(false); // Trạng thái upload file
+  const [selectedMediaAssets, setSelectedMediaAssets] = useState<any[]>([]);
+  const [selectedSongId, setSelectedSongId] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // State cho Comment Modal
   const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState<any | null>(null); // Dùng state cho reply
-  const [quote, setQuote] = useState<any | null>(null); // Dùng state cho quote
+  const [replyTo, setReplyTo] = useState<any | null>(null);
+  const [quote, setQuote] = useState<any | null>(null);
   const [commentModalVisible, setCommentModalVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null); // Post ID hiện tại trong modal comment
 
   const [isRefreshing, setIsRefreshing] = useState(false); // Refresh screen
 
   // State cho Like Modal
-  const [likeModalVisible, setLikeModalVisible] = useState(false); // Hiển thị/ẩn modal like
+  const [likeModalVisible, setLikeModalVisible] = useState(false);
   const [selectedPostIdForLikes, setSelectedPostIdForLikes] = useState<
     string | null
-  >(null); // Post ID hiện tại trong modal like
+  >(null);
 
-  // State cho search
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPosts, setFilteredPosts] = useState([]);
-
   // State cho tabs
   const [activeTab, setActiveTab] = useState<"posts" | "covers">("posts");
-
   // State cho Upload Cover Modal
   const [uploadCoverModalVisible, setUploadCoverModalVisible] = useState(false);
   // State cho Options Menu
@@ -113,28 +100,6 @@ const SocialScreen = () => {
   const [covers, setCovers] = useState<any[]>([]);
   const [coversLoading, setCoversLoading] = useState(true);
 
-  // console.log("User: ", user);
-
-  // Header animation functions
-  const animateHeaderTransition = (toSearch: boolean) => {
-    Animated.parallel([
-      Animated.timing(headerOpacity, {
-        toValue: toSearch ? 0 : 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(headerTranslateY, {
-        toValue: toSearch ? -10 : 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handleSearchToggle = (showSearch: boolean) => {
-    animateHeaderTransition(showSearch);
-    setIsSearchVisible(showSearch);
-  };
   const animateFABPress = () => {
     Animated.sequence([
       Animated.timing(fabScale, {
@@ -172,10 +137,8 @@ const SocialScreen = () => {
     try {
       const response = await FindTrackById(trackId);
       if (response.success) {
-        setTrackItem(response.data);
         return response.data;
       } else {
-        setTrackItem(null);
         return null;
       }
     } catch (error) {
@@ -187,7 +150,7 @@ const SocialScreen = () => {
     let songNameAndArtists = "";
     let trackData = apiPost.OriginalSong;
 
-    // 1. Ưu tiên dùng OriginalSong (nếu có)
+    // 1. Ưu tiên dùng OriginalSong
     if (apiPost.OriginalSong && apiPost.OriginalSong.name) {
       const artists = Array.isArray(apiPost.OriginalSong.artists)
         ? apiPost.OriginalSong.artists.map((a) => a.name).join(", ")
@@ -196,7 +159,6 @@ const SocialScreen = () => {
     }
     // 2. Nếu không có OriginalSong nhưng có songId, phải gọi API để lấy
     else if (apiPost.songId) {
-      // GỌI HÀM BẤT ĐỒNG BỘ
       const fetchedTrack = await findTrackById(apiPost.songId);
       if (fetchedTrack) {
         trackData = fetchedTrack;
@@ -235,13 +197,12 @@ const SocialScreen = () => {
         : apiPost.fileUrl
           ? [apiPost.fileUrl]
           : [],
-      // Cập nhật musicLink sử dụng kết quả đã xác định
       musicLink: songNameAndArtists,
       isOnline: false,
       comments: [],
       isCover: apiPost.isCover || false,
       originalSongId: apiPost.originalSongId,
-      OriginalSong: trackData, // Cập nhật OriginalSong nếu tìm thấy
+      OriginalSong: trackData,
       originalPost: apiPost.OriginalPost,
     };
   };
@@ -258,6 +219,7 @@ const SocialScreen = () => {
     [navigate]
   );
 
+  // Hàm chọn ảnh
   const handleSelectMedia = async () => {
     if (isUploading) return;
 
@@ -297,6 +259,7 @@ const SocialScreen = () => {
     }
     try {
       setIsUploading(true);
+      info("Đang xử lý", "Đang đăng bài viết của bạn, vui lòng đợi...");
       // UPLOAD MEDIA NẾU CÓ
       let fileUrlsToSend = null;
       if (selectedMediaAssets.length > 0) {
@@ -331,8 +294,9 @@ const SocialScreen = () => {
 
       // Map bài đăng mới về format local (hàm async)
       const newPost = await mapApiPostToLocal(apiPost);
+      console.log("Mapped Post:", newPost);
 
-      // Cập nhật state: thêm bài mới lên đầu danh sách (optimistic)
+      // Cập nhật state: thêm bài mới lên đầu danh sách với dữ liệu thực từ server
       setPosts(prevPosts => [newPost, ...prevPosts]);
 
       // RESET INPUTS
@@ -344,10 +308,9 @@ const SocialScreen = () => {
       // Đóng modal NewPostCreator
       setNewPostModalVisible(false);
 
-      // Sau khi đăng thành công, gọi lại loadPosts để đồng bộ với backend
-      setLoading(true);
-      await loadPosts();
-      setLoading(false);
+      // Thông báo thành công
+      success("Thành công", "Bài viết của bạn đã được đăng thành công!");
+
     } catch (err) {
       console.error("Lỗi khi tạo bài đăng:", err);
       const errorMessage = err.response?.data?.error || err.message || "Không thể tạo bài đăng.";
@@ -363,7 +326,6 @@ const SocialScreen = () => {
       prevPosts.map((post) => {
         if (post.id === id) {
           if (type === "heartCount") {
-            // Logic cập nhật heart count trong state gốc với giá trị mới từ API
             return { ...post, heartCount: value };
           } else if (type === "comment") {
             return {
@@ -383,42 +345,43 @@ const SocialScreen = () => {
   };
 
   // Hàm xử lý chỉnh sửa bài viết
-  const handleEditPost = async (
-    postId: string,
-    newContent: string,
-    newFileUrls: string[] | null,
-    newSongId: number | null
-  ) => {
-    try {
-      const updatedPost = await updatePost(
-        postId,
-        newContent,
-        newFileUrls,
-        newSongId
-      );
-      if ("message" in updatedPost) {
-        throw new Error(updatedPost.message);
-      }
-      // Cập nhật state với bài viết đã chỉnh sửa
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              content: newContent,
-              fileUrl: newFileUrls,
-              songId: newSongId,
-            }
-            : post
-        )
-      );
-      success("Bài viết đã được cập nhật.");
-    } catch (error) {
-      console.error("Lỗi khi chỉnh sửa bài viết:", error);
-      error("Lỗi", "Không thể cập nhật bài viết.");
-    }
-  };
+  // const handleEditPost = async (
+  //   postId: string,
+  //   newContent: string,
+  //   newFileUrls: string[] | null,
+  //   newSongId: number | null
+  // ) => {
+  //   try {
+  //     const updatedPost = await updatePost(
+  //       postId,
+  //       newContent,
+  //       newFileUrls,
+  //       newSongId
+  //     );
+  //     if ("message" in updatedPost) {
+  //       throw new Error(updatedPost.message);
+  //     }
+  //     // Cập nhật state với bài viết đã chỉnh sửa
+  //     setPosts((prevPosts) =>
+  //       prevPosts.map((post) =>
+  //         post.id === postId
+  //           ? {
+  //             ...post,
+  //             content: newContent,
+  //             fileUrl: newFileUrls,
+  //             songId: newSongId,
+  //           }
+  //           : post
+  //       )
+  //     );
+  //     success("Bài viết đã được cập nhật.");
+  //   } catch (error) {
+  //     console.error("Lỗi khi chỉnh sửa bài viết:", error);
+  //     error("Lỗi", "Không thể cập nhật bài viết.");
+  //   }
+  // };
 
+  
   // Hàm xử lý xóa bài viết
   const handleDeletePost = async (postId: string) => {
     confirm(
@@ -426,7 +389,6 @@ const SocialScreen = () => {
       "Bạn có chắc chắn muốn xóa bài viết này?",
       async () => {
         try {
-          // Thêm hiệu ứng loading
           setIsUploading(true);
           
           // Gọi API xóa bài viết
@@ -445,7 +407,6 @@ const SocialScreen = () => {
             }
           } else {
             // Xử lý trường hợp không có thông báo từ server
-            // Vẫn cập nhật UI để đảm bảo trải nghiệm người dùng mượt mà
             setPosts(prevPosts => 
               prevPosts.filter(post => post.id !== postId)
             );
@@ -454,7 +415,7 @@ const SocialScreen = () => {
         } catch (error) {
           console.error("Lỗi khi xóa bài viết:", error);
           
-          // Hiển thị thông báo lỗi chi tiết hơn
+          // Hiển thị thông báo lỗi
           let errorMessage = "Đã xảy ra lỗi khi xóa bài viết";
           if (error.response?.data?.message) {
             errorMessage = error.response.data.message;
@@ -468,7 +429,6 @@ const SocialScreen = () => {
         }
       },
       () => {
-        // Hủy xóa
         console.log("Đã hủy xóa bài viết");
       }
     );
@@ -478,8 +438,6 @@ const SocialScreen = () => {
   const openCommentModal = (postId: string) => {
     setSelectedPostId(postId);
     setCommentModalVisible(true);
-
-    // Tải comments ngay khi modal mở
     loadComments(postId);
   };
 
@@ -495,20 +453,9 @@ const SocialScreen = () => {
     setQuote(null);
   };
 
-  // Hàm set reply/quote
-  const handleSetReply = (comment: any) => {
-    setReplyTo(comment);
-    setQuote(null);
-  };
-
-  const handleSetQuote = (comment: any) => {
-    setQuote(comment);
-    setReplyTo(null);
-  };
-
-  // Hàm thêm comment với optimistic update
+  // Hàm thêm comment
   const addComment = async (text: string, parentId: string | null) => {
-    // Lấy thông tin người dùng hiện tại từ store để tự tạo comment object
+    // Lấy thông tin người dùng hiện tại từ store
     const currentUser = useAuthStore.getState().user;
 
     if (!selectedPostId || !text.trim() || !currentUser) return;
@@ -535,11 +482,11 @@ const SocialScreen = () => {
         : undefined,
     };
 
-    // CẬP NHẬT UI TỨC THỜI
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
-        if (post.id === selectedPostId) {
-          let updatedComments = [...(post.comments || [])];
+    // CẬP NHẬT UI TỨC THỜI - Cập nhật cả posts và covers state
+    const updateCommentsInState = (items: any[]) => {
+      return items.map((item) => {
+        if (item.id === selectedPostId) {
+          let updatedComments = [...(item.comments || [])];
 
           if (parentId) {
             // LÀ TRẢ LỜI (Reply): Tìm comment cha và thêm vào Replies
@@ -557,16 +504,17 @@ const SocialScreen = () => {
             updatedComments = [optimisticComment, ...updatedComments];
           }
           return {
-            ...post,
-            commentCount: (post.commentCount || 0) + 1,
+            ...item,
+            commentCount: (item.commentCount || 0) + 1,
             comments: updatedComments,
           };
         }
-        return post;
-      })
-    );
+        return item;
+      });
+    };
 
-    // Dọn dẹp Input ngay lập tức
+    setPosts(updateCommentsInState);
+    setCovers(updateCommentsInState);
     setNewComment("");
     cancelReplyOrQuote();
 
@@ -587,7 +535,6 @@ const SocialScreen = () => {
         prevPosts.map((post) => {
           if (post.id === selectedPostId) {
             let updatedComments = [...(post.comments || [])];
-            // Tìm và thay thế comment tạm thởi bằng comment chính thức
             const updateCommentArray = (arr) =>
               arr.map((c) => {
                 if (c.id === optimisticComment.id) {
@@ -616,7 +563,7 @@ const SocialScreen = () => {
       console.error("Lỗi khi gửi bình luận:", err);
       error("Lỗi", "Gửi bình luận thất bại. Đã hoàn tác.");
 
-      // ROLLBACK nếu API thất bại (Xóa comment tạm thởi khỏi UI)
+      // ROLLBACK nếu API thất bại
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
           if (post.id === selectedPostId) {
@@ -642,192 +589,6 @@ const SocialScreen = () => {
     }
   };
 
-  // Hàm cập nhật like cho comment với optimistic update
-  const updateCommentLike = async (postId, commentId, isReply, replyId) => {
-    const post = posts.find((p) => p.id === postId);
-    if (!post) return;
-    // Chuẩn hóa parent/reply khi gọi từ UI có thể truyền commentId = replyId
-    let parentComment = post.comments.find((c) => c.id === commentId);
-    let targetReplyId = replyId;
-    if (isReply) {
-      // Nếu không có replyId, coi commentId chính là replyId
-      if (!targetReplyId) targetReplyId = commentId;
-      // Nếu chưa tìm được parent theo commentId, dò theo danh sách Replies
-      if (!parentComment) {
-        parentComment = post.comments.find((c) =>
-          (c.Replies || []).some((r) => r.id === targetReplyId)
-        );
-      }
-    }
-    if (!parentComment) return;
-
-    // Nếu là Reply: cập nhật vào Replies của comment cha
-    if (isReply && (targetReplyId || replyId)) {
-      const targetReply = (parentComment.Replies || []).find((r) => r.id === (targetReplyId || replyId));
-      if (!targetReply) return;
-
-      const prevIsLiked = targetReply.isLiked;
-      const prevLikeCount = targetReply.likeCount || 0;
-      const newIsLikedOptimistic = !prevIsLiked;
-      const likeChangeOptimistic = newIsLikedOptimistic ? 1 : -1;
-
-      // 1. Optimistic update cho Reply
-      setPosts((prev) =>
-        prev.map((p) => {
-          if (p.id !== postId) return p;
-          return {
-            ...p,
-            comments: p.comments.map((c) => {
-              if (c.id !== parentComment.id) return c;
-              return {
-                ...c,
-                Replies: (c.Replies || []).map((r) =>
-                  r.id === (targetReplyId || replyId)
-                    ? {
-                      ...r,
-                      isLiked: newIsLikedOptimistic,
-                      likeCount: (prevLikeCount || 0) + likeChangeOptimistic,
-                    }
-                    : r
-                ),
-              };
-            }),
-          };
-        })
-      );
-
-      try {
-        const result = await toggleCommentLike(targetReplyId || replyId);
-        if ("message" in result) throw new Error(result.message);
-
-        // 2. Cập nhật theo kết quả server
-        setPosts((prev) =>
-          prev.map((p) => {
-            if (p.id !== postId) return p;
-            return {
-              ...p,
-              comments: p.comments.map((c) => {
-                if (c.id !== parentComment.id) return c;
-                return {
-                  ...c,
-                  Replies: (c.Replies || []).map((r) =>
-                    r.id === (targetReplyId || replyId)
-                      ? { ...r, isLiked: result.isLiked, likeCount: result.likeCount }
-                      : r
-                  ),
-                };
-              }),
-            };
-          })
-        );
-      } catch (err) {
-        console.error("Lỗi khi thích/bỏ thích trả lời:", err);
-        error("Lỗi", "Không thể cập nhật trạng thái thích trả lời.");
-        // 3. Rollback
-        setPosts((prev) =>
-          prev.map((p) => {
-            if (p.id !== postId) return p;
-            return {
-              ...p,
-              comments: p.comments.map((c) => {
-                if (c.id !== parentComment.id) return c;
-                return {
-                  ...c,
-                  Replies: (c.Replies || []).map((r) =>
-                    r.id === (targetReplyId || replyId) ? { ...r, isLiked: prevIsLiked, likeCount: prevLikeCount } : r
-                  ),
-                };
-              }),
-            };
-          })
-        );
-      }
-      return;
-    }
-
-    // Mặc định: xử lý Comment cha như trước
-    const prevIsLiked = parentComment.isLiked;
-    const prevLikeCount = parentComment.likeCount;
-    const newIsLikedOptimistic = !prevIsLiked;
-    const likeChangeOptimistic = newIsLikedOptimistic ? 1 : -1;
-
-    // 1. Optimistic Update: Cập nhật UI tạm thởi cho comment cha
-    setPosts((prevPosts) =>
-      prevPosts.map((p) => {
-        if (p.id === postId) {
-          return {
-            ...p,
-            comments: p.comments.map((c) => {
-              if (c.id === commentId) {
-                return {
-                  ...c,
-                  isLiked: newIsLikedOptimistic,
-                  likeCount: prevLikeCount + likeChangeOptimistic,
-                };
-              }
-              return c;
-            }),
-          };
-        }
-        return p;
-      })
-    );
-
-    try {
-      const result = await toggleCommentLike(commentId);
-      if ("message" in result) {
-        throw new Error(result.message);
-      }
-
-      // 2. Cập nhật trạng thái chính thức từ Server
-      setPosts((prevPosts) =>
-        prevPosts.map((p) => {
-          if (p.id === postId) {
-            return {
-              ...p,
-              comments: p.comments.map((c) => {
-                if (c.id === commentId) {
-                  return {
-                    ...c,
-                    isLiked: result.isLiked,
-                    likeCount: result.likeCount,
-                  };
-                }
-                return c;
-              }),
-            };
-          }
-          return p;
-        })
-      );
-    } catch (err) {
-      console.error("Lỗi khi thích/bỏ thích bình luận:", err);
-      error("Lỗi", "Không thể cập nhật trạng thái thích bình luận.");
-
-      // 3. Rollback nếu thất bại
-      setPosts((prevPosts) =>
-        prevPosts.map((p) => {
-          if (p.id === postId) {
-            return {
-              ...p,
-              comments: p.comments.map((c) => {
-                if (c.id === commentId) {
-                  return {
-                    ...c,
-                    isLiked: prevIsLiked,
-                    likeCount: prevLikeCount,
-                  };
-                }
-                return c;
-              }),
-            };
-          }
-          return p;
-        })
-      );
-    }
-  };
-
   // Hàm xử lý khi nhấn chia sẻ bài viết (re-share nội bộ)
   const handleShare = async () => {
     if (!reShareTargetPost) return;
@@ -846,11 +607,11 @@ const SocialScreen = () => {
 
       const { newPost, originalPost } = result;
 
-      // Thêm bài re-share mới vào đầu danh sách (map async)
+      // Thêm bài re-share mới vào đầu danh sách
       const mappedNewPost = await mapApiPostToLocal(newPost);
       setPosts((prevPosts) => [mappedNewPost, ...prevPosts]);
 
-      // Cập nhật shareCount cho bài gốc nếu backend trả về
+      // Cập nhật shareCount cho bài gốc
       if (originalPost && originalPost.id) {
         setPosts((prevPosts) =>
           prevPosts.map((post) =>
@@ -901,18 +662,113 @@ const SocialScreen = () => {
     setSelectedPostIdForLikes(null);
   };
 
-  // Chức năng Comment Modal
-  // Dùng để tải comments khi modal mở
+  // Hàm comment like
+  const handleCommentLike = async (
+    postId: string,
+    commentId: string,
+    isReply: boolean,
+    replyId: string
+  ) => {
+    // Update UI
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+
+        const updateComment = (comment: any) => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              isLiked: !comment.isLiked,
+              likeCount: comment.isLiked
+                ? String(Number(comment.likeCount) - 1)
+                : String(Number(comment.likeCount) + 1),
+            };
+          }
+          return comment;
+        };
+
+        const updateReply = (comment: any) => {
+          if (comment.id === replyId) {
+            return {
+              ...comment,
+              Replies: comment.Replies.map(updateComment),
+            };
+          }
+          return comment;
+        };
+
+        return {
+          ...p,
+          comments: isReply
+            ? p.comments.map(updateReply)
+            : p.comments.map(updateComment),
+        };
+      })
+    );
+
+    try {
+      const result = await toggleCommentLike(commentId);
+      if ("message" in result) {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error("Error toggling comment like:", error);
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p;
+          return {
+            ...p,
+            comments: p.comments.map((comment: any) => {
+              if (comment.id === commentId) {
+                return {
+                  ...comment,
+                  isLiked: !comment.isLiked,
+                  likeCount: comment.isLiked
+                    ? String(Number(comment.likeCount) + 1)
+                    : String(Number(comment.likeCount) - 1),
+                };
+              }
+              return comment;
+            }),
+          };
+        })
+      );
+    }
+  };
+
+  // Hàm tải comments
   const loadComments = async (postId) => {
     try {
       const fetchedComments = await fetchCommentsByPostId(postId);
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId ? { ...post, comments: fetchedComments } : post
-        )
-      );
+      const commentsLength = Array.isArray(fetchedComments) ? fetchedComments.length : 0;
+      
+      // Cập nhật posts state (cho tab posts)
+      setPosts((prevPosts) => {
+        const updatedPosts = prevPosts.map((post) =>
+          post.id === postId ? { 
+            ...post, 
+            comments: fetchedComments,
+            commentCount: commentsLength 
+          } : post
+        );
+        return updatedPosts;
+      });
+      
+      // Cập nhật covers state (cho tab covers)
+      setCovers((prevCovers) => {
+        const updatedCovers = prevCovers.map((cover) =>
+          cover.id === postId ? { 
+            ...cover, 
+            comments: fetchedComments,
+            commentCount: commentsLength 
+          } : cover
+        );
+        return updatedCovers;
+      });
+      
       return fetchedComments;
     } catch (e) {
+      console.error('Error in loadComments:', e);
       error("Lỗi", "Không thể tải bình luận cho bài viết này." + e.message);
       return [];
     }
@@ -921,7 +777,6 @@ const SocialScreen = () => {
   const loadPosts = useCallback(async () => {
     try {
       let apiPosts;
-      // Fetch all posts (không phân biệt tab nữa vì covers có hàm riêng)
       if (isGuest) {
         apiPosts = await fetchPostsForGuest();
       } else {
@@ -932,7 +787,6 @@ const SocialScreen = () => {
         error("Lỗi", apiPosts.message || "Không thể tải bài đăng từ server.");
         return;
       }
-      // const mappedPosts = apiPosts.map(mapApiPostToLocal);
       const mappedPosts = await Promise.all(
         apiPosts.map(mapApiPostToLocal)
       );
@@ -981,9 +835,8 @@ const SocialScreen = () => {
     setFilteredPosts(filtered);
   }, [searchQuery, posts]);
 
-  /**
- * Hàm xử lý khi vuốt xuống làm mới
- */
+  
+ // Hàm xử lý khi vuốt xuống làm mới
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     if (activeTab === 'covers') {
@@ -999,14 +852,12 @@ const SocialScreen = () => {
     try {
       setCoversLoading(true);
       const response = await fetchAllCovers();
-      console.log("Response from fetchAllCovers:", response);
-      
-      // Kiểm tra nếu response có lỗi (kiểu error response)
+
+      // Kiểm tra nếu response có lỗi
       if (response && typeof response === 'object' && 'success' in response && response.success === false) {
         throw new Error((response as any).message || "Không thể tải covers");
       }
       
-      // Lấy data từ response - có thể là response.data hoặc response trực tiếp
       let allCovers;
       if (Array.isArray(response)) {
         allCovers = response;
@@ -1015,14 +866,11 @@ const SocialScreen = () => {
       } else {
         allCovers = response;
       }
-      
       if (Array.isArray(allCovers) && allCovers.length > 0) {
-        console.log("All covers found:", allCovers.length);
         // Map covers về đúng định dạng như posts
         const mappedCovers = await Promise.all(allCovers.map(mapApiPostToLocal));
         setCovers(mappedCovers);
       } else {
-        console.log("No covers found or invalid data");
         setCovers([]);
       }
     } catch (error) {
@@ -1044,68 +892,36 @@ const SocialScreen = () => {
     <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0E0C1F]">
       {/* Header (Title + Search) */}
       <View className="px-3 pt-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-sm">
-        {isSearchVisible ? (
-          <View className="flex-row items-center">
-            <TouchableOpacity
-              onPress={() => handleSearchToggle(false)}
-              className="mr-2"
-            >
-              <Icon
-                name="arrow-left"
-                size={24}
-                color={colorScheme === "dark" ? "#fff" : "#000"}
-              />
-            </TouchableOpacity>
-            <TextInput
-              className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-lg px-3 py-2 text-black dark:text-white"
-              placeholder="Tìm kiếm bài đăng hoặc người dùng..."
-              placeholderTextColor={
-                colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
-              }
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoFocus
-            />
-          </View>
-        ) : (
-          <View className="flex-row justify-between items-center">
-            <View className="flex-1">
-              <Animated.View 
-                style={{
-                  opacity: headerOpacity,
-                  transform: [{ translateY: headerTranslateY }]
-                }}
-              >
-                <View className="flex-row items-center">
-                  {/* Avatar User */}
-                  <TouchableOpacity onPress={() => navigate("ProfileSocialScreen", { userId: user?.id })}>
-                    <Image
-                      source={{ uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png' }}
-                      className="w-10 h-10 rounded-full mr-3 border-2 border-emerald-500"
-                    />
-                  </TouchableOpacity>
-                  
-                  <View className="flex-1">
-                    <Text className="text-2xl font-extrabold text-black dark:text-white">
-                      Khám phá
-                    </Text>
-                    <Text className="text-sm text-gray-500 dark:text-gray-400">
-                      Khám phá covers và bài đăng từ cộng đồng
-                    </Text>
-                  </View>
-                </View>
-              </Animated.View>
+        <View className="flex-row justify-between items-center">
+          <View className="flex-1">
+            <View className="flex-row items-center">
+              {/* Avatar User */}
+              <TouchableOpacity onPress={() => navigate("ProfileSocialScreen", { userId: user?.id })}>
+                <Image
+                  source={{ uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png' }}
+                  className="w-10 h-10 rounded-full mr-3 border-2 border-emerald-500"
+                />
+              </TouchableOpacity>
+              
+              <View className="flex-1">
+                <Text className="text-2xl font-extrabold text-black dark:text-white">
+                  Khám phá
+                </Text>
+                <Text className="text-sm text-gray-500 dark:text-gray-400">
+                  Khám phá covers và bài đăng từ cộng đồng
+                </Text>
+              </View>
             </View>
-            
-            <TouchableOpacity onPress={() => setSearchOverlayVisible(true)}>
-              <Icon
-                name="search"
-                size={24}
-                color={colorScheme === "dark" ? "#fff" : "#000"}
-              />
-            </TouchableOpacity>
           </View>
-        )}
+          
+          <TouchableOpacity onPress={() => setSearchOverlayVisible(true)}>
+            <Icon
+              name="search"
+              size={24}
+              color={colorScheme === "dark" ? "#fff" : "#000"}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -1278,6 +1094,7 @@ const SocialScreen = () => {
                 <PostItem
                   {...item}
                   postId={item.id}
+                  songId={item.songId}
                   onPostUpdate={(type, value) =>
                     updatePostState(item.id, type, value)
                   }
@@ -1411,10 +1228,13 @@ const SocialScreen = () => {
         visible={commentModalVisible}
         onClose={closeCommentModal}
         comments={
-          posts.find((post) => post.id === selectedPostId)?.comments || []
+          (activeTab === 'covers' 
+            ? covers.find((cover) => cover.id === selectedPostId)?.comments
+            : posts.find((post) => post.id === selectedPostId)?.comments
+          ) || []
         }
         onAddComment={addComment}
-        onCommentLike={updateCommentLike}
+        onCommentLike={handleCommentLike}
         postId={selectedPostId}
         onUserPress={handleUserPress}
         newComment={newComment}
@@ -1424,7 +1244,7 @@ const SocialScreen = () => {
         quote={quote}
         setQuote={setQuote}
       />
-
+      
       {/* Like Modal */}
       <LikeModal
         visible={likeModalVisible}
@@ -1440,7 +1260,6 @@ const SocialScreen = () => {
         onRequestClose={() => setNewPostModalVisible(false)}
       >
         {selectedMediaAssets.length > 0 ? (
-          // Khi có media, không dùng KeyboardAvoidingView để tránh giật
           <TouchableOpacity 
             className="flex-1 justify-end" 
             activeOpacity={1}
@@ -1474,7 +1293,6 @@ const SocialScreen = () => {
             </View>
           </TouchableOpacity>
         ) : (
-          // Khi không có media, dùng KeyboardAvoidingView để tránh bị bàn phím che
           <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1 }}
@@ -1519,7 +1337,7 @@ const SocialScreen = () => {
       <SearchOverlay
         visible={searchOverlayVisible}
         onClose={() => setSearchOverlayVisible(false)}
-        topOffset={0} // Cover entire header area
+        topOffset={0}
       />
 
       {/* Options Menu Modal */}

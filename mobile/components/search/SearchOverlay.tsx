@@ -26,7 +26,7 @@ interface User {
 interface SearchOverlayProps {
   visible: boolean;
   onClose: () => void;
-  topOffset: number; // Position from top
+  topOffset: number;
 }
 
 const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffset }) => {
@@ -110,14 +110,13 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffs
     async (query: string) => {
       if (query.trim().length === 0) {
         setSearchResults([]);
-        setShowHistory(true); // Show history when query is empty
+        setShowHistory(true);
         return;
       }
       
       setIsSearching(true);
       
       try {
-        // Real API call
         const response = await SearchUsers({ 
           username: query,
           fullName: query,
@@ -125,7 +124,6 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffs
         });
         
         if (response.success && response.data) {
-          // Map API response to our User interface
           const mappedResults: User[] = response.data.map((user: any) => ({
             id: user.id?.toString() || user._id?.toString(),
             name: user.fullName || user.name || 'Unknown',
@@ -134,9 +132,8 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffs
           }));
           
           setSearchResults(mappedResults);
-          setShowHistory(false); // Hide history when searching
+          setShowHistory(false);
           
-          // Save to history if query has results
           if (mappedResults.length > 0) {
             saveToHistory(query);
           }
@@ -291,7 +288,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffs
         visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
       style={{
-        top: topOffset + statusBarHeight, // Add status bar height
+        top: topOffset + statusBarHeight,
         maxHeight: height * 0.6,
         transform: [{ translateY: visible ? 0 : -20 }],
       }}

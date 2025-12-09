@@ -1,4 +1,4 @@
-const { Post, User, Comment, CommentLike, sequelize } = require('../models');
+const { Post, User, Comment, CommentLike, Track, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { createNotification } = require('../utils/notificationHelper');
 
@@ -13,7 +13,7 @@ exports.getAllComment = async (req, res) => {
 
 // LẤY COMMENT THEO trackId (THREAD THEO BÀI HÁT) KÈM likeCount VÀ isLiked
 exports.getCommentsByTrackId = async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user?.id || null; // Handle case when user is not authenticated
     try {
         const { trackId } = req.params;
         const { fromMs, toMs } = req.query;
@@ -118,6 +118,8 @@ exports.getCommentsByPostId = async (req, res) => {
         const { postId } = req.params;
         const { fromMs, toMs } = req.query;
 
+        console.log('getCommentsByPostId called with postId:', postId);
+
         const whereParent = {
             postId: postId,
             parentId: null
@@ -180,9 +182,8 @@ exports.getCommentsByPostId = async (req, res) => {
             // likeCount đã được tính bằng literal
             delete commentJson.Likes;
 
-            // Xử lý Replies (Bình luận con) - Lỗi 500 có thể nằm ở đây nếu Replies không có User
+            // Xử lý Replies (Bình luận con)
             commentJson.Replies = commentJson.Replies.map(reply => {
-                // ... (Nếu cần, bạn có thể thêm logic tính like cho replies ở đây)
                 return reply;
             });
 
@@ -310,14 +311,22 @@ exports.createComment = async (req, res) => {
             payload.userId = req.user.id; // Gán userId từ token đã xác thực
         }
 
-        // Chấp nhận postId HOẶC trackId cho thread theo bài hát
-        if (!payload.postId && !payload.trackId) {
+        // Chấp nhận postId HOẶC trackId hoặc spotifyId cho thread theo bài hát
+        if (!payload.postId && !payload.trackId && !payload.spotifyId) {
             return res.status(400).json({ error: 'Post or Track not identified' });
         }
 
         if (!payload.content && !payload.fileUrl) {
             return res.status(400).json({ error: 'Content and file not specified' });
         }
+
+        if (payload.spotifyId && !payload.trackId) {
+    const track = await Track.findOne({ where: { spotifyId: payload.spotifyId } });
+    if (!track) {
+        return res.status(404).json({ error: 'Track not found' });
+    }
+    payload.trackId = track.id;
+}
 
         let targetPost = null;
         if (payload.postId) {
@@ -425,5 +434,64 @@ exports.toggleCommentLike = async (req, res) => {
         res.status(500).json({
             error: err.message
         });
+    }
+};
+
+// LẤY COMMENT THEO spotifyId (THREAD THEO BÀI HÁT) KÈM likeCount VÀ isLiked
+exports.getCommentsBySpotifyId = async (req, res) => {
+    const userId = req.user?.id || null;
+    try {
+        const { spotifyId } = req.params;
+        const { fromMs, toMs } = req.query;
+
+        // Tìm trackId từ spotifyId
+        const track = await Track.findOne({ where: { spotifyId } });
+        if (!track) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const whereParent = {
+            trackId: track.id,
+            parentId: null,
+        };
+        if (fromMs || toMs) {
+            whereParent.timecodeMs = {};
+            if (fromMs) whereParent.timecodeMs[Op.gte] = parseInt(fromMs, 10);
+            if (toMs) whereParent.timecodeMs[Op.lte] = parseInt(toMs, 10);
+        }
+
+        const rows = await Comment.findAll({
+            attributes: {
+                include: [
+                    [
+                        sequelize.literal(`(
+              SELECT COUNT(*)
+              FROM comment_likes AS "CommentLikes"
+              WHERE "CommentLikes"."comment_id" = "Comment"."id"
+            )`),
+                        'likeCount'
+                    ]
+                ]
+            },
+            where: whereParent,
+            include: [
+                { model: User, as: 'User', attributes: ['id', 'username', 'avatarUrl', 'fullName'] },
+                { model: Comment, as: 'Replies', include: [{ model: User, as: 'User', attributes: ['id', 'username', 'avatarUrl', 'fullName'] }] },
+                { model: CommentLike, as: 'Likes', where: { userId }, required: false, attributes: ['userId'] },
+            ],
+            order: [['commentedAt', 'ASC'], [sequelize.literal('"likeCount"'), 'DESC']],
+        });
+
+        const processedRows = rows.map(c => {
+            const json = c.toJSON();
+            json.isLiked = json.Likes && json.Likes.length > 0;
+            delete json.Likes;
+            return json;
+        });
+
+        res.json(processedRows);
+    } catch (err) {
+        console.error('SERVER ERROR fetching comments by spotifyId:', err.message);
+        res.status(500).json({ error: 'Server error when fetching comments by spotifyId.', detail: err.message });
     }
 };

@@ -153,6 +153,47 @@ export const createTrackComment = async (
   }
 };
 
+export const fetchCommentsBySpotifyId = async (
+  spotifyId: string,
+  options?: { fromMs?: number; toMs?: number }
+): Promise<Comment[]> => {
+  try {
+    const params: any = {};
+    if (options?.fromMs != null) params.fromMs = options.fromMs;
+    if (options?.toMs != null) params.toMs = options.toMs;
+    const response = await api.get(`/comments/bySpotifyId/${spotifyId}`, { params });
+    const data = response.data;
+    if (!Array.isArray(data)) return [];
+    return data.map(mapCommentData) as Comment[];
+  } catch (error) {
+    console.error("Lỗi khi tải bình luận theo spotifyId:", error);
+    return [];
+  }
+};
+
+export const createTrackCommentBySpotifyId = async (
+  spotifyId: string,
+  content: string,
+  parentId: string | null = null,
+  timecodeMs?: number
+): Promise<Comment | { message: string; status: string }> => {
+  try {
+    if (!useAuthStore.getState().user)
+      return { message: "Chưa đăng nhập", status: "error" };
+
+    const response = await api.post("/comments", {
+      spotifyId,
+      content,
+      parentId,
+      timecodeMs: typeof timecodeMs === 'number' ? timecodeMs : undefined,
+    });
+    return response.data as Comment;
+  } catch (error) {
+    console.error("Lỗi khi đăng bình luận theo spotifyId:", error);
+    return { message: "Không thể đăng bình luận.", status: "error" };
+  }
+};
+
 // === API CHO BÀI ĐĂNG ===
 
 /** Lấy danh sách tất cả bài đăng mới nhất
@@ -310,20 +351,10 @@ export const sharePost = async (
 export const fetchCommentsByPostId = async (postId: string) => {
   try {
     const response = await api.get(`/comments/byPost/${postId}`);
-    const data = response.data.data;
-    if (!Array.isArray(data)) {
-      return [];
-    }
-    return data.map(mapCommentData) as Comment[];
+    return response.data.data.map(mapCommentData);
   } catch (error) {
-    if (error.response) {
-      const { status, data } = error.response;
-      return {
-        success: false,
-        status: status,
-        message: data.message
-      }
-    }
+    console.error('Error fetching comments:', error);
+    return [];
   }
 };
 

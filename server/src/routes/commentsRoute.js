@@ -5,6 +5,7 @@ const { authenticateToken, authorizeRole } = require('../middlewares/authenticat
 
 router.get('/byPost/:postId', controller.getCommentsByPostId)
 router.get('/byTrack/:trackId', controller.getCommentsByTrackId)
+router.get('/bySpotifyId/:spotifyId', controller.getCommentsBySpotifyId)
 
 router.get('/', authenticateToken, controller.getAllComment)
 

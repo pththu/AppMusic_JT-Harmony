@@ -6,12 +6,14 @@ const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const { sequelize, User } = require("./models");
 const { API_PREFIX } = require("./configs/constants");
-const { authenticateToken, authorizeRole } = require("./middlewares/authentication");
+const {
+  authenticateToken,
+  authorizeRole,
+} = require("./middlewares/authentication");
 const seedDatabase = require("./utils/seeder");
-const { connectRedis } = require('./configs/redis');
+const { connectRedis } = require("./configs/redis");
 const dotenv = require("dotenv");
 const { Server } = require("socket.io");
-
 
 const chatEvents = require("./sockets/chatEvents");
 const notificationEvents = require("./sockets/notificationEvents");
@@ -29,8 +31,8 @@ const io = new Server(server, {
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
-      "http://192.168.1.12:3000",
-      "exp://192.168.1.12:8081",
+      "http://192.168.1.30:3000",
+      "exp://192.168.1.30:8081",
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -44,7 +46,7 @@ const io = new Server(server, {
 io.use(async (socket, next) => {
   // Lấy token từ handshake query (hoặc header, tùy cách client gửi)
   const token = socket.handshake.auth.token;
-  console.log('token', token)
+  console.log("token", token);
 
   if (!token) {
     return next(new Error("Authentication error: Token not provided"));
@@ -80,7 +82,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
-      "http://192.168.1.12:3000",
+      "http://192.168.1.30:3000",
     ],
     credentials: true,
   })
@@ -99,25 +101,25 @@ app.use(
 
 // --- KHAI BÁO ROUTES Ở PHẠM VI TOÀN CỤC ---
 const protectedRoutes = [
-  'notifications', // Thông báo
-  'genres', // Xem thể loại nhạc
-  'artists', // Xem thông tin nghệ sĩ
-  'albums', // Xem album
+  "notifications", // Thông báo
+  "genres", // Xem thể loại nhạc
+  "artists", // Xem thông tin nghệ sĩ
+  "albums", // Xem album
   "conversations",
   "upload", // Upload hình ảnh, file
   "tracks", // Xem bài hát (public), upload bài hát (private)
   "roles", // Quản lý vai trò người dùng
 ];
 const publicRoutes = [
-  'playlists', // Playlist cá nhân
+  "playlists", // Playlist cá nhân
   "auth",
   "users",
   "posts",
-  'follows', // Theo dõi người dùng, nghệ sĩ
+  "follows", // Theo dõi người dùng, nghệ sĩ
   "music",
   "comments",
-  'favorites', // Yêu thích
-  'histories', // Lịch sử nghe nhạc
+  "favorites", // Yêu thích
+  "histories", // Lịch sử nghe nhạc
   "recommendations",
 ];
 
@@ -138,7 +140,15 @@ app.use(
   `${API_PREFIX}/admin/metrics`,
   authenticateToken,
   authorizeRole,
-  require('./routes/adminMetricsRoute')
+  require("./routes/adminMetricsRoute")
+);
+
+// Admin routes
+app.use(
+  `${API_PREFIX}/admin`,
+  authenticateToken,
+  authorizeRole,
+  require("./routes/adminRoute")
 );
 
 // Start server

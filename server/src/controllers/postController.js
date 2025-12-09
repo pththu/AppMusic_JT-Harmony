@@ -749,12 +749,23 @@ exports.createPost = async (req, res) => {
           error: "Cover phải có originalSongId là một số hợp lệ.",
         });
       }
+      
+      console.log(`Checking for track with tempId: ${originalSongId}`);
+      
+      // Tìm track theo tempId (đây là ID thực từ database được gửi làm tempId)
       const track = await Track.findByPk(originalSongId);
+      console.log(`Track found:`, track ? `ID=${track.id}, Name=${track.name}` : 'NULL');
+      
       if (!track) {
-        return res.status(400).json({
-          message: "Bài hát gốc không tồn tại.",
-          error: "Không thể tạo cover cho bài hát không hợp lệ.",
-        });
+        // Nếu không tìm thấy theo tempId, thử tìm theo id (trường hợp client gửi id thật)
+        console.log(`Trying to find track with actual ID: ${originalSongId}`);
+        const trackByRealId = await Track.findByPk(originalSongId);
+        if (!trackByRealId) {
+          return res.status(400).json({
+            message: "Bài hát gốc không tồn tại.",
+            error: `Không thể tạo cover cho bài hát có ID ${originalSongId} vì không tìm thấy trong database.`,
+          });
+        }
       }
       songId = null; // Đảm bảo songId là null cho cover
     } else {

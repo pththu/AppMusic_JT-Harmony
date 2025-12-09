@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  Alert,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
-  FlatList,
+  Platform,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
+  FlatList,
+  useColorScheme,
   ActivityIndicator,
   TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
-  useColorScheme,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
 import { createNewCover } from "@/services/coverService";
 import { GetTracksForCover } from "@/services/musicService";
@@ -33,7 +37,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
   onCoverPosted,
 }) => {
   const colorScheme = useColorScheme();
-  const { error, info, warning, confirm, success } = useCustomAlert();
+  const { error: showError, info, warning, confirm, success } = useCustomAlert();
   const [selectedSong, setSelectedSong] = useState(null);
   const [coverText, setCoverText] = useState("");
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
@@ -53,63 +57,89 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
   const loadTracks = async () => {
     try {
       if (tracks.length === 0) {
+        console.log("=== DEBUG: Loading tracks for cover ===");
         const response = await GetTracksForCover();
+        console.log("API Response:", response);
+        console.log("Tracks data:", response.data);
+        console.log("Number of tracks:", response.data?.length);
+        
         if (response.success) {
           setTracks(response.data);
+          console.log("First 3 tracks:", response.data?.slice(0, 3));
         }
       }
     } catch (err) {
       console.error("Error loading tracks:", err);
-      error("Không thể tải danh sách bài hát.");
+      showError("Không thể tải danh sách bài hát.");
       setTracks([]);
     }
   };
 
-  const handleSelectMedia = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      error("Lỗi", "Cần quyền truy cập thư viện.");
-      return;
-    }
+  const handleSelectMedia = () => {
+    // Chọn thẳng file media (audio hoặc video)
+    selectMediaFile();
+  };
 
+  const selectMediaFile = async () => {
     try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
-        quality: 1,
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [
+          // Audio types
+          'audio/*',
+          'audio/mp3',
+          'audio/wav',
+          'audio/m4a',
+          'audio/aac',
+          // Video types
+          'video/*',
+          'video/mp4',
+          'video/mov',
+          'video/avi',
+        ],
+        copyToCacheDirectory: true,
+        multiple: false,
       });
 
-      if (!result.canceled) {
+      if (!result.canceled && result.assets.length > 0) {
         const asset = result.assets[0];
-        // Check file size using asset.fileSize or approximate from uri
-        const fileSize = asset.fileSize || 0;
-        if (fileSize > 50 * 1024 * 1024) {
-          error("File quá lớn", "Kích thước file không được vượt quá 50MB");
+        
+        // Kiểm tra kích thước file
+        if (asset.size && asset.size > 50 * 1024 * 1024) {
+          showError("File quá lớn", "Kích thước file không được vượt quá 50MB");
           return;
         }
-        setSelectedMedia(asset);
+
+        // Format asset để match với ImagePicker format
+        const formattedAsset = {
+          uri: asset.uri,
+          fileName: asset.name,
+          mimeType: asset.mimeType,
+          fileSize: asset.size,
+        };
+
+        setSelectedMedia(formattedAsset);
       }
     } catch (error) {
       console.error("Error selecting media:", error);
-      error("Lỗi", "Không thể chọn media.");
+      showError("Lỗi", "Không thể chọn file media.");
     }
   };
 
   const handlePostCover = async () => {
     // Kiểm tra điều kiện đăng bài với thông báo rõ ràng
     if (!selectedSong) {
-      error("Thiếu thông tin", "Vui lòng chọn bài hát gốc.");
+      showError("Thiếu thông tin", "Vui lòng chọn bài hát gốc.");
       return;
     }
 
     if (!selectedMedia) {
-      error("Thiếu file media", "Vui lòng chọn file audio/video để tải lên.");
+      showError("Thiếu file media", "Vui lòng chọn file audio hoặc video để tải lên.");
       return;
     }
 
     const fileType = selectedMedia.mimeType || selectedMedia.type;
     if (!fileType || (!fileType.startsWith('audio/') && !fileType.startsWith('video/'))) {
-      error("Định dạng không hỗ trợ", "Vui lòng chọn file audio hoặc video");
+      showError("Định dạng không hỗ trợ", "Vui lòng chọn file audio hoặc video");
       return;
     }
 
@@ -123,7 +153,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
       const uploadResult = await UploadMultipleFile([selectedMedia]);
       
       if (!uploadResult.success) {
-        error("Lỗi khi tải lên", `Không thể tải lên file media: ${uploadResult.message || 'Vui lòng thử lại sau'}`);
+        showError("Lỗi khi tải lên", `Không thể tải lên file media: ${uploadResult.message || 'Vui lòng thử lại sau'}`);
         return;
       }
 
@@ -138,14 +168,24 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
       }
 
       // Tạo cover mới
+      console.log("=== DEBUG: Before creating cover ===");
+      console.log("Selected song:", selectedSong);
+      console.log("Selected song ID:", selectedSong.id);
+      console.log("Selected song tempId:", selectedSong.tempId);
+      console.log("Selected song ID type:", typeof selectedSong.id);
+      
+      // Sử dụng tempId nếu có, ngược lại dùng id
+      const songIdToSend = selectedSong.tempId || selectedSong.id;
+      console.log("Song ID to send:", songIdToSend);
+      
       const coverResult = await createNewCover(
         coverText,
         fileUrls,
-        selectedSong.id
+        songIdToSend
       );
 
       // Kiểm tra kết quả tạo cover
-      if (!coverResult || (coverResult as any).status === 'error') {
+      if (!coverResult || (coverResult as any).success === false) {
         const errorMessage = (coverResult as any)?.message || 'Không thể tạo cover';
         throw new Error(errorMessage);
       }
@@ -163,11 +203,13 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
       let errorMessage = "Đã xảy ra lỗi khi đăng cover";
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = error.message;
       }
       
-      error("Lỗi", errorMessage);
+      showError("Lỗi", errorMessage);
     } finally {
       setIsUploading(false);
     }
@@ -318,6 +360,9 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => {
+              console.log("Selected song from list:", item);
+              console.log("Selected song ID:", item.id);
+              console.log("Selected song name:", item.name);
               setSelectedSong(item);
               setShowSongSelector(false);
             }}
@@ -346,13 +391,11 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <TouchableWithoutFeedback onPress={handleClose}>
-        {/* KeyboardAvoidingView để tránh bàn phím che mất input */}
         <KeyboardAvoidingView
           className="flex-1 bg-black/50 justify-end"
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <TouchableWithoutFeedback>
-            {/* Main content container */}
             <View className="bg-white dark:bg-[#171431] rounded-t-3xl p-6 flex-1 max-h-[60%]">
               {isUploading && (
                 <View className="absolute inset-0 bg-black/40 z-10 justify-center items-center rounded-t-3xl">

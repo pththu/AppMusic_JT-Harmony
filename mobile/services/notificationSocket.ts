@@ -42,6 +42,9 @@ export const disconnectNotificationSocket = (): void => {
   notificationSocket = null;
 };
 
+// Debouncing để tránh xử lý trùng lặp
+const processedNotifications = new Set<number>();
+
 export const subscribeToNotificationEvents = (
   listener: (notification: NotificationItem) => void
 ): (() => void) => {
@@ -49,8 +52,67 @@ export const subscribeToNotificationEvents = (
     return () => {};
   }
 
-  notificationSocket.on('notification:new', listener);
-  return () => {
-    notificationSocket?.off('notification:new', listener);
+  const wrappedListener = (notification: NotificationItem) => {
+    // Kiểm tra xem đã xử lý thông báo này chưa
+    if (processedNotifications.has(notification.id)) {
+      console.log('[notificationSocket] Already processed notification:', notification.id);
+      return;
+    }
+    
+    // Đánh dấu là đã xử lý
+    processedNotifications.add(notification.id);
+    
+    // Xóa khỏi Set sau 5 giây để tránh memory leak
+    setTimeout(() => {
+      processedNotifications.delete(notification.id);
+    }, 5000);
+    
+    // Gọi listener gốc
+    listener(notification);
   };
+
+  notificationSocket.on('notification:new', wrappedListener);
+  return () => {
+    notificationSocket?.off('notification:new', wrappedListener);
+  };
+};
+
+export const getNotifications = (
+  options: { limit?: number; offset?: number } = {},
+  callback: (response: { notifications: NotificationItem[] } | { error: string }) => void
+): void => {
+  if (!notificationSocket || !notificationSocket.connected) {
+    callback({ error: 'Socket not connected' });
+    return;
+  }
+
+  const { limit = 20, offset = 0 } = options;
+  notificationSocket.emit('get_notifications', { limit, offset }, callback);
+};
+
+export const markNotificationAsRead = (
+  notificationId: number,
+  callback?: (success: boolean) => void
+): void => {
+  if (!notificationSocket || !notificationSocket.connected) {
+    callback?.(false);
+    return;
+  }
+
+  notificationSocket.emit('mark_notification_as_read', { notificationId }, (response: any) => {
+    callback?.(response?.success || false);
+  });
+};
+
+export const markAllNotificationsAsRead = (
+  callback?: (success: boolean) => void
+): void => {
+  if (!notificationSocket || !notificationSocket.connected) {
+    callback?.(false);
+    return;
+  }
+
+  notificationSocket.emit('mark_all_notifications_as_read', {}, (response: any) => {
+    callback?.(response?.success || false);
+  });
 };

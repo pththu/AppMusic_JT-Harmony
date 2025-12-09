@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   Image,
   useColorScheme,
-  Alert,
   TouchableWithoutFeedback,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 interface ChatOptionsModalProps {
   visible: boolean;
@@ -32,6 +32,7 @@ const ChatOptionsModal: React.FC<ChatOptionsModalProps> = ({
   onDeleteConversation,
 }) => {
   const colorScheme = useColorScheme();
+  const { confirm } = useCustomAlert();
   const isDark = colorScheme === "dark";
 
   const baseTextColor = isDark ? "text-white" : "text-black";
@@ -39,20 +40,13 @@ const ChatOptionsModal: React.FC<ChatOptionsModalProps> = ({
   const separatorColor = isDark ? "border-gray-700" : "border-gray-200";
 
   const handleDeleteConversation = () => {
-    Alert.alert(
+    confirm(
       "Xác nhận xóa",
       `Bạn có chắc chắn muốn xóa cuộc trò chuyện với ${user.fullName}?`,
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Xóa",
-          style: "destructive",
-          onPress: () => {
-            onDeleteConversation();
-            onClose();
-          },
-        },
-      ]
+      () => {
+        onDeleteConversation();
+        onClose();
+      }
     );
   };
 

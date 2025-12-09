@@ -4,11 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigate } from '@/hooks/useNavigate';
 import {
   NotificationItem,
-  fetchNotifications,
-  fetchUnreadNotificationCount,
-  markAllNotificationsRead as markAllNotificationsReadApi,
-  markNotificationAsRead as markNotificationAsReadApi,
 } from '@/services/notificationService';
+import { 
+  connectNotificationSocket, 
+  subscribeToNotificationEvents,
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead
+} from '@/services/notificationSocket';
 import { useNotificationStore } from '@/store/notificationStore';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -23,6 +26,7 @@ export default function ActivityScreen() {
   const markNotificationRead = useNotificationStore((state) => state.markNotificationRead);
   const markAllNotificationsReadLocal = useNotificationStore((state) => state.markAllNotificationsReadLocal);
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
+  const prependNotification = useNotificationStore((state) => state.prependNotification);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<'all' | string>('all');
@@ -32,61 +36,76 @@ export default function ActivityScreen() {
     return notifications.filter((item) => item.type === selectedFilter);
   }, [notifications, selectedFilter]);
 
-  const fetchData = useCallback(async () => {
-    try {
+  const fetchData = useCallback(() => {
+    const socket = connectNotificationSocket();
+    
+    if (socket && socket.connected) {
       setIsLoading(true);
-      const [listResponse, count] = await Promise.all([
-        fetchNotifications({ limit: 50 }),
-        fetchUnreadNotificationCount(),
-      ]);
-      setNotifications(listResponse.items || []);
-      setUnreadCount(count);
-    } catch (error) {
-      console.warn('Failed to fetch notifications', error);
-    } finally {
+      getNotifications({ limit: 50 }, (response) => {
+        if ('notifications' in response) {
+          setNotifications(response.notifications);
+          const unreadCount = response.notifications.filter(n => !n.isRead).length;
+          setUnreadCount(unreadCount);
+        } else {
+          console.warn('Failed to fetch notifications:', response.error);
+        }
+        setIsLoading(false);
+      });
+    } else {
+      console.warn('Socket not connected, cannot fetch notifications');
       setIsLoading(false);
     }
   }, [setNotifications, setUnreadCount]);
 
-  const onRefresh = useCallback(async () => {
-    try {
+  const onRefresh = useCallback(() => {
+    const socket = connectNotificationSocket();
+    
+    if (socket && socket.connected) {
       setIsRefreshing(true);
-      const listResponse = await fetchNotifications({ limit: 50 });
-      setNotifications(listResponse.items || []);
-    } catch (error) {
-      console.warn('Failed to refresh notifications', error);
-    } finally {
+      getNotifications({ limit: 50 }, (response) => {
+        if ('notifications' in response) {
+          setNotifications(response.notifications);
+        } else {
+          console.warn('Failed to refresh notifications:', response.error);
+        }
+        setIsRefreshing(false);
+      });
+    } else {
+      console.warn('Socket not connected, cannot refresh notifications');
       setIsRefreshing(false);
     }
   }, [setNotifications]);
 
   const handleMarkRead = useCallback(
-    async (notification: NotificationItem) => {
+    (notification: NotificationItem) => {
       if (notification.isRead) {
         navigateToNotification(notification);
         return;
       }
 
       markNotificationRead(notification.id);
-      try {
-        await markNotificationAsReadApi(notification.id);
-      } catch (error) {
-        console.warn('Failed to mark notification read', error);
-      }
+      markNotificationAsRead(notification.id, (success) => {
+        if (!success) {
+          console.warn('Failed to mark notification read');
+          // Rollback local state if failed
+          // TODO: Implement rollback if needed
+        }
+      });
 
       navigateToNotification(notification);
     },
     [markNotificationRead]
   );
 
-  const handleMarkAllRead = useCallback(async () => {
+  const handleMarkAllRead = useCallback(() => {
     markAllNotificationsReadLocal();
     setUnreadCount(0);
-    try {
-      await markAllNotificationsReadApi();
-    } catch (error) {
-      console.warn('Failed to mark all notifications read', error);
-    }
+    markAllNotificationsAsRead((success) => {
+      if (!success) {
+        console.warn('Failed to mark all notifications read');
+        // TODO: Implement rollback if needed
+      }
+    });
   }, [markAllNotificationsReadLocal, setUnreadCount]);
 
   const navigateToNotification = (notification: NotificationItem) => {
@@ -162,9 +181,66 @@ export default function ActivityScreen() {
     }
   };
 
+  // Initialize socket and fetch data
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const socket = connectNotificationSocket();
+    
+    if (socket) {
+      console.log('[ActivityScreen] Connected to notification socket');
+      
+      // Load initial data from storage or server
+      const loadInitialData = async () => {
+        try {
+          // Get notifications from store (will be loaded from AsyncStorage)
+          const { notifications: storedNotifications } = useNotificationStore.getState();
+          
+          // If no notifications in store, fetch from server
+          if (storedNotifications.length === 0) {
+            getNotifications({ limit: 50 }, (response) => {
+              if ('notifications' in response) {
+                setNotifications(response.notifications);
+                const unreadCount = response.notifications.filter(n => !n.isRead).length;
+                setUnreadCount(unreadCount);
+              } else {
+                console.warn('Failed to fetch initial notifications:', response.error);
+              }
+            });
+          }
+        } catch (error) {
+          console.warn('Error loading notifications:', error);
+        }
+      };
+
+      loadInitialData();
+      
+      // Lắng nghe thông báo real-time - chỉ đăng ký một lần
+      const unsubscribe = subscribeToNotificationEvents((notification) => {
+        console.log('[ActivityScreen] New notification received:', notification);
+        
+        // Kiểm tra xem thông báo đã tồn tại chưa (dùng Set để nhanh hơn)
+        const currentNotifications = notifications;
+        const notificationIds = new Set(currentNotifications.map(n => n.id));
+        
+        if (!notificationIds.has(notification.id)) {
+          // Chỉ thêm nếu chưa tồn tại
+          prependNotification(notification);
+          
+          // Cập nhật số lượng chưa đọc
+          const currentUnreadCount = useNotificationStore.getState().unreadCount;
+          setUnreadCount(currentUnreadCount + 1);
+        } else {
+          console.log('[ActivityScreen] Notification already exists, skipping:', notification.id);
+        }
+      });
+      
+      return () => {
+        console.log('[ActivityScreen] Disconnecting notification socket');
+        unsubscribe();
+      };
+    } else {
+      console.log('[ActivityScreen] Failed to connect to notification socket');
+    }
+  }, [setNotifications, setUnreadCount, prependNotification]);
 
   return (
     <SafeAreaView className={`flex-1 ${colorScheme === 'dark' ? 'bg-black' : 'bg-white'}`}>
@@ -204,7 +280,7 @@ export default function ActivityScreen() {
 
       <FlatList
         data={filteredNotifications}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={renderNotificationItem}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={() => (
