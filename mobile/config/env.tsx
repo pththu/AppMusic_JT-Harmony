@@ -12,5 +12,10 @@ export const ENV = {
   FACEBOOK_DISPLAY_NAME: Constants.expoConfig?.extra
     ?.FACEBOOK_DISPLAY_NAME as string,
   SOCKET_SERVER_URL: Constants.expoConfig?.extra?.SOCKET_SERVER_URL as string,
+<<<<<<< HEAD
   // SOCKET_SERVER_URL: 'http://192.168.1.30:3000'
 };
+=======
+  // SOCKET_SERVER_URL: 'http://192.168.1.14:3000'
+};
+>>>>>>> 28d211b863d35a1e2d2089033a85fc6fa1a8ee5d

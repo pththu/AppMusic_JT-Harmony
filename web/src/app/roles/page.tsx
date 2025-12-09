@@ -27,7 +27,7 @@ import {
   Textarea,
 } from "@/components/ui";
 import { useRoleData } from "@/hooks/useRoleData";
-import { CreateRole, DeleteRole, UpdateRole } from "@/services/userApi";
+import { CreateRole, DeleteRole, UpdateRole } from "@/services";
 
 export default function RolesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

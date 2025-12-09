@@ -5,8 +5,8 @@ import { useParams } from "next/navigation";
 import { format } from "date-fns";
 import { ArrowLeft, Heart, MessageSquare, Share } from "lucide-react";
 import { Button, Badge } from "@/components/ui";
-import { getPostAdmin, getPostLikesAdmin, type AdminPost, type PostLikeUser } from "@/services/postAdminApi";
-import { fetchAllComments, type AdminComment } from "@/services/commentAdminApi";
+import { getPostAdmin, getPostLikesAdmin, type AdminPost, type PostLikeUser } from "@/services";
+import { fetchAllComments, type AdminComment } from "@/services/commentService";
 
 interface LikeItem {
   id: number;

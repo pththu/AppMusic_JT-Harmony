@@ -45,7 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui";
 import { mockUsers, mockPosts, getUserById, getPostById, type Comment as MockComment } from "@/lib/mock-data";
-import { fetchAllComments, deleteCommentAdmin, type AdminComment } from "@/services/commentAdminApi";
+import { fetchAllComments, deleteCommentAdmin, type AdminComment } from "@/services/commentService";
 
 export default function CommentsPage() {
   const router = useRouter();

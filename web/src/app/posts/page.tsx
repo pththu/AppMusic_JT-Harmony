@@ -41,7 +41,7 @@ import {
   CardContent,
 } from "@/components/ui";
 import { type Post as MockPost } from "@/lib/mock-data";
-import { fetchPostsAdmin, updatePostAdmin, deletePostAdmin, type AdminPost } from "@/services/postAdminApi";
+import { fetchPostsAdmin, updatePostAdmin, deletePostAdmin, type AdminPost } from "@/services";
 import { getUserById, mockUsers, mockTracks, getCommentsByPostId } from "@/lib/mock-data";
 
 export default function PostsPage() {

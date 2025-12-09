@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import useAuthStore from "@/store/authStore";
-import { Login } from "@/services/authApi";
+import { useAuthStore } from "@/store";
+import { Login } from "@/services";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,8 +24,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const login = useAuthStore((state) => state.login);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,20 +38,18 @@ export default function LoginPage() {
       const response = await Login(payload);
       console.log('response', response)
 
-      if (!response.success) {
-        setError("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
-        return;
-      }
-
       if (response.success) {
         const user = response.user;
 
-        login(user, "local", user.accessToken);
+        console.log('user', user)
 
-        await new Promise((r) => setTimeout(r, 0));
+        login(user);
+
+        await new Promise((r) => setTimeout(r, 2000));
         router.replace("/dashboard");
       } else {
-        setError("Đăng nhập thất bại. Vui lòng thử lại.");
+        setError("Email hoặc mật khẩu không đúng. Vui lòng thử lại.");
+        return;
       }
     } catch (err) {
       console.error("Login error:", err);

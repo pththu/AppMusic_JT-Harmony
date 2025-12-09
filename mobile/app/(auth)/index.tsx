@@ -1,18 +1,17 @@
-import { useNavigate } from '@/hooks/useNavigate';
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, useColorScheme, Image, ActivityIndicator, Button } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import { GoogleSignin, } from '@react-native-google-signin/google-signin';
 import { ENV } from '@/config/env';
-import { LoginWithFacebook, LoginWithGoogle } from '@/routes/ApiRouter';
-import { useCustomAlert } from '@/hooks/useCustomAlert';
-import useAuthStore from '@/store/authStore';
-import { Settings, LoginManager, Profile, AccessToken } from 'react-native-fbsdk-next';
-import { Pressable } from 'react-native';
-import { useBoardingStore } from '@/store/boardingStore';
 import { useAuthData } from '@/hooks/useAuthData';
+import { useCustomAlert } from '@/hooks/useCustomAlert';
+import { useNavigate } from '@/hooks/useNavigate';
+import { LoginWithFacebook, LoginWithGoogle } from '@/routes/ApiRouter';
+import useAuthStore from '@/store/authStore';
+import { useBoardingStore } from '@/store/boardingStore';
+import { GoogleSignin, } from '@react-native-google-signin/google-signin';
+import React, { useState } from 'react';
+import { ActivityIndicator, Image, Pressable, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { AccessToken, LoginManager, Profile, Settings } from 'react-native-fbsdk-next';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_OAUTH_WEB_CLIENT_ID_APP,
@@ -167,11 +166,11 @@ export default function AuthScreen() {
       </View>
       <View className="w-full">
         <TouchableOpacity
-          className={`${colorScheme === 'dark' ? 'bg-green-600' : 'bg-green-500'} rounded-full w-full py-4 mb-8 items-center flex-row justify-center`}
+          className={`bg-[#089b0d] rounded-full w-full py-4 mb-8 items-center flex-row justify-center`}
           onPress={() => navigate('Login')}
           activeOpacity={0.7}
         >
-          <Text className="text-black font-semibold text-lg">Đăng nhập</Text>
+          <Text className="text-white font-semibold text-lg">Đăng nhập</Text>
         </TouchableOpacity>
         <View className='self-center flex-row items-center mb-8'>
           <View className={`self-center w-[15%] h-[1px] ${colorScheme === "dark" ? "bg-slate-500" : "bg-slate-300"}`} />

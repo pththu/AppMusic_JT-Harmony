@@ -7,49 +7,75 @@ require('dotenv').config();
  */
 exports.authenticateToken = async (req, res, next) => {
     try {
+        console.log(1)
         let token;
         token = req.cookies['accessToken'];
+        console.log('req.cookies: ', req.cookies['accessToken'])
 
+        console.log('token', token)
+
+        console.log(2)
         if (!token) {
-            let authHeader = req.headers['authorization'];
+            console.log(3)
+            const authHeader = req.headers['authorization'] || req.headers['Authorization'];
 
-            if (!authHeader) {
-                authHeader = req.headers['Authorization'];
-            }
-
+            console.log(4)
             if (authHeader && authHeader.startsWith('Bearer ')) {
+                console.log(5)
                 token = authHeader.split(' ')[1];
             }
         }
 
-
+        console.log(7)
         if (!token) {
-            return res.status(401).json({ error: 'Access token required' });
+            console.log(8)
+            return res.status(401).json({ error: 'Access token required', code: 'TOKEN_MISSING' });
         }
 
+        console.log(9)
         // Verify token
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
+        console.log('decoded', decoded);
+        console.log(10)
+
         // Check if user exists
         const user = await User.findByPk(decoded.id);
+        console.log(11)
         if (!user) {
-            return res.status(401).json({ error: 'User not found' });
+            console.log(12)
+            return res.status(404).json({ error: 'User not found', code: 'USER_NOT_FOUND' });
         }
 
+        console.log(13)
         // Thêm thông tin User vào request để các middleware/controller sau sử dụng
         req.user = decoded; // Thông tin từ token (id, role,...)
         req.currentUser = user; // Toàn bộ thông tin từ DB
         next();
 
     } catch (err) {
+        console.log(14)
         if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({ error: 'Token expired' });
+            console.log(15)
+            return res.status(401).json({
+                error: 'Token expired',
+                code: 'TOKEN_EXPIRED'
+            });
         }
+        console.log(16)
         if (err.name === 'JsonWebTokenError') {
-            return res.status(401).json({ error: 'Invalid token' });
+            console.log(17)
+            return res.status(401).json({
+                error: 'Invalid token',
+                code: 'TOKEN_INVALID'
+            });
         }
+        console.log(18)
         console.error('LỖI AUTH KHÔNG XÁC ĐỊNH:', err.message);
-        return res.status(500).json({ error: 'Internal server error: ' + err.message });
+        return res.status(500).json({
+            error: 'Internal server error: ' + err.message,
+            code: 'SERVER_ERROR'
+        });
     }
 };
 
@@ -141,3 +167,4 @@ exports.authorizeRole = (req, res, next) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+

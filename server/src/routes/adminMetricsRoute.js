@@ -10,4 +10,6 @@ router.get('/posts/cover-breakdown', adminMetricsController.getPostsCoverBreakdo
 router.get('/top/posts', adminMetricsController.getTopPosts); // lấy top 5 bài đăng có lượt thích cao nhất
 router.get('/top/users', adminMetricsController.getTopUsers); // lấy top 5 người dùng có bài đăng cao nhất
 
+router.get('/behavior/search', adminMetricsController.analyzeBehaviorSearch); // phân tích hành vi tìm kiếm
+
 module.exports = router;

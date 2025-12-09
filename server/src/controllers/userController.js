@@ -14,6 +14,8 @@ const formatUser = (user) => {
         avatarUrl: user.avatarUrl,
         bio: user.bio,
         gender: user.gender === true ? 'male' : 'female',
+        favoritesGenres: user.favoritesGenres,
+        accountType: user.accountType,
         status: user.status,
         roleId: user.roleId,
         lastLogin: user.lastLogin,

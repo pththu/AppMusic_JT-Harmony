@@ -3,12 +3,9 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface AuthState {
   user: any | null;
-  token: string | null;
   isLoggedIn: boolean;
-  loginType?: string | null; // 'local' | 'google' | 'facebook' | null
-  login: (user: any, loginType: string, token: string) => void;
+  login: (user: any) => void;
   logout: () => void;
-  updateAccessToken: (newToken: string) => void;
   updateUser: (user: any) => void;
 }
 
@@ -20,28 +17,16 @@ const useAuthStore = create<AuthState>()(
       isLoggedIn: false,
       loginType: null,
 
-      login: (user, loginType, token) =>
-        set({ user, loginType, token, isLoggedIn: true }),
-      logout: () =>
-        set({
-          user: null,
-          token: null,
-          isLoggedIn: false,
-          loginType: null,
-        }),
-      updateAccessToken: (newToken) =>
-        set({ token: newToken }),
-      updateUser: (user) =>
-        set({ user }),
+      login: (user) => set({ user, isLoggedIn: true }),
+      logout: () => set({ user: null, isLoggedIn: false }),
+      updateUser: (user) => set({ user }),
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        token: state.token,
         user: state.user,
         isLoggedIn: state.isLoggedIn,
-        loginType: state.loginType
       }),
       onRehydrateStorage: () => {
         console.log("Auth store rehydrated");
@@ -51,5 +36,5 @@ const useAuthStore = create<AuthState>()(
 );
 
 export const authStore = useAuthStore;
-export default useAuthStore;
+export { useAuthStore} ;
 export type { AuthState };
