@@ -370,7 +370,7 @@ export const createNewComment = async (
   content: string,
   parentId: string | null = null,
   timecodeMs?: number
-): Promise<Comment | { message: string; status: string }> => {
+) => {
   try {
     if (!useAuthStore.getState().user)
       return { message: "Chưa đăng nhập", status: "error" };
@@ -381,7 +381,7 @@ export const createNewComment = async (
       parentId: parentId,
       timecodeMs: typeof timecodeMs === 'number' ? timecodeMs : undefined,
     });
-    return response.data as Comment;
+    return response.data;
   } catch (error) {
     console.error("Lỗi khi đăng bình luận:", error);
     return { message: "Không thể đăng bình luận.", status: "error" };
@@ -567,18 +567,14 @@ export const updatePost = async (
  * postId: ID của bài đăng.
  * Endpoint: DELETE /api/v1/posts/remove/:postId
  */
-export const deletePost = async (
-  postId: string
-): Promise<{ message: string } | { message: string; status: string }> => {
+export const deletePost = async (postId) => {
   try {
-    if (!useAuthStore.getState().user)
-      return { message: "Chưa đăng nhập", status: "error" };
-
-    const response = await api.delete(`/posts/remove/${postId}`);
+    const response = await axiosClient.delete(`/posts/remove/${postId}`);
+    console.log("response.data", response.data)
     return response.data;
   } catch (error) {
-    console.error("Lỗi khi xóa bài đăng:", error);
-    return { message: "Không thể xóa bài đăng.", status: "error" };
+    console.log(error)
+    return { message: "Không thể xóa bài đăng.", status: "error" }
   }
 };
 

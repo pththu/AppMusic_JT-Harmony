@@ -629,6 +629,5 @@ export default function SongScreen() {
         </Modal>
       )}
     </ScrollView>
-    // </SafeAreaView>
   );
 }

@@ -50,12 +50,12 @@ const ArtistItem = ({ item, artist, theme, onSelect, onUnfollow, onBlock }) => {
         </TouchableOpacity>
 
         {/* Nút Chặn */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => onBlock(artist)}
           className="px-3 py-1 rounded-full bg-red-500 dark:bg-red-700"
         >
           <Text className="text-white text-sm font-semibold">Chặn</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </TouchableOpacity>
   );

@@ -123,8 +123,8 @@ const CommentModal: React.FC<CommentModalProps> = ({
         setNewComment("");
         setReplyTo(null);
         setQuote(null);
-      } catch (error) {
-        console.error("Lỗi khi gửi bình luận trong modal:", error);
+      } catch (err) {
+        console.error("Lỗi khi gửi bình luận trong modal:", err);
       } finally {
         setIsSending(false);
       }

@@ -89,6 +89,7 @@ export default function HomeScreen() {
     const mood = MOODS.find(m => m.id === selectedMood?.id);
     return mood ? mood.label : 'Bình thường';
   };
+  
 
   const getCurrentActivityLabel = () => {
     const activity = ACTIVITIES.find(a => a.id === selectedActivity?.id);
@@ -173,7 +174,7 @@ export default function HomeScreen() {
         </Text>
         <View className="flex-row items-center">
           <TouchableOpacity className="mr-4 relative"
-           onPress={() => navigate("Activity")}
+            onPress={() => navigate("Activity")}
           >
             <Icon name="notifications-outline" size={28} color={colorScheme === "dark" ? "white" : "black"} />
             {hasNotification && (
@@ -294,7 +295,7 @@ export default function HomeScreen() {
         />
         {!isGuest && (
           <>
-            {hasFollowedArtists && (
+            {hasFollowedArtists && dataRecommendations.baseOnFollowedArtists.length > 0 && (
               <HomeListSection
                 title="Dựa trên nghệ sĩ bạn theo dõi"
                 isLoading={isLoading.baseOnFollowedArtists}
@@ -305,7 +306,7 @@ export default function HomeScreen() {
                 onSelectTrack={() => { }}
               />
             )}
-            {hasFavorites && (
+            {hasFavorites && dataRecommendations.baseOnFavoriteItems.length > 0 && (
               <HomeListSection
                 title="Có thể bạn sẽ thích"
                 data={dataRecommendations.baseOnFavoriteItems}
@@ -316,7 +317,7 @@ export default function HomeScreen() {
                 onSelectTrack={() => { }}
               />
             )}
-            {hasHistories && (
+            {hasHistories && dataRecommendations.baseOnHistory.length > 0 && (
               <HomeListSection
                 title="Đề xuất dựa trên lịch sử nghe của bạn"
                 data={dataRecommendations.baseOnHistory}
