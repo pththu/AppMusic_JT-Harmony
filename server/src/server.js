@@ -6,9 +6,12 @@ const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const { sequelize, User } = require("./models");
 const { API_PREFIX } = require("./configs/constants");
-const { authenticateToken, authorizeRole } = require("./middlewares/authentication");
+const {
+  authenticateToken,
+  authorizeRole,
+} = require("./middlewares/authentication");
 const seedDatabase = require("./utils/seeder");
-const { connectRedis } = require('./configs/redis');
+const { connectRedis } = require("./configs/redis");
 const dotenv = require("dotenv");
 const { Server } = require("socket.io");
 
@@ -23,20 +26,21 @@ initSocket(server);
 
 app.set("trust proxy", true);
 app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://192.168.1.12:3000",
-      "http://192.168.1.14:3001",
-      "http://192.168.1.14:3000",
-      "http://192.168.32.101:3000",
-      "http://192.168.1.28:3000",
-      'https://app-music-jt-harmony-web.vercel.app',
-      'https://app-music-jt-harmony.vercel.app',
-    ],
-    credentials: true,
-  })
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://192.168.1.30:3000",
+      "http://192.168.1.12:3000",
+      "http://192.168.1.14:3001",
+      "http://192.168.1.14:3000",
+      "http://192.168.32.101:3000",
+      "http://192.168.1.28:3000",
+      'https://app-music-jt-harmony-web.vercel.app',
+      'https://app-music-jt-harmony.vercel.app',
+    ],
+    credentials: true,
+  })
 );
 
 app.use(express.json({ limit: "50mb" }));
@@ -66,11 +70,11 @@ const publicRoutes = [
   "auth",
   "users",
   "posts",
-  'follows', // Theo dõi người dùng, nghệ sĩ
+  "follows", // Theo dõi người dùng, nghệ sĩ
   "music",
   "comments",
-  'favorites', // Yêu thích
-  'histories', // Lịch sử nghe nhạc
+  "favorites", // Yêu thích
+  "histories", // Lịch sử nghe nhạc
   "recommendations",
 ];
 
@@ -91,7 +95,15 @@ app.use(
   `${API_PREFIX}/admin/metrics`,
   authenticateToken,
   authorizeRole,
-  require('./routes/adminMetricsRoute')
+  require("./routes/adminMetricsRoute")
+);
+
+// Admin routes
+app.use(
+  `${API_PREFIX}/admin`,
+  authenticateToken,
+  authorizeRole,
+  require("./routes/adminRoute")
 );
 
 // Start server

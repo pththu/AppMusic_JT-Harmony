@@ -311,7 +311,6 @@ export const RemoveTrackFromPlaylist = async (payload) => {
   }
 }
 
-// đang test
 export const GetTracksForCover = async () => {
   try {
     const response = await axiosPublicClient.get(`/music/track-for-cover`);

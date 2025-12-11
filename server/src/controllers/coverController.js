@@ -1,4 +1,5 @@
-const { Post, User, Track } = require("../models");
+const { Post, User, Track, Like } = require("../models");
+const { sequelize } = require("../models");
 
 // Hàm này kiểm tra xem người dùng đã thích bài đăng cụ thể chưa
 async function checkIsLiked(userId, postId) {
@@ -284,6 +285,12 @@ exports.getAllCovers = async (req, res) => {
         "songId",
         "isCover",
         "originalSongId",
+        [
+          sequelize.literal(
+            `(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")`
+          ),
+          "commentCountOptimized",
+        ],
       ],
       include: [
         {
@@ -329,6 +336,7 @@ exports.getAllCovers = async (req, res) => {
         return {
           ...coverJson,
           fileUrl: parsedFileUrls,
+          commentCount: coverJson.commentCountOptimized || coverJson.commentCount || 0,
         };
       })
     );

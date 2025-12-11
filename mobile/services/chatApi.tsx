@@ -6,8 +6,6 @@ const api = axiosClient;
 // Hàm helper để hiển thị lỗi
 const showError = (message: string) => {
   console.error(message);
-  // Có thể thay thế bằng Alert.alert hoặc custom alert hook nếu cần
-  // Alert.alert('Lỗi', message);
 };
 
 // Interface cho cuộc trò chuyện

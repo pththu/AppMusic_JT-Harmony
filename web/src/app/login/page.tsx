@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const login = useAuthStore((state) => state.login);
@@ -59,10 +60,16 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    if (isLoggedIn) {
-      router.replace("/");
-    }
-  }, [isLoggedIn, router]);
+    setIsCheckingAuth(false);
+  }, []);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#a7f29b]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-row items-center justify-center bg-[#a7f29b] py-12 px-4 sm:px-6 lg:px-8">

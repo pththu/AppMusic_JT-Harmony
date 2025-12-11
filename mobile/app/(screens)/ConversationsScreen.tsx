@@ -22,7 +22,6 @@ import { fetchUserConversations, fetchAllUsers, Conversation, createOrGetPrivate
 import UsersModal from '@/components/modals/UsersModal';
 import ConversationOptionsModal from '@/components/modals/ConversationOptionsModal';
 import RestrictedUsersModal from '@/components/modals/RestrictedUsersModal';
-
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
@@ -64,7 +63,7 @@ export default function ConversationsScreen() {
         }
     }, [currentUserId]);
 
-    // Hàm tải restricted users từ AsyncStorage
+    // Hàm tải danh sách người dùng bị hạn chế từ AsyncStorage
     const loadRestrictedUsers = useCallback(async () => {
         if (!currentUserId) return;
 
@@ -73,7 +72,6 @@ export default function ConversationsScreen() {
             if (storedRestrictedUsers) {
                 const restrictedUsersArray = JSON.parse(storedRestrictedUsers);
                 setRestrictedUsers(new Set(restrictedUsersArray));
-                // Load all users to filter restricted ones for the list
                 const allUsers = await fetchAllUsers();
                 const restrictedList = allUsers.filter((user: any) => restrictedUsersArray.includes(user.id));
                 setRestrictedUsersList(restrictedList);
@@ -98,7 +96,7 @@ export default function ConversationsScreen() {
     }, [loadConversations]);
 
     // Hàm tải danh sách users để tạo cuộc trò chuyện mới
-    // ƯU TIÊN dùng dữ liệu đã có trong followStore (không gọi lại API all users)
+    // ƯU TIÊN dùng dữ liệu đã có trong followStore
     const loadUsers = useCallback(async () => {
         setLoadingUsers(true);
         try {
@@ -148,7 +146,7 @@ export default function ConversationsScreen() {
     const startLongPress = (user: any) => {
         const timer = setTimeout(() => {
             handleUserLongPress(user);
-        }, 1000); // 2 seconds
+        }, 1000);
         setLongPressTimer(timer);
     };
 
@@ -307,7 +305,6 @@ export default function ConversationsScreen() {
 
         return (
             <TouchableOpacity
-                // Thêm hiệu ứng nhấn và border
                 className={`flex-row items-center px-4 py-3 border-b ${borderColor} ${activeOpacity}`}
                 onPress={() => {
                     (navigation as any).navigate('ChatScreen', {
@@ -316,7 +313,7 @@ export default function ConversationsScreen() {
                     });
                 }}
             >
-                {/* Avatar (Tăng kích thước và thêm viền nổi bật nhẹ) */}
+                {/* Avatar */}
                 <Image
                     source={{ uri: otherParticipant.avatarUrl || 'https://via.placeholder.com/60' }}
                     className="w-14 h-14 rounded-full mr-4 bg-gray-300 border border-indigo-400 dark:border-indigo-600" // w-14 h-14 thay vì w-12 h-12

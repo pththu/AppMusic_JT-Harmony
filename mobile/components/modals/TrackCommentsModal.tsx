@@ -14,14 +14,16 @@ import {
   Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
-import { Comment, createTrackComment, fetchCommentsByTrackId, toggleCommentLike } from "@/services/socialApi";
+import { Comment, createTrackComment, createTrackCommentBySpotifyId, fetchCommentsByTrackId, fetchCommentsBySpotifyId, toggleCommentLike } from "@/services/socialApi";
 import { usePlayerStore } from "@/store/playerStore";
+import useAuthStore from "@/store/authStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface TrackCommentsModalProps {
   visible: boolean;
   onClose: () => void;
   trackId: number | null;
+  spotifyId?: string;
   defaultTimecodeMs?: number | null;
   onUserPress?: (userId: number) => void;
 }
@@ -37,6 +39,7 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
   visible,
   onClose,
   trackId,
+  spotifyId,
   defaultTimecodeMs,
   onUserPress,
 }) => {
@@ -59,19 +62,24 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
   }, [attachTime]);
 
   useEffect(() => {
-    if (!visible || !trackId) return;
+    if (!visible || (!trackId && !spotifyId)) return;
     setAttachTime(defaultTimecodeMs ?? null);
     const load = async () => {
       try {
         setLoading(true);
-        const items = await fetchCommentsByTrackId(trackId, {});
-        setComments(items);
+        let items;
+        if (trackId) {
+          items = await fetchCommentsByTrackId(trackId, {});
+        } else if (spotifyId) {
+          items = await fetchCommentsBySpotifyId(spotifyId, {});
+        }
+        setComments(items || []);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [visible, trackId, defaultTimecodeMs]);
+  }, [visible, trackId, spotifyId, defaultTimecodeMs]);
 
   // Inform player to pause background updates while modal is open
   useEffect(() => {
@@ -82,7 +90,7 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
   }, [visible, setUiOverlayOpen]);
 
   const handleSend = async () => {
-    if (!trackId || !newText.trim()) return;
+    if ((!trackId && !spotifyId) || !newText.trim()) return;
     const optimistic: Comment = {
       id: Date.now().toString(),
       userId: 0 as any,
@@ -109,17 +117,34 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
     }
     setNewText("");
     try {
-      const res = await createTrackComment(
-        trackId,
-        optimistic.content,
-        replyingTo ? replyingTo.id : null,
-        attachTime ?? undefined
-      );
+      let res;
+      if (trackId) {
+        res = await createTrackComment(
+          trackId,
+          optimistic.content,
+          replyingTo ? replyingTo.id : null,
+          attachTime ?? undefined
+        );
+      } else if (spotifyId) {
+        res = await createTrackCommentBySpotifyId(
+          spotifyId,
+          optimistic.content,
+          replyingTo ? replyingTo.id : null,
+          attachTime ?? undefined
+        );
+      }
+      if (!res) throw new Error("Không thể gửi bình luận");
       if ("message" in res) throw new Error(res.message);
       // Sau khi gửi thành công: reload lại danh sách để đồng bộ UI với server
-      const latest = await fetchCommentsByTrackId(trackId, {});
+      let latest;
+      if (trackId) {
+        latest = await fetchCommentsByTrackId(trackId, {});
+      } else if (spotifyId) {
+        latest = await fetchCommentsBySpotifyId(spotifyId, {});
+      }
       setComments(latest);
     } catch (e) {
+      console.error('Error sending comment:', e);
       if (replyingTo) {
         setComments((prev) =>
           prev.map((c) =>
@@ -262,7 +287,7 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 12,
-        backgroundColor: '#6366F1',
+        backgroundColor: '#10B981',
         minWidth: 56,
         height: 24,
         alignItems: 'center',
@@ -293,8 +318,8 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
 
               {attachTime != null && (
                 <View className="px-4 pt-2">
-                  <View className="self-start px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40">
-                    <Text className="text-indigo-600 dark:text-indigo-300 text-xs">
+                  <View className="self-start px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/40">
+                    <Text className="text-green-600 dark:text-green-300 text-xs">
                       Đang gắn mốc {timeLabel}
                     </Text>
                   </View>
@@ -331,7 +356,7 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
                       setAttachTime(Math.floor(pos * 1000));
                     }
                   }}
-                  className="px-3 py-2 rounded-full bg-indigo-500 mr-2"
+                  className="px-3 py-2 rounded-full bg-green-500 mr-2"
                 >
                   <Text className="text-white text-xs font-bold">
                     {attachTime != null
@@ -348,7 +373,7 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
                   multiline
                   style={{ maxHeight: 100 }}
                 />
-                <TouchableOpacity onPress={handleSend} disabled={!newText.trim()} className={`ml-2 px-4 py-2 rounded-full ${!newText.trim() ? "bg-gray-400" : "bg-[#4F46E5]"}`}>
+                <TouchableOpacity onPress={handleSend} disabled={!newText.trim()} className={`ml-2 px-4 py-2 rounded-full ${!newText.trim() ? "bg-gray-400" : "bg-green-500"}`}>
                   <Text className="text-white font-bold">Gửi</Text>
                 </TouchableOpacity>
               </View>
