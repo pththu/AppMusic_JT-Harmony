@@ -21,9 +21,6 @@ const HeaderSection = ({ timeFilter, setTimeFilter }) => {
             <option value="year">Năm nay</option>
           </select>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-sm flex items-center gap-2 transition-colors">
-          <TrendingUp className="w-4 h-4" /> Xuất Báo Cáo
-        </button>
       </div>
     </div>
   )

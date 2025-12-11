@@ -34,16 +34,13 @@ const NotificationPane = ({
                         <span className="text-xs font-bold text-gray-500">{user.username.charAt(0).toUpperCase()}</span>
                       )}
                     </div>
-                    <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white bg-green-400" />
+                    {/* <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white bg-green-400" /> */}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900 truncate w-[120px]">{user.fullName || user.username}</p>
                     <p className="text-xs text-gray-500">{format(new Date(user.createdAt), "dd/MM", { locale: vi })}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-white hover:shadow-sm">
-                  <MoreHorizontal className="h-4 w-4 text-gray-400" />
-                </Button>
               </div>
             ))
           ) : (

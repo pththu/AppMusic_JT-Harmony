@@ -209,7 +209,7 @@ export default function FollowsStatsPage() {
       <FollowerModal
         selectedFollowerDetail={selectedFollowerDetail}
         setSelectedFollowerDetail={setSelectedFollowerDetail}
-        format={format}
+        // format={format}
       />
     </div>
   );

@@ -137,11 +137,6 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </div>
-        {/* <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Quên mật khẩu? Liên hệ quản trị viên hệ thống.
-          </p>
-        </div> */}
       </div>
     </div >
   );

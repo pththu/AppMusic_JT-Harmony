@@ -1,4 +1,11 @@
-import React, { useState, useEffect } from "react";
+import CustomButton from "@/components/custom/CustomButton";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { UploadMultipleFile } from "@/routes/ApiRouter";
+import { createNewCover } from "@/services/coverService";
+import { GetTracksForCover } from "@/services/musicService";
+import useAuthStore from "@/store/authStore";
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Image,

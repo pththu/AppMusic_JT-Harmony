@@ -1,4 +1,5 @@
 import axiosClient from "@/lib/axiosClient"
+import { ca } from "date-fns/locale";
 
 // role api
 const GetAllRole = async () => {
@@ -82,10 +83,96 @@ const GetAllUser = async () => {
   }
 }
 
+const CreateUser = async (payload) => {
+  try {
+    const response = await axiosClient.post('/users', payload);
+    console.log('response: ', response.data);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+const DeleteUser = async (userId) => {
+  try {
+    const response = await axiosClient.delete(`/users/remove/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+const DeleteUsers = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/users/delete-multiple`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+const BannedUser = async (userId) => {
+  try {
+    const response = await axiosClient.put(`/users/banned/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+const UnlockUser = async (userId) => {
+  try {
+    const response = await axiosClient.put(`/users/unlock-user/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
 export {
   CreateRole,
+  CreateUser,
   GetAllRole,
   GetAllUser,
   UpdateRole,
   DeleteRole,
+  DeleteUser,
+  DeleteUsers,
+  BannedUser,
+  UnlockUser,
 }

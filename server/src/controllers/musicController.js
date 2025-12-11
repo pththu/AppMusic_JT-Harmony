@@ -1859,7 +1859,6 @@ const getAllTrack = async (req, res) => {
     });
 
     const dataFormated = [];
-    console.log('artist 2:', tracks[0].toJSON())
     for (let track of tracks) {
       const spotifyId = track?.spotifyId;
       let tempId = track?.id || null;

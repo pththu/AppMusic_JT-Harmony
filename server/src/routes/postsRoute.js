@@ -41,7 +41,9 @@ router.put("/reports/:id", authenticateToken, authorizeRole, postController.upda
 router.delete("/:id/likes/:userId", authenticateToken, authorizeRole, postController.removeLikeAdmin); // Admin: xóa like của user khỏi bài đăng
 router.get("/likes/admin", authenticateToken, authorizeRole, postController.getAllLikesAdmin); // Admin: danh sách tất cả likes
 
-// Đặt route theo ID sau cùng để tránh nuốt các path cụ thể như /admin, /reports
+router.get("/all-posts", authenticateToken, authorizeRole, postController.GetAllPost); // Admin: lấy tất cả bài đăng
+
 router.get("/:id", postController.getPostById); // Lấy bài đăng theo ID (public)
+
 
 module.exports = router;

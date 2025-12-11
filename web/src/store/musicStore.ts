@@ -1,4 +1,4 @@
-import { GetAllAlbum, GetAllPlaylist, GetAllTrack, GetAllArtist, GetDataAnalyticsSearch } from "@/services";
+import { GetAllAlbum, GetAllPlaylist, GetAllTrack, GetAllArtist, GetDataAnalyticsSearch, GetAllGenres } from "@/services";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -10,11 +10,13 @@ interface MusicState {
   artists: any[];
   topKeywords: any[];
   trendsOverTime: any[];
+  genres: any[];
 
   setTracks: (tracks: any[]) => void;
   setPlaylists: (playlists: any[]) => void;
   setAlbums: (albums: any[]) => void;
   setArtists: (artists: any[]) => void;
+  setGenres: (genres: any[]) => void;
   setTopKeywords: (topKeywords: any[]) => void;
   setTrendsOverTime: (trendsOverTime: any[]) => void;
 
@@ -22,6 +24,7 @@ interface MusicState {
   fetchPlaylists: () => Promise<void>;
   fetchAlbums: () => Promise<void>;
   fetchArtists: () => Promise<void>;
+  fetchGenres: () => Promise<void>;
   fetchDataAnalyticsSearch: (searchHistories: any[]) => Promise<void>;
 
   clearMusicData: () => void;
@@ -34,6 +37,7 @@ export const useMusicStore = create<MusicState>()(
       playlists: [],
       albums: [],
       artists: [],
+      genres: [],
       topKeywords: [],
       trendsOverTime: [],
 
@@ -41,6 +45,7 @@ export const useMusicStore = create<MusicState>()(
       setPlaylists: (playlists) => set({ playlists }),
       setAlbums: (albums) => set({ albums }),
       setArtists: (artists) => set({ artists }),
+      setGenres: (genres) => set({ genres }),
       setTopKeywords: (topKeywords) => set({ topKeywords }),
       setTrendsOverTime: (trendsOverTime) => set({ trendsOverTime }),
 
@@ -92,6 +97,18 @@ export const useMusicStore = create<MusicState>()(
           toast.error('Lỗi khi tải danh sách nghệ sĩ: ' + err.message);
         }
       },
+      fetchGenres: async () => {
+        try {
+          const response = await GetAllGenres();
+          if (response.success) {
+            set({ genres: response.data });
+          } else {
+            set({ genres: [] });
+          }
+        } catch (error) {
+          toast.error('Lỗi khi tải danh sách thể loại: ' + error.message);
+        }
+      },
       fetchDataAnalyticsSearch: async (searchHistories) => {
         try {
           const response = await GetDataAnalyticsSearch(searchHistories);
@@ -113,7 +130,8 @@ export const useMusicStore = create<MusicState>()(
         albums: [],
         artists: [],
         topKeywords: [],
-        trendsOverTime: []
+        trendsOverTime: [],
+        genres: [],
       }),
     }),
     {

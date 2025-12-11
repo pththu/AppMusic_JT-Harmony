@@ -2,6 +2,7 @@ const { Artist, Genres } = require('../models');
 const spotify = require('../configs/spotify');
 const { redisClient } = require('../configs/redis');
 const Op = require('sequelize').Op;
+const sequelize = require('../configs/database');
 
 const formatArtist = (artist) => {
   return {
@@ -22,7 +23,8 @@ const formatArtistGenres = (artist) => {
     genres: [...artist.genres.map(genre => genre.name)],
     imageUrl: artist.imageUrl,
     shareCount: artist.shareCount,
-    totalFollowers: artist.totalFollowers
+    totalFollowers: artist.totalFollowers,
+    createdAt: artist.createdAt,
   }
 }
 
@@ -46,7 +48,6 @@ exports.getAllArtist = async (req, res) => {
       data: dataFormatted,
       success: true
     };
-    // await redisClient.set(cacheKey, JSON.stringify(response), { EX: 3600 });
     res.json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -65,11 +66,48 @@ exports.getArtistById = async (req, res) => {
 
 exports.createArtist = async (req, res) => {
   try {
-    const row = await Artist.create(req.body);
-    const dataFormatted = formatArtist(row);
-    res.status(201).json(dataFormatted);
+    console.log('req: ', req.body)
+    const row = await Artist.create({
+      name: req.body.name,
+      spotifyId: req.body.spotifyId,
+      imageUrl: req.body.imageUrl,
+      shareCount: req.body.shareCount || 0,
+      totalFollowers: req.body.totalFollowers || 0,
+    });
+
+    if (!row) {
+      return res.status(500).json({ error: 'Failed to create artist' });
+    }
+
+    const junctionTable = sequelize.models.artist_genres;
+
+    const artistGenresToInsert = [];
+    const genres = [];
+    if (req.body.genresId) {
+      for (let genreId of req.body.genresId) {
+        let genre = await Genres.findByPk(genreId);
+        console.log(genre.toJSON())
+        if (!genre) {
+          return res.status(400).json({ error: `Genre with ID ${genreId} not found` });
+        }
+        artistGenresToInsert.push({ artist_id: row.id, genre_id: genre.id });
+        genres.push(genre);
+        console.log()
+      }
+
+      console.log('artistGenresToInsert', artistGenresToInsert)
+      console.log('genres', genres)
+      await junctionTable.bulkCreate(artistGenresToInsert, { ignoreDuplicates: true });
+    }
+
+    const dataFormatted = formatArtistGenres({ genres: genres, ...row.toJSON() });
+    res.status(201).json({
+      message: 'Artist created successfully',
+      data: dataFormatted,
+      success: true
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err });
   }
 };
 

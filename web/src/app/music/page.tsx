@@ -30,23 +30,24 @@ import {
 import { useMusicStore, useUserStore } from "@/store";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { useHistoryStore } from "@/store/historyStore";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
 // --- UI COMPONENTS ---
-const Card = ({ children, className = "" }) => (
-  <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>{children}</div>
-);
-const CardHeader = ({ children, className = "" }) => (
-  <div className={`p-6 pb-2 ${className}`}>{children}</div>
-);
-const CardTitle = ({ children, className = "" }) => (
-  <h3 className={`font-semibold text-gray-900 ${className}`}>{children}</h3>
-);
-const CardDescription = ({ children, className = "" }) => (
-  <p className={`text-sm text-gray-500 ${className}`}>{children}</p>
-);
-const CardContent = ({ children, className = "" }) => (
-  <div className={`p-6 pt-2 ${className}`}>{children}</div>
-);
+// const Card = ({ children, className = "" }) => (
+//   <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>{children}</div>
+// );
+// const CardHeader = ({ children, className = "" }) => (
+//   <div className={`p-6 pb-2 ${className}`}>{children}</div>
+// );
+// const CardTitle = ({ children, className = "" }) => (
+//   <h3 className={`font-semibold text-gray-900 ${className}`}>{children}</h3>
+// );
+// const CardDescription = ({ children, className = "" }) => (
+//   <p className={`text-sm text-gray-500 ${className}`}>{children}</p>
+// );
+// const CardContent = ({ children, className = "" }) => (
+//   <div className={`p-6 pt-2 ${className}`}>{children}</div>
+// );
 
 // --- HELPER FUNCTIONS ---
 const getQualityScore = (durationListened, totalDuration) => {
@@ -122,8 +123,15 @@ const analyzeData = ({
       const track = tracks.find(t => t.id === history.itemId);
       if (track) {
         const qualityPoint = getQualityScore(history.durationListened, track.duration);
-        if (!trackStats[track.name]) trackStats[track.name] = { count: 0, qualityCount: 0, artist: track.artists?.map(a => a.name).join(', ') || 'N/A' };
+        if (!trackStats[track.name]) trackStats[track.name] = {
+          count: 0,
+          qualityCount: 0,
+          playCount: 0,
+          artist: track.artists?.map(a => a.name).join(', ') || 'N/A'
+        };
+
         trackStats[track.name].count += 1;
+        trackStats[track.name].playCount = track.playCount;
         trackStats[track.name].qualityCount += qualityPoint;
 
         const artistName = track.artists[0].name;
@@ -248,10 +256,9 @@ const renderCustomTooltip = ({ active, payload, label }, totalGenreCount) => {
 export default function MusicDashboard() {
   const [timeRange, setTimeRange] = useState(30); // Default 30 days
 
-
-  const { users } = useUserStore();
-  const { tracks, albums, playlists, artists } = useMusicStore();
-  const { favoriteTracks, favoritePlaylists, favoriteAlbums } = useFavoritesStore();
+  const { users, fetchUsers } = useUserStore();
+  const { tracks, albums, playlists, artists, fetchTracks, fetchArtists, fetchAlbums, fetchPlaylists } = useMusicStore();
+  const { favoriteTracks, favoritePlaylists, favoriteAlbums, fetchFavoriteItems } = useFavoritesStore();
   const { searchHistories, listenHistories, fetchSearchHistories, fetchListenHistories } = useHistoryStore();
 
   const {
@@ -294,16 +301,24 @@ export default function MusicDashboard() {
   useEffect(() => {
     if (listenHistories.length === 0) fetchListenHistories();
     if (searchHistories.length === 0) fetchSearchHistories();
-  }, [fetchListenHistories, fetchSearchHistories]);
+    if (tracks.length === 0) fetchTracks();
+    if (artists.length === 0) fetchArtists();
+    if (albums.length === 0) fetchAlbums();
+    if (playlists.length === 0) fetchPlaylists();
+    if (users.length === 0) fetchUsers();
+    if (favoriteTracks.length === 0 || favoritePlaylists.length === 0 || favoriteAlbums.length === 0) {
+      fetchFavoriteItems();
+    }
+  }, [fetchListenHistories, fetchSearchHistories, fetchTracks, fetchArtists, fetchAlbums, fetchPlaylists, fetchUsers, fetchFavoriteItems]);
 
   return (
     <div className="space-y-8 p-6 bg-gray-50/50 min-h-screen font-sans text-slate-800">
       {/* Header & Filter */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Music Analytics</h1>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Tổng quan thống kê dữ liệu</h1>
           <p className="text-gray-500 mt-1 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" /> Tổng quan dữ liệu & Xu hướng
+            <TrendingUp className="w-4 h-4" /> Phân tích dữ liệu & Xu hướng
           </p>
         </div>
         <div className="flex bg-white rounded-lg p-1 shadow-sm border border-gray-200">
@@ -433,8 +448,8 @@ export default function MusicDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs font-bold text-gray-900 block">{track.qualityCount}</span>
-                      <span className="text-[10px] text-gray-400">HQ plays</span>
+                      <span className="text-xs font-bold text-gray-900 block">{track?.playCount}</span>
+                      <span className="text-[10px] text-gray-400">plays</span>
                     </div>
                   </div>
                 )) : <p className="text-gray-400 text-center text-sm">Chưa có dữ liệu</p>}

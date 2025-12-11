@@ -6,7 +6,6 @@ export const Login = async (payload) => {
       email: payload.email,
       password: payload.password,
     });
-    console.log('response api', response.data)
     return response.data;
   } catch (error) {
     if (error.response) {

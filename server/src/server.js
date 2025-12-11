@@ -56,17 +56,17 @@ app.use(
 
 // --- KHAI BÁO ROUTES Ở PHẠM VI TOÀN CỤC ---
 const protectedRoutes = [
-  "notifications", // Thông báo
-  "genres", // Xem thể loại nhạc
-  "artists", // Xem thông tin nghệ sĩ
-  "albums", // Xem album
+  'notifications', // Thông báo
+  'genres', // Xem thể loại nhạc
+  'albums', // Xem album
   "conversations",
   "upload", // Upload hình ảnh, file
-  "tracks", // Xem bài hát (public), upload bài hát (private)
   "roles", // Quản lý vai trò người dùng
 ];
 const publicRoutes = [
-  "playlists", // Playlist cá nhân
+  "tracks", // Xem bài hát (public), upload bài hát (private)
+  'artists', // Xem thông tin nghệ sĩ
+  'playlists', // Playlist cá nhân
   "auth",
   "users",
   "posts",
