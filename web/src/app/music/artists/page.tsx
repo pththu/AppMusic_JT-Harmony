@@ -313,7 +313,7 @@ export default function ArtistsPage() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản Lý Nghệ Sĩ</h1>
           <p className="text-gray-500">Theo dõi thông tin, thống kê follower và quản lý hồ sơ.</p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button variant="default" onClick={() => setIsAddDialogOpen(true)} >
           <Plus className="w-4 h-4 mr-2" /> Thêm Nghệ Sĩ
         </Button>
       </div>

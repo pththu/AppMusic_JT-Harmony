@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
 import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
-import { SearchTracks } from "@/services/searchService";
-import { shuffleData } from "@/utils/array"; // Cần import shuffleData từ utils
 import { GenerateFromActivity, GenerateFromFavorites, GenerateFromFollowedArtists, GenerateFromHistories, GenerateFromMood, GenerateFromTimeOfDay, GenerateTrackFromFavorites } from "@/services/recommendationService";
-import { useBoardingStore } from "@/store/boardingStore"; // Cần dùng store để set recommendations
-import { useAuthData } from "./useAuthData";
+import { SearchTracks } from "@/services/searchService";
 import useAuthStore from "@/store/authStore";
+import { useBoardingStore } from "@/store/boardingStore"; // Cần dùng store để set recommendations
+import { shuffleData } from "@/utils/array"; // Cần import shuffleData từ utils
+import { useCallback, useEffect, useState } from "react";
+import { useAuthData } from "./useAuthData";
 
 interface QueryParams {
   playlistForYou: string[];

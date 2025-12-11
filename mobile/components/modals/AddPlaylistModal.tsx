@@ -1,19 +1,17 @@
+import React from "react";
 import {
-  View,
-  Text,
-  useColorScheme,
+  Image,
   Modal,
+  Platform,
+  Switch,
+  Text,
   TextInput,
   TouchableOpacity,
-  Switch,
-  Platform,
-  Image,
+  useColorScheme,
+  View,
 } from "react-native";
-import React, { useState } from "react";
-import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { useLocalSearchParams } from "expo-router";
+import Icon from "react-native-vector-icons/Ionicons";
 
 const AddPlaylistModal = ({
   isModalVisible,
@@ -31,8 +29,6 @@ const AddPlaylistModal = ({
 }) => {
   const colorScheme = useColorScheme();
   const iconColor = colorScheme === "dark" ? "#888" : "#666";
-  const { success, error, warning } = useCustomAlert();
-  const [loading, setLoading] = useState(false);
 
   return (
     <Modal

@@ -20,7 +20,8 @@ import {
   CheckSquare,
   ChevronLeft,
   ChevronRight,
-  Filter
+  Filter,
+  Delete
 } from "lucide-react";
 import {
   BarChart,
@@ -37,9 +38,13 @@ import {
 } from "recharts";
 import { useHistoryStore, useMusicStore, useUserStore } from "@/store";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
+import ViewDetailModal from "@/components/music/playlist/view-detail-modal";
+import AddModal from "@/components/music/playlist/add-modal";
+import { is } from "date-fns/locale";
+import { AddPlaylist, DeletePlaylists } from "@/services";
+import toast from "react-hot-toast";
 
-// --- MOCK STORE CHO HISTORY (Giả lập vì chưa có code store thực tế) ---
-// Trong thực tế, bạn sẽ import: import { useHistoryStore } from "@/store";
+// --- COMPONENTS CON (SelectNative, Modal, DropdownMenu, StatCard) ---
 const SelectNative = ({ value, onChange, options, placeholder = "Select...", className = "" }: any) => (
   <select
     value={value}
@@ -126,35 +131,45 @@ const StatCard = ({ title, value, subtext, icon: Icon, colorClass }: any) => (
 export default function PlaylistsPage() {
   const { users, fetchUsers } = useUserStore();
   const { playlists, setPlaylists, fetchPlaylists } = useMusicStore();
-  const { listenHistories, fetchListenHistories } = useHistoryStore(); // Lấy lịch sử nghe từ store
-  console.log(listenHistories)
+  const { listenHistories, fetchListenHistories } = useHistoryStore();
 
   // --- States ---
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
 
-  // Filter & Search
+  // Filter & Search States
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterVisibility, setFilterVisibility] = useState<string>("all");
+  const [filterType, setFilterType] = useState("all");
+  // FIX: Đặt giá trị mặc định là "all" để khớp với value của option placeholder trong SelectNative
+  const [filterVisibility, setFilterVisibility] = useState("all");
+  const [filterSource, setFilterSource] = useState("all");
+
   const [sortConfig, setSortConfig] = useState<{ key: string | null, direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
 
   // Pagination & Selection
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [selectedIds, setSelectedIds] = useState<Set<number | string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState([]);
 
   // Form State (New Playlist)
-  const [newPlaylistData, setNewPlaylistData] = useState({ name: "", description: "", type: "playlist", isPublic: true });
+  const [newPlaylistData, setNewPlaylistData] = useState({
+    name: "",
+    description: "",
+    type: "playlist",
+    isPublic: true,
+    userId: null,
+    sharedCount: 0,
+    image: null,
+    imagePreview: null
+  });
 
-  // --- LOGIC 1: STATISTICS (Cập nhật dùng listenHistories) ---
+  // --- LOGIC 1: STATISTICS ---
   const stats = useMemo(() => {
     const totalPlaylists = playlists.length;
     const totalTracks = playlists.reduce((acc, curr) => acc + curr.totalTracks, 0);
 
-    // Pie Chart Data
     const publicCount = playlists.filter(p => p.isPublic).length;
     const privateCount = totalPlaylists - publicCount;
     const visibilityData = [
@@ -162,8 +177,6 @@ export default function PlaylistsPage() {
       { name: 'Riêng Tư', value: privateCount, color: '#64748b' }
     ].filter(i => i.value > 0);
 
-    // Horizontal Bar Chart Data (Top Playlists by Play Count)
-    // B1: Đếm số lần xuất hiện của mỗi playlistId trong listenHistories
     const playCounts: Record<number, number> = {};
     listenHistories.forEach((h) => {
       if (h.itemType === 'playlist') {
@@ -171,43 +184,62 @@ export default function PlaylistsPage() {
       }
     });
 
-    // B2: Map playCounts vào danh sách playlist thực tế
     const topPlaylistsData = playlists
       .map(p => ({
         name: p.name.length > 25 ? p.name.slice(0, 22) + '...' : p.name,
         fullTitle: p.name.length > 25 ? p.name.slice(0, 22) + '...' : p.name,
-        plays: p.id ? (playCounts[p.id] || 0) : 0, // Nếu không có ID database thì plays = 0 (hoặc logic khác tùy app)
+        plays: p.id ? (playCounts[p.id] || 0) : 0,
       }))
-      .sort((a, b) => b.plays - a.plays) // Sắp xếp giảm dần theo lượt nghe
-      .slice(0, 5); // Lấy top 5
+      .sort((a, b) => b.plays - a.plays)
+      .slice(0, 5);
 
     return { totalPlaylists, totalTracks, visibilityData, topPlaylistsData };
   }, [playlists, listenHistories]);
 
-  // --- LOGIC 2: FILTER & SORT ---
+  // --- LOGIC 2: FILTER & SORT (UPDATED) ---
   const processedPlaylists = useMemo(() => {
     let result = [...playlists];
 
-
-    // Filter
-    if (searchTerm || filterType !== 'all' || filterVisibility !== 'all') {
+    // Filter Logic
+    if (searchTerm || filterType !== 'all' || filterVisibility !== 'all' || filterSource !== 'all') {
       result = result.filter(item => {
-        const ownerName = item.userId ? users.find(u => u.id === item.userId)?.fullName : '';
-        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        // 1. Search (Name & Owner)
+        const ownerName = item.userId ? (users.find(u => u.id === item.userId)?.fullName || "") : "";
+        const matchesSearch =
+          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           ownerName.toLowerCase().includes(searchTerm.toLowerCase());
+
+        // 2. Type (Hiện tại UI chưa có dropdown chọn type, mặc định 'all')
         const matchesType = filterType === 'all' || item.type === filterType;
+
+        // 3. Visibility (Public/Private)
         const matchesVisibility = filterVisibility === 'all' ||
           (filterVisibility === 'public' && item.isPublic) ||
           (filterVisibility === 'private' && !item.isPublic);
-        return matchesSearch && matchesType && matchesVisibility;
+
+        // 4. Source (Local/Spotify) - FIX LOGIC
+        const matchesSource = filterSource === 'all' ||
+          (filterSource === 'spotify' && !!item.spotifyId) || // Có spotifyId là Spotify
+          (filterSource === 'local' && !item.spotifyId);      // Không có là Local
+
+        return matchesSearch && matchesType && matchesVisibility && matchesSource;
       });
     }
 
-    // Sort
+    // Sort Logic
     if (sortConfig.key) {
       result.sort((a, b) => {
-        let aValue: any = sortConfig.key === 'ownerName' ? a.owner.name : (a as any)[sortConfig.key!];
-        let bValue: any = sortConfig.key === 'ownerName' ? b.owner.name : (b as any)[sortConfig.key!];
+        let aValue: any = sortConfig.key === 'ownerName'
+          ? (a.userId ? users.find(u => u.id === a.userId)?.fullName : "")
+          : (a as any)[sortConfig.key!];
+
+        let bValue: any = sortConfig.key === 'ownerName'
+          ? (b.userId ? users.find(u => u.id === b.userId)?.fullName : "")
+          : (b as any)[sortConfig.key!];
+
+        // Handle null/undefined for sort
+        if (!aValue) aValue = "";
+        if (!bValue) bValue = "";
 
         if (typeof aValue === 'string') {
           return sortConfig.direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
@@ -216,7 +248,7 @@ export default function PlaylistsPage() {
       });
     }
     return result;
-  }, [playlists, searchTerm, filterType, filterVisibility, sortConfig]);
+  }, [playlists, users, searchTerm, filterType, filterVisibility, filterSource, sortConfig]);
 
   // --- LOGIC 3: PAGINATION ---
   const totalPages = Math.ceil(processedPlaylists.length / itemsPerPage);
@@ -227,54 +259,91 @@ export default function PlaylistsPage() {
   }, [processedPlaylists, currentPage, itemsPerPage]);
 
   // Reset page when filter changes
-  useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterVisibility]);
+  useEffect(() => setCurrentPage(1), [searchTerm, filterType, filterVisibility, filterSource]);
 
   // --- LOGIC 4: SELECTION & ACTIONS ---
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSelectAll = (e) => {
     if (e.target.checked) {
-      const ids = new Set(currentItems.map(p => p.id || p.spotifyId || '')); // Ưu tiên ID DB, fallback SpotifyID
-      setSelectedIds(ids as Set<number | string>);
+      const ids = currentItems.map(item => item.id);
+      setSelectedIds(ids);
     } else {
-      setSelectedIds(new Set());
+      setSelectedIds([]);
     }
   };
 
   const handleSelectOne = (id: number | string) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) newSelected.delete(id);
-    else newSelected.add(id);
+    const newSelected = [...selectedIds];
+    if (newSelected.includes(id)) {
+      newSelected.splice(newSelected.indexOf(id), 1);
+    } else {
+      newSelected.push(id);
+    }
     setSelectedIds(newSelected);
   };
 
-  const handleDeleteSelected = () => {
-    if (confirm(`Bạn có chắc muốn xóa ${selectedIds.size} danh sách phát đã chọn?`)) {
-      // Logic xóa thực tế: Gọi API xóa danh sách ID
-      const newPlaylists = playlists.filter(p => {
-        const idToCheck = p.id || p.spotifyId;
-        return !selectedIds.has(idToCheck!);
-      });
-      setPlaylists(newPlaylists);
-      setSelectedIds(new Set());
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+
+    const response = await DeletePlaylists(selectedIds);
+    console.log('response', response)
+    if (!response.success) {
+      toast.error(`Lỗi khi xóa playlisDt: ${response.message || 'Unknown error'}`);
+      return;
     }
+
+    const newPlaylists = playlists.filter((p) => p.id && !selectedIds.includes(p.id));
+    setPlaylists(newPlaylists);
+
+    setSelectedIds([]);
+    toast.success("Xóa playlist thành công!")
   };
 
-  const handleAddPlaylist = () => {
-    // Logic thêm mới: Gọi API tạo playlist
-    const newPlaylistMock = {
-      id: Date.now(), // Fake ID
-      spotifyId: null,
+  const handleAddPlaylist = async () => {
+    const newPlaylist = {
       name: newPlaylistData.name,
       description: newPlaylistData.description,
-      type: newPlaylistData.type as any,
       isPublic: newPlaylistData.isPublic,
-      owner: { id: 1, name: "Current User", spotifyId: null },
-      imageUrl: null,
-      totalTracks: 0,
-      createdAt: new Date().toISOString()
-    };
-    setPlaylists([newPlaylistMock, ...playlists]);
+      userId: newPlaylistData.userId,
+      sharedCount: newPlaylistData.sharedCount,
+      image: newPlaylistData.image
+    }
+
+    setPlaylists([{
+      id: `temp-${Date.now()}`,
+      name: newPlaylistData.name,
+      description: newPlaylistData.description,
+      isPublic: newPlaylistData.isPublic,
+      userId: newPlaylistData.userId,
+      sharedCount: newPlaylistData.sharedCount,
+      imageUrl: newPlaylistData.image
+    }, ...playlists]);
+    const response = await AddPlaylist(newPlaylist);
+    if (!response.success) {
+      toast.error(`Lỗi khi thêm playlist: ${response.message || 'Unknown error'}`);
+      return;
+    }
+
+    const newPlaylists = playlists.map((p) => {
+      if (p.id.toString().startsWith('temp-')) {
+        p.id = response.playlist.id;
+        p.imageUrl = response.playlist.imageUrl;
+        p.createdAt = response.playlist.createdAt;
+      }
+      return p;
+    })
+    setPlaylists(newPlaylists);
     setIsAddDialogOpen(false);
-    setNewPlaylistData({ name: "", description: "", type: "playlist", isPublic: true }); // Reset form
+    setNewPlaylistData({
+      name: "",
+      description: "",
+      type: "playlist",
+      isPublic: true,
+      userId: null,
+      sharedCount: 0,
+      image: null,
+      imagePreview: null
+    });
+    toast.success("Thêm playlist thành công!")
   };
 
   const requestSort = (key: string) => {
@@ -290,7 +359,6 @@ export default function PlaylistsPage() {
     if (listenHistories.length === 0) fetchListenHistories();
   }, []);
 
-  // Helper renders
   const getSortIcon = (columnKey: string) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-2 h-4 w-4 text-gray-400 opacity-50" />;
     return <ArrowUpDown className={`ml-2 h-4 w-4 text-blue-600 ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`} />;
@@ -298,7 +366,6 @@ export default function PlaylistsPage() {
 
   return (
     <div className="space-y-6 pb-10 bg-gray-50/30 min-h-screen p-6 font-sans">
-
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -306,11 +373,9 @@ export default function PlaylistsPage() {
           <p className="text-gray-500">Quản lý playlist, album và theo dõi thống kê lượt nghe.</p>
         </div>
         <div className="flex gap-2">
-          {/* Nút Xóa Nhiều - Chỉ hiện khi có checkbox được chọn */}
-
-          {/* <Button className="bg-blue-600 hover:bg-blue-700 shadow-md" onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Thêm Mới
-          </Button> */}
+          <Button variant="default" onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Thêm danh sách phát
+          </Button>
         </div>
       </div>
 
@@ -321,7 +386,6 @@ export default function PlaylistsPage() {
           <StatCard title="Tổng Bài Hát" value={stats.totalTracks.toLocaleString()} subtext="Toàn hệ thống" icon={Music} colorClass="bg-purple-500" />
         </div>
 
-        {/* Updated Chart: Horizontal Bar (Top Plays) */}
         <Card className="md:col-span-5 shadow-sm border-gray-200">
           <CardHeader>
             <CardTitle className="text-sm font-semibold">Top Playlist (Lượt Nghe Cao Nhất)</CardTitle>
@@ -334,9 +398,7 @@ export default function PlaylistsPage() {
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} interval={0} />
                   <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                  <Bar dataKey="plays" barSize={20} radius={[0, 4, 4, 0]} fill="#3b82f6">
-                    {/* Label on right of bar */}
-                  </Bar>
+                  <Bar dataKey="plays" barSize={20} radius={[0, 4, 4, 0]} fill="#3b82f6" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -377,15 +439,34 @@ export default function PlaylistsPage() {
             <Filter className="w-4 h-4 text-gray-500" /> <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Bộ lọc:</span>
           </div>
           <div className="w-[200px] flex-shrink-0">
-            <SelectNative value={filterVisibility} onChange={setFilterVisibility} placeholder="Quyền riêng tư" options={[{ value: 'public', label: 'Công Khai' }, { value: 'private', label: 'Riêng Tư' }]} />
+            <SelectNative
+              value={filterVisibility}
+              onChange={setFilterVisibility}
+              placeholder="Tất cả Quyền riêng tư"
+              options={[
+                { value: 'public', label: 'Công Khai' },
+                { value: 'private', label: 'Riêng Tư' }
+              ]}
+            />
+          </div>
+          <div className="w-[200px] flex-shrink-0">
+            <SelectNative
+              value={filterSource}
+              onChange={setFilterSource}
+              placeholder="Tất cả Nguồn"
+              options={[
+                { value: 'local', label: 'Local DB' },
+                { value: 'spotify', label: 'Spotify' }
+              ]}
+            />
           </div>
         </div>
       </div>
 
       <div className="flex flex-1 w-full items-end justify-end">
-        {selectedIds.size > 0 && (
+        {selectedIds.length > 0 && (
           <Button variant="destructive" onClick={handleDeleteSelected} className="animate-in fade-in zoom-in duration-200">
-            <Trash2 className="mr-2 h-4 w-4" /> Xóa ({selectedIds.size})
+            <Trash2 className="mr-2 h-4 w-4" /> Xóa ({selectedIds.length})
           </Button>
         )}
       </div>
@@ -400,7 +481,7 @@ export default function PlaylistsPage() {
                   type="checkbox"
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   onChange={handleSelectAll}
-                  checked={currentItems.length > 0 && currentItems.every(p => selectedIds.has(p.id || p.spotifyId!))}
+                  checked={currentItems.length > 0 && currentItems.every(p => selectedIds.includes(p.id))}
                 />
               </TableHead>
               <TableHead className="w-[50px] text-center font-bold text-gray-700">STT</TableHead>
@@ -414,7 +495,6 @@ export default function PlaylistsPage() {
               <TableHead onClick={() => requestSort('totalTracks')} className="text-right cursor-pointer hover:text-blue-600">
                 <div className="flex items-center justify-end">Số Bài {getSortIcon('totalTracks')}</div>
               </TableHead>
-              <TableHead className="text-center">Loại</TableHead>
               <TableHead className="text-center">Trạng Thái</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
@@ -422,11 +502,10 @@ export default function PlaylistsPage() {
           <TableBody>
             {currentItems.length > 0 ? (
               currentItems.map((playlist, idx) => {
-                const globalIndex = (currentPage - 1) * itemsPerPage + idx + 1; // Tính STT toàn cục
+                const globalIndex = (currentPage - 1) * itemsPerPage + idx + 1;
                 const itemId = playlist.id || playlist.spotifyId;
-                const isSelected = selectedIds.has(itemId!);
+                const isSelected = selectedIds.includes(itemId!);
                 const owner = playlist.userId ? users.find(u => u.id === playlist.userId) : null;
-                console.log(owner);
 
                 return (
                   <TableRow key={idx} className={isSelected ? "bg-blue-50" : ""}>
@@ -458,7 +537,6 @@ export default function PlaylistsPage() {
                     </TableCell>
                     <TableCell className="text-gray-700">{owner?.fullName || "Unknown"}</TableCell>
                     <TableCell className="text-right font-mono">{playlist.totalTracks}</TableCell>
-                    <TableCell className="text-center"><Badge variant="outline" className="capitalize">{playlist.type}</Badge></TableCell>
                     <TableCell className="text-center">
                       {playlist.isPublic ? <Badge variant="secondary">Public</Badge> : <Badge variant="secondary">Private</Badge>}
                     </TableCell>
@@ -516,91 +594,22 @@ export default function PlaylistsPage() {
       </div>
 
       {/* --- MODAL: ADD PLAYLIST --- */}
-      <Modal
-        isOpen={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
-        title="Thêm Danh Sách Phát Mới"
-        description="Tạo một playlist mới vào hệ thống."
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)}>Hủy Bỏ</Button>
-            <Button onClick={handleAddPlaylist}>Tạo Mới</Button>
-          </>
-        }
-      >
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label>Tên Playlist</Label>
-            <Input
-              placeholder="Nhập tên danh sách phát..."
-              value={newPlaylistData.name}
-              onChange={(e: any) => setNewPlaylistData({ ...newPlaylistData, name: e.target.value })}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Loại</Label>
-              <SelectNative
-                value={newPlaylistData.type}
-                onChange={(val: any) => setNewPlaylistData({ ...newPlaylistData, type: val })}
-                options={[{ value: 'playlist', label: 'Playlist' }, { value: 'album', label: 'Album' }]}
-                placeholder="Chọn loại"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Chế độ</Label>
-              <SelectNative
-                value={newPlaylistData.isPublic ? 'true' : 'false'}
-                onChange={(val: any) => setNewPlaylistData({ ...newPlaylistData, isPublic: val === 'true' })}
-                options={[{ value: 'true', label: 'Công Khai' }, { value: 'false', label: 'Riêng Tư' }]}
-                placeholder="Chọn chế độ"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Mô tả (Tùy chọn)</Label>
-            <textarea
-              className="flex w-full rounded-md border border-gray-200 bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-600 min-h-[80px]"
-              placeholder="Mô tả nội dung playlist..."
-              value={newPlaylistData.description}
-              onChange={(e) => setNewPlaylistData({ ...newPlaylistData, description: e.target.value })}
-            />
-          </div>
-        </div>
-      </Modal>
+      <AddModal
+        isAddDialogOpen={isAddDialogOpen}
+        setIsAddDialogOpen={setIsAddDialogOpen}
+        newPlaylistData={newPlaylistData}
+        setNewPlaylistData={setNewPlaylistData}
+        handleAddPlaylist={handleAddPlaylist}
+      />
 
-      {/* --- MODAL: VIEW DETAILS (Giữ nguyên logic cũ) --- */}
-      <Modal
-        isOpen={isViewDialogOpen}
-        onClose={() => setIsViewDialogOpen(false)}
-        title="Thông tin chi tiết"
-      >
-        {selectedPlaylist && (
-          <div className="space-y-4">
-            <div className="flex gap-4">
-              <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
-                {selectedPlaylist.imageUrl ? <img src={selectedPlaylist.imageUrl} className="w-full h-full object-cover rounded-lg" /> : <Music className="w-8 h-8 text-gray-400" />}
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">{selectedPlaylist.name}</h3>
-                <p className="text-sm text-gray-500">{selectedPlaylist?.userId ? users.find(u => u.id === selectedPlaylist.userId)?.fullName : 'Unknown'}</p>
-                <div className="flex gap-2 mt-2">
-                  <Badge>{selectedPlaylist.type}</Badge>
-                  <Badge variant={selectedPlaylist.isPublic ? "outline" : "secondary"}>{selectedPlaylist.isPublic ? "Public" : "Private"}</Badge>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 p-4 rounded border border-gray-100 text-sm">
-              <p><strong>Database ID:</strong> {selectedPlaylist.id}</p>
-              <p><strong>Spotify ID:</strong> {selectedPlaylist.spotifyId || 'N/A'}</p>
-              <p><strong>Số bài hát:</strong> {selectedPlaylist.totalTracks}</p>
-              <p><strong>Mô tả:</strong> {selectedPlaylist.description || "Không có"}</p>
-            </div>
-          </div>
-        )}
-      </Modal>
+      {/* --- MODAL: VIEW DETAILS --- */}
+      <ViewDetailModal
+        isViewDialogOpen={isViewDialogOpen}
+        setIsViewDialogOpen={setIsViewDialogOpen}
+        selectedPlaylist={selectedPlaylist}
+      />
 
-      {/* --- MODAL: EDIT (Placeholder) --- */}
+      {/* --- MODAL: EDIT --- */}
       <Modal isOpen={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} title="Chỉnh sửa">
         <div className="py-8 text-center text-gray-500">Form chỉnh sửa sẽ được đặt tại đây</div>
       </Modal>

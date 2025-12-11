@@ -1,4 +1,4 @@
-const { Album, Genres } = require('../models');
+const { Album, Genres, Artist } = require('../models');
 const Op = require('sequelize').Op;
 const spotify = require('../configs/spotify');
 const { redisClient } = require('../configs/redis');
@@ -10,7 +10,16 @@ exports.getAllAlbum = async (req, res) => {
     // if (cachedData) {
     //   return res.json(JSON.parse(cachedData));
     // }
-    const rows = await Album.findAll();
+    const rows = await Album.findAll({
+      include: [
+        {
+          model: Artist,
+          as: 'artists',
+          attributes: ['id', 'name', 'imageUrl'],
+          through: { attributes: [] }
+        }
+      ]
+    });
 
     const response = {
       message: 'Lấy tất cả album thành công',

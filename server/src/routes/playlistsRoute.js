@@ -6,6 +6,7 @@ const { authenticateToken, authorizeRole } = require('../middlewares/authenticat
 
 // admin routes
 router.get('/', authenticateToken, authorizeRole, playlistController.getAllPlaylist);
+router.post('/remove-many', authenticateToken, authorizeRole, playlistController.deleteMultiplePlaylists);
 
 router.post('/new', authenticateToken, upload.single('image'), playlistController.createOne);
 router.post('/share', authenticateToken, playlistController.sharePlaylist);
