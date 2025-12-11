@@ -79,13 +79,6 @@ export const connectSocket = (): Socket => {
     console.error("Socket connection error:", error.message);
   });
 
-  // Thêm logic tự động tham gia phòng chat sau khi kết nối lại
-  // if (user) {
-  //     newSocket.on('connect', () => {
-  //         joinRoom(user.lastConversationId); // Thay bằng ID phòng chat thực tế
-  //     });
-  // }
-
   return newSocket;
 };
 

@@ -57,13 +57,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
   isMyMessage,
   onLongPress,
 }) => {
-  // Định dạng thời gian - parse ISO string để tránh timezone issues
+  // Định dạng thời gian
   const timeAgo = formatDistanceToNowStrict(parseISO(message.createdAt), {
     addSuffix: true,
     locale: vi,
   });
 
-  // Render nội dung tin nhắn dựa trên type
+  // Render nội dung tin nhắn
   const renderMessageContent = () => {
     switch (message.type) {
       case "text":

@@ -8,11 +8,11 @@ import {
   ActivityIndicator,
   useColorScheme,
   Image,
-  Alert,
   TouchableWithoutFeedback,
 } from "react-native";
 import { useNavigate } from "@/hooks/useNavigate";
 import Icon from "react-native-vector-icons/Feather";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { fetchLikesByPostId, UserInfo } from "../../services/socialApi";
 
 interface LikeModalProps {
@@ -74,6 +74,7 @@ export default function LikeModal({
   postId,
 }: LikeModalProps) {
   const colorScheme = useColorScheme();
+  const { error } = useCustomAlert();
   const [data, setData] = useState<
     {
       id: number;
@@ -93,7 +94,7 @@ export default function LikeModal({
       setData(fetchedUsers);
     } catch (error) {
       console.error("Lỗi khi tải danh sách likes:", error);
-      Alert.alert("Lỗi", "Không thể tải danh sách người đã thích.");
+      error("Lỗi", "Không thể tải danh sách người đã thích.");
     } finally {
       setLoading(false);
     }

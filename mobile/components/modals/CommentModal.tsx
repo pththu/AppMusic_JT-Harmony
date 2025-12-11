@@ -80,6 +80,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
   setQuote,
 }) => {
   const colorScheme = useColorScheme();
+  const [loading, setLoading] = useState(false);
   const { info } = useCustomAlert();
   const isGuest = useAuthStore((state) => state.isGuest);
   const setShowLoginWall = useAuthStore((state) => state.setShowLoginWall);

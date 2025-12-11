@@ -11,7 +11,6 @@ import {
   View,
   Modal,
   TextInput,
-  Alert,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -21,7 +20,7 @@ import TrackCommentsModal from "@/components/modals/TrackCommentsModal";
 import ArtistsSection from "@/components/artists/ArtistsSection";
 import { useNavigate } from "@/hooks/useNavigate";
 import { usePlayerStore } from "@/store/playerStore";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import SongItem from "@/components/items/SongItem";
 import TextTicker from "react-native-text-ticker";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
@@ -33,14 +32,16 @@ import { useFavoritesStore } from "@/store/favoritesStore";
 import { fetchCoversBySongId } from "@/services/coverService";
 import CoverItem from "@/components/items/CoverItem";
 import PlayerProgressBar from "@/components/player/PlayerProgressBar";
+import { FindTrackById } from "@/services/musicService";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
 export default function SongScreen() {
   const { navigate } = useNavigate();
-  const { info, error, success } = useCustomAlert();
+  const { info, error, success, alert } = useCustomAlert();
   const colorScheme = useColorScheme();
+  const { songId } = useLocalSearchParams<{ songId?: string }>();
 
   const user = useAuthStore((state) => state.user);
   const playbackPosition = usePlayerStore((state) => state.playbackPosition)
@@ -94,16 +95,18 @@ export default function SongScreen() {
   const handleSharePress = () => {
     if (!currentTrack) return;
 
-    Alert.alert(
+    alert(
       "Chia sẻ",
       "Bạn muốn chia sẻ như thế nào?",
       [
         {
           text: "Chia sẻ ra ngoài",
+          style: 'default',
           onPress: () => handleShareTrack(currentTrack),
         },
         {
           text: "Chia sẻ bài đăng",
+          style: 'default',
           onPress: () => {
             if (!user) {
               info("Thông báo", "Bạn cần đăng nhập để chia sẻ bài đăng.");
@@ -117,7 +120,8 @@ export default function SongScreen() {
           text: "Hủy",
           style: "cancel",
         },
-      ]
+      ],
+      'info'
     );
   };
 
@@ -190,6 +194,32 @@ export default function SongScreen() {
     };
     loadCovers();
   }, [currentTrack?.id]);
+
+  // Load bài hát khi có songId từ params
+  useEffect(() => {
+    const loadTrackFromSongId = async () => {
+      if (songId && (!currentTrack || currentTrack.id !== parseInt(songId))) {
+        try {
+          setIsLoading(true);
+          const response = await FindTrackById(parseInt(songId));
+          if (response.success && response.data) {
+            // Đặt bài hát vào player store
+            setCurrentTrack(response.data);
+          } else {
+            error('Lỗi', 'Không tìm thấy bài hát.');
+            router.back();
+          }
+        } catch (err) {
+          console.error('Lỗi khi tải bài hát:', err);
+          error('Lỗi', 'Không thể tải bài hát.');
+          router.back();
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadTrackFromSongId();
+  }, [songId, currentTrack?.id]);
 
   const handleSelectQueue = () => {
     if (!currentTrack) return;
@@ -475,21 +505,22 @@ export default function SongScreen() {
       <PlayerProgressBar />
 
       {/* Comment at current time */}
-      {/* <View className="items-end px-3 mb-4">
-        <TouchableOpacity onPress={handleCommentAtCurrentTime} className="px-3 py-1 rounded-full bg-indigo-500 flex-row items-center">
+      <View className="items-end px-3 mb-4">
+        <TouchableOpacity onPress={handleCommentAtCurrentTime} className="px-3 py-1 rounded-full bg-green-500 flex-row items-center">
           <Icon name="comment" size={16} color="#fff" />
           <Text className="text-white font-semibold ml-2">Bình luận tại {formatTime(playbackPosition)}</Text>
         </TouchableOpacity>
-      </View> */}
+      </View>
 
       {/* Track Comments Modal */}
-      {/* <TrackCommentsModal
+      <TrackCommentsModal
         visible={trackCommentsVisible}
         onClose={() => setTrackCommentsVisible(false)}
         trackId={currentTrack?.id}
+        spotifyId={currentTrack?.spotifyId}
         defaultTimecodeMs={defaultTimecodeMs}
         onUserPress={(userId) => navigate("ProfileSocialScreen", { userId })}
-      /> */}
+      />
 
       {/* Up Next Header */}
       <View className={`flex-row justify-between items-center mb-2`}>
@@ -581,9 +612,9 @@ export default function SongScreen() {
                     setSharePostModalVisible(false);
                     setSharePostText('');
                   }}
-                  className="px-4 py-2 rounded-full mr-2 bg-gray-300"
+                  className="px-4 py-2 rounded-full mr-2 bg-gray-500"
                 >
-                  <Text className="text-sm font-semibold text-gray-800">Hủy</Text>
+                  <Text className="text-sm font-semibold text-white">Hủy</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleSubmitSharePost}

@@ -140,15 +140,23 @@ export const createNewCover = async (
       originalSongId,
     });
     console.log("Response từ server:", response.data);
+    
+    // Kiểm tra success flag từ server
+    if (response.data.success === false) {
+      throw new Error(response.data.message || 'Lỗi khi tạo cover');
+    }
+    
     return response.data.data as Cover;
   } catch (error) {
+    console.error("Lỗi khi tạo cover:", error.response?.data || error);
     if (error.response) {
       const { status, data } = error.response;
       return {
         success: false,
         status: status,
-        message: data.message
+        message: data.message || data.error || 'Lỗi không xác định'
       }
     }
+    throw error;
   }
 };

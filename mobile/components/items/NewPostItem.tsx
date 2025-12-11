@@ -9,7 +9,6 @@ import {
     View,
     useColorScheme
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigate } from "@/hooks/useNavigate";
 import useAuthStore from '@/store/authStore';
@@ -51,10 +50,8 @@ const NewPostItem = forwardRef<NewPostItemRef, NewPostItemProps>(({
     const { error, info, warning } = useCustomAlert();
     const avatarDefault = 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png';
 
-    // Ref for the text input
     const textInputRef = React.useRef<any>(null);
 
-    // Expose focus method via ref
     React.useImperativeHandle(ref, () => ({
         focus: () => {
             textInputRef.current?.focus();
@@ -85,7 +82,7 @@ const NewPostItem = forwardRef<NewPostItemRef, NewPostItemProps>(({
 
 
                 <View className="flex-1">
-                    {/* 1. INPUT NỘI DUNG */}
+                    {/* INPUT NỘI DUNG */}
                     <TextInput
                         ref={textInputRef}
                         placeholder="Bạn đang nghĩ gì?"
@@ -103,7 +100,7 @@ const NewPostItem = forwardRef<NewPostItemRef, NewPostItemProps>(({
                 </View>
             </View>
 
-            {/* 2. HIỂN THỊ MEDIA ĐÃ CHỌN */}
+            {/* HIỂN THỊ MEDIA ĐÃ CHỌN */}
             {selectedMediaAssets.length > 0 && (
                 <View className="mt-3 border-t pt-3 border-dashed border-gray-300 dark:border-gray-700">
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-2">
@@ -129,7 +126,7 @@ const NewPostItem = forwardRef<NewPostItemRef, NewPostItemProps>(({
                 </View>
             )}
 
-            {/* 3. HIỂN THỊ SONG ID ĐÃ CHỌN */}
+            {/* HIỂN THỊ SONG ID ĐÃ CHỌN */}
             {selectedSongId ? (
                 <View className="mt-3 p-3 bg-emerald-100 dark:bg-emerald-900 rounded-lg flex-row items-center justify-between">
                     <View className="flex-row items-center flex-1">
@@ -164,7 +161,7 @@ const NewPostItem = forwardRef<NewPostItemRef, NewPostItemProps>(({
                 </View>
 
 
-                {/* 4. NÚT ĐĂNG BÀI (CALLS addPost) */}
+                {/* NÚT ĐĂNG BÀI */}
                 <TouchableOpacity
                     onPress={addPost}
                     disabled={!canPost || isGuest}

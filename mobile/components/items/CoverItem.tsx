@@ -339,6 +339,14 @@ import {
   View
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
+import FontAwesome from "react-native-vector-icons/FontAwesome"; // Import thêm FontAwesome cho icon Share
+import { VideoView, useVideoPlayer } from "expo-video";
+import * as FileSystem from 'expo-file-system';
+import { useAudioPlayer } from "expo-audio";
+import { voteCover } from "../../services/coverService";
+import { useNavigate } from "@/hooks/useNavigate";
+import useAuthStore from "@/store/authStore";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { voteCover } from "../../services/coverService";
 
 // --- IMPORTS CHO MEDIA MỚI ---
@@ -537,9 +545,48 @@ const CoverItem: React.FC<CoverItemProps> = ({
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const { error } = useCustomAlert();
 
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [heartCount, setHeartCount] = useState(initialHeartCount);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isVideo, setIsVideo] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [position, setPosition] = useState(0);
+  
+  // Audio player hook
+  const audioPlayer = useAudioPlayer(Array.isArray(fileUrl) ? fileUrl[0] : fileUrl);
+
+  // Sync audio player state
+  useEffect(() => {
+    if (audioPlayer) {
+      // Update initial state
+      setIsPlaying(audioPlayer.playing);
+      
+      if (audioPlayer.duration) {
+        setDuration(audioPlayer.duration * 1000);
+      }
+    }
+  }, [audioPlayer]);
+
+  // Update position periodically
+  useEffect(() => {
+    if (audioPlayer && isPlaying) {
+      const interval = setInterval(() => {
+        if (audioPlayer.currentTime) {
+          setPosition(audioPlayer.currentTime * 1000);
+        }
+      }, 100); // Update every 100ms
+      
+      return () => clearInterval(interval);
+    }
+  }, [audioPlayer, isPlaying]);
+
+  // Video player hook
+  const videoPlayer = useVideoPlayer(Array.isArray(fileUrl) ? fileUrl[0] : fileUrl, (player) => {
+    player.loop = false;
+    player.muted = false;
+  });
 
   useEffect(() => {
     setIsLiked(initialIsLiked);
@@ -566,11 +613,126 @@ const CoverItem: React.FC<CoverItemProps> = ({
       }
     } catch (error) {
       console.error("Lỗi khi vote cover:", error);
-      Alert.alert("Lỗi", "Không thể vote cover.");
+      error("Lỗi", "Không thể vote cover.");
+      // Hoàn tác nếu có lỗi
       setIsLiked(prevIsLiked);
       setHeartCount(prevHeartCount);
     }
   };
+
+  // Kiểm tra loại file dựa trên extension
+  const getMediaType = (url: string): 'video' | 'audio' => {
+    const extension = url.split('.').pop()?.toLowerCase();
+    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
+    const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma'];
+    
+    if (videoExtensions.includes(extension || '')) {
+      return 'video';
+    }
+    return 'audio';
+  };
+
+  // Khởi tạo media player
+  const initializeMedia = async () => {
+    const mediaUrl = Array.isArray(fileUrl) ? fileUrl[0] : fileUrl;
+    if (!mediaUrl) return;
+    
+    const mediaType = getMediaType(mediaUrl);
+    setIsVideo(mediaType === 'video');
+    
+    if (mediaType === 'audio') {
+      try {
+        console.log('Audio file detected:', mediaUrl);
+        console.log('File URL type:', typeof mediaUrl);
+        console.log('File URL length:', mediaUrl.length);
+        console.log('File extension:', mediaUrl.split('.').pop());
+        console.log('Full URL:', mediaUrl);
+        
+        // Kiểm tra URL có hợp lệ không
+        if (!mediaUrl.startsWith('http')) {
+          console.error('Invalid URL format:', mediaUrl);
+          return;
+        }
+        
+        // useAudioPlayer hook sẽ tự động xử lý loading
+        // console.log('Audio player initialized with useAudioPlayer hook');
+        
+      } catch (error) {
+        console.error('Lỗi khi khởi tạo audio:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+      }
+    }
+  };
+
+  useEffect(() => {
+    initializeMedia();
+    
+    // Cleanup khi unmount
+    return () => {
+      // useAudioPlayer hook tự động cleanup
+    };
+  }, [fileUrl]);
+
+  const handlePlayPause = async () => {
+    if (isVideo) {
+      // Xử lý video play/pause với expo-video
+      if (videoPlayer) {
+        try {
+          if (isPlaying) {
+            videoPlayer.pause();
+          } else {
+            videoPlayer.play();
+          }
+          setIsPlaying(!isPlaying);
+        } catch (error) {
+          console.error('Lỗi khi phát/dừng video:', error);
+        }
+      }
+    } else {
+      // Xử lý audio play/pause với expo-audio hook
+      if (audioPlayer) {
+        try {
+          if (isPlaying) {
+            audioPlayer.pause();
+            setIsPlaying(false);
+          } else {
+            audioPlayer.play();
+            setIsPlaying(true);
+          }
+        } catch (error) {
+          console.error('Lỗi khi phát/dừng audio:', error);
+        }
+      }
+    }
+  };
+
+  // Format thởi gian
+  const formatTime = (milliseconds: number) => {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Xử lý khi video update status
+  useEffect(() => {
+    if (videoPlayer) {
+      const subscription = videoPlayer.addListener('statusChange', (event) => {
+        const { status } = event;
+        // Với expo-video API mới, status có thể là object hoặc string
+        if (typeof status === 'object' && status !== null) {
+          setPosition(status?.currentTime || 0);
+          setDuration(status?.duration || 0);
+          if (status?.isEnded) {
+            setIsPlaying(false);
+            setPosition(0);
+          }
+        }
+      });
+      
+      return () => subscription?.remove();
+    }
+  }, [videoPlayer]);
 
   const handleSongPress = () => {
     if (originalSongId) {
@@ -580,6 +742,7 @@ const CoverItem: React.FC<CoverItemProps> = ({
 
   const displayTime = formatTimeAgo(uploadedAt);
 
+  // Màu sắc cho Icon Like
   const heartColor = isLiked
     ? "rgb(239, 68, 68)"
     : colorScheme === "dark"
@@ -638,9 +801,141 @@ const CoverItem: React.FC<CoverItemProps> = ({
 
       {/* MEDIA PLAYER SECTION (ĐÃ CẬP NHẬT) */}
       {fileUrl && (
-        <View className="mb-3 shadow-xl dark:shadow-black/70 items-center">
-          {/* Component MediaContent sẽ tự động chọn Video hoặc Audio */}
-          <MediaContent fileUrl={fileUrl} />
+        <View className="mb-3 shadow-xl dark:shadow-black/70">
+          {isVideo ? (
+            // Video Player
+            <View className="relative">
+              <VideoView
+                player={videoPlayer}
+                style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}
+                className="rounded-xl"
+                contentFit="contain"
+                allowsFullscreen={true}
+                allowsPictureInPicture={true}
+              />
+              
+              {/* Video Controls Overlay */}
+              <TouchableOpacity 
+                onPress={handlePlayPause} 
+                className="absolute inset-0 justify-center items-center rounded-xl"
+                activeOpacity={0.8}
+              >
+                <View className="absolute inset-0 bg-black/30 rounded-xl" />
+                {!isPlaying && (
+                  <View className="p-4 bg-white/30 rounded-full border-2 border-white">
+                    <Icon
+                      name="play"
+                      size={30}
+                      color="white"
+                      style={{ marginLeft: 5 }}
+                    />
+                  </View>
+                )}
+                {isPlaying && (
+                  <View className="p-4 bg-white/30 rounded-full border-2 border-white">
+                    <Icon
+                      name="pause"
+                      size={30}
+                      color="white"
+                    />
+                  </View>
+                )}
+              </TouchableOpacity>
+              
+              {/* Video Progress Bar */}
+              {duration > 0 && (
+                <View className="absolute bottom-2 left-2 right-2">
+                  <View className="bg-black/50 rounded-full px-2 py-1">
+                    <Text className="text-white text-xs">
+                      {formatTime(position)} / {formatTime(duration)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          ) : (
+            // Audio Player
+            <View className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4">
+              {/* Audio Visual/Thumbnail */}
+              <View className="relative mb-4">
+                <Image
+                  source={{ uri: 'https://via.placeholder.com/400x300?text=Audio+Cover' }}
+                  style={{ width: '100%', height: 200 }}
+                  className="rounded-xl"
+                  blurRadius={2}
+                />
+                <View className="absolute inset-0 justify-center items-center bg-black/40 rounded-xl">
+                  <TouchableOpacity
+                    onPress={handlePlayPause}
+                    className="p-4 bg-white/30 rounded-full border-2 border-white"
+                    activeOpacity={0.8}
+                  >
+                    <Icon
+                      name={isPlaying ? "pause" : "play"}
+                      size={40}
+                      color="white"
+                      style={isPlaying ? {} : { marginLeft: 5 }}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              {/* Audio Controls */}
+              <View className="space-y-3">
+                {/* Progress Bar */}
+                <View className="bg-gray-300 dark:bg-gray-600 h-2 rounded-full overflow-hidden">
+                  <View 
+                    className="bg-emerald-500 h-full rounded-full"
+                    style={{ 
+                      width: duration > 0 ? `${(position / duration) * 100}%` : '0%' 
+                    }}
+                  />
+                </View>
+                
+                {/* Time Display */}
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-xs text-gray-600 dark:text-gray-400">
+                    {formatTime(position)}
+                  </Text>
+                  <Text className="text-xs text-gray-600 dark:text-gray-400">
+                    {formatTime(duration)}
+                  </Text>
+                </View>
+                
+                {/* Control Buttons */}
+                <View className="flex-row justify-center items-center space-x-6">
+                  <TouchableOpacity className="p-2">
+                    <Icon
+                      name="skip-back"
+                      size={24}
+                      color={colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}
+                    />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    onPress={handlePlayPause}
+                    className="p-3 bg-emerald-500 rounded-full"
+                    activeOpacity={0.8}
+                  >
+                    <Icon
+                      name={isPlaying ? "pause" : "play"}
+                      size={24}
+                      color="white"
+                      style={isPlaying ? {} : { marginLeft: 3 }}
+                    />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity className="p-2">
+                    <Icon
+                      name="skip-forward"
+                      size={24}
+                      color={colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
       )}
 
