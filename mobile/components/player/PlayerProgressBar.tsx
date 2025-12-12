@@ -1,7 +1,7 @@
 // components/player/PlayerProgressBar.tsx (Tệp mới)
-import React, { useEffect, useState } from 'react';
-import { View, Text, useColorScheme } from 'react-native';
 import { usePlayerStore } from '@/store/playerStore';
+import React, { useEffect, useState } from 'react';
+import { Text, useColorScheme, View } from 'react-native';
 
 // Hàm formatTime (copy từ SongScreen)
 const formatTime = (seconds) => {
@@ -13,7 +13,7 @@ const formatTime = (seconds) => {
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };
 
-export default function PlayerProgressBar() {
+const PlayerProgressBar = () => {
   const colorScheme = useColorScheme();
   const [progress, setProgress] = useState(0);
 
@@ -26,8 +26,8 @@ export default function PlayerProgressBar() {
 
   useEffect(() => {
     if (durationTrack > 0) {
-      const percentage = (playbackPosition / durationTrack) * 100;
-      setProgress(percentage);
+      const percentage = (playbackPosition / (durationTrack < 10 ? durationTrack * 1000 : durationTrack)) * 100;
+      setProgress(Math.min(percentage, 100));
     } else {
       setProgress(0);
     }
@@ -45,8 +45,10 @@ export default function PlayerProgressBar() {
         />
       </View>
       <Text className={`${colorScheme === 'dark' ? 'text-gray-400' : 'text-gray-800'} text-xs w-8 text-center`}>
-        {formatTime(durationTrack)}
+        {formatTime(durationTrack > 10 ? durationTrack : currentTrack?.duration / 1000 || 0)}
       </Text>
     </View>
   );
 }
+
+export default React.memo(PlayerProgressBar);

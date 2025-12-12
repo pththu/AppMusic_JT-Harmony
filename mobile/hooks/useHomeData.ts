@@ -1,11 +1,10 @@
-import { useState, useCallback, useEffect } from "react";
 import { GetAlbumsForYou, GetArtistsForYou, GetPlaylistsForYou } from "@/services/musicService";
-import { SearchTracks } from "@/services/searchService";
-import { shuffleData } from "@/utils/array"; // Cần import shuffleData từ utils
 import { GenerateFromActivity, GenerateFromFavorites, GenerateFromFollowedArtists, GenerateFromHistories, GenerateFromMood, GenerateFromTimeOfDay, GenerateTrackFromFavorites } from "@/services/recommendationService";
-import { useBoardingStore } from "@/store/boardingStore"; // Cần dùng store để set recommendations
-import { useAuthData } from "./useAuthData";
+import { SearchTracks } from "@/services/searchService";
 import useAuthStore from "@/store/authStore";
+import { useBoardingStore } from "@/store/boardingStore"; // Cần dùng store để set recommendations
+import { shuffleData } from "@/utils/array"; // Cần import shuffleData từ utils
+import { useCallback, useEffect, useState } from "react";
 
 interface QueryParams {
   playlistForYou: string[];
@@ -64,11 +63,6 @@ export const useHomeData = (
   const setRecommendBasedOnHistories = useBoardingStore((state) => state.setRecommendBasedOnHistories);
   const setRecommendBasedOnTimeOfDay = useBoardingStore((state) => state.setRecommendBasedOnTimeOfDay);
   const setRecommendTrackBasedOnFavorites = useBoardingStore((state) => state.setRecommendTrackBasedOnFavorites);
-
-  const { 
-    fetchFollowees,
-    fetchFollowers
-  } = useAuthData();
 
   // fetch data recommend
   const fetchGenericRecommendation = useCallback(async (dataItems, keyStateName, setRecommendStore) => {
@@ -218,8 +212,6 @@ export const useHomeData = (
         fetchTrendingPlaylists(),
         fetchTrendingAlbums(),
         fetchArtistsForYou(),
-        fetchFollowers(user?.id),
-        fetchFollowees(user?.id)
       ]);
       GenerateFromTimeOfDay().then(response => {
         if (response.success) {
@@ -233,7 +225,7 @@ export const useHomeData = (
 
   // --- EFFECT: GỢI Ý THEO LỊCH SỬ ---
   useEffect(() => {
-    if (formattedListenHistory.length > 0) {
+    if (formattedListenHistory.length === 1 || formattedListenHistory.length % 5 === 0) {
       GenerateFromHistories(formattedListenHistory).then(response => {
         if (response.success) {
           fetchGenericRecommendation(response.data, 'baseOnHistory', setRecommendBasedOnHistories);
@@ -254,15 +246,11 @@ export const useHomeData = (
         GenerateTrackFromFavorites(formattedFavoriteItems),
       ])
 
-      if (responseCommon.success) {
-        fetchGenericRecommendation(responseCommon.data, 'baseOnFavoriteItems', setRecommendBasedOnFavorites);
-      }
-      if (responseTrack.success) {
-        setRecommendTrackBasedOnFavorites(responseTrack.data || []);
-      }
+      if (responseCommon.success) fetchGenericRecommendation(responseCommon.data, 'baseOnFavoriteItems', setRecommendBasedOnFavorites);
+      if (responseTrack.success) setRecommendTrackBasedOnFavorites(responseTrack.data || []);
     };
 
-    if (formattedFavoriteItems.length > 0) {
+    if (formattedFavoriteItems.length === 1 || formattedFavoriteItems.length % 5 === 0) {
       fetchData();
     } else {
       setIsLoading(prev => ({ ...prev, baseOnFavoriteItems: false }));
@@ -272,7 +260,7 @@ export const useHomeData = (
 
   // --- EFFECT: GỢI Ý THEO ARTIST FOLLOWED ---
   useEffect(() => {
-    if (formattedArtistFollowed.length > 0) {
+    if (formattedArtistFollowed.length === 1 || formattedArtistFollowed.length % 5 === 0) {
       GenerateFromFollowedArtists(formattedArtistFollowed).then(response => {
         if (response.success) {
           fetchGenericRecommendation(response.data, 'baseOnFollowedArtists', setRecommendBasedOnFollowedArtists);

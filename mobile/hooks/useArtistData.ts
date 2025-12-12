@@ -8,10 +8,12 @@ export const useArtistData = (currentArtist) => {
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const artistFollowed = useFollowStore((state) => state.artistFollowed);
+  const listTrack = usePlayerStore((state) => state.listTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setPopularTracks = useFollowStore((state) => state.setPopularTracks);
   const setAlbums = useFollowStore((state) => state.setAlbums);
   const setIsFollowing = useFollowStore((state) => state.setIsFollowing);
+  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
 
   const [artistOptionModalVisible, setArtistOptionModalVisible] = useState(false);
 
@@ -65,7 +67,9 @@ export const useArtistData = (currentArtist) => {
     setIsLoading((prev) => ({ ...prev, screen: true }));
     checkIsFollowing();
     fetchTopTracks();
-    fetchAlbums();
+    setTimeout(() => {
+      fetchAlbums();
+    }, 700)
     setIsLoading((prev) => ({ ...prev, screen: false }));
   }, [currentArtist?.spotifyId, checkIsFollowing, fetchAlbums, fetchTopTracks]);
 
@@ -74,6 +78,7 @@ export const useArtistData = (currentArtist) => {
   }, [artistFollowed, checkIsFollowing]);
 
   return {
+    listTrack,
     isLoading,
     artistOptionModalVisible,
     setArtistOptionModalVisible,

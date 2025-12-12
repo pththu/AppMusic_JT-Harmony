@@ -68,6 +68,7 @@ const formatTrack = (track, artist, album, videoId) => {
     imageUrl: track?.album?.images?.[0]?.url || album?.imageUrl || null,
     playCount: track?.playCount || 0,
     shareCount: track?.shareCount || 0,
+    externalUrl: track?.externalUrl || null,
   }
 };
 
@@ -853,6 +854,8 @@ const addTrackToPlaylist = async (req, res) => {
       id: row.id
     }
 
+    console.log('dataFormated', dataFormated)
+
     return res.status(200).json({
       message: 'Thêm bài hát vào playlist thành công',
       data: dataFormated,
@@ -1014,70 +1017,25 @@ const removeTrackFromPlaylist = async (req, res) => {
 
 const findVideoIdForTrack = async (req, res) => {
   try {
-    const { trackSpotifyId } = req.params;
-    console.log('trackSpotifyId', trackSpotifyId);
-
-    const cacheKey = `track:videoid:${trackSpotifyId}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log('CACHE HIT (findVideoIdForTrack)');
-      return res.status(200).json(JSON.parse(cachedData));
-    }
-    console.log('CACHE MISS (findVideoIdForTrack)');
-
-    let videoData = null;
+    const { title, artists } = req.body;
     let videoId = null;
     let duration = 0;
-    if (!trackSpotifyId) {
-      return res.status(400).json({ message: 'Track Spotify ID is required', success: false });
+
+    if (!title || !artists || artists.length === 0) {
+      return res.status(400).json({ message: 'Title and artists parameters are required', success: false });
     }
 
-    let track = await Track.findOne({
-      where: { spotifyId: trackSpotifyId },
-      include: [
-        { model: Artist, as: 'artists' }
-      ]
-    });
+    const aristsName = artists.join(',');
+    const videoData = await youtube.searchVideo(title, aristsName);
 
-    if (track) {
-      if (track.videoId) {
-        videoId = track.videoId;
-        if (track.duration > 0) {
-          duration = track.duration;
-        } else {
-          duration = await youtube.searchVideoWithDuration(videoId);
-          track.duration = duration;
-          await track.save();
-        }
-      } else if (!track.videoId) {
-        videoData = await youtube.searchVideo(track?.name, track.artists[0]?.name || '');
-        videoId = videoData.videoId;
-        track.videoId = videoId;
-        if (videoId) {
-          duration = await youtube.searchVideoWithDuration(videoId);
-        }
-        track.duration = duration;
-        await track.save();
-      }
-    } else {
-      track = await callSpotify(() => spotify.findTrackById(trackSpotifyId));
-      videoData = await youtube.searchVideo(track.name, track.artists[0]?.name || '');
-      videoId = videoData.videoId;
-      if (videoId) {
-        duration = await youtube.searchVideoWithDuration(videoId);
-      }
+    if (!videoData || !videoData.videoId) {
+      return res.status(200).json({ message: 'Không tìm thấy video phù hợp', success: false });
+    }
 
-      const row = await Track.create({
-        spotifyId: trackSpotifyId,
-        videoId: videoId,
-        duration: duration,
-        shareCount: 0,
-        playCount: 0
-      })
-
-      if (!row) {
-        res.status(500).json({ message: 'Failed to create track with video ID', success: false });
-      }
+    videoId = videoData.videoId;
+    duration = await youtube.searchVideoWithDuration(videoId);
+    if (!duration) {
+      duration = 0;
     }
 
     const response = {
@@ -1089,8 +1047,8 @@ const findVideoIdForTrack = async (req, res) => {
       success: true
     };
 
-    await redisClient.set(cacheKey, JSON.stringify(response), { EX: DEFAULT_TTL_SECONDS * 10 });
     return res.status(200).json(response);
+
   } catch (error) {
     res.status(500).json({ message: error.message || 'Failed to find video ID for track' });
   }
@@ -1134,42 +1092,21 @@ const getTracksForCover = async (req, res) => {
     }
     console.log('CACHE MISS (getTracksForCover)');
 
-    const dataFormated = [];
     const tracks = await Track.findAll({
       limit: 70,
-      order: [['playCount', 'DESC']]
+      order: [['playCount', 'DESC']],
+      include: [
+        { model: Artist, as: 'artists', through: { attributes: [] } }
+      ]
     });
 
-    // Sử dụng Promise.all để xử lý bất đồng bộ
-    const trackPromises = tracks.map(async (track) => {
-      try {
-        const spotifyId = track?.spotifyId;
-        const idTemp = track?.id || null;
-        const playCount = track?.playCount || 0;
-
-        if (!spotifyId) {
-          console.warn(`Track ${track.id} missing spotifyId`);
-          return null;
-        }
-
-        const spotifyTrack = await callSpotify(() => spotify.findTrackById(spotifyId));
-        if (!spotifyTrack) {
-          console.warn(`Spotify track not found for ID: ${spotifyId}`);
-          return null;
-        }
-
-        spotifyTrack.tempId = idTemp;
-        spotifyTrack.playCount = playCount;
-        return formatTrack(spotifyTrack, null, null, spotifyTrack?.videoId || null);
-      } catch (error) {
-        console.error(`Error processing track ${track.id}:`, error.message);
-        return null; // Bỏ qua lỗi và tiếp tục với track tiếp theo
+    const dataFormated = tracks.map(track => {
+      if (track && track.name) {
+        return formatTrack(track, track?.artists, null, track?.videoId || null);
       }
+      return null;
     });
-
-    // Chờ tất cả các promise hoàn thành và lọc bỏ các giá trị null
-    const results = await Promise.all(trackPromises);
-    const validTracks = results.filter(track => track !== null);
+    const validTracks = dataFormated.filter(track => track !== null && track.name !== null);
 
     const response = {
       message: 'Get tracks for cover successful',
@@ -1179,15 +1116,15 @@ const getTracksForCover = async (req, res) => {
 
     // Chỉ cache nếu có dữ liệu hợp lệ
     if (validTracks.length > 0) {
-      await redisClient.set(cacheKey, JSON.stringify(response), { 
-        EX: DEFAULT_TTL_SECONDS * 10 
+      await redisClient.set(cacheKey, JSON.stringify(response), {
+        EX: DEFAULT_TTL_SECONDS * 10
       });
     }
 
     return res.status(200).json(response);
   } catch (error) {
     console.error('Error in getTracksForCover:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: error.message || "Failed to get tracks for cover",
       success: false,
       error: error.toString()
@@ -1896,6 +1833,32 @@ const getAllTrack = async (req, res) => {
   }
 }
 
+const getExternalUrl = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Track ID is required', success: false });
+    }
+
+    const track = await Track.findByPk(id);
+    if (!track) {
+      return res.status(404).json({ message: 'Track not found', success: false });
+    }
+
+    if (!track.externalUrl) {
+      return res.status(404).json({ message: 'External URL not found for this track', success: false });
+    }
+
+    return res.status(200).json({
+      message: 'Get external URL successful',
+      data: { externalUrl: track.externalUrl },
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get external url' });
+  }
+}
+
 module.exports = {
   findSpotifyPlaylist,
   findYoutubeVideo,
@@ -1930,4 +1893,5 @@ module.exports = {
   getSearchSuggestions,
   getCategoryContent,
   getAllTrack,
+  getExternalUrl,
 };

@@ -1,8 +1,10 @@
+import { useAuthData } from "@/hooks/useAuthData";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { useNavigate } from "@/hooks/useNavigate";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
 import { FindTrackById } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
+import { useFollowStore } from "@/store/followStore";
 import * as ImagePicker from "expo-image-picker";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -25,7 +27,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
 import CoverItem from "../../components/items/CoverItem";
-import NewPostCreator, { NewPostItemRef } from "../../components/items/NewPostItem";
+import NewPostCreator from "../../components/items/NewPostItem";
 import PostItem from "../../components/items/PostItem";
 import CommentModal from "../../components/modals/CommentModal";
 import LikeModal from "../../components/modals/LikeModal";
@@ -40,23 +42,8 @@ import {
   fetchPosts,
   fetchPostsForGuest,
   sharePost,
-  toggleCommentLike,
-  updatePost
+  toggleCommentLike
 } from "../../services/socialApi";
-import useAuthStore from "@/store/authStore";
-import * as ImagePicker from "expo-image-picker";
-import { UploadMultipleFile } from "@/routes/ApiRouter";
-import { useNavigate } from "@/hooks/useNavigate";
-import PostItem from "../../components/items/PostItem";
-import CoverItem from "../../components/items/CoverItem";
-import CommentModal from "../../components/modals/CommentModal";
-import LikeModal from "../../components/modals/LikeModal";
-import UploadCoverModal from "../../components/modals/UploadCoverModal";
-import NewPostCreator, { NewPostItemRef } from "../../components/items/NewPostItem";
-import SearchOverlay from "../../components/search/SearchOverlay";
-import { createNewCover, fetchAllCovers } from "../../services/coverService";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { FindTrackById } from "@/services/musicService";
 
 const SocialScreen = () => {
   const colorScheme = useColorScheme();
@@ -65,22 +52,17 @@ const SocialScreen = () => {
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
-  
+  const userFollowers = useFollowStore((state) => state.userFollowers);
+  const userFollowees = useFollowStore((state) => state.userFollowees);
+
+  const {
+    fetchFollowees,
+    fetchFollowers
+  } = useAuthData();
+
   // FAB animation value
   const fabScale = useRef(new Animated.Value(1)).current;
-  
 
-  // Ref for NewPostCreator
-  const newPostCreatorRef = useRef<NewPostItemRef>(null);
-
-  // FAB animation value
-  const fabScale = useRef(new Animated.Value(1)).current;
-
-  // Header animation values
-  const headerOpacity = useRef(new Animated.Value(1)).current;
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
-
-  const [trackItem, setTrackItem] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   // State cho New Post Creator
@@ -406,9 +388,9 @@ const SocialScreen = () => {
   //   }
   // };
 
-  
+
   // Hàm xử lý xóa bài viết
-  const handleDeletePost = async (postId: string) => {
+  const handleDeletePost = async (postId) => {
     confirm(
       "Xác nhận xóa",
       "Bạn có chắc chắn muốn xóa bài viết này?",
@@ -416,41 +398,21 @@ const SocialScreen = () => {
         try {
           setIsUploading(true);
 
+          console.log(postId)
           // Gọi API xóa bài viết
-          const result = await deletePost(postId);
-
+          const response = await deletePost(postId);
           // Kiểm tra kết quả trả về từ API
-          if (result && 'message' in result) {
-            if (result.message === 'Post deleted successfully') {
-              // Xóa bài viết khỏi state nếu xóa thành công
-              setPosts(prevPosts =>
-                prevPosts.filter(post => post.id !== postId)
-              );
-              success("Bài viết đã được xóa thành công!");
-            } else {
-              throw new Error(result.message || 'Không thể xóa bài viết');
-            }
-          } else {
-            // Xử lý trường hợp không có thông báo từ server
-            setPosts(prevPosts => 
-            // Vẫn cập nhật UI để đảm bảo trải nghiệm người dùng mượt mà
-            setPosts(prevPosts =>
-              prevPosts.filter(post => post.id !== postId)
-            );
+          if (response.success) {
+            // Xóa bài viết khỏi state nếu xóa thành công
+            setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
             success("Bài viết đã được xóa thành công!");
+          } else {
+            console.log(4)
+            error("Lỗi", response.message || "Không thể xóa bài viết.");
           }
-        } catch (error) {
-          console.error("Lỗi khi xóa bài viết:", error);
-          
-          // Hiển thị thông báo lỗi
-          let errorMessage = "Đã xảy ra lỗi khi xóa bài viết";
-          if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-
-          error("Lỗi", errorMessage);
+        } catch (err) {
+          console.log(5)
+          error("Lỗi", err);
         } finally {
           setIsUploading(false);
         }
@@ -487,6 +449,8 @@ const SocialScreen = () => {
 
     if (!selectedPostId || !text.trim() || !currentUser) return;
 
+    console.log(text)
+
     // Khởi tạo một đối tượng comment tạm thởi để hiển thị ngay lập tức
     const optimisticComment = {
       id: Date.now().toString(),
@@ -510,7 +474,7 @@ const SocialScreen = () => {
     };
 
     // CẬP NHẬT UI TỨC THỜI - Cập nhật cả posts và covers state
-    const updateCommentsInState = (items: any[]) => {
+    const updateCommentsInState = (items) => {
       return items.map((item) => {
         if (item.id === selectedPostId) {
           let updatedComments = [...(item.comments || [])];
@@ -553,9 +517,13 @@ const SocialScreen = () => {
         parentId
       );
 
-      if ("message" in apiComment) {
-        throw new Error(apiComment.message);
+      // --- SỬA LẠI ĐOẠN NÀY ---
+      // Kiểm tra nếu object trả về có status là 'error' thì mới ném lỗi
+      // Hoặc kiểm tra nếu không có 'id' (vì comment thành công phải có id)
+      if ('status' in apiComment && apiComment.status === 'error') {
+        throw new Error(apiComment.message || "Lỗi không xác định");
       }
+      // ------------------------
 
       // CẬP NHẬT LẠI ID CHÍNH THỨC VÀ DỮ LIỆU TỪ SERVER
       setPosts((prevPosts) =>
@@ -568,7 +536,7 @@ const SocialScreen = () => {
                   return {
                     ...apiComment,
                     User: c.User,
-                    Replies: apiComment.Replies || c.Replies,
+                    Replies: apiComment?.Replies || c.Replies,
                   };
                 }
                 // Nếu là comment cha, tìm trong Replies của nó
@@ -587,6 +555,7 @@ const SocialScreen = () => {
         })
       );
     } catch (err) {
+      console.log(3)
       console.error("Lỗi khi gửi bình luận:", err);
       error("Lỗi", "Gửi bình luận thất bại. Đã hoàn tác.");
 
@@ -656,8 +625,8 @@ const SocialScreen = () => {
       setLoading(true);
       await loadPosts();
       setLoading(false);
-    } catch (error) {
-      console.error("Lỗi khi chia sẻ bài đăng:", error);
+    } catch (err) {
+      console.error("Lỗi khi chia sẻ bài đăng:", err);
       error("Lỗi", "Không thể chia sẻ bài viết.");
     } finally {
       setIsSharing(false);
@@ -738,8 +707,8 @@ const SocialScreen = () => {
       if ("message" in result) {
         throw new Error(result.message);
       }
-    } catch (error) {
-      console.error("Error toggling comment like:", error);
+    } catch (err) {
+      console.error("Error toggling comment like:", err);
       setPosts((prev) =>
         prev.map((p) => {
           if (p.id !== postId) return p;
@@ -768,31 +737,31 @@ const SocialScreen = () => {
     try {
       const fetchedComments = await fetchCommentsByPostId(postId);
       const commentsLength = Array.isArray(fetchedComments) ? fetchedComments.length : 0;
-      
+
       // Cập nhật posts state (cho tab posts)
       setPosts((prevPosts) => {
         const updatedPosts = prevPosts.map((post) =>
-          post.id === postId ? { 
-            ...post, 
+          post.id === postId ? {
+            ...post,
             comments: fetchedComments,
-            commentCount: commentsLength 
+            commentCount: commentsLength
           } : post
         );
         return updatedPosts;
       });
-      
+
       // Cập nhật covers state (cho tab covers)
       setCovers((prevCovers) => {
         const updatedCovers = prevCovers.map((cover) =>
-          cover.id === postId ? { 
-            ...cover, 
+          cover.id === postId ? {
+            ...cover,
             comments: fetchedComments,
-            commentCount: commentsLength 
+            commentCount: commentsLength
           } : cover
         );
         return updatedCovers;
       });
-      
+
       return fetchedComments;
     } catch (e) {
       console.error('Error in loadComments:', e);
@@ -834,8 +803,8 @@ const SocialScreen = () => {
         } else {
           await loadPosts();
         }
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu:", error);
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu:", err);
       } finally {
         setLoading(false);
       }
@@ -862,8 +831,8 @@ const SocialScreen = () => {
     setFilteredPosts(filtered);
   }, [searchQuery, posts]);
 
-  
- // Hàm xử lý khi vuốt xuống làm mới
+
+  // Hàm xử lý khi vuốt xuống làm mới
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     if (activeTab === 'covers') {
@@ -884,7 +853,7 @@ const SocialScreen = () => {
       if (response && typeof response === 'object' && 'success' in response && response.success === false) {
         throw new Error((response as any).message || "Không thể tải covers");
       }
-      
+
       let allCovers;
       if (Array.isArray(response)) {
         allCovers = response;
@@ -900,8 +869,8 @@ const SocialScreen = () => {
       } else {
         setCovers([]);
       }
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách covers:", error);
+    } catch (err) {
+      console.error("Lỗi khi tải danh sách covers:", err);
       error("Lỗi", "Không thể tải danh sách covers. Vui lòng thử lại sau.");
     } finally {
       setCoversLoading(false);
@@ -914,6 +883,11 @@ const SocialScreen = () => {
     setUploadCoverModalVisible(false); // Đóng modal
     success("Thành công", "Đăng cover thành công!");
   }, [refreshCovers]);
+
+  useEffect(() => {
+    if (userFollowees.length === 0) fetchFollowees(user?.id);
+    if (userFollowers.length === 0) fetchFollowers(user?.id);
+  })
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0E0C1F]">
@@ -929,7 +903,7 @@ const SocialScreen = () => {
                   className="w-10 h-10 rounded-full mr-3 border-2 border-emerald-500"
                 />
               </TouchableOpacity>
-              
+
               <View className="flex-1">
                 <Text className="text-2xl font-extrabold text-black dark:text-white">
                   Khám phá
@@ -939,68 +913,8 @@ const SocialScreen = () => {
                 </Text>
               </View>
             </View>
-        {isSearchVisible ? (
-          <View className="flex-row items-center">
-            <TouchableOpacity
-              onPress={() => handleSearchToggle(false)}
-              className="mr-2"
-            >
-              <Icon
-                name="arrow-left"
-                size={24}
-                color={colorScheme === "dark" ? "#fff" : "#000"}
-              />
-            </TouchableOpacity>
-            <TextInput
-              className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-lg px-3 py-2 text-black dark:text-white"
-              placeholder="Tìm kiếm bài đăng hoặc người dùng..."
-              placeholderTextColor={
-                colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
-              }
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoFocus
-            />
           </View>
-        ) : (
-          <View className="flex-row justify-between items-center">
-            <View className="flex-1">
-              <Animated.View
-                style={{
-                  opacity: headerOpacity,
-                  transform: [{ translateY: headerTranslateY }]
-                }}
-              >
-                <View className="flex-row items-center">
-                  {/* Avatar User */}
-                  <TouchableOpacity onPress={() => navigate("ProfileSocialScreen", { userId: user?.id })}>
-                    <Image
-                      source={{ uri: user?.avatarUrl || 'https://res.cloudinary.com/chaamz03/image/upload/v1762574889/kltn/user_hnoh3o.png' }}
-                      className="w-10 h-10 rounded-full mr-3 border-2 border-emerald-500"
-                    />
-                  </TouchableOpacity>
 
-                  <View className="flex-1">
-                    <Text className="text-2xl font-extrabold text-black dark:text-white">
-                      Khám phá
-                    </Text>
-                    <Text className="text-sm text-gray-500 dark:text-gray-400">
-                      Khám phá covers và bài đăng từ cộng đồng
-                    </Text>
-                  </View>
-                </View>
-              </Animated.View>
-            </View>
-
-            <TouchableOpacity onPress={() => setSearchOverlayVisible(true)}>
-              <Icon
-                name="search"
-                size={24}
-                color={colorScheme === "dark" ? "#fff" : "#000"}
-              />
-            </TouchableOpacity>
-          </View>
-          
           <TouchableOpacity onPress={() => setSearchOverlayVisible(true)}>
             <Icon
               name="search"
@@ -1013,7 +927,7 @@ const SocialScreen = () => {
 
       <FlatList
         data={activeTab === 'covers' ? covers : filteredPosts}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
         showsVerticalScrollIndicator={false}
         // Thao tác vuốt xuống để làm mới (Pull-to-Refresh)
         refreshControl={
@@ -1035,8 +949,8 @@ const SocialScreen = () => {
                 <TouchableOpacity
                   onPress={() => setActiveTab("posts")}
                   className={`flex-1 py-3 px-4 rounded-l-xl justify-center items-center ${activeTab === "posts"
-                      ? "bg-emerald-500 dark:bg-emerald-600"
-                      : "bg-transparent"
+                    ? "bg-emerald-500 dark:bg-emerald-600"
+                    : "bg-transparent"
                     }`}
                 >
                   <View className="flex-row items-center">
@@ -1048,8 +962,8 @@ const SocialScreen = () => {
                     />
                     <Text
                       className={`text-sm ${activeTab === "posts"
-                          ? "text-white font-bold"
-                          : "text-gray-600 dark:text-gray-400 font-medium"
+                        ? "text-white font-bold"
+                        : "text-gray-600 dark:text-gray-400 font-medium"
                         }`}
                     >
                       Bài đăng
@@ -1071,8 +985,8 @@ const SocialScreen = () => {
                 <TouchableOpacity
                   onPress={() => setActiveTab("covers")}
                   className={`flex-1 py-3 px-4 rounded-r-xl justify-center items-center ${activeTab === "covers"
-                      ? "bg-emerald-500 dark:bg-emerald-600"
-                      : "bg-transparent"
+                    ? "bg-emerald-500 dark:bg-emerald-600"
+                    : "bg-transparent"
                     }`}
                 >
                   <View className="flex-row items-center">
@@ -1084,8 +998,8 @@ const SocialScreen = () => {
                     />
                     <Text
                       className={`text-sm ${activeTab === "covers"
-                          ? "text-white font-bold"
-                          : "text-gray-600 dark:text-gray-400 font-medium"
+                        ? "text-white font-bold"
+                        : "text-gray-600 dark:text-gray-400 font-medium"
                         }`}
                     >
                       Covers/Sáng tác
@@ -1118,37 +1032,31 @@ const SocialScreen = () => {
         renderItem={({ item, index }) => {
           if (activeTab === 'covers') {
             return (
-              <View
-                key={`cover-${item.id}-${index}`}
-                className="mb-4 px-3">
-                <CoverItem
-                  id={item.id}
-                  userId={item.userId}
-                  User={item.User}
-                  uploadedAt={item.uploadedAt}
-                  content={item.content}
-                  fileUrl={item.fileUrl}
-                  heartCount={item.heartCount}
-                  isLiked={item.isLiked}
-                  originalSongId={item.originalSongId}
-                  OriginalSong={item.OriginalSong}
-                  onUserPress={handleUserPress}
-                  onRefresh={onRefresh}
-                  onCommentPress={() => openCommentModal(item.id)}
-                  onSharePress={() => openReShare(item)}
-                  onVoteCountPress={openLikeModal}
-                  likeCount={item.heartCount}
-                  commentCount={item.commentCount}
-                  shareCount={item.shareCount}
-                  isLikedPost={item.isLiked}
-                />
-              </View>
+              <CoverItem
+                id={item.id}
+                userId={item.userId}
+                User={item.User}
+                uploadedAt={item.uploadedAt}
+                content={item.content}
+                fileUrl={item.fileUrl}
+                heartCount={item.heartCount}
+                isLiked={item.isLiked}
+                originalSongId={item.originalSongId}
+                OriginalSong={item.OriginalSong}
+                onUserPress={handleUserPress}
+                onRefresh={onRefresh}
+                onCommentPress={() => openCommentModal(item.id)}
+                onSharePress={() => openReShare(item)}
+                onVoteCountPress={openLikeModal}
+                likeCount={item.heartCount}
+                commentCount={item.commentCount}
+                shareCount={item.shareCount}
+                isLikedPost={item.isLiked}
+              />
             );
           }
           return (
-            <View
-              key={`post-${item?.id}-${index}-${item.uploadedAt}-${new Date().getTime().toString()}`}
-              className="mb-4 px-3">
+            <>
               {item.isCover ? (
                 <CoverItem
                   id={item.id}
@@ -1179,7 +1087,6 @@ const SocialScreen = () => {
                   onPostUpdate={(type, value) =>
                     updatePostState(item.id, type, value)
                   }
-                  fileUrl={item?.fileUrl}
                   onCommentPress={() => openCommentModal(item.id)}
                   onSharePress={() => openReShare(item)}
                   userId={item.userId || item.User?.id}
@@ -1192,11 +1099,10 @@ const SocialScreen = () => {
                   }}
                   onRefresh={onRefresh}
                   onEdit={undefined}
-                  onDelete={() => handleDeletePost(item.id)}
+                  onDelete={() => handleDeletePost(item?.id)}
                   isUserPost={item.userId === user?.id}
                 />
-              )}
-            </View>
+              )}</>
           );
         }}
         // Hiển thị trạng thái Loading/Empty khi danh sách rỗng
@@ -1310,7 +1216,7 @@ const SocialScreen = () => {
         visible={commentModalVisible}
         onClose={closeCommentModal}
         comments={
-          (activeTab === 'covers' 
+          (activeTab === 'covers'
             ? covers.find((cover) => cover.id === selectedPostId)?.comments
             : posts.find((post) => post.id === selectedPostId)?.comments
           ) || []
@@ -1326,7 +1232,7 @@ const SocialScreen = () => {
         quote={quote}
         setQuote={setQuote}
       />
-      
+
       {/* Like Modal */}
       <LikeModal
         visible={likeModalVisible}
@@ -1342,8 +1248,8 @@ const SocialScreen = () => {
         onRequestClose={() => setNewPostModalVisible(false)}
       >
         {selectedMediaAssets.length > 0 ? (
-          <TouchableOpacity 
-            className="flex-1 justify-end" 
+          <TouchableOpacity
+            className="flex-1 justify-end"
             activeOpacity={1}
             onPress={() => setNewPostModalVisible(false)}
           >
@@ -1357,6 +1263,7 @@ const SocialScreen = () => {
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   style={{ maxHeight: '85%' }}
+
                 >
                   <NewPostCreator
                     user={user}
@@ -1375,7 +1282,7 @@ const SocialScreen = () => {
             </View>
           </TouchableOpacity>
         ) : (
-          <KeyboardAvoidingView 
+          <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1 }}
           >

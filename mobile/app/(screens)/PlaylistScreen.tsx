@@ -1,37 +1,36 @@
+import SongItem from "@/components/items/SongItem";
+import AddPlaylistModal from "@/components/modals/AddPlaylistModal";
+import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
+import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
+import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
+import EditPlaylistModal from "@/components/modals/EditPlaylistModal";
+import PlaylistOptionModal from "@/components/modals/PlaylistOptionModal";
+import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useMusicAction } from "@/hooks/useMusicAction";
+import { useNavigate } from "@/hooks/useNavigate";
+import { usePlaylistData } from "@/hooks/usePlaylistData";
+import { AddTracksToPlaylists, CreatePlaylist, DeletePlaylist, RemoveTrackFromPlaylist, UpdatePlaylist } from "@/services/musicService";
+import useAuthStore from "@/store/authStore";
+import { usePlayerStore } from "@/store/playerStore";
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  Dimensions,
   Image,
   Pressable,
+  StyleSheet,
   Text,
   TouchableOpacity,
   useColorScheme,
   View,
-  StyleSheet,
-  Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useNavigate } from "@/hooks/useNavigate";
-import { useRouter } from "expo-router";
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import SongItem from "@/components/items/SongItem";
-import { usePlayerStore } from "@/store/playerStore";
-import { AddTracksToPlaylists, CreatePlaylist, DeletePlaylist, RemoveTrackFromPlaylist, UpdatePlaylist } from "@/services/musicService";
-import useAuthStore from "@/store/authStore";
-import PlaylistOptionModal from "@/components/modals/PlaylistOptionModal";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import EditPlaylistModal from "@/components/modals/EditPlaylistModal";
-import * as ImagePicker from 'expo-image-picker';
-import AddToAnotherPlaylistModal from "@/components/modals/AddToAnotherPlaylistModal";
-import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
-import AddPlaylistModal from "@/components/modals/AddPlaylistModal";
-import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
-import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
-import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
-import { usePlaylistData } from "@/hooks/usePlaylistData";
-import { useMusicAction } from "@/hooks/useMusicAction";
-import { set } from "date-fns";
 
 const HEADER_SCROLL_THRESHOLD = 256;
 const screenHeight = Dimensions.get("window").height;
@@ -46,9 +45,10 @@ export default function PlaylistScreen() {
   const user = useAuthStore((state) => state.user);
   const isGuest = useAuthStore((state) => state.isGuest);
   const currentPlaylist = usePlayerStore((state) => state.currentPlaylist);
-  const listTrack = usePlayerStore((state) => state.listTrack);
+  // const listTrack = usePlayerStore((state) => state.listTrack);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
-
+  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
+  const setListTrack = usePlayerStore((state) => state.setListTrack);
   const updateCurrentPlaylist = usePlayerStore((state) => state.updateCurrentPlaylist);
   const updateMyPlaylists = usePlayerStore((state) => state.updateMyPlaylists);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
@@ -97,6 +97,7 @@ export default function PlaylistScreen() {
   const {
     playlist,
     isLoading,
+    listTrack,
     isMine,
     isFavorite,
     isFavoriteLoading,
@@ -296,6 +297,13 @@ export default function PlaylistScreen() {
       () => { }
     );
   };
+
+  useEffect(() => {
+    return () => {
+      setCurrentPlaylist(null);
+      setListTrack([]);
+    }
+  }, [])
 
   useEffect(() => {
     if (currentPlaylist) {

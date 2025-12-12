@@ -112,6 +112,60 @@ const AddTrack = async (payload) => {
   }
 }
 
+const AddPlaylist = async (payload) => {
+  try {
+    console.log("payload", payload)
+    const formData = new FormData();
+
+    if (payload.image && payload.image instanceof File) {
+      formData.append("image", payload.image);
+    }
+
+    formData.append("name", payload.name);
+    formData.append("description", payload.description);
+    formData.append("isPublic", payload.isPublic);
+    formData.append("userId", payload.userId);
+    formData.append("sharedCount", payload.sharedCount);
+
+    console.log('formData', formData)
+
+    const response = await axiosClient.post(`/playlists/new`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    console.log('response', response.data)
+    return response.data;
+  } catch (error) {
+    console.log(error)
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+const DeletePlaylists = async (playlistIds) => {
+  try {
+    const response = await axiosClient.post('/playlists/remove-many', playlistIds);
+    console.log(response)
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
 export {
   GetAllTrack,
   GetAllPlaylist,
@@ -119,5 +173,7 @@ export {
   GetAllGenres,
   AddArtist,
   AddAlbum,
-  AddTrack
+  AddTrack,
+  AddPlaylist,
+  DeletePlaylists,
 }

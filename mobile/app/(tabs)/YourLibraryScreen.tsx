@@ -5,7 +5,6 @@ import { useNavigate } from '@/hooks/useNavigate';
 import LibraryItemButton from '@/components/button/LibraryItemButton';
 import SongItem from '@/components/items/SongItem';
 import { usePlayerStore } from '@/store/playerStore';
-import { trackData, albumData } from "@/constants/data";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { useHistoriesStore } from '@/store/historiesStore';
 import AlbumItem from '@/components/items/AlbumItem';
@@ -37,13 +36,13 @@ const libraryItems = [
     screen: 'AllPlaylistScreen',
     color: '#82d8ff',
   },
-  {
-    id: '4',
-    title: 'Đã tải xuống',
-    icon: 'cloud-download',
-    screen: 'DownloadsScreen',
-    color: '#88d89a',
-  },
+  // {
+  //   id: '4',
+  //   title: 'Đã tải xuống',
+  //   icon: 'cloud-download',
+  //   screen: 'DownloadsScreen',
+  //   color: '#88d89a',
+  // },
 ];
 
 export default function YourLibraryScreen() {

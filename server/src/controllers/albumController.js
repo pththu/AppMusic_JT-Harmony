@@ -1,4 +1,4 @@
-const { Album, Genres } = require('../models');
+const { Album, Genres, Artist } = require('../models');
 const Op = require('sequelize').Op;
 const spotify = require('../configs/spotify');
 const { redisClient } = require('../configs/redis');
@@ -10,7 +10,16 @@ exports.getAllAlbum = async (req, res) => {
     // if (cachedData) {
     //   return res.json(JSON.parse(cachedData));
     // }
-    const rows = await Album.findAll();
+    const rows = await Album.findAll({
+      include: [
+        {
+          model: Artist,
+          as: 'artists',
+          attributes: ['id', 'name', 'imageUrl'],
+          through: { attributes: [] }
+        }
+      ]
+    });
 
     const response = {
       message: 'Lấy tất cả album thành công',
@@ -60,10 +69,8 @@ exports.createOne = async (req, res) => {
 exports.shareAlbum = async (req, res) => {
   try {
     const { albumId, albumSpotifyId } = req.body;
-    console.log(req.body);
 
     if (!albumId && !albumSpotifyId) {
-      console.log(1)
       return res.status(400).json({ error: 'albumId and albumSpotifyId are required' });
     }
 
@@ -77,16 +84,13 @@ exports.shareAlbum = async (req, res) => {
           ]
         }
       })
-      console.log(8)
       if (!album) {
         const response = await Album.create({
           spotifyId: albumSpotifyId,
           shareCount: 1
         });
 
-        console.log(4)
         if (!response) {
-          console.log(5)
           return res.status(500).json({ error: 'Failed to create album record' });
         }
 
@@ -97,7 +101,6 @@ exports.shareAlbum = async (req, res) => {
         });
       }
 
-      console.log(10)
       album.shareCount += 1;
       await album.save();
       return res.status(200).json({
@@ -107,7 +110,6 @@ exports.shareAlbum = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(12)
     res.status(500).json({ error: error.message });
   }
 }

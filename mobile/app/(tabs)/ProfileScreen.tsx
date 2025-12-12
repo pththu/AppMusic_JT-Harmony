@@ -30,6 +30,7 @@ import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { useHistoriesStore } from "@/store/historiesStore";
 import { useFollowStore } from "@/store/followStore";
 import { useBoardingStore } from "@/store/boardingStore";
+import { useNotificationStore } from "@/store/notificationStore";
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
@@ -51,6 +52,7 @@ export default function ProfileScreen() {
   const clearSearchHistory = useHistoriesStore((state) => state.clearSearchHistory);
   const clearFollowStore = useFollowStore((state) => state.clearFollowStore);
   const clearBoardingStore = useBoardingStore((state) => state.clearBoardingStore);
+  const clearNotifications = useNotificationStore((state) => state.clearNotifications);
   const logout = useAuthStore((state) => state.logout);
 
   const [selectedImage, setSelectedImage] = useState(null);
@@ -135,9 +137,11 @@ export default function ProfileScreen() {
       clearSearchHistory();
       clearListenHistory();
       clearBoardingStore();
+      clearNotifications();
       setIsGuest(true);
       setShowLoginWall(false);
       setGuestSongPlayCount(0);
+      navigate("Main");
     } catch (err) {
       error("Lỗi khi đăng xuất: " + err.message);
     }
@@ -331,10 +335,10 @@ export default function ProfileScreen() {
             }
             onPress={() => { }}
           />
-          <SettingItem
+          {/* <SettingItem
             title={`Ngôn ngữ: ${settings?.musicLanguages.join(", ")}`}
             onPress={() => navigate("MusicLanguage")}
-          />
+          /> */}
           {
             isGuest ? (
               <TouchableOpacity

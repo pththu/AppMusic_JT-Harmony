@@ -1,4 +1,4 @@
-const { Playlist, PlaylistTrack, Track } = require('../models');
+const { Playlist, PlaylistTrack, Track, User } = require('../models');
 const Op = require('sequelize').Op;
 const spotify = require('../configs/spotify');
 const { redisClient } = require('../configs/redis');
@@ -46,9 +46,32 @@ exports.createOne = async (req, res) => {
       return res.status(400).json({ error: 'Mô tả không được vượt quá 500 ký tự' });
     }
 
+    const userId = req.user?.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Người dùng không tồn tại' });
+    }
+
+    let isAdmin = false;
+    if (user.roleId === 1) {
+      isAdmin = true;
+    }
+    let totalTracks = 0;
+    let sharedCount = 0;
+    if (req.body?.totalTracks) totalTracks = req.body.totalTracks;
+    if (req.body?.sharedCount) sharedCount = req.body.sharedCount;
+
     // invalid cache
     await redisClient.del(`user:${req.user?.id}:playlists`);
-    const row = await Playlist.create({ name, description, imageUrl, isPublic, userId: req.user?.id, totalTracks: 0, sharedCount: 0 });
+    const row = await Playlist.create({
+      name,
+      description, imageUrl,
+      isPublic,
+      userId: isAdmin ? req.body.userId : userId,
+      totalTracks: totalTracks,
+      shareCount: sharedCount
+    });
+
     res.status(201).json({
       message: 'Tạo danh sách phát thành công',
       playlist: row,
@@ -177,6 +200,26 @@ exports.updatePrivacy = async (req, res) => {
 
 exports.deletePlaylist = async (req, res) => {
   try {
+    const userId = req.user?.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Người dùng không tồn tại' });
+    }
+
+    let isAdmin = false;
+    if (user.roleId === 1) {
+      isAdmin = true;
+    }
+
+    const playlist = await Playlist.findByPk(req.params.id);
+    if (!playlist) {
+      return res.status(404).json({ error: 'Danh sách phát không tìm thấy' });
+    }
+
+    if (!isAdmin && userId !== playlist.userId) {
+      return res.status(403).json({ error: 'Bạn không có quyền xóa danh sách phát này' });
+    }
+
     const deleted = await Playlist.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'Danh sách phát không tìm thấy' });
     await redisClient.del(`user:${req.user?.id}:playlists`);
@@ -185,3 +228,39 @@ exports.deletePlaylist = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.deleteMultiplePlaylists = async (req, res) => {
+  try {
+    const playlistIds = req.body;
+
+    console.log('playlistIds', playlistIds)
+
+    const userId = req.user?.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Người dùng không tồn tại' });
+    }
+
+    if (playlistIds.length === 0) {
+      return res.status(400).json({ error: 'Danh sách ID danh sách phát không hợp lệ' });
+    }
+
+    let isAdmin = false;
+    if (user.roleId === 1) {
+      isAdmin = true;
+    }
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Chỉ quản trị viên mới có thể xóa nhiều danh sách phát' });
+    }
+
+    const deleted = await Playlist.destroy({ where: { id: { [Op.in]: playlistIds } } });
+    if (deleted === 0) {
+      return res.status(404).json({ error: 'Không tìm thấy danh sách phát để xóa' });
+    }
+    await redisClient.del(`user:${req.user?.id}:playlists`);
+    res.status(200).send({ message: 'Đã xóa danh sách phát', success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}

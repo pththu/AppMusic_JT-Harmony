@@ -1,29 +1,29 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-    View,
-    Text,
-    FlatList,
-    TouchableOpacity,
-    ActivityIndicator,
-    RefreshControl,
-    Image,
-    Alert,
-    TextInput,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Feather';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useNavigate } from "@/hooks/useNavigate";
-import { useColorScheme } from 'react-native';
-import useAuthStore from '@/store/authStore';
-import { useFollowStore } from '@/store/followStore';
-import { fetchUserConversations, fetchAllUsers, Conversation, createOrGetPrivateConversation } from '@/services/chatApi';
-import UsersModal from '@/components/modals/UsersModal';
 import ConversationOptionsModal from '@/components/modals/ConversationOptionsModal';
 import RestrictedUsersModal from '@/components/modals/RestrictedUsersModal';
+import UsersModal from '@/components/modals/UsersModal';
+import { useNavigate } from "@/hooks/useNavigate";
+import { Conversation, createOrGetPrivateConversation, fetchAllUsers, fetchUserConversations } from '@/services/chatApi';
+import useAuthStore from '@/store/authStore';
+import { useFollowStore } from '@/store/followStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    RefreshControl,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    useColorScheme,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Feather';
 
 export default function ConversationsScreen() {
     const colorScheme = useColorScheme();
@@ -414,7 +414,7 @@ export default function ConversationsScreen() {
                 </View>
             ) : (
                 <FlatList
-                    data={filteredConversations}
+                    data={filteredConversations.filter(conv => conv.name !== 'Quản trị viên')}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderConversationItem}
                     refreshControl={

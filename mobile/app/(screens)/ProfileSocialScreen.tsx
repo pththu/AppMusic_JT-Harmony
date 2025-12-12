@@ -237,14 +237,15 @@ export default function ProfileSocialScreen() {
       async () => {
         try {
           const result = await deletePost(postId);
-          if ("message" in result) {
-            throw new Error(result.message);
+          console.log('result', result)
+          if (result.success) {
           }
           // Xóa khỏi state local
           setPosts((prev) => prev.filter((p) => p.id !== postId));
           success("Thành công", "Bài viết đã được xóa.");
-        } catch (error) {
-          console.error("Lỗi khi xóa bài viết:", error);
+
+        } catch (err) {
+          console.error("Lỗi khi xóa bài viết:", err);
           error("Lỗi", "Không thể xóa bài viết.");
         }
       },
@@ -430,49 +431,49 @@ export default function ProfileSocialScreen() {
   };
 
   // HÀM XỬ LÝ RE-SHARE
-const openReShare = (post: any) => {
-  setReShareTargetPost(post);
-  setReShareCaption("");
-  setReShareModalVisible(true);
-};
+  const openReShare = (post: any) => {
+    setReShareTargetPost(post);
+    setReShareCaption("");
+    setReShareModalVisible(true);
+  };
 
-const closeReShareModal = () => {
-  if (isSharing) return;
-  setReShareModalVisible(false);
-  setReShareCaption("");
-  setReShareTargetPost(null);
-};
+  const closeReShareModal = () => {
+    if (isSharing) return;
+    setReShareModalVisible(false);
+    setReShareCaption("");
+    setReShareTargetPost(null);
+  };
 
-const handleShare = async () => {
-  if (!reShareTargetPost || isSharing) return;
+  const handleShare = async () => {
+    if (!reShareTargetPost || isSharing) return;
 
-  setIsSharing(true);
-  try {
-    const result = await sharePost(reShareTargetPost.id, reShareCaption);
-    
-    // Kiểm tra xem có newPost trong result không (success case)
-    if ('newPost' in result) {
-      // Cập nhật số lượt share trong danh sách
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post.id === reShareTargetPost.id
-            ? { ...post, shareCount: String(Number(post.shareCount) + 1) }
-            : post
-        )
-      );
-      success("Thành công", "Đã chia sẻ bài viết");
-      closeReShareModal();
-    } else {
-      // Error case - có message và status field
-      throw new Error(result.status === 'error' ? result.message : "Không thể chia sẻ bài viết");
+    setIsSharing(true);
+    try {
+      const result = await sharePost(reShareTargetPost.id, reShareCaption);
+
+      // Kiểm tra xem có newPost trong result không (success case)
+      if ('newPost' in result) {
+        // Cập nhật số lượt share trong danh sách
+        setPosts(prevPosts =>
+          prevPosts.map(post =>
+            post.id === reShareTargetPost.id
+              ? { ...post, shareCount: String(Number(post.shareCount) + 1) }
+              : post
+          )
+        );
+        success("Thành công", "Đã chia sẻ bài viết");
+        closeReShareModal();
+      } else {
+        // Error case - có message và status field
+        throw new Error(result.status === 'error' ? result.message : "Không thể chia sẻ bài viết");
+      }
+    } catch (error) {
+      console.error("Lỗi khi chia sẻ bài viết:", error);
+      error("Lỗi", error.message || "Đã xảy ra lỗi khi chia sẻ bài viết");
+    } finally {
+      setIsSharing(false);
     }
-  } catch (error) {
-    console.error("Lỗi khi chia sẻ bài viết:", error);
-    error("Lỗi", error.message || "Đã xảy ra lỗi khi chia sẻ bài viết");
-  } finally {
-    setIsSharing(false);
-  }
-};
+  };
 
   const renderProfileHeader = () => {
     if (!profile) return null;
@@ -847,7 +848,7 @@ const handleShare = async () => {
             <Text className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
               Chia sẻ bài viết
             </Text>
-            
+
             {reShareTargetPost && (
               <View className="mb-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <Text className="text-gray-700 dark:text-gray-300">
@@ -874,7 +875,7 @@ const handleShare = async () => {
               >
                 <Text className="text-gray-800 dark:text-gray-200">Hủy</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 onPress={handleShare}
                 disabled={isSharing}

@@ -1,17 +1,17 @@
+import { Feather } from "@expo/vector-icons";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  Modal,
-  useColorScheme,
-  Image,
-  TouchableOpacity,
-  Pressable,
   Animated,
   Easing,
+  Image,
+  Modal,
+  Pressable,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
-import { Feather } from "@expo/vector-icons";
 
 // --- Bắt đầu Component OptionItem (Giữ nguyên) ---
 const OptionItem = ({ iconName, text, onPress, isDestructive = false, colorScheme }) => (
@@ -169,13 +169,13 @@ const ArtistOptionModal = ({
                   onPress={onShare}
                   colorScheme={colorScheme}
                 />
-                <OptionItem
+                {/* <OptionItem
                   text="Chặn nhạc của nghệ sĩ này"
                   iconName="slash" // Icon "cấm"
                   onPress={onBlock}
                   isDestructive={true} // Hành động destructive
                   colorScheme={colorScheme}
-                />
+                /> */}
               </View>
 
               {/* Nút đóng */}

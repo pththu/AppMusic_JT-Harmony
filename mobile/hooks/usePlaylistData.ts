@@ -1,11 +1,9 @@
 import { GetTracksByPlaylistId } from "@/services/musicService";
-import { GenerateFromPlaylist, GenerateTrackFromFavorites } from "@/services/recommendationService";
+import { GenerateFromPlaylist } from "@/services/recommendationService";
 import useAuthStore from "@/store/authStore";
 import { useBoardingStore } from "@/store/boardingStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { usePlayerStore } from "@/store/playerStore";
-import { formatDataFavorites } from "@/utils";
-import { ar } from "date-fns/locale";
 import { useCallback, useEffect, useState } from "react";
 
 export const usePlaylistData = (currentPlaylist) => {
@@ -16,7 +14,6 @@ export const usePlaylistData = (currentPlaylist) => {
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setRecommendBasedOnPlaylist = useBoardingStore((state) => state.setRecommendBasedOnPlaylist);
-
 
   const [playlist, setPlaylist] = useState(currentPlaylist);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -112,6 +109,7 @@ export const usePlaylistData = (currentPlaylist) => {
   return {
     // Data State
     playlist,
+    listTrack,
     isLoading,
     isMine,
     isFavorite,

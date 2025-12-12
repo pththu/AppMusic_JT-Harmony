@@ -1,7 +1,11 @@
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { Comment, createTrackComment, createTrackCommentBySpotifyId, fetchCommentsBySpotifyId, fetchCommentsByTrackId, toggleCommentLike } from "@/services/socialApi";
+import { usePlayerStore } from "@/store/playerStore";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -11,13 +15,9 @@ import {
   TouchableWithoutFeedback,
   View,
   useColorScheme,
-  Image,
 } from "react-native";
-import Icon from "react-native-vector-icons/Feather";
-import { Comment, createTrackComment, createTrackCommentBySpotifyId, fetchCommentsByTrackId, fetchCommentsBySpotifyId, toggleCommentLike } from "@/services/socialApi";
-import { usePlayerStore } from "@/store/playerStore";
-import useAuthStore from "@/store/authStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/Feather";
 
 interface TrackCommentsModalProps {
   visible: boolean;
@@ -47,6 +47,8 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
   const setTargetSeekMs = usePlayerStore((s) => s.setTargetSeekMs);
   const setUiOverlayOpen = usePlayerStore((s) => s.setUiOverlayOpen);
   const insets = useSafeAreaInsets();
+  const { error } = useCustomAlert();
+  const playbackPosition = usePlayerStore((s) => s.playbackPosition);
 
   const [loading, setLoading] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -133,18 +135,23 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
           attachTime ?? undefined
         );
       }
-      if (!res) throw new Error("Không thể gửi bình luận");
-      if ("message" in res) throw new Error(res.message);
-      // Sau khi gửi thành công: reload lại danh sách để đồng bộ UI với server
-      let latest;
-      if (trackId) {
-        latest = await fetchCommentsByTrackId(trackId, {});
-      } else if (spotifyId) {
-        latest = await fetchCommentsBySpotifyId(spotifyId, {});
+
+      console.log(res)
+      if (!res.success) {
+        error("Không thể gửi bình luận");
       }
-      setComments(latest);
+      // Sau khi gửi thành công: reload lại danh sách để đồng bộ UI với server
+      // let latest;
+      // if (trackId) {
+      //   latest = await fetchCommentsByTrackId(trackId, {});
+      // } else if (spotifyId) {
+      //   latest = await fetchCommentsBySpotifyId(spotifyId, {});
+      // }
+      // if (latest) {
+      //   setComments(latest);
+      // }
     } catch (e) {
-      console.error('Error sending comment:', e);
+      console.log(e.message)
       if (replyingTo) {
         setComments((prev) =>
           prev.map((c) =>
@@ -167,13 +174,13 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
         c.id === commentId
           ? { ...c, isLiked: !c.isLiked, likeCount: c.isLiked ? Math.max(0, (c.likeCount || 0) - 1) : (c.likeCount || 0) + 1 }
           : {
-              ...c,
-              Replies: (c.Replies || []).map((r) =>
-                r.id === commentId
-                  ? { ...r, isLiked: !r.isLiked, likeCount: r.isLiked ? Math.max(0, (r.likeCount || 0) - 1) : (r.likeCount || 0) + 1 }
-                  : r
-              ),
-            }
+            ...c,
+            Replies: (c.Replies || []).map((r) =>
+              r.id === commentId
+                ? { ...r, isLiked: !r.isLiked, likeCount: r.isLiked ? Math.max(0, (r.likeCount || 0) - 1) : (r.likeCount || 0) + 1 }
+                : r
+            ),
+          }
       )
     );
     try {
@@ -185,13 +192,13 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
           c.id === commentId
             ? { ...c, isLiked: !c.isLiked, likeCount: c.isLiked ? (c.likeCount || 0) + 1 : Math.max(0, (c.likeCount || 0) - 1) }
             : {
-                ...c,
-                Replies: (c.Replies || []).map((r) =>
-                  r.id === commentId
-                    ? { ...r, isLiked: !r.isLiked, likeCount: r.isLiked ? (r.likeCount || 0) + 1 : Math.max(0, (r.likeCount || 0) - 1) }
-                    : r
-                ),
-              }
+              ...c,
+              Replies: (c.Replies || []).map((r) =>
+                r.id === commentId
+                  ? { ...r, isLiked: !r.isLiked, likeCount: r.isLiked ? (r.likeCount || 0) + 1 : Math.max(0, (r.likeCount || 0) - 1) }
+                  : r
+              ),
+            }
         )
       );
     }
@@ -347,7 +354,7 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
               <View className={`flex-row items-end px-3 py-3 border-t ${colorScheme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
                 <TouchableOpacity
                   onPress={() => {
-                    const pos = usePlayerStore.getState().playbackPosition || 0;
+                    const pos = playbackPosition || 0;
                     if (attachTime != null) {
                       // Tắt gán thời gian -> bình luận thường
                       setAttachTime(null);

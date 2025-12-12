@@ -84,20 +84,6 @@ const formatArtist = (artist, genres) => {
 
 const getFormattedTrack = async (favorite) => {
   const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
-  const cacheKey = `fav_item:track:${itemSpotifyId}`;
-
-  // B1: Kiểm tra Item Cache
-  try {
-    const cachedItem = await redisClient.get(cacheKey);
-    if (cachedItem) {
-      const parsedItem = JSON.parse(cachedItem);
-      // Thêm thông tin 'favoriteItem' (vì nó không được cache)
-      parsedItem.favoriteItem = { id: favoriteId, createdAt };
-      return parsedItem;
-    }
-  } catch (e) {
-    console.error("Lỗi đọc item cache (track):", e.message);
-  }
 
   // B2: Cache Miss, build lại
   let album = null;
@@ -129,14 +115,6 @@ const getFormattedTrack = async (favorite) => {
 
   const itemFormat = formatTrack(track, artist, album, track?.videoId || null);
 
-  // B3: Lưu vào Item Cache (không lưu 'favoriteItem')
-  try {
-    await redisClient.set(cacheKey, JSON.stringify(itemFormat), { EX: ITEM_CACHE_TTL_SECONDS });
-  } catch (e) {
-    console.error("Lỗi ghi item cache (track):", e.message);
-  }
-
-  // B4: Thêm 'favoriteItem' và trả về
   itemFormat.favoriteItem = { id: favoriteId, createdAt };
   return itemFormat;
 };
@@ -144,19 +122,7 @@ const getFormattedTrack = async (favorite) => {
 // --- (MỚI) HÀM HELPER LẤY ALBUM (CÓ CACHE TỪNG ITEM) ---
 const getFormattedAlbum = async (favorite) => {
   const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
-  const cacheKey = `fav_item:album:${itemSpotifyId}`;
 
-  // B1: Kiểm tra Item Cache
-  try {
-    const cachedItem = await redisClient.get(cacheKey);
-    if (cachedItem) {
-      const parsedItem = JSON.parse(cachedItem);
-      parsedItem.favoriteItem = { id: favoriteId, createdAt };
-      return parsedItem;
-    }
-  } catch (e) { console.error("Lỗi đọc item cache (album):", e.message); }
-
-  // B2: Cache Miss
   let album = null;
   if (itemSpotifyId) {
     album = await spotify.findAlbumById(itemSpotifyId);
@@ -167,13 +133,6 @@ const getFormattedAlbum = async (favorite) => {
   if (!album) return null;
 
   const itemFormat = formatAlbum(album, null);
-
-  // B3: Lưu vào Item Cache
-  try {
-    await redisClient.set(cacheKey, JSON.stringify(itemFormat), { EX: ITEM_CACHE_TTL_SECONDS });
-  } catch (e) { console.error("Lỗi ghi item cache (album):", e.message); }
-
-  // B4: Trả về
   itemFormat.favoriteItem = { id: favoriteId, createdAt };
   return itemFormat;
 };
@@ -181,19 +140,7 @@ const getFormattedAlbum = async (favorite) => {
 // --- (MỚI) HÀM HELPER LẤY PLAYLIST (CÓ CACHE TỪNG ITEM) ---
 const getFormattedPlaylist = async (favorite) => {
   const { id: favoriteId, itemId, itemSpotifyId, createdAt } = favorite;
-  const cacheKey = `fav_item:playlist:${itemSpotifyId}`;
 
-  // B1: Kiểm tra Item Cache
-  try {
-    const cachedItem = await redisClient.get(cacheKey);
-    if (cachedItem) {
-      const parsedItem = JSON.parse(cachedItem);
-      parsedItem.favoriteItem = { id: favoriteId, createdAt };
-      return parsedItem;
-    }
-  } catch (e) { console.error("Lỗi đọc item cache (playlist):", e.message); }
-
-  // B2: Cache Miss
   let playlist = null;
   let owner = null;
   if (itemSpotifyId) {
@@ -207,23 +154,12 @@ const getFormattedPlaylist = async (favorite) => {
 
   const itemFormat = formatPlaylist(playlist, owner);
 
-  // B3: Lưu vào Item Cache
-  try {
-    await redisClient.set(cacheKey, JSON.stringify(itemFormat), { EX: ITEM_CACHE_TTL_SECONDS });
-  } catch (e) { console.error("Lỗi ghi item cache (playlist):", e.message); }
-
-  // B4: Trả về
   itemFormat.favoriteItem = { id: favoriteId, createdAt };
   return itemFormat;
 };
 
 const GetAll = async (req, res) => {
   try {
-    // const cacheKey = `favorites:all`;
-    // const cachedData = await redisClient.get(cacheKey);
-    // if (cachedData) {
-    //   return res.status(200).json(JSON.parse(cachedData));
-    // }
     const favorites = await FavoriteItem.findAll();
 
     const response = {
@@ -231,8 +167,6 @@ const GetAll = async (req, res) => {
       data: favorites,
       success: true
     }
-
-    // await redisClient.set(cacheKey, JSON.stringify(response), { EX: ITEM_CACHE_TTL_SECONDS });
 
     res.status(200).json(response);
   } catch (error) {
@@ -260,8 +194,7 @@ const GetByPk = async (req, res) => {
 const GetByUserId = async (req, res) => {
   try {
     const favorites = await FavoriteItem.findAll({
-      where: { userId: req.user.id },
-      include: [{ model: User, as: 'User' }]
+      where: { userId: req.user.id }
     });
     if (!favorites || favorites.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy mục yêu thích của người dùng này' });
@@ -278,14 +211,8 @@ const GetItemsGroupedByType = async (req, res) => {
   if (!id) {
     return res.status(400).json({ message: 'Thiếu userId' });
   }
-  const cacheKey = `favorites:grouped:${id}`;
+
   try {
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log('CACHE HIT (LỚP 1 - GROUP): GetItemsGroupedByType');
-      return res.status(200).json(JSON.parse(cachedData));
-    }
-    console.log('CACHE MISS (LỚP 1 - GROUP): GetItemsGroupedByType');
 
     const favorites = await FavoriteItem.findAll({
       where: { userId: id },
@@ -349,7 +276,6 @@ const GetItemsGroupedByType = async (req, res) => {
       data: combinedHistory,
       success: true
     };
-    await redisClient.set(cacheKey, JSON.stringify(responseData), { EX: DEFAULT_TTL_SECONDS });
     return res.status(200).json(responseData);
   } catch (error) {
     console.error("Error retrieving grouped history:", error);
@@ -411,7 +337,6 @@ const CreateOne = async (req, res) => {
     let playlist = null;
     let artist = [];
     if (!itemType && (!itemId || !itemSpotifyId)) {
-      console.log('thieu')
       return res.status(400).json({ message: 'Thiếu thông tin yêu thích' });
     }
 
@@ -447,7 +372,6 @@ const CreateOne = async (req, res) => {
             }
           } else {
             if (!track.Album) {
-              console.log('teadsga')
               album = null;
               const albumSpotify = await spotify.findAlbumById(track.spotifyAlbumId);
               if (albumSpotify) {

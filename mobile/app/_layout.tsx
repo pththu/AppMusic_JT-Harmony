@@ -32,21 +32,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
 
-  const setCurrentPlaylist = usePlayerStore((state) => state.setCurrentPlaylist);
-  const setCurrentAlbum = usePlayerStore((state) => state.setCurrentAlbum);
-  const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
-  const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
-  const setListTrack = usePlayerStore((state) => state.setListTrack);
-  const setQueue = usePlayerStore((state) => state.setQueue);
-  const setMyPlaylists = usePlayerStore((state) => state.setMyPlaylists);
-  const setFavoriteItems = useFavoritesStore((state) => state.setFavoriteItems);
-  const setArtistFollowed = useFollowStore((state) => state.setArtistFollowed);
-  const setListenHistory = useHistoriesStore((state) => state.setListenHistory);
-  const setSearchHistory = useHistoriesStore((state) => state.setSearchHistory);
-  const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
-  const setRepeatMode = usePlayerStore((state) => state.setRepeatMode);
-  const setDuration = usePlayerStore((state) => state.setDuration);
-  const setMiniPlayerVisible = usePlayerStore((state) => state.setMiniPlayerVisible);
 
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -62,28 +47,6 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
-
-  // useEffect(() => {
-  //   setCurrentPlaylist(null);
-  //   setCurrentAlbum(null);
-  //   setCurrentArtist(null);
-  //   setCurrentTrack(null);
-  //   setIsShuffled(false);
-  //   setRepeatMode("none");
-  //   setDuration(0);
-  //   setMiniPlayerVisible(false);
-  //   setListTrack([]);
-  //   setQueue([]);
-  //   setMyPlaylists([]);
-  //   setFavoriteItems([]);
-  //   setArtistFollowed([]);
-  //   setListenHistory([]);
-  //   setSearchHistory([]);
-  //   const logout = async () => {
-  //     await GoogleSignin.signOut();
-  //   }
-  //   logout();
-  // }, []);
 
   useGuestTriggers();
 

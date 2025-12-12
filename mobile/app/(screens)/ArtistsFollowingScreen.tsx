@@ -1,21 +1,21 @@
-import { router, useRouter } from "expo-router";
-import React, { useState, useMemo } from "react";
+import { useTheme } from '@/components/ThemeContext';
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { UnfollowArtist } from "@/services/followService";
+import { useFollowStore } from "@/store/followStore";
+import { useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
 import {
   FlatList,
   Image,
+  Modal, // Import Modal từ react-native
+  Pressable,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Modal, // Import Modal từ react-native
-  Pressable, // Import Pressable để xử lý đóng modal
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useTheme } from '@/components/ThemeContext';
-import { useFollowStore } from "@/store/followStore";
-import { useNavigate } from "@/hooks/useNavigate";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { UnfollowArtist } from "@/services/followService";
 
 // --- ArtistItem Component ---
 const ArtistItem = ({ item, artist, theme, onSelect, onUnfollow, onBlock }) => {
@@ -50,12 +50,12 @@ const ArtistItem = ({ item, artist, theme, onSelect, onUnfollow, onBlock }) => {
         </TouchableOpacity>
 
         {/* Nút Chặn */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => onBlock(artist)}
           className="px-3 py-1 rounded-full bg-red-500 dark:bg-red-700"
         >
           <Text className="text-white text-sm font-semibold">Chặn</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </TouchableOpacity>
   );
@@ -142,15 +142,10 @@ export default function ArtistsFollowingScreen() {
       setIsLoading(true);
       const followId = item.id;
 
-      const response = await UnfollowArtist({
+      removeArtistFollowed(followId);
+      await UnfollowArtist({
         followId: followId
       });
-
-      if (response.success) {
-        removeArtistFollowed(followId);
-      } else {
-        error(response.message || 'Hủy theo dõi thất bại.');
-      }
     } catch (err) {
       error('Lỗi khi hủy theo dõi nghệ sĩ. Vui lòng thử lại sau: ' + err.message);
     } finally {
