@@ -25,9 +25,10 @@ export default function PlayerProgressBar() {
   const [durationTrack, setDurationTrack] = useState(duration / 1000 || currentTrack?.duration / 1000 || 0);
 
   useEffect(() => {
+    console.log('playbackPosition ', playbackPosition)
     if (durationTrack > 0) {
       const percentage = (playbackPosition / durationTrack) * 100;
-      setProgress(percentage);
+      setProgress(Math.min(percentage, 100));
     } else {
       setProgress(0);
     }

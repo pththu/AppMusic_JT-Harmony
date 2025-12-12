@@ -346,7 +346,7 @@ export default function GlobalPlayer() {
     <YoutubePlayer
       ref={playerRef}
       height={0}
-      videoId={currentTrack?.videoId ? currentTrack.videoId : videoIdTemp}
+      videoId={"erBLE3XUvSs"}
       play={isPlaying}
       onChangeState={onPlayerStateChange}
       onReady={onPlayerReady}

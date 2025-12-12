@@ -442,6 +442,8 @@ const SocialScreen = () => {
 
     if (!selectedPostId || !text.trim() || !currentUser) return;
 
+    console.log(text)
+
     // Khởi tạo một đối tượng comment tạm thởi để hiển thị ngay lập tức
     const optimisticComment = {
       id: Date.now().toString(),
@@ -465,7 +467,7 @@ const SocialScreen = () => {
     };
 
     // CẬP NHẬT UI TỨC THỜI - Cập nhật cả posts và covers state
-    const updateCommentsInState = (items: any[]) => {
+    const updateCommentsInState = (items) => {
       return items.map((item) => {
         if (item.id === selectedPostId) {
           let updatedComments = [...(item.comments || [])];
@@ -913,7 +915,7 @@ const SocialScreen = () => {
 
       <FlatList
         data={activeTab === 'covers' ? covers : filteredPosts}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
         showsVerticalScrollIndicator={false}
         // Thao tác vuốt xuống để làm mới (Pull-to-Refresh)
         refreshControl={
@@ -1018,29 +1020,27 @@ const SocialScreen = () => {
         renderItem={({ item, index }) => {
           if (activeTab === 'covers') {
             return (
-              <>
-                <CoverItem
-                  id={item.id}
-                  userId={item.userId}
-                  User={item.User}
-                  uploadedAt={item.uploadedAt}
-                  content={item.content}
-                  fileUrl={item.fileUrl}
-                  heartCount={item.heartCount}
-                  isLiked={item.isLiked}
-                  originalSongId={item.originalSongId}
-                  OriginalSong={item.OriginalSong}
-                  onUserPress={handleUserPress}
-                  onRefresh={onRefresh}
-                  onCommentPress={() => openCommentModal(item.id)}
-                  onSharePress={() => openReShare(item)}
-                  onVoteCountPress={openLikeModal}
-                  likeCount={item.heartCount}
-                  commentCount={item.commentCount}
-                  shareCount={item.shareCount}
-                  isLikedPost={item.isLiked}
-                />
-              </>
+              <CoverItem
+                id={item.id}
+                userId={item.userId}
+                User={item.User}
+                uploadedAt={item.uploadedAt}
+                content={item.content}
+                fileUrl={item.fileUrl}
+                heartCount={item.heartCount}
+                isLiked={item.isLiked}
+                originalSongId={item.originalSongId}
+                OriginalSong={item.OriginalSong}
+                onUserPress={handleUserPress}
+                onRefresh={onRefresh}
+                onCommentPress={() => openCommentModal(item.id)}
+                onSharePress={() => openReShare(item)}
+                onVoteCountPress={openLikeModal}
+                likeCount={item.heartCount}
+                commentCount={item.commentCount}
+                shareCount={item.shareCount}
+                isLikedPost={item.isLiked}
+              />
             );
           }
           return (
@@ -1251,6 +1251,7 @@ const SocialScreen = () => {
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   style={{ maxHeight: '85%' }}
+
                 >
                   <NewPostCreator
                     user={user}

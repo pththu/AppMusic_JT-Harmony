@@ -93,11 +93,11 @@ const CommentModal: React.FC<CommentModalProps> = ({
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
-      () => {}
+      () => { }
     );
     const keyboardDidHideListener = Keyboard.addListener(
       "keyboardDidHide",
-      () => {}
+      () => { }
     );
 
     return () => {
@@ -123,8 +123,9 @@ const CommentModal: React.FC<CommentModalProps> = ({
         setNewComment("");
         setReplyTo(null);
         setQuote(null);
-      } catch (err) {
-        console.error("Lỗi khi gửi bình luận trong modal:", err);
+      } catch (error) {
+        // console.error("Lỗi khi gửi bình luận trong modal:", error);
+        
       } finally {
         setIsSending(false);
       }
@@ -313,7 +314,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
 
               <FlatList
                 data={comments}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
                 keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => {
                   const isExpanded = expandedReplies[item.id];
