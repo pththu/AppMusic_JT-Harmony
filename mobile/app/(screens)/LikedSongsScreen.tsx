@@ -1,33 +1,30 @@
-import { useNavigation } from "@react-navigation/native";
+import SongItem from "@/components/items/SongItem";
+import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
+import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
+import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { RemoveFavoriteItem } from "@/services/favoritesService";
+import { AddTracksToPlaylists, ShareTrack } from "@/services/musicService";
+import useAuthStore from "@/store/authStore";
+import { useFavoritesStore } from "@/store/favoritesStore";
+import { usePlayerStore } from "@/store/playerStore";
+import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
-  Image,
+  Modal,
   Pressable,
   Share,
   Text,
   TextInput,
   TouchableOpacity,
   useColorScheme,
-  View,
-  Modal,
-  ActivityIndicator,
+  View
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import SongItem from "@/components/items/SongItem";
-import { usePlayerStore } from "@/store/playerStore";
-import SongItemOptionModal from "@/components/modals/SongItemOptionModal";
-import { AddTracksToPlaylists, ShareTrack } from "@/services/musicService";
-import { useNavigate } from "@/hooks/useNavigate";
-import useAuthStore from "@/store/authStore";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { useRouter } from "expo-router";
-import AddTrackToPlaylistsModal from "@/components/modals/AddTrackToPlaylistsModal";
-import ArtistSelectionModal from "@/components/modals/ArtistSelectionModal";
-import { useFavoritesStore } from "@/store/favoritesStore";
-import { RemoveFavoriteItem } from "@/services/favoritesService";
-import { useHistoriesStore } from "@/store/historiesStore";
-import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 
 export default function LikedSongsScreen() {
   const colorScheme = useColorScheme();
@@ -36,17 +33,14 @@ export default function LikedSongsScreen() {
   const { info, error, success, confirm, warning } = useCustomAlert();
 
   const user = useAuthStore((state) => state.user);
-  const listTrack = usePlayerStore((state) => state.listTrack);
   const isShuffled = usePlayerStore((state) => state.isShuffled);
   const favoriteItems = useFavoritesStore((state) => state.favoriteItems);
-  const playbackPosition = usePlayerStore((state) => state.playbackPosition)
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setQueue = usePlayerStore((state) => state.setQueue);
   const setIsShuffled = usePlayerStore((state) => state.setIsShuffled);
   const addTrackToQueue = usePlayerStore((state) => state.addTrackToQueue);
-  const addListenHistory = useHistoriesStore((state) => state.addListenHistory);
   const updateTrack = usePlayerStore((state) => state.updateTrack);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
   const playPlaylist = usePlayerStore((state) => state.playPlaylist);
@@ -120,7 +114,6 @@ export default function LikedSongsScreen() {
       async () => {
         try {
           setIsDeleting(true);
-          const { favoriteItems } = useFavoritesStore.getState();
 
           // Tìm các bản ghi favorite tương ứng với các track đã chọn
           const itemsToRemove = favoriteItems.filter(item => {
@@ -139,7 +132,7 @@ export default function LikedSongsScreen() {
 
           // Cập nhật lại store local sau khi xóa
           const updatedFavorites = favoriteItems.filter(item => !itemsToRemove.includes(item));
-          useFavoritesStore.setState({ favoriteItems: updatedFavorites });
+          setFavoriteTracks(updatedFavorites);
 
           // Cập nhật state local cho danh sách bài hát yêu thích (kèm thời điểm thêm vào yêu thích)
           const updatedTracks = updatedFavorites
@@ -207,6 +200,7 @@ export default function LikedSongsScreen() {
   };
 
   const handleSongOptionsPress = (track) => {
+    console.log('track', track)
     setSelectedTrack(track); // Lưu bài hát đã chọn
     setSongModalVisible(true); // Mở modal
   };
@@ -368,7 +362,6 @@ export default function LikedSongsScreen() {
     const allFavoriteTracks = [];
     for (const favItem of favoriteItems) {
       if (favItem.itemType === 'track') {
-        // Gắn thêm thời điểm được thêm vào yêu thích để phục vụ sắp xếp mới nhất/cũ nhất
         allFavoriteTracks.push({
           ...favItem.item,
           favoriteCreatedAt: favItem.createdAt,
@@ -376,7 +369,6 @@ export default function LikedSongsScreen() {
       }
     }
     setFavoriteTracks(allFavoriteTracks);
-    // setListTrack(allFavoriteTracks);
   }, [favoriteItems]);
 
   useEffect(() => {
@@ -436,9 +428,9 @@ export default function LikedSongsScreen() {
             )}
           </View>
         </View>
-        
+
         {isSelectionMode ? (
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={deleteSelectedTracks}
             disabled={selectedTracks.size === 0}
           >
@@ -457,10 +449,10 @@ export default function LikedSongsScreen() {
       {isSelectionMode && (
         <View className="flex-row items-center justify-between mb-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
           <TouchableOpacity onPress={toggleSelectAll} className="flex-row items-center">
-            <Icon 
-              name={selectAll ? 'checkbox-outline' : 'square-outline'} 
-              size={24} 
-              color={selectAll ? '#3b82f6' : (colorScheme === 'dark' ? '#fff' : '#000')} 
+            <Icon
+              name={selectAll ? 'checkbox-outline' : 'square-outline'}
+              size={24}
+              color={selectAll ? '#3b82f6' : (colorScheme === 'dark' ? '#fff' : '#000')}
             />
             <Text className="ml-2 text-black dark:text-white">
               {selectAll ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}

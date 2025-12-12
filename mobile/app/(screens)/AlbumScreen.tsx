@@ -1,26 +1,24 @@
-import { View, Text, useColorScheme, Animated, Image, Pressable, TouchableOpacity, ActivityIndicator, StyleSheet, Share, Dimensions } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
-import { router } from 'expo-router';
-import { usePlayerStore } from '@/store/playerStore';
-import { useNavigate } from '@/hooks/useNavigate';
 import SongItem from '@/components/items/SongItem';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Icon from "react-native-vector-icons/Ionicons";
-import { AddTracksToPlaylists, CreatePlaylist } from '@/services/musicService';
-import { useFavoritesStore } from '@/store/favoritesStore';
-import * as ImagePicker from 'expo-image-picker';
-import { useCustomAlert } from '@/hooks/useCustomAlert';
-import useAuthStore from '@/store/authStore';
 import AddPlaylistModal from '@/components/modals/AddPlaylistModal';
 import AddToAnotherPlaylistModal from '@/components/modals/AddToAnotherPlaylistModal';
-import AlbumOptionModal from '@/components/modals/AlbumOptionModal';
-import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
-import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
-import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
-import { useHistoriesStore } from '@/store/historiesStore';
-import { useMusicAction } from '@/hooks/useMusicAction';
-import { useAlbumData } from '@/hooks/useAlbumData';
 import AddTrackToPlaylistsModal from '@/components/modals/AddTrackToPlaylistsModal';
+import AlbumOptionModal from '@/components/modals/AlbumOptionModal';
+import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
+import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import { useAlbumData } from '@/hooks/useAlbumData';
+import { useCustomAlert } from '@/hooks/useCustomAlert';
+import { useMusicAction } from '@/hooks/useMusicAction';
+import { useNavigate } from '@/hooks/useNavigate';
+import { AddTracksToPlaylists, CreatePlaylist } from '@/services/musicService'; // Bỏ GetTracksByAlbumId
+import useAuthStore from '@/store/authStore';
+import { usePlayerStore } from '@/store/playerStore';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react'; // Bỏ useCallback dư thừa
+import { ActivityIndicator, Animated, Dimensions, Image, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import Icon from "react-native-vector-icons/Ionicons";
 
 const HEADER_SCROLL_THRESHOLD = 256;
 const screenHeight = Dimensions.get("window").height;
@@ -29,10 +27,11 @@ const AlbumScreen = () => {
   const { navigate } = useNavigate();
   const { info, error, success, confirm, warning } = useCustomAlert();
   const colorScheme = useColorScheme();
+  // const setListTrack = usePlayerStore((state) => state.setListTrack); // Không cần nữa vì hook xử lý rồi
 
+  const listTrack = usePlayerStore((state) => state.listTrack);
   const isGuest = useAuthStore((state) => state.isGuest);
   const currentAlbum = usePlayerStore((state) => state.currentAlbum);
-  const listTrack = usePlayerStore((state) => state.listTrack);
   const isMiniPlayerVisible = usePlayerStore((state) => state.isMiniPlayerVisible);
   const addToMyPlaylists = usePlayerStore((state) => state.addToMyPlaylists);
   const updateTotalTracksInMyPlaylists = usePlayerStore((state) => state.updateTotalTracksInMyPlaylists);
@@ -76,14 +75,18 @@ const AlbumScreen = () => {
     setAddTrackToPlaylistModalVisible,
   } = useMusicAction();
 
+  // --- SỬ DỤNG HOOK MỚI ---
   const {
     isFavorite,
     isLoading,
     isFavoriteLoading,
     setIsFavoriteLoading,
     setIsFavorite,
+    // setIsLoading, // Không cần lấy ra set thủ công
+    // fetchTracks // Có thể lấy ra nếu muốn làm chức năng Refresh
   } = useAlbumData(currentAlbum);
 
+  // --- CÁC HÀM XỬ LÝ SỰ KIỆN (Giữ nguyên) ---
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -92,7 +95,8 @@ const AlbumScreen = () => {
     }
     return true;
   };
-
+  
+  // ... (Giữ nguyên handlePickerImage, handleDownloadAlbum, handleAddToPlaylist, handleConfirmAddToPlaylist, handleAddPlaylist) ...
   const handlePickerImage = async (image, setImage) => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
@@ -203,6 +207,9 @@ const AlbumScreen = () => {
     }
   };
 
+  // --- BỎ HÀM fetchTracks VÀ useEffect CŨ ---
+  
+  // Chỉ giữ lại effect Animation
   useEffect(() => {
     if (currentAlbum) {
       Animated.parallel([
@@ -252,6 +259,7 @@ const AlbumScreen = () => {
         paddingBottom: isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0
       }}
       className={`flex-1 top-0 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'}`}>
+      {/* ... Phần giao diện giữ nguyên ... */}
       <View>
         <Animated.View
           style={{
@@ -261,7 +269,6 @@ const AlbumScreen = () => {
             zIndex: -1,
           }}
         />
-        {/* <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}> */}
         <View className="flex-row justify-between items-center h-14 px-5">
           <TouchableOpacity onPress={() => router.back()} className="p-1">
             <Icon name="arrow-back-outline" size={28} color={iconColor} />
@@ -275,8 +282,9 @@ const AlbumScreen = () => {
           </Animated.Text>
           <View className="w-8" />
         </View>
-        {/* </SafeAreaView> */}
       </View>
+      
+      {/* Loading Overlay khi xử lý Favorite */}
       {isFavoriteLoading && (
         <View className="absolute top-0 right-0 left-0 z-10 bg-black/50 justify-center items-center"
           style={{
@@ -286,6 +294,7 @@ const AlbumScreen = () => {
           <ActivityIndicator size="large" color="#22c55e" />
         </View>
       )}
+
       <Animated.ScrollView
         className="flex-1"
         onScroll={Animated.event(
@@ -326,6 +335,8 @@ const AlbumScreen = () => {
                   color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
                   size={22} />
               </Pressable>
+              
+              {/* Nút Thích - Chỉ thay đổi trạng thái UI, không trigger fetch lại tracks */}
               <TouchableOpacity className="p-2"
                 onPress={() => {
                   if (isFavorite) {
@@ -341,6 +352,7 @@ const AlbumScreen = () => {
                   size={23}
                 />
               </TouchableOpacity>
+              
               <Pressable onPress={() => setModalVisible(true)}>
                 <Ionicons
                   name="ellipsis-vertical"
@@ -364,6 +376,8 @@ const AlbumScreen = () => {
             </View>
           </View>
         </View>
+        
+        {/* Render danh sách bài hát */}
         <View className="px-4">
           <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-bold mb-4`}>
             Danh sách bài hát
@@ -383,6 +397,7 @@ const AlbumScreen = () => {
         </View>
       </Animated.ScrollView>
 
+      {/* ... Phần Modals giữ nguyên ... */}
       {modalVisible && (
         <AlbumOptionModal
           isVisible={modalVisible}
@@ -394,17 +409,15 @@ const AlbumScreen = () => {
           onAddToPlaylist={handleAddToPlaylist}
         />
       )}
-
       {modalAddToPlaylistVisible && (
         <AddToAnotherPlaylistModal
           isVisible={modalAddToPlaylistVisible}
           setIsVisible={setModalAddToPlaylistVisible}
-          data={currentAlbum} // Truyền 'album' để hiển thị thông tin nếu cần (modal này có thể không dùng)
+          data={currentAlbum}
           onAddToPlaylist={handleAddToAnotherPlaylist}
           onCreateNewPlaylist={() => { setModalAddPlaylistVisible(true) }}
         />
       )}
-
       {modalAddPlaylistVisible && (
         <AddPlaylistModal
           isModalVisible={modalAddPlaylistVisible}
@@ -421,7 +434,6 @@ const AlbumScreen = () => {
           onCreatePlaylist={handleAddPlaylist}
         />
       )}
-
       {songModalVisible && selectedTrack && (
         <SongItemOptionModal
           isVisible={songModalVisible}
@@ -435,7 +447,6 @@ const AlbumScreen = () => {
           onViewAlbum={() => handleTrackViewAlbum(selectedTrack)}
         />
       )}
-
       {artistModalVisible && selectedTrack && (
         <ArtistSelectionModal
           isVisible={artistModalVisible}
@@ -444,7 +455,6 @@ const AlbumScreen = () => {
           onSelectArtist={handleSelectArtist}
         />
       )}
-
       {addTrackToPlaylistModalVisible && selectedTrack && (
         <AddTrackToPlaylistsModal
           isVisible={addTrackToPlaylistModalVisible}

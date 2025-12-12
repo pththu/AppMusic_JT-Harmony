@@ -89,7 +89,7 @@ export default function HomeScreen() {
     const mood = MOODS.find(m => m.id === selectedMood?.id);
     return mood ? mood.label : 'Bình thường';
   };
-  
+
 
   const getCurrentActivityLabel = () => {
     const activity = ACTIVITIES.find(a => a.id === selectedActivity?.id);

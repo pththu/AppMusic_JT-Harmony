@@ -1,38 +1,35 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   Image,
+  Modal,
   ScrollView,
   Share,
   Text,
+  TextInput,
   TouchableOpacity,
   useColorScheme,
   View,
-  Modal,
-  TextInput,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
-import LyricsSection from "@/components/LyricsSection";
-import TrackCommentsModal from "@/components/modals/TrackCommentsModal";
 import ArtistsSection from "@/components/artists/ArtistsSection";
-import { useNavigate } from "@/hooks/useNavigate";
-import { usePlayerStore } from "@/store/playerStore";
-import { router, useLocalSearchParams } from "expo-router";
 import SongItem from "@/components/items/SongItem";
-import TextTicker from "react-native-text-ticker";
+import TrackCommentsModal from "@/components/modals/TrackCommentsModal";
+import PlayerProgressBar from "@/components/player/PlayerProgressBar";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { ShareTrack } from "@/services/musicService";
+import { useNavigate } from "@/hooks/useNavigate";
+import { fetchCoversBySongId } from "@/services/coverService";
+import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
+import { FindTrackById, ShareTrack } from "@/services/musicService";
 import { createNewPost } from "@/services/socialApi";
 import useAuthStore from "@/store/authStore";
-import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
 import { useFavoritesStore } from "@/store/favoritesStore";
-import { fetchCoversBySongId } from "@/services/coverService";
-import CoverItem from "@/components/items/CoverItem";
-import PlayerProgressBar from "@/components/player/PlayerProgressBar";
-import { FindTrackById } from "@/services/musicService";
+import { usePlayerStore } from "@/store/playerStore";
+import { router, useLocalSearchParams } from "expo-router";
+import TextTicker from "react-native-text-ticker";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -532,38 +529,6 @@ export default function SongScreen() {
     </View>
   );
 
-  const ListFooter = () => (
-    <View>
-      {/* Community Covers Section */}
-      {covers.length > 0 && (
-        <View className="mb-6">
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-black dark:text-white text-lg font-bold">Community Covers</Text>
-            <TouchableOpacity onPress={handleViewAllCovers}>
-              <Text className="text-gray-600 dark:text-gray-400 text-base">Xem tất cả</Text>
-            </TouchableOpacity>
-          </View>
-          {/* {covers.map((cover, index) => (
-            <CoverItem
-              key={cover.id || index}
-              item={cover}
-              onPress={() => {
-                // Handle cover press - maybe play the cover
-                console.log('Play cover:', cover);
-              }}
-              onUserPress={(userId) => navigate("ProfileSocialScreen", { userId })}
-              onVotePress={() => {
-                // Handle vote
-                console.log('Vote for cover:', cover.id);
-              }}
-            />
-          ))} */}
-        </View>
-      )}
-
-    </View>
-  );
-
   return (
     // <SafeAreaView className="flex-1">
     <ScrollView className={`flex-1 ${colorScheme === 'dark' ? 'bg-[#0E0C1F]' : 'bg-white'}`}
@@ -584,7 +549,6 @@ export default function SongScreen() {
               </View>
             ))
         }
-        {/* <LyricsSection /> */}
       </View>
       <ArtistsSection artists={currentTrack.artists} onPress={() => { }} />
       {sharePostModalVisible && (

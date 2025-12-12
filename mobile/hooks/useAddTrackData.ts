@@ -1,9 +1,9 @@
-import { AddTrackToPlaylist, AddTrackToPlaylistAfterConfirm, GetTracks, GetTracksFromRecommend } from "@/services/musicService";
+import { AddTrackToPlaylist, AddTrackToPlaylistAfterConfirm, GetTracksFromRecommend } from "@/services/musicService";
+import { useBoardingStore } from "@/store/boardingStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
+import { usePlayerStore } from "@/store/playerStore";
 import { useCallback, useEffect, useState } from "react";
 import { useCustomAlert } from "./useCustomAlert";
-import { usePlayerStore } from "@/store/playerStore";
-import { useBoardingStore } from "@/store/boardingStore";
 
 export const useAddTrackData = () => {
 
@@ -22,18 +22,18 @@ export const useAddTrackData = () => {
   const [recommendData, setRecommendData] = useState([]);
 
   const handleAddTrackAfterConfirm = async (track, payload) => {
+    const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
+      setStateFunc(prevData => {
+        if (!prevData) return [];
+        return prevData.filter(t => t.spotifyId !== trackIdToRemove);
+      });
+    };
+    removeTrackFromState(setRecentData, track.spotifyId);
+    removeTrackFromState(setFavoriteData, track.spotifyId);
+    removeTrackFromState(setRecommendData, track.spotifyId);
+
     const confirmResponse = await AddTrackToPlaylistAfterConfirm(payload);
     if (confirmResponse.success) {
-      const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
-        setStateFunc(prevData => {
-          if (!prevData) return [];
-          return prevData.filter(t => t.spotifyId !== trackIdToRemove);
-        });
-      };
-      removeTrackFromState(setRecentData, track.spotifyId);
-      removeTrackFromState(setFavoriteData, track.spotifyId);
-      removeTrackFromState(setRecommendData, track.spotifyId);
-
       updateTotalTracksInCurrentPlaylist(1);
       updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
       addTrackToPlaylist(confirmResponse.data);
@@ -50,22 +50,25 @@ export const useAddTrackData = () => {
         trackId: track?.id || null,
         trackSpotifyId: track?.spotifyId,
       }
+      const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
+        setStateFunc(prevData => {
+          if (!prevData) return [];
+          return prevData.filter(t => t.spotifyId !== trackIdToRemove);
+        });
+      };
+
+      removeTrackFromState(setRecentData, track.spotifyId);
+      removeTrackFromState(setFavoriteData, track.spotifyId);
+      removeTrackFromState(setRecommendData, track.spotifyId);
+
+
 
       const response = await AddTrackToPlaylist(payload);
       if (response.success) {
-        const removeTrackFromState = (setStateFunc, trackIdToRemove) => {
-          setStateFunc(prevData => {
-            if (!prevData) return [];
-            return prevData.filter(t => t.spotifyId !== trackIdToRemove);
-          });
-        };
-        removeTrackFromState(setRecentData, track.spotifyId);
-        removeTrackFromState(setFavoriteData, track.spotifyId);
-        removeTrackFromState(setRecommendData, track.spotifyId);
-
+        addTrackToPlaylist(response.data);
+        console.log(`Thêm bài hát ${track.name} thành công.`);
         updateTotalTracksInCurrentPlaylist(1);
         updateTotalTracksInMyPlaylists(currentPlaylist.id, 1);
-        addTrackToPlaylist(response.data);
       } else {
         if (response.isExisting) {
           confirm(

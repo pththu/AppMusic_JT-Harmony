@@ -1,25 +1,21 @@
-import {
-  View,
-  Text,
-  useColorScheme,
-  TouchableOpacity,
-  TextInput,
-  FlatList,
-  Image,
-  Dimensions,
-  ActivityIndicator,
-} from 'react-native';
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { router } from 'expo-router';
-import { usePlayerStore } from '@/store/playerStore';
-import { useCustomAlert } from '@/hooks/useCustomAlert';
-import { AddTrackToPlaylist, AddTrackToPlaylistAfterConfirm, GetTracks } from '@/services/musicService';
-import { SearchTracks } from '@/services/searchService';
-import { useFavoritesStore } from '@/store/favoritesStore';
 import TrackItem from '@/components/items/TrackItem';
 import { useAddTrackData } from '@/hooks/useAddTrackData';
+import { useCustomAlert } from '@/hooks/useCustomAlert';
+import { usePlayerStore } from '@/store/playerStore';
+import { router } from 'expo-router';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

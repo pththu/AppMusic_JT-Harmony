@@ -13,7 +13,7 @@ import useAuthStore from '@/store/authStore';
 import { useFollowStore } from '@/store/followStore';
 import { usePlayerStore } from '@/store/playerStore';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -41,6 +41,7 @@ export default function ArtistScreen() {
   const artistFollowed = useFollowStore((state) => state.artistFollowed);
   const isShuffled = usePlayerStore((state) => state.isShuffled);
 
+  const setListTrack = usePlayerStore((state) => state.setListTrack);
   const setCurrentTrack = usePlayerStore((state) => state.setCurrentTrack);
   const setCurrentArtist = useFollowStore((state) => state.setCurrentArtist);
   const setIsFollowing = useFollowStore((state) => state.setIsFollowing);
@@ -156,6 +157,8 @@ export default function ArtistScreen() {
   const handleFollow = async () => {
     try {
       setIsLoading((prev) => ({ ...prev, following: true }));
+      setIsFollowing(true);
+      setIsLoading((prev) => ({ ...prev, following: false }));
       const response = await FollowArtist({
         artistId: currentArtist?.id || null,
         artistSpotifyId: currentArtist?.spotifyId
@@ -170,7 +173,6 @@ export default function ArtistScreen() {
         addArtistFollowed(response.data);
         currentArtist.totalFollower += 1;
         setCurrentArtist(currentArtist);
-        setIsFollowing(true);
       }
     } catch (err) {
       error('Lỗi khi theo dõi nghệ sĩ. Vui lòng thử lại sau: ' + err.message);
@@ -181,17 +183,18 @@ export default function ArtistScreen() {
 
   const handleUnfollow = async () => {
     try {
-      setIsLoading((prev) => ({ ...prev, following: true }));
       const followId = artistFollowed.find(f => f.artistSpotifyId === currentArtist.spotifyId)?.id;
       if (!followId) {
         error('Bạn chưa theo dõi nghệ sĩ này.');
         return;
       }
+      setIsLoading((prev) => ({ ...prev, following: true }));
+      setIsFollowing(false);
+
       const response = await UnfollowArtist({
         followId: followId
       });
       if (response.success) {
-        setIsFollowing(false);
         currentArtist.totalFollower -= 1;
         setCurrentArtist(currentArtist);
         removeArtistFollowed(followId);
@@ -210,6 +213,14 @@ export default function ArtistScreen() {
     }
     info('Chức năng đang phát triển');
   };
+
+
+  useEffect(() => {
+    return () => {
+      setListTrack([]);
+      setCurrentArtist(null);
+    }
+  }, [])
 
   const renderSongItem = ({ item, index }) => (
     <SongItem

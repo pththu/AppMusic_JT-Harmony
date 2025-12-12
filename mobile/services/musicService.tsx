@@ -144,6 +144,25 @@ export const GetVideoId = async (payload) => {
   }
 }
 
+export const getUrlTrackOnSoundCloud = async (payload) => {
+  try {
+    const response = await axiosClient.post(`/music/track/soundcloud`, {
+      title: payload.title,
+      artists: payload.artists
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
 // add
 export const AddTrackToPlaylist = async (payload) => {
   try {
@@ -365,6 +384,22 @@ export const FindTrackByNameAndArtists = async (payload) => {
 export const GetTracksFromRecommend = async (payload) => {
   try {
     const response = await axiosPublicClient.post(`/music/tracks-from-recommend`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
+  }
+}
+
+export const GetExternalUrl = async (trackId) => {
+  try {
+    const response = await axiosClient.get(`/music/track/get-url/${trackId}`);
     return response.data;
   } catch (error) {
     if (error.response) {

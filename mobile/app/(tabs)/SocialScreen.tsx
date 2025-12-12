@@ -1,49 +1,49 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useAuthData } from "@/hooks/useAuthData";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { UploadMultipleFile } from "@/routes/ApiRouter";
+import { FindTrackById } from "@/services/musicService";
+import useAuthStore from "@/store/authStore";
+import { useFollowStore } from "@/store/followStore";
+import * as ImagePicker from "expo-image-picker";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
-  RefreshControl,
+  Image,
   Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  RefreshControl,
+  ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   useColorScheme,
-  TextInput,
-  Modal,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Animated,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
-import {
-  fetchPosts,
-  fetchCommentsByPostId,
-  createNewComment,
-  createNewPost,
-  togglePostLike,
-  toggleCommentLike,
-  updatePost,
-  deletePost,
-  sharePost,
-  fetchPostsForGuest,
-} from "../../services/socialApi";
-import useAuthStore from "@/store/authStore";
-import * as ImagePicker from "expo-image-picker";
-import { UploadMultipleFile } from "@/routes/ApiRouter";
-import { useNavigate } from "@/hooks/useNavigate";
-import PostItem from "../../components/items/PostItem";
 import CoverItem from "../../components/items/CoverItem";
+import NewPostCreator from "../../components/items/NewPostItem";
+import PostItem from "../../components/items/PostItem";
 import CommentModal from "../../components/modals/CommentModal";
 import LikeModal from "../../components/modals/LikeModal";
 import UploadCoverModal from "../../components/modals/UploadCoverModal";
-import NewPostCreator, { NewPostItemRef } from "../../components/items/NewPostItem";
 import SearchOverlay from "../../components/search/SearchOverlay";
-import { createNewCover, fetchAllCovers } from "../../services/coverService";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { FindTrackById } from "@/services/musicService";
+import { fetchAllCovers } from "../../services/coverService";
+import {
+  createNewComment,
+  createNewPost,
+  deletePost,
+  fetchCommentsByPostId,
+  fetchPosts,
+  fetchPostsForGuest,
+  sharePost,
+  toggleCommentLike
+} from "../../services/socialApi";
 
 const SocialScreen = () => {
   const colorScheme = useColorScheme();
@@ -52,6 +52,13 @@ const SocialScreen = () => {
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
+  const userFollowers = useFollowStore((state) => state.userFollowers);
+  const userFollowees = useFollowStore((state) => state.userFollowees);
+
+  const {
+    fetchFollowees,
+    fetchFollowers
+  } = useAuthData();
 
   // FAB animation value
   const fabScale = useRef(new Animated.Value(1)).current;
@@ -876,6 +883,11 @@ const SocialScreen = () => {
     setUploadCoverModalVisible(false); // Đóng modal
     success("Thành công", "Đăng cover thành công!");
   }, [refreshCovers]);
+
+  useEffect(() => {
+    if (userFollowees.length === 0) fetchFollowees(user?.id);
+    if (userFollowers.length === 0) fetchFollowers(user?.id);
+  })
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0E0C1F]">

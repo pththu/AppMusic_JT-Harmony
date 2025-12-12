@@ -20,6 +20,7 @@ router.get('/artist/:artistId/top-tracks', musicController.getTopTrackFromArtist
 router.get('/artist/:artistId/albums', musicController.getAlbumsFromArtist);
 router.post('/playlist/:playlistId/tracks', musicController.getTracksFromPlaylist);
 router.post('/playlist-for-you', musicController.getPlaylistsForYou);
+router.get('/track/get-url/:id', musicController.getExternalUrl);
 
 router.post('/album-for-you', musicController.getAlbumsForYou);
 router.post('/artist-for-you', musicController.getArtistsForYou);

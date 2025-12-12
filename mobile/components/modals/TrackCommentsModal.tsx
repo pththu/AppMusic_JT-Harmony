@@ -1,7 +1,11 @@
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { Comment, createTrackComment, createTrackCommentBySpotifyId, fetchCommentsBySpotifyId, fetchCommentsByTrackId, toggleCommentLike } from "@/services/socialApi";
+import { usePlayerStore } from "@/store/playerStore";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -11,14 +15,9 @@ import {
   TouchableWithoutFeedback,
   View,
   useColorScheme,
-  Image,
 } from "react-native";
-import Icon from "react-native-vector-icons/Feather";
-import { Comment, createTrackComment, createTrackCommentBySpotifyId, fetchCommentsByTrackId, fetchCommentsBySpotifyId, toggleCommentLike } from "@/services/socialApi";
-import { usePlayerStore } from "@/store/playerStore";
-import useAuthStore from "@/store/authStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
+import Icon from "react-native-vector-icons/Feather";
 
 interface TrackCommentsModalProps {
   visible: boolean;
@@ -49,6 +48,7 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
   const setUiOverlayOpen = usePlayerStore((s) => s.setUiOverlayOpen);
   const insets = useSafeAreaInsets();
   const { error } = useCustomAlert();
+  const playbackPosition = usePlayerStore((s) => s.playbackPosition);
 
   const [loading, setLoading] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -354,7 +354,7 @@ const TrackCommentsModal: React.FC<TrackCommentsModalProps> = ({
               <View className={`flex-row items-end px-3 py-3 border-t ${colorScheme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
                 <TouchableOpacity
                   onPress={() => {
-                    const pos = usePlayerStore.getState().playbackPosition || 0;
+                    const pos = playbackPosition || 0;
                     if (attachTime != null) {
                       // Tắt gán thời gian -> bình luận thường
                       setAttachTime(null);

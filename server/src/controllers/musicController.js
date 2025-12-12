@@ -68,6 +68,7 @@ const formatTrack = (track, artist, album, videoId) => {
     imageUrl: track?.album?.images?.[0]?.url || album?.imageUrl || null,
     playCount: track?.playCount || 0,
     shareCount: track?.shareCount || 0,
+    externalUrl: track?.externalUrl || null,
   }
 };
 
@@ -853,6 +854,8 @@ const addTrackToPlaylist = async (req, res) => {
       id: row.id
     }
 
+    console.log('dataFormated', dataFormated)
+
     return res.status(200).json({
       message: 'Thêm bài hát vào playlist thành công',
       data: dataFormated,
@@ -1089,42 +1092,21 @@ const getTracksForCover = async (req, res) => {
     }
     console.log('CACHE MISS (getTracksForCover)');
 
-    const dataFormated = [];
     const tracks = await Track.findAll({
       limit: 70,
-      order: [['playCount', 'DESC']]
+      order: [['playCount', 'DESC']],
+      include: [
+        { model: Artist, as: 'artists', through: { attributes: [] } }
+      ]
     });
 
-    // Sử dụng Promise.all để xử lý bất đồng bộ
-    const trackPromises = tracks.map(async (track) => {
-      try {
-        const spotifyId = track?.spotifyId;
-        const idTemp = track?.id || null;
-        const playCount = track?.playCount || 0;
-
-        if (!spotifyId) {
-          console.warn(`Track ${track.id} missing spotifyId`);
-          return null;
-        }
-
-        const spotifyTrack = await callSpotify(() => spotify.findTrackById(spotifyId));
-        if (!spotifyTrack) {
-          console.warn(`Spotify track not found for ID: ${spotifyId}`);
-          return null;
-        }
-
-        spotifyTrack.tempId = idTemp;
-        spotifyTrack.playCount = playCount;
-        return formatTrack(spotifyTrack, null, null, spotifyTrack?.videoId || null);
-      } catch (error) {
-        console.error(`Error processing track ${track.id}:`, error.message);
-        return null; // Bỏ qua lỗi và tiếp tục với track tiếp theo
+    const dataFormated = tracks.map(track => {
+      if (track && track.name) {
+        return formatTrack(track, track?.artists, null, track?.videoId || null);
       }
+      return null;
     });
-
-    // Chờ tất cả các promise hoàn thành và lọc bỏ các giá trị null
-    const results = await Promise.all(trackPromises);
-    const validTracks = results.filter(track => track !== null);
+    const validTracks = dataFormated.filter(track => track !== null && track.name !== null);
 
     const response = {
       message: 'Get tracks for cover successful',
@@ -1851,6 +1833,32 @@ const getAllTrack = async (req, res) => {
   }
 }
 
+const getExternalUrl = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Track ID is required', success: false });
+    }
+
+    const track = await Track.findByPk(id);
+    if (!track) {
+      return res.status(404).json({ message: 'Track not found', success: false });
+    }
+
+    if (!track.externalUrl) {
+      return res.status(404).json({ message: 'External URL not found for this track', success: false });
+    }
+
+    return res.status(200).json({
+      message: 'Get external URL successful',
+      data: { externalUrl: track.externalUrl },
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to get external url' });
+  }
+}
+
 module.exports = {
   findSpotifyPlaylist,
   findYoutubeVideo,
@@ -1885,4 +1893,5 @@ module.exports = {
   getSearchSuggestions,
   getCategoryContent,
   getAllTrack,
+  getExternalUrl,
 };
