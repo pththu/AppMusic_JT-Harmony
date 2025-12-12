@@ -26,21 +26,23 @@ initSocket(server);
 
 app.set("trust proxy", true);
 app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://192.168.1.30:3000",
-      "http://192.168.1.12:3000",
-      "http://192.168.1.14:3001",
-      "http://192.168.1.14:3000",
-      "http://192.168.32.101:3000",
-      "http://192.168.1.28:3000",
-      'https://app-music-jt-harmony-web.vercel.app',
-      'https://app-music-jt-harmony.vercel.app',
-    ],
-    credentials: true,
-  })
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://192.168.1.30:3000",
+      "http://192.168.1.12:3000",
+      "http://192.168.1.14:3001",
+      "http://192.168.1.14:3000",
+      "http://192.168.32.101:3000",
+      "http://192.168.1.28:3000",
+      'https://app-music-jt-harmony-web.vercel.app',
+      'https://app-music-jt-harmony.vercel.app',
+      'https://admin-jt-harmony.vercel.app',
+      'https://jt-harmony.vercel.app'
+    ],
+    credentials: true,
+  })
 );
 
 app.use(express.json({ limit: "50mb" }));
