@@ -19,6 +19,7 @@ export const FollowArtist = async (payload) => {
       artistId: payload.artistId,
       artistSpotifyId: payload.artistSpotifyId,
     })
+    console.log('response.data', response.data)
     return response.data;
   } catch (error) {
     console.log(error.message);

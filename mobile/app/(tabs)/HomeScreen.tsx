@@ -1,4 +1,23 @@
+import QuickActionChip from "@/components/common/QuickActionChip";
 import CustomButton from "@/components/custom/CustomButton";
+import ActivitySelectionModal from "@/components/modals/ActivitySelectionModal";
+import MoodSelectionModal from "@/components/modals/MoodSelectionModal";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import HomeListSection from "@/components/section/HomeListSection";
+import { ACTIVITIES, MOODS } from "@/constants/data";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useHomeData } from "@/hooks/useHomeData";
+import { useMusicAction } from "@/hooks/useMusicAction";
+import { useNavigate } from "@/hooks/useNavigate";
+import { usePlaylistData } from "@/hooks/usePlaylistData";
+import useAuthStore from "@/store/authStore";
+import { useBoardingStore } from "@/store/boardingStore";
+import { useFavoritesStore } from "@/store/favoritesStore";
+import { useFollowStore } from "@/store/followStore";
+import { useHistoriesStore } from "@/store/historiesStore";
+import { useNotificationStore } from "@/store/notificationStore";
+import { usePlayerStore } from "@/store/playerStore";
+import { formatDataFavorites, formatDataFollowedArtists, formatDataHistories, formatDescription } from "@/utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -11,26 +30,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import { useNavigate } from "@/hooks/useNavigate";
-import useAuthStore from "@/store/authStore";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { usePlayerStore } from "@/store/playerStore";
-import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
-import { useFavoritesStore } from "@/store/favoritesStore";
-import { useFollowStore } from "@/store/followStore";
-import { useHistoriesStore } from "@/store/historiesStore";
-import { useBoardingStore } from "@/store/boardingStore";
-import MoodSelectionModal from "@/components/modals/MoodSelectionModal";
-import ActivitySelectionModal from "@/components/modals/ActivitySelectionModal";
-import { useNotificationStore } from "@/store/notificationStore";
-import HomeListSection from "@/components/section/HomeListSection";
-import { formatDataFavorites, formatDataFollowedArtists, formatDataHistories, formatDescription } from "@/utils";
-import { ACTIVITIES, MOODS } from "@/constants/data";
-import QuickActionChip from "@/components/common/QuickActionChip";
-import { useMusicAction } from "@/hooks/useMusicAction";
-import { useHomeData } from "@/hooks/useHomeData";
-import { usePlaylistData } from "@/hooks/usePlaylistData";
 import Icon from "react-native-vector-icons/Ionicons";
 
 export default function HomeScreen() {

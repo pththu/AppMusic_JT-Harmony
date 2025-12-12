@@ -127,11 +127,20 @@ export const GetTracks = async (payload) => {
 
 export const GetVideoId = async (payload) => {
   try {
-    const response = await axiosClient.get(`/music/track/${payload}/video-id`);
+    const response = await axiosClient.post(`/music/track/video-id`, {
+      title: payload.title,
+      artists: payload.artists
+    });
     return response.data;
   } catch (error) {
-    console.log(error);
-    throw error;
+    if (error.response) {
+      const { status, data } = error.response;
+      return {
+        success: false,
+        status: status,
+        message: data.message
+      }
+    }
   }
 }
 

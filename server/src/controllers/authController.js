@@ -76,7 +76,6 @@ exports.register = async (req, res) => {
       success: true,
     });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -86,7 +85,6 @@ exports.login = async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const { email, password } = req.body;
 
-    console.log('req.body:', req.body)
     // Validate input
     if (!email || !password) {
       return res.status(200).json({ message: 'Email và mật khẩu không để trống', success: false });
@@ -181,7 +179,6 @@ exports.login = async (req, res) => {
 exports.loginWithGoogle = async (req, res) => {
   try {
     const userInfor = req.body;
-    console.log(req.body)
     const existingUser = await User.findOne({ where: { email: userInfor?.email } });
     if (existingUser) {
       if (existingUser.status === 'locked' || existingUser.status === 'banned') {
@@ -342,9 +339,7 @@ exports.loginWithFacebook = async (req, res) => {
 exports.me = async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log(req.user)
     const user = await User.findByPk(userId);
-    console.log(user)
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -362,12 +357,9 @@ exports.me = async (req, res) => {
 exports.logout = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      console.log('req', req)
-      console.log('Unauthorized access attempt to logout');
       return res.status(401).json({ message: 'Unauthorized' });
     }
     const user = await User.findOne({ where: { id: req.user.id } });
-    console.log(user)
     if (!user) return res.status(200).json({ message: 'Không tìm thấy người dùng', success: false });
     user.accessToken = null;
     user.refreshToken = null;

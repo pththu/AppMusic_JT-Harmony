@@ -31,7 +31,7 @@ const youtubeApiRequest = async (endpoint, params) => {
  */
 
 const searchVideo = async (songName, artistName) => {
-  const query = `${songName} ${artistName} Official Audio Lyrics`;
+  const query = `${songName} ${artistName} Lyrics Official Audio `;
 
   try {
     const response = await youtubeApiRequest('/search', {
@@ -40,6 +40,7 @@ const searchVideo = async (songName, artistName) => {
       q: query,
       maxResults: 5,
       type: 'video',
+      // videoEmbeddable: 'true',
     });
 
     if (!response.items || response.items.length === 0) {

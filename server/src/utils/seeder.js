@@ -301,7 +301,6 @@ const seedDataTrack = async () => {
 
             const tracksToInsert = trackData.map(track => ({
                 spotifyId: track.spotifyId,
-                videoId: track.videoId,
                 name: track.name,
                 lyrics: track.lyrics,
                 externalUrl: track.externalUrl,
@@ -1099,13 +1098,11 @@ const seedDataFavoriteItem = async () => {
 };
 
 const useSeeder = async () => {
-    // await seedDataRole();
+    await seedDataRole();
     await seedDataUser();
-
     await seedDataGenres();
     await seedDataArtists();
     await seedDataArtistGenres(); /* Bảng trung gian */
-
     await seedDataAlbum();
     await seedDataArtistAlbums(); /* Bảng trung gian */
 
@@ -1118,13 +1115,13 @@ const useSeeder = async () => {
     await seedDataPlaylist();
     await seedDataSearchHistory();
 
-    // await seedDataPost();
-    // await seedDataLike();
-    // await seedDataComment();
-    // await seedDataPostReport();
-    // await seedDataConversation();
-    // await seedDataConversationMember();
-    // await seedDataMessage();
+    await seedDataPost();
+    await seedDataLike();
+    await seedDataComment();
+    await seedDataPostReport();
+    await seedDataConversation();
+    await seedDataConversationMember();
+    await seedDataMessage();
 
     await seedDataFavoriteItem();
     await seedDataListeningHistory();

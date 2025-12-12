@@ -66,7 +66,6 @@ exports.getArtistById = async (req, res) => {
 
 exports.createArtist = async (req, res) => {
   try {
-    console.log('req: ', req.body)
     const row = await Artist.create({
       name: req.body.name,
       spotifyId: req.body.spotifyId,
@@ -86,17 +85,13 @@ exports.createArtist = async (req, res) => {
     if (req.body.genresId) {
       for (let genreId of req.body.genresId) {
         let genre = await Genres.findByPk(genreId);
-        console.log(genre.toJSON())
         if (!genre) {
           return res.status(400).json({ error: `Genre with ID ${genreId} not found` });
         }
         artistGenresToInsert.push({ artist_id: row.id, genre_id: genre.id });
         genres.push(genre);
-        console.log()
       }
 
-      console.log('artistGenresToInsert', artistGenresToInsert)
-      console.log('genres', genres)
       await junctionTable.bulkCreate(artistGenresToInsert, { ignoreDuplicates: true });
     }
 
@@ -147,10 +142,7 @@ exports.getSongByArtist = async (req, res) => {
 exports.shareArtist = async (req, res) => {
   try {
     const { artistId, artistSpotifyId } = req.body;
-    console.log(req.body);
-
     if (!artistId && !artistSpotifyId) {
-      console.log(1)
       return res.status(400).json({ error: 'artistId and artistSpotifyId are required' });
     }
 
@@ -164,7 +156,6 @@ exports.shareArtist = async (req, res) => {
           ]
         }
       })
-      console.log(8)
       if (!artist) {
         const response = await spotify.findArtistById(artistSpotifyId);
         if (!response) {
@@ -178,9 +169,7 @@ exports.shareArtist = async (req, res) => {
           shareCount: 1
         });
 
-        console.log(4)
         if (!result) {
-          console.log(5)
           return res.status(500).json({ error: 'Failed to create artist record' });
         }
 
@@ -191,7 +180,6 @@ exports.shareArtist = async (req, res) => {
         });
       }
 
-      console.log(10)
       artist.shareCount += 1;
       await artist.save();
       return res.status(200).json({

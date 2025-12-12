@@ -126,7 +126,6 @@ exports.uploadMultipleFiles = async (req, res) => {
       data: filesWithDetails
     });
   } catch (error) {
-    console.log(5)
     console.log(error.message)
     return res.status(500).json({ error: error.message });
   }

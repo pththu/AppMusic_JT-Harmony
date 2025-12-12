@@ -1,32 +1,31 @@
+import CustomButton from '@/components/custom/CustomButton';
+import SongItem from '@/components/items/SongItem';
+import AddTrackToPlaylistsModal from '@/components/modals/AddTrackToPlaylistsModal';
+import ArtistOptionModal from '@/components/modals/ArtistOptionModal';
+import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
+import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
+import { useArtistData } from '@/hooks/useArtistData';
+import { useCustomAlert } from '@/hooks/useCustomAlert';
+import { useMusicAction } from '@/hooks/useMusicAction';
+import { useNavigate } from '@/hooks/useNavigate';
+import { FollowArtist, UnfollowArtist } from '@/services/followService';
+import useAuthStore from '@/store/authStore';
+import { useFollowStore } from '@/store/followStore';
+import { usePlayerStore } from '@/store/playerStore';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
+  Image,
+  ImageBackground,
   Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
   useColorScheme,
-  ImageBackground, // Thêm StyleSheet để tạo bóng
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import SongItem from '@/components/items/SongItem';
-import CustomButton from '@/components/custom/CustomButton';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigate } from '@/hooks/useNavigate';
-import { useFollowStore } from '@/store/followStore';
-import { AddTracksToPlaylists } from '@/services/musicService';
-import { usePlayerStore } from '@/store/playerStore';
-import { useCustomAlert } from '@/hooks/useCustomAlert';
-import useAuthStore from '@/store/authStore';
-import AddTrackToPlaylistsModal from '@/components/modals/AddTrackToPlaylistsModal';
-import SongItemOptionModal from '@/components/modals/SongItemOptionModal';
-import ArtistSelectionModal from '@/components/modals/ArtistSelectionModal';
-import ArtistOptionModal from '@/components/modals/ArtistOptionModal';
-import { FollowArtist, UnfollowArtist } from '@/services/followService';
-import { useMusicAction } from '@/hooks/useMusicAction';
-import { useArtistData } from '@/hooks/useArtistData';
 
 export default function ArtistScreen() {
   const router = useRouter();
@@ -162,6 +161,7 @@ export default function ArtistScreen() {
         artistSpotifyId: currentArtist?.spotifyId
       });
 
+      console.log(response)
       if (response.success) {
         if (!currentArtist?.id) {
           currentArtist.id = response.data.artistId;

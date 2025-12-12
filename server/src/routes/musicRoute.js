@@ -14,7 +14,7 @@ router.get('/search/playlists', musicController.findSpotifyPlaylist);
 router.get('/search-album/:albumId', musicController.findAlbumById);
 router.post('/playlist', musicController.findPlaylistById);
 router.get('/:userId/playlists', musicController.getMyPlaylists);
-router.get('/track/:trackSpotifyId/video-id', musicController.findVideoIdForTrack);
+router.post('/track/video-id', musicController.findVideoIdForTrack);
 router.get('/album/:spotifyId/tracks', musicController.getTracksFromAlbum);
 router.get('/artist/:artistId/top-tracks', musicController.getTopTrackFromArtist);
 router.get('/artist/:artistId/albums', musicController.getAlbumsFromArtist);

@@ -411,7 +411,6 @@ const CreateOne = async (req, res) => {
     let playlist = null;
     let artist = [];
     if (!itemType && (!itemId || !itemSpotifyId)) {
-      console.log('thieu')
       return res.status(400).json({ message: 'Thiếu thông tin yêu thích' });
     }
 
@@ -447,7 +446,6 @@ const CreateOne = async (req, res) => {
             }
           } else {
             if (!track.Album) {
-              console.log('teadsga')
               album = null;
               const albumSpotify = await spotify.findAlbumById(track.spotifyAlbumId);
               if (albumSpotify) {

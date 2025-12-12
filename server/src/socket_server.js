@@ -36,7 +36,6 @@ module.exports = (server) => {
   io.use(async (socket, next) => {
     // Lấy token từ handshake query (hoặc header, tùy cách client gửi)
     const token = socket.handshake.auth.token;
-    console.log("token", token);
 
     if (!token) {
       return next(new Error("Authentication error: Token not provided"));
@@ -45,7 +44,6 @@ module.exports = (server) => {
     try {
       const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
       const user = await User.findByPk(decoded.id);
-      // console.log('user', user)
       if (!user) {
         return next(new Error("Authentication error: User not found"));
       }
