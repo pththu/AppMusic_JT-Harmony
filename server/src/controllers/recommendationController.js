@@ -1853,35 +1853,35 @@ const analyzeSongMood = async (req, res) => {
     }
 
     const prompt = `
-Bạn là chuyên gia phân tích cảm xúc âm nhạc.
+      Bạn là chuyên gia phân tích cảm xúc âm nhạc.
 
-🎵 THÔNG TIN BÀI HÁT:
-- Tên bài: ${songTitle}
-- Nghệ sĩ: ${artistName || "Không rõ"}
-- Thể loại: ${genre || "Không rõ"}
-${lyrics ? `- Đoạn lyrics mẫu: ${lyrics.substring(0, 200)}...` : ""}
+      🎵 THÔNG TIN BÀI HÁT:
+      - Tên bài: ${songTitle}
+      - Nghệ sĩ: ${artistName || "Không rõ"}
+      - Thể loại: ${genre || "Không rõ"}
+      ${lyrics ? `- Đoạn lyrics mẫu: ${lyrics.substring(0, 200)}...` : ""}
 
-🎯 NHIỆM VỤ:
-Phân tích và trả về JSON object với thông tin sau:
+      🎯 NHIỆM VỤ:
+      Phân tích và trả về JSON object với thông tin sau:
 
-{
-  "primaryMood": "happy/sad/energetic/chill/romantic/melancholic/angry/peaceful",
-  "secondaryMood": "...",
-  "energy": 0.0-1.0,
-  "valence": 0.0-1.0,
-  "danceability": 0.0-1.0,
-  "tags": ["upbeat", "chill", "workout", "sleep", "party"],
-  "bestTimeToListen": "morning/afternoon/evening/night/anytime",
-  "activities": ["workout", "study", "driving", "relax", "party"],
-  "emotionalDescription": "Mô tả ngắn gọn về cảm xúc bài hát"
-}
+      {
+        "primaryMood": "happy/sad/energetic/chill/romantic/melancholic/angry/peaceful",
+        "secondaryMood": "...",
+        "energy": 0.0-1.0,
+        "valence": 0.0-1.0,
+        "danceability": 0.0-1.0,
+        "tags": ["upbeat", "chill", "workout", "sleep", "party"],
+        "bestTimeToListen": "morning/afternoon/evening/night/anytime",
+        "activities": ["workout", "study", "driving", "relax", "party"],
+        "emotionalDescription": "Mô tả ngắn gọn về cảm xúc bài hát"
+      }
 
-📌 GIẢI THÍCH:
-- energy: Mức năng lượng (0=rất chậm, 1=rất sôi động)
-- valence: Tích cực/tiêu cực (0=buồn, 1=vui)
-- danceability: Mức độ phù hợp để nhảy
+      📌 GIẢI THÍCH:
+      - energy: Mức năng lượng (0=rất chậm, 1=rất sôi động)
+      - valence: Tích cực/tiêu cực (0=buồn, 1=vui)
+      - danceability: Mức độ phù hợp để nhảy
 
-Chỉ trả về JSON, không giải thích thêm.
+      Chỉ trả về JSON, không giải thích thêm.
         `.trim();
 
     const model = genAI.getGenerativeModel({

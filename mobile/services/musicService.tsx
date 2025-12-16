@@ -146,7 +146,7 @@ export const GetVideoId = async (payload) => {
 
 export const getUrlTrackOnSoundCloud = async (payload) => {
   try {
-    const response = await axiosClient.post(`/music/track/soundcloud`, {
+    const response = await axiosPublicClient.post(`/music/track/soundcloud`, {
       title: payload.title,
       artists: payload.artists
     });

@@ -1,18 +1,18 @@
-import { usePlayerStore } from "@/store/playerStore";
-import { useNavigate } from "./useNavigate";
-import { useFollowStore } from "@/store/followStore";
-import { SaveToListeningHistory } from "@/services/historiesService";
-import { useHistoriesStore } from "@/store/historiesStore";
-import useAuthStore from "@/store/authStore";
-import { useCustomAlert } from "./useCustomAlert";
-import { Share } from "react-native";
-import { AddTracksToPlaylists, ShareAlbum, SharePlaylist, ShareTrack, UpdatePlaylistPrivacy } from "@/services/musicService";
-import { useState } from "react";
 import { AddFavoriteItem, RemoveFavoriteItem } from "@/services/favoritesService";
-import { usePlaylistData } from "./usePlaylistData";
-import { useFavoritesStore } from "@/store/favoritesStore";
 import { ShareArtist } from "@/services/followService";
+import { SaveToListeningHistory } from "@/services/historiesService";
+import { AddTracksToPlaylists, ShareAlbum, SharePlaylist, ShareTrack, UpdatePlaylistPrivacy } from "@/services/musicService";
+import useAuthStore from "@/store/authStore";
+import { useFavoritesStore } from "@/store/favoritesStore";
+import { useFollowStore } from "@/store/followStore";
+import { useHistoriesStore } from "@/store/historiesStore";
+import { usePlayerStore } from "@/store/playerStore";
+import { useState } from "react";
+import { Share } from "react-native";
 import { useArtistData } from "./useArtistData";
+import { useCustomAlert } from "./useCustomAlert";
+import { useNavigate } from "./useNavigate";
+import { usePlaylistData } from "./usePlaylistData";
 
 export const useMusicAction = () => {
 
@@ -328,6 +328,7 @@ export const useMusicAction = () => {
     }
     try {
       setIsFavoriteLoading(true);
+
       console.log('fav')
       const response = await AddFavoriteItem({
         itemType: type,

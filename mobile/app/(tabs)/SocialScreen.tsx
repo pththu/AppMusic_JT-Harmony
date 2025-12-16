@@ -887,7 +887,7 @@ const SocialScreen = () => {
   useEffect(() => {
     if (userFollowees.length === 0) fetchFollowees(user?.id);
     if (userFollowers.length === 0) fetchFollowers(user?.id);
-  })
+  }, [])
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0E0C1F]">

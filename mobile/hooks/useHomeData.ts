@@ -201,9 +201,6 @@ export const useHomeData = (
     }
   }, [queryParam.artistNames, queryParam.genres]);
 
-  // (Thêm fetchTrendingPlaylists, fetchTrendingAlbums, fetchArtistsForYou tương tự ở đây...)
-
-  // --- EFFECT: TẢI DỮ LIỆU CỐ ĐỊNH VÀ THỜI GIAN ---
   useEffect(() => {
     const fetchBaseData = async () => {
       await Promise.all([
@@ -225,7 +222,7 @@ export const useHomeData = (
 
   // --- EFFECT: GỢI Ý THEO LỊCH SỬ ---
   useEffect(() => {
-    if (formattedListenHistory.length === 1 || formattedListenHistory.length % 5 === 0) {
+    if (formattedListenHistory.length > 0) {
       GenerateFromHistories(formattedListenHistory).then(response => {
         if (response.success) {
           fetchGenericRecommendation(response.data, 'baseOnHistory', setRecommendBasedOnHistories);
@@ -250,7 +247,7 @@ export const useHomeData = (
       if (responseTrack.success) setRecommendTrackBasedOnFavorites(responseTrack.data || []);
     };
 
-    if (formattedFavoriteItems.length === 1 || formattedFavoriteItems.length % 5 === 0) {
+    if (formattedFavoriteItems.length > 0) {
       fetchData();
     } else {
       setIsLoading(prev => ({ ...prev, baseOnFavoriteItems: false }));
@@ -260,7 +257,7 @@ export const useHomeData = (
 
   // --- EFFECT: GỢI Ý THEO ARTIST FOLLOWED ---
   useEffect(() => {
-    if (formattedArtistFollowed.length === 1 || formattedArtistFollowed.length % 5 === 0) {
+    if (formattedArtistFollowed.length > 0) {
       GenerateFromFollowedArtists(formattedArtistFollowed).then(response => {
         if (response.success) {
           fetchGenericRecommendation(response.data, 'baseOnFollowedArtists', setRecommendBasedOnFollowedArtists);
@@ -271,7 +268,7 @@ export const useHomeData = (
     } else {
       setIsLoading(prev => ({ ...prev, baseOnFollowedArtists: false }));
     }
-  }, [formattedArtistFollowed, fetchGenericRecommendation, setRecommendBasedOnFollowedArtists]);
+  }, [formattedArtistFollowed]);
 
   // --- EFFECT: GỢI Ý THEO ACTIVITY ---
   useEffect(() => {
@@ -287,7 +284,7 @@ export const useHomeData = (
     } else {
       setIsLoading(prev => ({ ...prev, baseOnActivities: false }));
     }
-  }, [selectedActivity, fetchGenericRecommendation, setRecommendBasedOnActivity]);
+  }, [selectedActivity]);
 
   // --- EFFECT: GỢI Ý THEO MOOD ---
   useEffect(() => {
@@ -303,7 +300,7 @@ export const useHomeData = (
     } else {
       setIsLoading(prev => ({ ...prev, baseOnMoods: false }));
     }
-  }, [selectedMood, fetchGenericRecommendation, setRecommendBasedOnMood]);
+  }, [selectedMood]);
 
   useEffect(() => {
 

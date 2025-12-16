@@ -30,7 +30,16 @@ const ListeningHistory = require('./listening_history');
 const SearchHistory = require('./search_history');
 const FavoriteItem = require('./favorite_items')
 
+const ReportItem = require('./reportItem');
+const HideItem = require('./hideItem');
+
 // ================= Associations ================= //
+
+// new
+ReportItem.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', hooks: true });
+HideItem.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', hooks: true });
+User.hasMany(ReportItem, { foreignKey: 'userId', as: 'reportItems', onDelete: 'CASCADE', hooks: true });
+User.hasMany(HideItem, { foreignKey: 'userId', as: 'hideItems', onDelete: 'CASCADE', hooks: true });
 
 // User - Sync status
 User.hasMany(SyncStatus, { foreignKey: 'userId', onDelete: 'CASCADE', hooks: true });
@@ -268,4 +277,6 @@ module.exports = {
     Message,
     MessageHide,
     PostHide,
+    ReportItem,
+    HideItem
 }

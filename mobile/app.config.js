@@ -30,8 +30,7 @@ export default ({ config }) => ({
     [
       "expo-image-picker",
       {
-        photosPermission:
-          "Ứng dụng cần quyền truy cập thư viện ảnh để upload hình ảnh",
+        photosPermission:  "Ứng dụng cần quyền truy cập thư viện ảnh để upload hình ảnh",
         mutable: true,
       },
     ],
@@ -57,5 +56,13 @@ export default ({ config }) => ({
         },
       },
     ],
+    [
+      "expo-notifications",
+      {
+        "icon": "./assets/images/notification-icon.png",
+        "color": "#a7f29b",
+        "defaultChannel": "music-playback"
+      }
+    ]
   ],
 });

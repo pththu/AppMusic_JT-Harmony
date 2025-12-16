@@ -4,7 +4,7 @@ import useAuthStore from "@/store/authStore";
 import { useBoardingStore } from "@/store/boardingStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { usePlayerStore } from "@/store/playerStore";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const usePlaylistData = (currentPlaylist) => {
 
@@ -46,7 +46,9 @@ export const usePlaylistData = (currentPlaylist) => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPlaylist, setListTrack]);
+  }, [setListTrack]);
+
+  const currentPlaylistIdRef = useRef(null);
 
   const fetchRecommendBasedOnPlaylist = useCallback(async () => {
     if (!currentPlaylist || !isLoggedIn) return;
@@ -93,14 +95,21 @@ export const usePlaylistData = (currentPlaylist) => {
   }, [currentPlaylist, user?.id]);
 
   useEffect(() => {
-    setPlaylist(currentPlaylist);
-    setIsMine(checkIsMine());
-    fetchTracks(currentPlaylist);
-    checkIsFavorite();
-    if (currentPlaylist?.id && currentPlaylist?.owner?.id === user?.id) {
-      fetchRecommendBasedOnPlaylist();
+    const playlistId = currentPlaylist?.id || currentPlaylist?.spotifyId;
+
+    // ⚠️ Chỉ fetch khi ID thay đổi
+    if (playlistId !== currentPlaylistIdRef.current) {
+      currentPlaylistIdRef.current = playlistId;
+      setPlaylist(currentPlaylist);
+      setIsMine(checkIsMine());
+      fetchTracks(currentPlaylist);
+      checkIsFavorite();
+
+      if (currentPlaylist?.id && currentPlaylist?.owner?.id === user?.id) {
+        fetchRecommendBasedOnPlaylist();
+      }
     }
-  }, [currentPlaylist, checkIsMine, fetchTracks, checkIsFavorite]);
+  }, [currentPlaylist?.id, currentPlaylist?.spotifyId]);
 
   useEffect(() => {
     checkIsFavorite();

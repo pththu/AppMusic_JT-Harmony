@@ -1,33 +1,30 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { useAudioPlayer } from "expo-audio";
+import { VideoView, useVideoPlayer } from "expo-video";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  Dimensions,
   Image,
+  Pressable,
   Text,
   TouchableOpacity,
   View,
-  useColorScheme,
-  Dimensions,
+  useColorScheme
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
-import FontAwesome from "react-native-vector-icons/FontAwesome"; // Import thêm FontAwesome cho icon Share
-import { VideoView, useVideoPlayer } from "expo-video";
-import * as FileSystem from 'expo-file-system';
-import { useAudioPlayer } from "expo-audio";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { voteCover } from "../../services/coverService";
-import { useNavigate } from "@/hooks/useNavigate";
-import useAuthStore from "@/store/authStore";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
 
-// Lấy kích thước màn hình
 const { width: screenWidth } = Dimensions.get("window");
 const MEDIA_WIDTH = screenWidth - 32;
-const MEDIA_HEIGHT = MEDIA_WIDTH * 0.75;
+const MEDIA_HEIGHT = MEDIA_WIDTH * 0.65;
+const AUDIO_HEIGHT = 160;
 
-// Hàm format time (giữ nguyên)
 const formatTimeAgo = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
   const intervals = [
     { label: "năm", seconds: 31536000 },
     { label: "tháng", seconds: 2592000 },
@@ -35,14 +32,19 @@ const formatTimeAgo = (dateString: string): string => {
     { label: "giờ", seconds: 3600 },
     { label: "phút", seconds: 60 },
   ];
-
   for (const interval of intervals) {
     const count = Math.floor(seconds / interval.seconds);
-    if (count >= 1) {
-      return `${count} ${interval.label} trước`;
-    }
+    if (count >= 1) return `${count} ${interval.label} trước`;
   }
   return "vừa xong";
+};
+
+const formatDuration = (milliseconds: number) => {
+  if (!milliseconds) return "0:00";
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
 interface CoverItemProps {
@@ -63,7 +65,6 @@ interface CoverItemProps {
   };
   onUserPress: (userId: number) => void;
   onRefresh?: () => void;
-  // Thêm props cho các actions khác để có thể xử lý logic từ bên ngoài
   onLikePress?: () => void;
   onCommentPress?: () => void;
   onSharePress?: () => void;
@@ -86,407 +87,247 @@ const CoverItem: React.FC<CoverItemProps> = ({
   originalSongId,
   OriginalSong,
   onUserPress,
-  onRefresh,
-  onCommentPress, // Sử dụng prop này
-  onSharePress, // Sử dụng prop này
+  onCommentPress,
+  onSharePress,
   onVoteCountPress,
   commentCount,
   shareCount,
 }) => {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
-  const user = useAuthStore((state) => state.user);
   const { error } = useCustomAlert();
 
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [heartCount, setHeartCount] = useState(initialHeartCount);
+  
+  // State quản lý playback
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isVideo, setIsVideo] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
 
-  // Audio player hook
-  const audioPlayer = useAudioPlayer(Array.isArray(fileUrl) ? fileUrl[0] : fileUrl);
+  const mediaSource = useMemo(() => {
+    return Array.isArray(fileUrl) ? fileUrl[0] : fileUrl;
+  }, [fileUrl]);
 
-  // Sync audio player state
-  useEffect(() => {
-    if (audioPlayer) {
-      // Update initial state
-      setIsPlaying(audioPlayer.playing);
+  const mediaType = useMemo(() => {
+    if (!mediaSource) return null;
+    const extension = mediaSource.split(".").pop()?.toLowerCase();
+    const videoExtensions = ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv"];
+    return videoExtensions.includes(extension || "") ? "video" : "audio";
+  }, [mediaSource]);
 
-      if (audioPlayer.duration) {
-        setDuration(audioPlayer.duration * 1000);
-      }
-    }
-  }, [audioPlayer]);
-
-  // Update position periodically
-  useEffect(() => {
-    if (audioPlayer && isPlaying) {
-      const interval = setInterval(() => {
-        if (audioPlayer.currentTime) {
-          setPosition(audioPlayer.currentTime * 1000);
-        }
-      }, 100); // Update every 100ms
-
-      return () => clearInterval(interval);
-    }
-  }, [audioPlayer, isPlaying]);
-
-  // Video player hook
-  const videoPlayer = useVideoPlayer(Array.isArray(fileUrl) ? fileUrl[0] : fileUrl, (player) => {
+  // --- VIDEO PLAYER SETUP ---
+  const videoPlayer = useVideoPlayer(mediaType === "video" ? mediaSource : null, (player) => {
     player.loop = false;
-    player.muted = false;
+    // player.muted = false; // Mặc định thường là false, có thể bỏ
   });
 
+  // Tối ưu hóa Listener cho Video
   useEffect(() => {
-    setIsLiked(initialIsLiked);
-  }, [initialIsLiked]);
+    if (mediaType === "video" && videoPlayer) {
+      // 1. Lắng nghe trạng thái Playing thay đổi
+      const playingSubscription = videoPlayer.addListener("playingChange", (payload) => {
+        setIsPlaying(payload.isPlaying);
+      });
+
+      // 2. Lắng nghe Playback kết thúc
+      const playToEndSubscription = videoPlayer.addListener("playToEnd", () => {
+        setIsPlaying(false);
+        videoPlayer.seekBy(-videoPlayer.duration); // Reset về đầu
+        // videoPlayer.pause(); // expo-video thường tự pause khi hết, nhưng gọi thêm cho chắc
+      });
+
+      // 3. Cập nhật tiến trình (dùng setInterval nhẹ hơn là listener statusChange liên tục cho mỗi frame)
+      const interval = setInterval(() => {
+        if (videoPlayer.playing) { // Chỉ update khi đang chạy
+           setPosition(videoPlayer.currentTime * 1000);
+           // Duration video thường không đổi, set 1 lần hoặc check nếu cần
+           if (videoPlayer.duration > 0 && duration === 0) {
+              setDuration(videoPlayer.duration * 1000);
+           }
+        }
+      }, 500); 
+
+      return () => {
+        playingSubscription.remove();
+        playToEndSubscription.remove();
+        clearInterval(interval);
+      };
+    }
+  }, [videoPlayer, mediaType]); // Bỏ duration khỏi dep array để tránh loop
+
+  // --- AUDIO PLAYER SETUP ---
+  const audioPlayer = useAudioPlayer(mediaType === "audio" ? mediaSource : null);
 
   useEffect(() => {
-    setHeartCount(initialHeartCount);
-  }, [initialHeartCount]);
+    if (mediaType === "audio" && audioPlayer) {
+      setIsPlaying(audioPlayer.playing);
+      if (audioPlayer.duration) setDuration(audioPlayer.duration * 1000);
+
+      const interval = setInterval(() => {
+        // Chỉ update position khi đang play để tối ưu
+        if (audioPlayer.playing) {
+           setPosition(audioPlayer.currentTime * 1000);
+        }
+        // Đồng bộ lại trạng thái playing (fallback)
+        if (audioPlayer.playing !== isPlaying) {
+           setIsPlaying(audioPlayer.playing);
+        }
+      }, 500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [audioPlayer, mediaType, isPlaying]); // Thêm isPlaying vào dep để check diff
+
+  // --- ACTION HANDLER ---
+  const handleMediaControl = () => {
+    if (mediaType === "video" && videoPlayer) {
+      if (videoPlayer.playing) {
+        videoPlayer.pause();
+        // UI sẽ tự cập nhật nhờ listener 'playingChange' ở trên
+      } else {
+        videoPlayer.play();
+        // Nếu video đã kết thúc, replay lại
+        if (videoPlayer.currentTime >= videoPlayer.duration) {
+            videoPlayer.replay();
+        }
+      }
+    } else if (mediaType === "audio" && audioPlayer) {
+      if (audioPlayer.playing) {
+        audioPlayer.pause();
+        setIsPlaying(false); // Audio hook đôi khi cập nhật chậm, set tay cho nhanh
+      } else {
+        audioPlayer.play();
+        setIsPlaying(true);
+      }
+    }
+  };
 
   const handleVote = async () => {
     const prevIsLiked = isLiked;
     const prevHeartCount = heartCount;
-
-    // Cập nhật UI tạm thời
     setIsLiked(!isLiked);
     setHeartCount(heartCount + (isLiked ? -1 : 1));
-
     try {
       const result = await voteCover(id);
-      if ("isLiked" in result && "heartCount" in result) {
-        // Cập nhật UI với kết quả từ API
+      if ("isLiked" in result) {
         setIsLiked(result.isLiked);
         setHeartCount(result.heartCount);
-      } else {
-        throw new Error("Invalid response");
       }
-    } catch (error) {
-      console.error("Lỗi khi vote cover:", error);
+    } catch (err) {
       error("Lỗi", "Không thể vote cover.");
-      // Hoàn tác nếu có lỗi
       setIsLiked(prevIsLiked);
       setHeartCount(prevHeartCount);
     }
   };
 
-  // Kiểm tra loại file dựa trên extension
-  const getMediaType = (url: string): 'video' | 'audio' => {
-    const extension = url.split('.').pop()?.toLowerCase();
-    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
-    const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma'];
+  const heartColor = isLiked ? "rgb(239, 68, 68)" : colorScheme === "dark" ? "rgb(156, 163, 175)" : "rgb(107, 114, 128)";
 
-    if (videoExtensions.includes(extension || '')) {
-      return 'video';
-    }
-    return 'audio';
-  };
-
-  // Khởi tạo media player
-  const initializeMedia = async () => {
-    const mediaUrl = Array.isArray(fileUrl) ? fileUrl[0] : fileUrl;
-    if (!mediaUrl) return;
-
-    const mediaType = getMediaType(mediaUrl);
-    setIsVideo(mediaType === 'video');
-
-    if (mediaType === 'audio') {
-      try {
-        console.log('Audio file detected:', mediaUrl);
-        console.log('File URL type:', typeof mediaUrl);
-        console.log('File URL length:', mediaUrl.length);
-        console.log('File extension:', mediaUrl.split('.').pop());
-        console.log('Full URL:', mediaUrl);
-
-        // Kiểm tra URL có hợp lệ không
-        if (!mediaUrl.startsWith('http')) {
-          console.error('Invalid URL format:', mediaUrl);
-          return;
-        }
-
-        // useAudioPlayer hook sẽ tự động xử lý loading
-        // console.log('Audio player initialized with useAudioPlayer hook');
-
-      } catch (error) {
-        console.error('Lỗi khi khởi tạo audio:', error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
-      }
-    }
-  };
-
-  useEffect(() => {
-    initializeMedia();
-
-    // Cleanup khi unmount
-    return () => {
-      // useAudioPlayer hook tự động cleanup
-    };
-  }, [fileUrl]);
-
-  const handlePlayPause = async () => {
-    if (isVideo) {
-      // Xử lý video play/pause với expo-video
-      if (videoPlayer) {
-        try {
-          if (isPlaying) {
-            videoPlayer.pause();
-          } else {
-            videoPlayer.play();
-          }
-          setIsPlaying(!isPlaying);
-        } catch (error) {
-          console.error('Lỗi khi phát/dừng video:', error);
-        }
-      }
-    } else {
-      // Xử lý audio play/pause với expo-audio hook
-      if (audioPlayer) {
-        try {
-          if (isPlaying) {
-            audioPlayer.pause();
-            setIsPlaying(false);
-          } else {
-            audioPlayer.play();
-            setIsPlaying(true);
-          }
-        } catch (error) {
-          console.error('Lỗi khi phát/dừng audio:', error);
-        }
-      }
-    }
-  };
-
-  // Format thởi gian
-  const formatTime = (milliseconds: number) => {
-    const seconds = Math.floor(milliseconds / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  // Xử lý khi video update status
-  useEffect(() => {
-    if (videoPlayer) {
-      const subscription = videoPlayer.addListener('statusChange', (event) => {
-        const { status }: any = event;
-        // Với expo-video API mới, status có thể là object hoặc string
-        if (typeof status === 'object' && status !== null) {
-          setPosition(status ? status?.currentTime : 0);
-          setDuration(status ? status?.duration : 0);
-          if (status?.isEnded) {
-            setIsPlaying(false);
-            setPosition(0);
-          }
-        }
-      });
-
-      return () => subscription?.remove();
-    }
-  }, [videoPlayer]);
-
-  const handleSongPress = () => {
-    if (originalSongId) {
-      navigate("SongScreen", { songId: originalSongId });
-    }
-  };
-
-  const displayTime = formatTimeAgo(uploadedAt);
-
-  // Màu sắc cho Icon Like
-  const heartColor = isLiked
-    ? "rgb(239, 68, 68)"
-    : colorScheme === "dark"
-      ? "rgb(156, 163, 175)"
-      : "rgb(107, 114, 128)";
-
+  // --- RENDER ---
   return (
-    <View className="bg-white dark:bg-[#171431] p-4 mb-4 rounded-xl shadow-lg shadow-gray-400 dark:shadow-black/70 border border-gray-100 dark:border-gray-800">
-      {/* Header */}
+    <View className="bg-white dark:bg-[#171431] p-4 my-2 mx-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+      
+      {/* HEADER ... (Giữ nguyên) */}
       <View className="flex-row items-center mb-3">
-        <TouchableOpacity
-          onPress={() => onUserPress(userId)}
-          className="flex-row items-center"
-        >
+        <TouchableOpacity onPress={() => onUserPress(userId)}>
           <Image
-            source={{
-              uri: User?.avatarUrl || "https://via.placeholder.com/150",
-            }}
-            // Tăng kích thước avatar
-            className="w-12 h-12 rounded-full border-2 border-emerald-400"
+            source={{ uri: User?.avatarUrl || "https://via.placeholder.com/150" }}
+            className="w-12 h-12 rounded-full border border-gray-200 dark:border-gray-600"
           />
         </TouchableOpacity>
-
-        <View className="ml-3 flex-col flex-1">
-          <Text className="font-extrabold text-lg text-black dark:text-white">
-            {User?.fullName}
-          </Text>
-          <Text className="text-gray-500 dark:text-gray-400 text-sm">
-            {displayTime}
-          </Text>
+        <View className="ml-3 flex-1">
+          <Text className="font-bold text-lg text-black dark:text-white">{User?.fullName}</Text>
+          <Text className="text-gray-500 dark:text-gray-400 text-xs">{formatTimeAgo(uploadedAt)}</Text>
         </View>
-
-        {/* Cover tag */}
-        <View className="ml-2 bg-emerald-500 px-3 py-1 rounded-full">
-          <Text className="text-white text-xs font-bold uppercase">Cover</Text>
+        <View className={`px-2 py-1 rounded-md flex-row items-center ${mediaType === 'video' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'}`}>
+          <Icon name={mediaType === 'video' ? 'video' : 'mic'} size={12} color={mediaType === 'video' ? '#3B82F6' : '#A855F7'} />
+          <Text className={`ml-1 text-[10px] font-bold uppercase ${mediaType === 'video' ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'}`}>
+            {mediaType === 'video' ? 'Video' : 'Vocal'}
+          </Text>
         </View>
       </View>
 
-      {/* Original Song Link */}
+      {/* SONG INFO & CONTENT ... (Giữ nguyên) */}
       {OriginalSong && (
-        <TouchableOpacity
-          onPress={handleSongPress}
-          className="mb-3 p-2 border-l-4 border-emerald-500 bg-gray-100 dark:bg-gray-700 rounded-md" // Hiệu ứng nổi bật
-        >
-          <Text className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-            {OriginalSong.name} -{" "}
-            {OriginalSong.artists?.map((artist) => artist.name).join(", ")}
+        <Pressable onPress={() => { }} className="mb-3">
+          <Text className="text-sm text-gray-800 dark:text-gray-200">
+            Cover bài: <Text className="font-bold text-emerald-600 dark:text-emerald-400">{OriginalSong.name}</Text>
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
-
-      {/* Content */}
       {content && (
-        <Text className="text-base text-black dark:text-gray-300 mb-3 leading-relaxed">
-          {content}
-        </Text>
+        <Text className="text-base text-gray-800 dark:text-gray-300 mb-3 leading-6">{content}</Text>
       )}
 
-      {/* Media Player */}
-      {fileUrl && (
-        <View className="mb-3 shadow-xl dark:shadow-black/70">
-          {isVideo ? (
-            // Video Player
-            <View className="relative">
+      {/* MEDIA PLAYER */}
+      {mediaSource && (
+        <View className="mb-4 rounded-xl overflow-hidden bg-black bg-opacity-5 dark:bg-black/20">
+          
+          {/* ----- VIDEO ----- */}
+          {mediaType === "video" ? (
+            <View className="relative justify-center items-center bg-black">
               <VideoView
                 player={videoPlayer}
                 style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}
-                className="rounded-xl"
                 contentFit="contain"
-                allowsFullscreen={true}
-                allowsPictureInPicture={true}
+                allowsPictureInPicture
+                nativeControls={false} // QUAN TRỌNG: Tắt control gốc để dùng nút custom
               />
-
-              {/* Video Controls Overlay */}
+              
+              {/* Vùng Clickable Toàn Màn Hình */}
               <TouchableOpacity
-                onPress={handlePlayPause}
-                className="absolute inset-0 justify-center items-center rounded-xl"
-                activeOpacity={0.8}
+                className="absolute inset-0 w-full h-full justify-center items-center z-10"
+                onPress={handleMediaControl}
+                activeOpacity={1} // Không nháy sáng khi click
               >
-                <View className="absolute inset-0 bg-black/30 rounded-xl" />
+                {/* Chỉ hiện nút Play khi đang Pause */}
                 {!isPlaying && (
-                  <View className="p-4 bg-white/30 rounded-full border-2 border-white">
-                    <Icon
-                      name="play"
-                      size={30}
-                      color="white"
-                      style={{ marginLeft: 5 }}
-                    />
-                  </View>
-                )}
-                {isPlaying && (
-                  <View className="p-4 bg-white/30 rounded-full border-2 border-white">
-                    <Icon
-                      name="pause"
-                      size={30}
-                      color="white"
-                    />
+                  <View className="w-16 h-16 bg-black/40 rounded-full justify-center items-center border border-white/30 backdrop-blur-md">
+                    <Icon name="play" size={32} color="white" style={{ marginLeft: 4 }} />
                   </View>
                 )}
               </TouchableOpacity>
 
-              {/* Video Progress Bar */}
-              {duration > 0 && (
-                <View className="absolute bottom-2 left-2 right-2">
-                  <View className="bg-black/50 rounded-full px-2 py-1">
-                    <Text className="text-white text-xs">
-                      {formatTime(position)} / {formatTime(duration)}
-                    </Text>
-                  </View>
-                </View>
-              )}
+              {/* (Optional) Play Icon nhỏ ở góc khi đang chạy để biết là video */}
+               {/* <View className="absolute top-2 right-2 z-0"> ... </View> */}
             </View>
           ) : (
-            // Audio Player
-            <View className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4">
-              {/* Audio Visual/Thumbnail */}
-              <View className="relative mb-4">
-                <Image
-                  source={{ uri: 'https://via.placeholder.com/400x300?text=Audio+Cover' }}
-                  style={{ width: '100%', height: 200 }}
-                  className="rounded-xl"
-                  blurRadius={2}
-                />
-                <View className="absolute inset-0 justify-center items-center bg-black/40 rounded-xl">
-                  <TouchableOpacity
-                    onPress={handlePlayPause}
-                    className="p-4 bg-white/30 rounded-full border-2 border-white"
-                    activeOpacity={0.8}
-                  >
-                    <Icon
-                      name={isPlaying ? "pause" : "play"}
-                      size={40}
-                      color="white"
-                      style={isPlaying ? {} : { marginLeft: 5 }}
-                    />
-                  </TouchableOpacity>
+            
+          /* ----- AUDIO ----- */
+            <View className="flex-row p-3 items-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 h-[160px]">
+              <View className="relative justify-center items-center mr-4">
+                <View className={`w-24 h-24 rounded-full border-4 border-gray-800 dark:border-gray-900 overflow-hidden shadow-lg ${isPlaying ? 'animate-spin-slow' : ''}`}>
+                  <Image source={{ uri: User?.avatarUrl || "https://via.placeholder.com/150" }} className="w-full h-full opacity-90" />
+                  <View className="absolute top-1/2 left-1/2 w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full -mt-2 -ml-2 z-10" />
+                </View>
+                <View className="absolute -bottom-2 bg-emerald-500 rounded-full p-1 border-2 border-white dark:border-gray-800">
+                  <MaterialIcons name="audiotrack" size={14} color="white" />
                 </View>
               </View>
 
-              {/* Audio Controls */}
-              <View className="space-y-3">
-                {/* Progress Bar */}
-                <View className="bg-gray-300 dark:bg-gray-600 h-2 rounded-full overflow-hidden">
-                  <View
-                    className="bg-emerald-500 h-full rounded-full"
-                    style={{
-                      width: duration > 0 ? `${(position / duration) * 100}%` : '0%'
-                    }}
-                  />
+              <View className="flex-1 justify-center space-y-2">
+                <View>
+                    <Text className="font-semibold text-gray-800 dark:text-gray-100 text-base" numberOfLines={1}>Audio Clip</Text>
+                    <Text className="text-xs text-gray-500 dark:text-gray-400">{User?.fullName}</Text>
+                </View>
+                
+                <View>
+                  <View className="h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full w-full overflow-hidden">
+                    <View className="h-full bg-emerald-500 rounded-full" style={{ width: duration > 0 ? `${(position / duration) * 100}%` : '0%' }} />
+                  </View>
+                  <View className="flex-row justify-between mt-1">
+                    <Text className="text-[10px] text-gray-500">{formatDuration(position)}</Text>
+                    <Text className="text-[10px] text-gray-500">{formatDuration(duration)}</Text>
+                  </View>
                 </View>
 
-                {/* Time Display */}
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-xs text-gray-600 dark:text-gray-400">
-                    {formatTime(position)}
+                <View className="flex-row items-center">
+                  <TouchableOpacity onPress={handleMediaControl} className="bg-black dark:bg-white rounded-full p-2 mr-3">
+                    <Icon name={isPlaying ? "pause" : "play"} size={20} color={colorScheme === 'dark' ? 'black' : 'white'} style={isPlaying ? {} : { marginLeft: 2 }} />
+                  </TouchableOpacity>
+                  <Text className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    {isPlaying ? "Đang phát..." : "Nghe thử"}
                   </Text>
-                  <Text className="text-xs text-gray-600 dark:text-gray-400">
-                    {formatTime(duration)}
-                  </Text>
-                </View>
-
-                {/* Control Buttons */}
-                <View className="flex-row justify-center items-center space-x-6">
-                  <TouchableOpacity className="p-2">
-                    <Icon
-                      name="skip-back"
-                      size={24}
-                      color={colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}
-                    />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={handlePlayPause}
-                    className="p-3 bg-emerald-500 rounded-full"
-                    activeOpacity={0.8}
-                  >
-                    <Icon
-                      name={isPlaying ? "pause" : "play"}
-                      size={24}
-                      color="white"
-                      style={isPlaying ? {} : { marginLeft: 3 }}
-                    />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity className="p-2">
-                    <Icon
-                      name="skip-forward"
-                      size={24}
-                      color={colorScheme === "dark" ? "#9CA3AF" : "#6B7280"}
-                    />
-                  </TouchableOpacity>
                 </View>
               </View>
             </View>
@@ -494,87 +335,25 @@ const CoverItem: React.FC<CoverItemProps> = ({
         </View>
       )}
 
-      {/* Interaction Stats Bar */}
-      <View className="flex-row justify-between items-center mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-        {/* KHỐI TRÁI: Thích  */}
-        <View className="flex-row items-center">
-          {/* Thích */}
-          <TouchableOpacity
-            onPress={() => onVoteCountPress?.(id)}
-            disabled={heartCount === 0} // Chỉ cho phép nhấn nếu có lượt thích
-            className="p-1 -ml-1"
-          >
-            <Text className="text-xs text-gray-500 dark:text-gray-400 font-bold">
-              {heartCount} Thích
+      {/* FOOTER ACTIONS ... (Giữ nguyên) */}
+      <View className="flex-row justify-between items-center py-2 border-t border-gray-100 dark:border-gray-800">
+        <View className="flex-1 flex-row space-x-6 justify-between">
+          <TouchableOpacity onPress={handleVote} className="flex-row items-center space-x-1">
+            <Icon name={isLiked ? "heart" : "heart"} size={20} color={heartColor} />
+            <Text className={`text-sm ${isLiked ? 'text-red-500 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}>
+              {heartCount > 0 ? heartCount : 'Thích'}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={onCommentPress} className="flex-row items-center space-x-1">
+            <Icon name="message-circle" size={20} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
+            <Text className="text-sm text-gray-500 dark:text-gray-400">
+              {commentCount > 0 ? commentCount : 'Bình luận'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onSharePress} className="flex-row items-center space-x-1">
+            <Icon name="share-2" size={20} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
+          </TouchableOpacity>
         </View>
-
-        {/* KHỐI PHẢI: Chia sẻ */}
-        <View className="flex-row items-center ">
-          {/* Bình luận */}
-          <Text className="text-xs text-gray-500 dark:text-gray-400 px-2">
-            {commentCount || 0} Bình luận
-          </Text>
-          {/* Chia sẻ */}
-          <Text className="text-xs text-gray-500 dark:text-gray-400">
-            {shareCount || 0} Chia sẻ
-          </Text>
-        </View>
-      </View>
-
-      {/* Interaction Buttons */}
-      <View className="flex-row justify-around">
-        {/* NÚT LIKE (TIM) */}
-        <TouchableOpacity
-          onPress={handleVote}
-          className="flex-row items-center p-2 rounded-full"
-        >
-          <Icon
-            name={isLiked ? "heart" : "heart"}
-            size={22}
-            color={heartColor}
-          />
-          <Text
-            className={`ml-2 text-sm ${isLiked ? "text-red-400 font-bold" : colorScheme === "dark" ? "text-gray-400" : "text-black"}`}
-          >
-            Thích
-          </Text>
-        </TouchableOpacity>
-
-        {/* NÚT BÌNH LUẬN */}
-        <TouchableOpacity
-          onPress={onCommentPress}
-          className="flex-row items-center p-2 rounded-full"
-        >
-          <Icon
-            name="message-circle"
-            size={22}
-            color={colorScheme === "dark" ? "#6B7280" : "#4B5563"}
-          />
-          <Text
-            className={`ml-2 text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}
-          >
-            Bình luận
-          </Text>
-        </TouchableOpacity>
-
-        {/* NÚT CHIA SẺ */}
-        <TouchableOpacity
-          onPress={onSharePress}
-          className="flex-row items-center p-2 rounded-full"
-        >
-          <Icon
-            name="share-2"
-            size={22}
-            color={colorScheme === "dark" ? "#6B7280" : "#4B5563"}
-          />
-          <Text
-            className={`ml-2 text-sm ${colorScheme === "dark" ? "text-gray-400" : "text-black"}`}
-          >
-            Chia sẻ
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
