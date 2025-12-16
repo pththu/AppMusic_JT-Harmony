@@ -83,7 +83,7 @@ const AlbumScreen = () => {
     setIsFavoriteLoading,
     setIsFavorite,
     // setIsLoading, // Không cần lấy ra set thủ công
-    // fetchTracks // Có thể lấy ra nếu muốn làm chức năng Refresh
+    fetchTracks // Có thể lấy ra nếu muốn làm chức năng Refresh
   } = useAlbumData(currentAlbum);
 
   // --- CÁC HÀM XỬ LÝ SỰ KIỆN (Giữ nguyên) ---
@@ -95,7 +95,7 @@ const AlbumScreen = () => {
     }
     return true;
   };
-  
+
   // ... (Giữ nguyên handlePickerImage, handleDownloadAlbum, handleAddToPlaylist, handleConfirmAddToPlaylist, handleAddPlaylist) ...
   const handlePickerImage = async (image, setImage) => {
     const hasPermission = await requestPermissions();
@@ -207,8 +207,15 @@ const AlbumScreen = () => {
     }
   };
 
+  useEffect(() => {
+    // ⚠️ Thêm điều kiện kiểm tra currentAlbum
+    if (currentAlbum && listTrack.length === 0) {
+      fetchTracks(currentAlbum);
+    }
+  }, [currentAlbum?.spotifyId]);
+
   // --- BỎ HÀM fetchTracks VÀ useEffect CŨ ---
-  
+
   // Chỉ giữ lại effect Animation
   useEffect(() => {
     if (currentAlbum) {
@@ -283,7 +290,7 @@ const AlbumScreen = () => {
           <View className="w-8" />
         </View>
       </View>
-      
+
       {/* Loading Overlay khi xử lý Favorite */}
       {isFavoriteLoading && (
         <View className="absolute top-0 right-0 left-0 z-10 bg-black/50 justify-center items-center"
@@ -335,7 +342,7 @@ const AlbumScreen = () => {
                   color={colorScheme === 'dark' ? '#FFFFFF' : '#000000'}
                   size={22} />
               </Pressable>
-              
+
               {/* Nút Thích - Chỉ thay đổi trạng thái UI, không trigger fetch lại tracks */}
               <TouchableOpacity className="p-2"
                 onPress={() => {
@@ -352,7 +359,7 @@ const AlbumScreen = () => {
                   size={23}
                 />
               </TouchableOpacity>
-              
+
               <Pressable onPress={() => setModalVisible(true)}>
                 <Ionicons
                   name="ellipsis-vertical"
@@ -376,7 +383,7 @@ const AlbumScreen = () => {
             </View>
           </View>
         </View>
-        
+
         {/* Render danh sách bài hát */}
         <View className="px-4">
           <Text className={`${colorScheme === 'dark' ? 'text-white' : 'text-black'} text-xl font-bold mb-4`}>

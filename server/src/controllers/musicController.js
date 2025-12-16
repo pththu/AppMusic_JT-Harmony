@@ -1840,7 +1840,7 @@ const getExternalUrl = async (req, res) => {
       return res.status(400).json({ message: 'Track ID is required', success: false });
     }
 
-    const track = await Track.findByPk(id);
+    const track = await Track.findOne({ where: { spotifyId: id } });
     if (!track) {
       return res.status(404).json({ message: 'Track not found', success: false });
     }

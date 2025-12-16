@@ -1,36 +1,34 @@
-import { SettingsContext } from "@/context/SettingsContext";
-import { useNavigate } from "@/hooks/useNavigate";
-import React, { useContext, useState } from "react";
-import {
-  Image,
-  Pressable,
-  Text,
-  View,
-  ScrollView,
-  ActivityIndicator,
-  useColorScheme,
-  TouchableOpacity,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Icon from "react-native-vector-icons/Ionicons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LibraryItemButton from "@/components/button/LibraryItemButton";
 import CustomButton from "@/components/custom/CustomButton";
 import SettingItem from "@/components/items/SettingItem";
-import useAuthStore from "@/store/authStore";
-import { ChangeAvatar, Logout, UploadMultipleFile } from "@/routes/ApiRouter";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { LoginManager } from "react-native-fbsdk-next";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
-import { usePlayerStore } from "@/store/playerStore";
-import { useFavoritesStore } from "@/store/favoritesStore";
 import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
-import { useHistoriesStore } from "@/store/historiesStore";
-import { useFollowStore } from "@/store/followStore";
+import { SettingsContext } from "@/context/SettingsContext";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { ChangeAvatar, Logout } from "@/routes/ApiRouter";
+import useAuthStore from "@/store/authStore";
 import { useBoardingStore } from "@/store/boardingStore";
+import { useFavoritesStore } from "@/store/favoritesStore";
+import { useFollowStore } from "@/store/followStore";
+import { useHistoriesStore } from "@/store/historiesStore";
 import { useNotificationStore } from "@/store/notificationStore";
+import { usePlayerStore } from "@/store/playerStore";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import * as ImagePicker from "expo-image-picker";
+import React, { useContext, useState } from "react";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View
+} from "react-native";
+import { LoginManager } from "react-native-fbsdk-next";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/Ionicons";
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
@@ -97,6 +95,7 @@ export default function ProfileScreen() {
     try {
       const response = await ChangeAvatar(selectedImage);
 
+      console.log(response)
       if (response.success) {
         setSelectedImage(null);
         setIsChoosedImage(false);

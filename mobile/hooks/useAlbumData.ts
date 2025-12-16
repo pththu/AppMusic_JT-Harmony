@@ -26,15 +26,14 @@ export const useAlbumData = (currentAlbum) => {
 
     const albumId = album.spotifyId || album.id;
 
-    // CHỐT CHẶN: Nếu ID trùng với lần trước VÀ store đã có bài hát -> Dừng ngay
+    // Chặn fetch nếu đã có data và ID trùng
     if (currentAlbumIdRef.current === albumId && listTrack && listTrack.length > 0) {
       setIsLoading(false);
       return;
     }
 
-    // Bắt đầu fetch mới
     setIsLoading(true);
-    currentAlbumIdRef.current = albumId; // Cập nhật Ref
+    currentAlbumIdRef.current = albumId;
 
     try {
       const response = await GetTracksByAlbumId(albumId);
@@ -53,7 +52,7 @@ export const useAlbumData = (currentAlbum) => {
     } finally {
       setIsLoading(false);
     }
-  }, [listTrack]); // Thêm listTrack vào dependency
+  }, []); // ⚠️ Bỏ listTrack khỏi dependency
 
   const checkIsFavorite = useCallback(() => {
     if (!currentAlbum || !isLoggedIn) {
@@ -88,7 +87,7 @@ export const useAlbumData = (currentAlbum) => {
   useEffect(() => {
     checkIsFavorite();
   }, [favoriteItems, checkIsFavorite]);
-  
+
   return {
     isFavorite,
     isLoading,
@@ -96,5 +95,6 @@ export const useAlbumData = (currentAlbum) => {
     setIsFavorite,
     setIsFavoriteLoading,
     setIsLoading,
+    fetchTracks
   }
 }

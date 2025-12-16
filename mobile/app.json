@@ -18,14 +18,20 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo_final.png",
+        "foregroundImage": "./assets/images/logo_mini.png",
         "backgroundColor": "#a7f29b"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.junia03.mobile_jtharmony",
       "googleServicesFile": "./google-services.json",
-      "permissions": ["android.permission.INTERNET"]
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -51,8 +57,8 @@
       "eas": {
         "projectId": "d5918968-3bf6-466a-b726-07b812636bd3"
       },
-      "API_URL": "http://192.168.1.30:3000/api/v1/",
-      "SOCKET_SERVER_URL": "http://192.168.1.14:3000",
+      "API_URL": "https://jt-harmony.vercel.app//api/v1/",
+      "SOCKET_SERVER_URL": "https://jt-harmony-socket.vercel.app/",
       "GOOGLE_OAUTH_CLIENT_ID_APP": "145190840857-ild54e2gkkbjas6f2km11b2s156mj05c.apps.googleusercontent.com"
     }
   }

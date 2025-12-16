@@ -1,40 +1,40 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  Image,
-} from "react-native";
-import { useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
-import Icon from "react-native-vector-icons/Feather";
+import ChatOptionsModal from "@/components/modals/ChatOptionsModal";
+import MessageOptionsModal from "@/components/modals/MessageOptionsModal";
+import { useNavigate } from "@/hooks/useNavigate";
+import { UploadMultipleFile } from "@/routes/ApiRouter";
+import { deleteConversation, deleteMessage, fetchMessages, hideMessage } from "@/services/chatApi";
 import {
   connectSocket,
   disconnectSocket,
   joinConversation,
+  Message,
   sendMessage,
-  subscribeToNewMessages,
-  subscribeToTypingStatus,
   startTyping,
   stopTyping,
-  Message,
+  subscribeToNewMessages,
+  subscribeToTypingStatus,
 } from "@/services/chatService";
 import useAuthStore from "@/store/authStore";
-import { fetchMessages, deleteMessage, hideMessage, deleteConversation } from "@/services/chatApi";
+import { RouteProp, useFocusEffect, useRoute } from "@react-navigation/native";
 import { formatDistanceToNowStrict, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
-import { useNavigate } from "@/hooks/useNavigate";
 import * as ImagePicker from "expo-image-picker";
-import { UploadMultipleFile } from "@/routes/ApiRouter";
-import MessageOptionsModal from "@/components/modals/MessageOptionsModal";
-import ChatOptionsModal from "@/components/modals/ChatOptionsModal";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/Feather";
 
 // Định nghĩa Route Params
 type RootStackParamList = {
@@ -128,7 +128,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
     return (
       <View
-        className={`mb-2 p-2 rounded-lg border-l-4 ${isMyMessage
+        className={`m-2 p-2 rounded-lg border-l-4 ${isMyMessage
           ? "bg-blue-600 border-blue-300"
           : "bg-gray-300 dark:bg-gray-700 border-gray-500"
           }`}
