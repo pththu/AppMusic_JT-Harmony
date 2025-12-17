@@ -56,7 +56,7 @@ export default function EditProfileScreen() {
       router.back();
     } catch (error) {
       error("Cập nhật thất bại", "Đã có lỗi xảy ra, vui lòng thử lại");
-      console.error("Error updating profile:", error);
+      console.log("Error updating profile:", error);
     } finally {
       setLoading(false);
     }

@@ -1,10 +1,12 @@
 // services/chatService.tsx
-import { io, Socket } from "socket.io-client";
 import useAuthStore from "@/store/authStore";
 import { Alert } from "react-native";
+import { io, Socket } from "socket.io-client";
 import { ENV } from "../config/env";
 
 const SOCKET_SERVER_URL = ENV.SOCKET_SERVER_URL;
+
+console.log('SOCKET_SERVER_URL', SOCKET_SERVER_URL)
 
 // INTERFACES
 export interface Message {
@@ -76,7 +78,7 @@ export const connectSocket = (): Socket => {
   });
 
   socket.on("connect_error", (error) => {
-    console.error("Socket connection error:", error.message);
+    console.log("Socket connection error:", error.message);
   });
 
   return newSocket;
@@ -166,7 +168,7 @@ export const subscribeToNewMessages = (
   listener: (message: Message) => void
 ): (() => void) => {
   if (!socket) {
-    console.error("Socket not initialized.");
+    console.log("Socket not initialized.");
     // Trả về hàm hủy đăng ký rỗng
     return () => {};
   }

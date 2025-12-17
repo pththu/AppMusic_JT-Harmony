@@ -1,5 +1,5 @@
-import useAuthStore from "@/store/authStore";
 import axiosClient from "@/config/axiosClient";
+import useAuthStore from "@/store/authStore";
 const api = axiosClient;
 
 // === INTERFACES ===
@@ -121,7 +121,7 @@ export const fetchCommentsByTrackId = async (
     if (!Array.isArray(data)) return [];
     return data.map(mapCommentData) as Comment[];
   } catch (error) {
-    console.error("Lỗi khi tải bình luận theo track:", error);
+    console.log("Lỗi khi tải bình luận theo track:", error);
     return [];
   }
 };
@@ -148,7 +148,7 @@ export const createTrackComment = async (
     });
     return response.data as Comment;
   } catch (error) {
-    console.error("Lỗi khi đăng bình luận theo track:", error);
+    console.log("Lỗi khi đăng bình luận theo track:", error);
     return { message: "Không thể đăng bình luận.", status: "error" };
   }
 };
@@ -166,7 +166,7 @@ export const fetchCommentsBySpotifyId = async (
     if (!Array.isArray(data)) return [];
     return data.map(mapCommentData) as Comment[];
   } catch (error) {
-    console.error("Lỗi khi tải bình luận theo spotifyId:", error);
+    console.log("Lỗi khi tải bình luận theo spotifyId:", error);
     return [];
   }
 };
@@ -189,7 +189,7 @@ export const createTrackCommentBySpotifyId = async (
     });
     return response.data as Comment;
   } catch (error) {
-    console.error("Lỗi khi đăng bình luận theo spotifyId:", error);
+    console.log("Lỗi khi đăng bình luận theo spotifyId:", error);
     return { message: "Không thể đăng bình luận.", status: "error" };
   }
 };
@@ -251,7 +251,7 @@ export const fetchPostsByUserId = async (
     }
     return data as Post[];
   } catch (error) {
-    console.error("Lỗi khi tải bài đăng của người dùng:", error);
+    console.log("Lỗi khi tải bài đăng của người dùng:", error);
     return {
       message: "Không thể tải bài đăng của người dùng.",
       status: "error",
@@ -284,7 +284,7 @@ export const createNewPost = async (
     const newPostResponse = response.data.data;
     return newPostResponse;
   } catch (error) {
-    console.error("Lỗi tạo bài đăng:", error);
+    console.log("Lỗi tạo bài đăng:", error);
     return { message: "Không thể tạo bài đăng mới.", status: "error" };
   }
 };
@@ -306,7 +306,7 @@ export const togglePostLike = async (
       heartCount: heartCount || 0,
     };
   } catch (error) {
-    console.error("Lỗi khi cập nhật trạng thái thích bài đăng:", error);
+    console.log("Lỗi khi cập nhật trạng thái thích bài đăng:", error);
     return { message: "Không thể cập nhật trạng thái thích.", status: "error" };
   }
 };
@@ -337,7 +337,7 @@ export const sharePost = async (
       originalPost: data.originalPost as Post | undefined,
     };
   } catch (error) {
-    console.error("Lỗi khi chia sẻ bài đăng:", error);
+    console.log("Lỗi khi chia sẻ bài đăng:", error);
     return { message: "Không thể chia sẻ bài đăng.", status: "error" };
   }
 };
@@ -353,7 +353,7 @@ export const fetchCommentsByPostId = async (postId: string) => {
     const response = await api.get(`/comments/byPost/${postId}`);
     return response.data.data.map(mapCommentData);
   } catch (error) {
-    console.error('Error fetching comments:', error);
+    console.log('Error fetching comments:', error);
     return [];
   }
 };
@@ -383,7 +383,7 @@ export const createNewComment = async (
     });
     return response.data;
   } catch (error) {
-    console.error("Lỗi khi đăng bình luận:", error);
+    console.log("Lỗi khi đăng bình luận:", error);
     return { message: "Không thể đăng bình luận.", status: "error" };
   }
 };
@@ -406,7 +406,7 @@ export const toggleCommentLike = async (
       likeCount: likeCount || 0,
     };
   } catch (error) {
-    console.error("Lỗi khi cập nhật trạng thái thích bình luận:", error);
+    console.log("Lỗi khi cập nhật trạng thái thích bình luận:", error);
     return {
       message: "Không thể cập nhật trạng thái thích bình luận.",
       status: "error",
@@ -434,7 +434,7 @@ export const fetchUserProfileSocial = async (
       isFollowing: data.isFollowing === true,
     } as ProfileSocial;
   } catch (error) {
-    console.error("Lỗi khi tải thông tin profile:", error);
+    console.log("Lỗi khi tải thông tin profile:", error);
     return { message: "Không thể tải thông tin profile.", status: "error" };
   }
 };
@@ -451,7 +451,7 @@ export const toggleFollow = async (
       isFollowing: response.data.isFollowing,
     };
   } catch (error) {
-    console.error("Lỗi khi thay đổi trạng thái theo dõi:", error);
+    console.log("Lỗi khi thay đổi trạng thái theo dõi:", error);
     return {
       message: "Không thể thay đổi trạng thái theo dõi.",
       status: "error",
@@ -468,7 +468,7 @@ export const fetchFollowers = async (userId: number): Promise<UserInfo[]> => {
     const response = await api.get(`/follows/users/${userId}/followers`);
     return response.data as UserInfo[];
   } catch (error) {
-    console.error("Lỗi khi tải danh sách người theo dõi:", error);
+    console.log("Lỗi khi tải danh sách người theo dõi:", error);
     throw error;
   }
 };
@@ -483,7 +483,7 @@ export const fetchFollowing = async (userId: number): Promise<UserInfo[]> => {
     const response = await api.get(`/follows/users/${userId}/following`);
     return response.data as UserInfo[];
   } catch (error) {
-    console.error("Lỗi khi tải danh sách đang theo dõi:", error);
+    console.log("Lỗi khi tải danh sách đang theo dõi:", error);
     throw error;
   }
 };
@@ -509,7 +509,7 @@ export const fetchLikesByPostId = async (
     const response = await api.get(`/posts/${postId}/likes`);
     return response.data;
   } catch (error) {
-    console.error("Lỗi khi tải danh sách người đã thích:", error);
+    console.log("Lỗi khi tải danh sách người đã thích:", error);
     throw error;
   }
 };
@@ -529,7 +529,7 @@ export const reportPost = async (
     const response = await api.post(`/posts/${postId}/report`, { reason });
     return response.data;
   } catch (error) {
-    console.error("Lỗi khi báo cáo bài đăng:", error);
+    console.log("Lỗi khi báo cáo bài đăng:", error);
     return { message: "Không thể gửi báo cáo.", status: "error" };
   }
 };
@@ -558,7 +558,7 @@ export const updatePost = async (
     });
     return response.data as Post;
   } catch (error) {
-    console.error("Lỗi khi cập nhật bài đăng:", error);
+    console.log("Lỗi khi cập nhật bài đăng:", error);
     return { message: "Không thể cập nhật bài đăng.", status: "error" };
   }
 };
@@ -592,7 +592,7 @@ export const hidePost = async (
     const response = await api.post(`/posts/${postId}/hide`);
     return response.data;
   } catch (error) {
-    console.error("Lỗi khi ẩn bài đăng:", error);
+    console.log("Lỗi khi ẩn bài đăng:", error);
     return { message: "Không thể ẩn bài đăng.", status: "error" };
   }
 };

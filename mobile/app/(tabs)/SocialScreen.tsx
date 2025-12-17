@@ -8,21 +8,21 @@ import { useFollowStore } from "@/store/followStore";
 import * as ImagePicker from "expo-image-picker";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Animated,
-  FlatList,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    ActivityIndicator,
+    Animated,
+    FlatList,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
@@ -35,14 +35,14 @@ import UploadCoverModal from "../../components/modals/UploadCoverModal";
 import SearchOverlay from "../../components/search/SearchOverlay";
 import { fetchAllCovers } from "../../services/coverService";
 import {
-  createNewComment,
-  createNewPost,
-  deletePost,
-  fetchCommentsByPostId,
-  fetchPosts,
-  fetchPostsForGuest,
-  sharePost,
-  toggleCommentLike
+    createNewComment,
+    createNewPost,
+    deletePost,
+    fetchCommentsByPostId,
+    fetchPosts,
+    fetchPostsForGuest,
+    sharePost,
+    toggleCommentLike
 } from "../../services/socialApi";
 
 const SocialScreen = () => {
@@ -251,7 +251,7 @@ const SocialScreen = () => {
       // Lưu trữ toàn bộ assets để preview và upload
       setSelectedMediaAssets((prevAssets) => [...prevAssets, ...result.assets]);
     } catch (e) {
-      console.error("Lỗi khi chọn media:", e);
+      console.log("Lỗi khi chọn media:", e);
       error("Không thể chọn media.");
 
     }
@@ -319,7 +319,7 @@ const SocialScreen = () => {
       success("Thành công", "Bài viết của bạn đã được đăng thành công!");
 
     } catch (err) {
-      console.error("Lỗi khi tạo bài đăng:", err);
+      console.log("Lỗi khi tạo bài đăng:", err);
       const errorMessage = err.response?.data?.error || err.message || "Không thể tạo bài đăng.";
       error("Lỗi Đăng Bài", errorMessage);
     } finally {
@@ -383,7 +383,7 @@ const SocialScreen = () => {
   //     );
   //     success("Bài viết đã được cập nhật.");
   //   } catch (error) {
-  //     console.error("Lỗi khi chỉnh sửa bài viết:", error);
+  //     console.log("Lỗi khi chỉnh sửa bài viết:", error);
   //     error("Lỗi", "Không thể cập nhật bài viết.");
   //   }
   // };
@@ -556,7 +556,7 @@ const SocialScreen = () => {
       );
     } catch (err) {
       console.log(3)
-      console.error("Lỗi khi gửi bình luận:", err);
+      console.log("Lỗi khi gửi bình luận:", err);
       error("Lỗi", "Gửi bình luận thất bại. Đã hoàn tác.");
 
       // ROLLBACK nếu API thất bại
@@ -626,7 +626,7 @@ const SocialScreen = () => {
       await loadPosts();
       setLoading(false);
     } catch (err) {
-      console.error("Lỗi khi chia sẻ bài đăng:", err);
+      console.log("Lỗi khi chia sẻ bài đăng:", err);
       error("Lỗi", "Không thể chia sẻ bài viết.");
     } finally {
       setIsSharing(false);
@@ -708,7 +708,7 @@ const SocialScreen = () => {
         throw new Error(result.message);
       }
     } catch (err) {
-      console.error("Error toggling comment like:", err);
+      console.log("Error toggling comment like:", err);
       setPosts((prev) =>
         prev.map((p) => {
           if (p.id !== postId) return p;
@@ -764,7 +764,7 @@ const SocialScreen = () => {
 
       return fetchedComments;
     } catch (e) {
-      console.error('Error in loadComments:', e);
+      console.log('Error in loadComments:', e);
       error("Lỗi", "Không thể tải bình luận cho bài viết này." + e.message);
       return [];
     }
@@ -788,7 +788,7 @@ const SocialScreen = () => {
       );
       setPosts(mappedPosts);
     } catch (err) {
-      console.error("Error fetching posts:", err);
+      console.log("Error fetching posts:", err);
       error("Lỗi", "Không thể tải bài đăng từ server.");
     }
   }, []);
@@ -804,7 +804,7 @@ const SocialScreen = () => {
           await loadPosts();
         }
       } catch (err) {
-        console.error("Lỗi khi tải dữ liệu:", err);
+        console.log("Lỗi khi tải dữ liệu:", err);
       } finally {
         setLoading(false);
       }
@@ -870,7 +870,7 @@ const SocialScreen = () => {
         setCovers([]);
       }
     } catch (err) {
-      console.error("Lỗi khi tải danh sách covers:", err);
+      console.log("Lỗi khi tải danh sách covers:", err);
       error("Lỗi", "Không thể tải danh sách covers. Vui lòng thử lại sau.");
     } finally {
       setCoversLoading(false);

@@ -55,7 +55,7 @@ export default function ConversationsScreen() {
             const data = await fetchUserConversations();
             setConversations(data);
         } catch (error) {
-            console.error('Lỗi khi tải cuộc trò chuyện:', error);
+            console.log('Lỗi khi tải cuộc trò chuyện:', error);
             Alert.alert('Lỗi', 'Không thể tải danh sách cuộc trò chuyện');
         } finally {
             setLoading(false);
@@ -77,7 +77,7 @@ export default function ConversationsScreen() {
                 setRestrictedUsersList(restrictedList);
             }
         } catch (error) {
-            console.error('Lỗi khi tải restricted users:', error);
+            console.log('Lỗi khi tải restricted users:', error);
         }
     }, [currentUserId]);
 
@@ -123,7 +123,7 @@ export default function ConversationsScreen() {
 
             setUsers(filteredUsers);
         } catch (error) {
-            console.error('Lỗi khi tải danh sách users từ followStore:', error);
+            console.log('Lỗi khi tải danh sách users từ followStore:', error);
             Alert.alert('Lỗi', 'Không thể tải danh sách người dùng từ danh sách theo dõi');
         } finally {
             setLoadingUsers(false);
@@ -178,7 +178,7 @@ export default function ConversationsScreen() {
                 user: user,
             });
         } catch (error) {
-            console.error('Lỗi khi tạo cuộc trò chuyện:', error);
+            console.log('Lỗi khi tạo cuộc trò chuyện:', error);
             Alert.alert('Lỗi', 'Không thể tạo cuộc trò chuyện');
         }
     };
@@ -212,7 +212,7 @@ export default function ConversationsScreen() {
                             setUsers((prevUsers) => prevUsers.filter((u) => u.id !== user.id));
                             Alert.alert('Thông báo', `Đã chuyển ${user.fullName} vào danh sách hạn chế`);
                         } catch (error) {
-                            console.error('Lỗi khi lưu restricted users:', error);
+                            console.log('Lỗi khi lưu restricted users:', error);
                             Alert.alert('Lỗi', 'Không thể chuyển user vào danh sách hạn chế');
                         }
                     }
@@ -249,7 +249,7 @@ export default function ConversationsScreen() {
                             setUsers((prevUsers) => [...prevUsers, user]);
                             Alert.alert('Thông báo', `Đã thêm lại ${user.fullName} vào danh sách`);
                         } catch (error) {
-                            console.error('Lỗi khi thêm lại user:', error);
+                            console.log('Lỗi khi thêm lại user:', error);
                             Alert.alert('Lỗi', 'Không thể thêm lại user vào danh sách');
                         }
                     }

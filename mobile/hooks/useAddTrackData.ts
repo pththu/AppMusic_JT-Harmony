@@ -80,7 +80,7 @@ export const useAddTrackData = () => {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.log(err);
       error('Lỗi', 'Không thể thêm bài hát vào danh sách phát.');
     }
   };

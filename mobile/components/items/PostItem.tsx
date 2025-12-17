@@ -1,25 +1,24 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { FindTrackById } from "@/services/musicService";
+import useAuthStore from "@/store/authStore";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+    Dimensions,
     Image,
-    Linking,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
-    useColorScheme,
-    Dimensions,
-    NativeSyntheticEvent,
-    NativeScrollEvent,
+    useColorScheme
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
-import { togglePostLike, reportPost, updatePost, hidePost } from "../../services/socialApi";
+import { hidePost, reportPost, togglePostLike, updatePost } from "../../services/socialApi";
 import PostOptionsModal from "../modals/PostOptionsModal";
 import ReportReasonModal from "../modals/ReportReasonModal";
-import useAuthStore from "@/store/authStore";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { useNavigate } from "@/hooks/useNavigate";
-import { FindTrackById } from "@/services/musicService";
 
 // Lấy kích thước màn hình để tính toán chiều rộng ảnh
 const { width: screenWidth } = Dimensions.get('window');
@@ -115,7 +114,7 @@ const PostItem = ({
                 error('Lỗi', 'Không tìm thấy thông tin bài hát.');
             }
         } catch (err) {
-            console.error('Lỗi khi tìm bài hát:', err);
+            console.log('Lỗi khi tìm bài hát:', err);
             error('Lỗi', 'Không thể mở bài hát.');
         }
     };
@@ -174,7 +173,7 @@ const PostItem = ({
                 throw new Error('Invalid response');
             }
         } catch (err) {
-            console.error('Lỗi khi thích/bỏ thích bài đăng:', err);
+            console.log('Lỗi khi thích/bỏ thích bài đăng:', err);
             error("Không thể cập nhật trạng thái thích.");
             setIsLiked(prevIsLiked);
             setCurrentLikeCount(prevLikeCount);
@@ -231,7 +230,7 @@ const PostItem = ({
                 error("Có lỗi xảy ra khi báo cáo.");
             }
         } catch (err) {
-            console.error('Lỗi khi gửi báo cáo:', err);
+            console.log('Lỗi khi gửi báo cáo:', err);
             error("Không thể gửi báo cáo. Vui lòng thử lại.");
 
         }
@@ -252,7 +251,7 @@ const PostItem = ({
                     onHidePost(postId);
                 }
             } catch (error) {
-                console.error('Lỗi khi ẩn bài viết:', error);
+                console.log('Lỗi khi ẩn bài viết:', error);
                 error('Lỗi', 'Không thể ẩn bài viết. Vui lòng thử lại.');
             }
             setIsTemporarilyHidden(false);
@@ -307,7 +306,7 @@ const PostItem = ({
                 }
             }
         } catch (error) {
-            console.error('Lỗi khi cập nhật bài viết:', error);
+            console.log('Lỗi khi cập nhật bài viết:', error);
             error('Không thể cập nhật bài viết. Vui lòng thử lại.');
 
         }

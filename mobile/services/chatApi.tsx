@@ -5,7 +5,7 @@ const api = axiosClient;
 
 // Hàm helper để hiển thị lỗi
 const showError = (message: string) => {
-  console.error(message);
+  console.log(message);
 };
 
 // Interface cho cuộc trò chuyện
@@ -47,7 +47,7 @@ export const fetchUserConversations = async (): Promise<Conversation[]> => {
         const response = await api.get('/conversations');
         return response.data as Conversation[];
     } catch (error) {
-        console.error('Lỗi khi tải danh sách cuộc trò chuyện:', error);
+        console.log('Lỗi khi tải danh sách cuộc trò chuyện:', error);
         showError('Không thể tải danh sách cuộc trò chuyện');
         throw error;
     }
@@ -68,7 +68,7 @@ export const createOrGetPrivateConversation = async (userId: number): Promise<{ 
             conversationId: response.data.conversationId,
         };
     } catch (error) {
-        console.error('Lỗi khi tạo hoặc mở cuộc trò chuyện:', error);
+        console.log('Lỗi khi tạo hoặc mở cuộc trò chuyện:', error);
         return { message: 'Không thể tạo hoặc mở cuộc trò chuyện.', status: 'error' };
     }
 };
@@ -102,7 +102,7 @@ export const fetchMessages = async (
         // Server trả về danh sách tin nhắn, tin nhắn mới nhất nằm trên cùng (DESC)
         return response.data as Message[];
     } catch (error) {
-        console.error('Lỗi khi tải tin nhắn lịch sử:', error);
+        console.log('Lỗi khi tải tin nhắn lịch sử:', error);
         throw error;
     }
 };
@@ -116,7 +116,7 @@ export const deleteMessage = async (messageId: number): Promise<{ message: strin
         await api.delete(`/conversations/messages/${messageId}`);
         return { message: 'Tin nhắn đã được xóa.' };
     } catch (error) {
-        console.error('Lỗi khi xóa tin nhắn:', error);
+        console.log('Lỗi khi xóa tin nhắn:', error);
         return { message: 'Không thể xóa tin nhắn.', status: 'error' };
     }
 };
@@ -130,7 +130,7 @@ export const hideMessage = async (messageId: number): Promise<{ message: string 
         await api.post(`/conversations/messages/${messageId}/hide`);
         return { message: 'Tin nhắn đã được ẩn.' };
     } catch (error) {
-        console.error('Lỗi khi ẩn tin nhắn:', error);
+        console.log('Lỗi khi ẩn tin nhắn:', error);
         return { message: 'Không thể ẩn tin nhắn.', status: 'error' };
     }
 };
@@ -144,7 +144,7 @@ export const deleteConversation = async (conversationId: number): Promise<{ mess
         await api.delete(`/conversations/${conversationId}`);
         return { message: 'Cuộc trò chuyện đã được xóa.' };
     } catch (error) {
-        console.error('Lỗi khi xóa cuộc trò chuyện:', error);
+        console.log('Lỗi khi xóa cuộc trò chuyện:', error);
         return { message: 'Không thể xóa cuộc trò chuyện.', status: 'error' };
     }
 };
@@ -158,7 +158,7 @@ export const fetchAllUsers = async (): Promise<UserInfo[]> => {
         const response = await api.get('/users');
         return response.data as UserInfo[];
     } catch (error) {
-        console.error('Lỗi khi tải danh sách người dùng:', error);
+        console.log('Lỗi khi tải danh sách người dùng:', error);
         showError('Không thể tải danh sách người dùng');
         throw error;
     }

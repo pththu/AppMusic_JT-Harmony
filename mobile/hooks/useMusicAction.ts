@@ -161,7 +161,7 @@ export const useMusicAction = () => {
         // Dismissed
       }
     } catch (err) {
-      console.error('Lỗi khi chia sẻ:', err);
+      console.log('Lỗi khi chia sẻ:', err);
       error('Lỗi khi chia sẻ playlist. Vui lòng thử lại sau.');
     }
   }
@@ -259,7 +259,7 @@ export const useMusicAction = () => {
         }
       }
     } catch (err) {
-      console.error('Lỗi khi chia sẻ:', err);
+      console.log('Lỗi khi chia sẻ:', err);
       error('Lỗi khi chia sẻ album.');
     }
   };
@@ -316,7 +316,7 @@ export const useMusicAction = () => {
         // Dismissed
       }
     } catch (err) {
-      console.error('Lỗi khi chia sẻ:', err);
+      console.log('Lỗi khi chia sẻ:', err);
       error('Lỗi khi chia sẻ thông tin nghệ sĩ. Vui lòng thử lại sau.');
     }
   };

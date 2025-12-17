@@ -436,7 +436,7 @@ export default function GlobalPlayer() {
             historySavedRef.current = null;
           }
         })
-        .catch(err => console.error('❌ Error saving history:', err));
+        .catch(err => console.log('❌ Error saving history:', err));
     }
   };
 
@@ -536,7 +536,7 @@ export default function GlobalPlayer() {
         player.seekTo(seekSeconds);
         if (isPlaying) player.play();
       } catch (e) {
-        console.error('⚠️ seekTo error', e);
+        console.log('⚠️ seekTo error', e);
       } finally {
         setTargetSeekMs(null);
       }

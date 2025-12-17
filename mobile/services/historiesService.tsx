@@ -55,7 +55,7 @@ export const ClearSearchHistory = async (SEARCH_HISTORY_KEY) => {
     const response = await axiosClient.delete('/histories/search/user/me');
     return response.data;
   } catch (error: any) {
-    console.error("ClearSearchHistory error:", error.message);
+    console.log("ClearSearchHistory error:", error.message);
     return { success: false };
   }
 };
@@ -67,7 +67,7 @@ export const RemoveItemSearchHistory = async (payload) => {
     console.log('response api remove search history item: ', response.data);
     return response.data;
   } catch (error) {
-    console.error("RemoveItemSearchHistory error:", error.message);
+    console.log("RemoveItemSearchHistory error:", error.message);
     throw error;
   }
 }

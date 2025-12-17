@@ -1,6 +1,6 @@
-import { io, Socket } from 'socket.io-client';
 import { ENV } from '@/config/env';
 import useAuthStore from '@/store/authStore';
+import { io, Socket } from 'socket.io-client';
 import { NotificationItem } from './notificationService';
 
 let notificationSocket: Socket | null = null;
@@ -29,7 +29,7 @@ export const connectNotificationSocket = (): Socket | null => {
   });
 
   notificationSocket.on('connect_error', (error) => {
-    console.error('[notificationSocket] connect error:', error.message);
+    console.log('[notificationSocket] connect error:', error.message);
   });
 
   return notificationSocket;

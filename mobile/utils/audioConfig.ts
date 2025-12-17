@@ -20,7 +20,7 @@ export const configureAudioForBackground = async () => {
     console.log('✅ Audio mode đã được cấu hình cho phát nền');
     return true;
   } catch (error) {
-    console.error('❌ Lỗi cấu hình audio mode:', error);
+    console.log('❌ Lỗi cấu hình audio mode:', error);
     return false;
   }
 };
@@ -39,6 +39,6 @@ export const resetAudioMode = async () => {
 
     console.log('✅ Audio mode đã reset');
   } catch (error) {
-    console.error('❌ Lỗi reset audio mode:', error);
+    console.log('❌ Lỗi reset audio mode:', error);
   }
 };

@@ -1,24 +1,23 @@
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import useAuthStore from "@/store/authStore";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  FlatList,
-  useColorScheme,
-  ActivityIndicator,
-  TouchableWithoutFeedback,
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    useColorScheme,
+    View
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
-import { toggleCommentLike, Comment } from "../../services/socialApi";
-import useAuthStore from "@/store/authStore";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { Comment } from "../../services/socialApi";
 
 const formatTimeAgo = (dateString: string): string => {
   const commentDate = new Date(dateString);
@@ -124,7 +123,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
         setReplyTo(null);
         setQuote(null);
       } catch (error) {
-        // console.error("Lỗi khi gửi bình luận trong modal:", error);
+        // console.log("Lỗi khi gửi bình luận trong modal:", error);
         
       } finally {
         setIsSending(false);

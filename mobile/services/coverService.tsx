@@ -36,7 +36,7 @@ export const fetchCoversBySongId = async (songId) => {
     const response = await api.get(`/posts/covers/song/${songId}`);
     return response.data as Cover[];
   } catch (error) {
-    console.error("Lỗi khi tải covers theo song ID:", error);
+    console.log("Lỗi khi tải covers theo song ID:", error);
     throw error;
   }
 };
@@ -90,7 +90,7 @@ export const fetchCoversByUserId = async (userId: number): Promise<Cover[]> => {
     const response = await api.get(`/posts/covers/user/${userId}`);
     return response.data as Cover[];
   } catch (error) {
-    console.error("Lỗi khi tải covers theo user ID:", error);
+    console.log("Lỗi khi tải covers theo user ID:", error);
     throw error;
   }
 };
@@ -112,7 +112,7 @@ export const voteCover = async (
       heartCount: heartCount || 0,
     };
   } catch (error) {
-    console.error("Lỗi khi vote cover:", error);
+    console.log("Lỗi khi vote cover:", error);
     return { message: "Không thể vote cover.", status: "error" };
   }
 };
@@ -148,7 +148,7 @@ export const createNewCover = async (
     
     return response.data.data as Cover;
   } catch (error) {
-    console.error("Lỗi khi tạo cover:", error.response?.data || error);
+    console.log("Lỗi khi tạo cover:", error.response?.data || error);
     if (error.response) {
       const { status, data } = error.response;
       return {

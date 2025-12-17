@@ -4,15 +4,15 @@ import { useNavigate } from "@/hooks/useNavigate";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
 import { deleteConversation, deleteMessage, fetchMessages, hideMessage } from "@/services/chatApi";
 import {
-  connectSocket,
-  disconnectSocket,
-  joinConversation,
-  Message,
-  sendMessage,
-  startTyping,
-  stopTyping,
-  subscribeToNewMessages,
-  subscribeToTypingStatus,
+    connectSocket,
+    disconnectSocket,
+    joinConversation,
+    Message,
+    sendMessage,
+    startTyping,
+    stopTyping,
+    subscribeToNewMessages,
+    subscribeToTypingStatus,
 } from "@/services/chatService";
 import useAuthStore from "@/store/authStore";
 import { RouteProp, useFocusEffect, useRoute } from "@react-navigation/native";
@@ -21,17 +21,17 @@ import { vi } from "date-fns/locale";
 import * as ImagePicker from "expo-image-picker";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  RefreshControl,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    RefreshControl,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
@@ -294,7 +294,7 @@ const ChatScreen: React.FC = () => {
 
         setPage(pageToLoad + 1);
       } catch (error) {
-        console.error("Lỗi khi tải tin nhắn:", error);
+        console.log("Lỗi khi tải tin nhắn:", error);
         Alert.alert("Lỗi", "Không thể tải lịch sử tin nhắn.");
       } finally {
         if (pageToLoad === 1) {
@@ -439,7 +439,7 @@ const ChatScreen: React.FC = () => {
       // Thêm vào selectedMediaAssets thay vì upload ngay
       setSelectedMediaAssets((prev) => [...prev, ...result.assets]);
     } catch (e) {
-      console.error("Lỗi khi chọn media:", e);
+      console.log("Lỗi khi chọn media:", e);
       Alert.alert("Lỗi", "Không thể chọn media.");
     }
   };
@@ -515,7 +515,7 @@ const ChatScreen: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error("Lỗi gửi media:", error);
+      console.log("Lỗi gửi media:", error);
       Alert.alert("Lỗi Gửi", "Đã xảy ra lỗi hệ thống khi gửi media.");
     } finally {
       setIsUploading(false);
@@ -583,7 +583,7 @@ const ChatScreen: React.FC = () => {
         );
       }
     } catch (error) {
-      console.error("Lỗi gửi tin nhắn:", error);
+      console.log("Lỗi gửi tin nhắn:", error);
       Alert.alert("Lỗi Gửi", "Đã xảy ra lỗi hệ thống khi gửi tin nhắn.");
 
       // Xóa tin nhắn tạm khỏi danh sách
@@ -610,7 +610,7 @@ const ChatScreen: React.FC = () => {
       setIsLoadingMore(false);
       await loadMessages(1);
     } catch (error) {
-      console.error("Lỗi khi refresh:", error);
+      console.log("Lỗi khi refresh:", error);
     } finally {
       setRefreshing(false);
     }
@@ -636,7 +636,7 @@ const ChatScreen: React.FC = () => {
       await deleteMessage(selectedMessage.id);
       setMessages((prev) => prev.filter((m) => m.id !== selectedMessage.id));
     } catch (error) {
-      console.error("Error deleting message:", error);
+      console.log("Error deleting message:", error);
       Alert.alert("Lỗi", "Không thể xóa tin nhắn.");
     }
   };
@@ -647,7 +647,7 @@ const ChatScreen: React.FC = () => {
       await hideMessage(selectedMessage.id);
       setMessages((prev) => prev.filter((m) => m.id !== selectedMessage.id));
     } catch (error) {
-      console.error("Error hiding message:", error);
+      console.log("Error hiding message:", error);
       Alert.alert("Lỗi", "Không thể ẩn tin nhắn.");
     }
   };
@@ -896,7 +896,7 @@ const ChatScreen: React.FC = () => {
               goBack(); // Navigate back after deletion
             }
           } catch (error) {
-            console.error("Error deleting conversation:", error);
+            console.log("Error deleting conversation:", error);
             Alert.alert("Lỗi", "Không thể xóa cuộc trò chuyện.");
           }
         }}

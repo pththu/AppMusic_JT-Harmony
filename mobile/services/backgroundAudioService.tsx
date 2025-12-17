@@ -68,15 +68,20 @@ export const requestNotificationPermissions = async () => {
 export const showMusicNotification = async (track, isPlaying = true) => {
   if (!track) return null;
 
+  console.log('track', track.name)
+
   try {
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) return null;
 
+    console.log(1)
     // Xóa notification cũ nếu có
     if (currentNotificationId) {
+      console.log(2)
       await Notifications.dismissNotificationAsync(currentNotificationId);
     }
-
+    
+    console.log(3)
     // Chuẩn bị nội dung notification
     const content = {
       title: track.name || 'Đang phát nhạc',
@@ -91,12 +96,14 @@ export const showMusicNotification = async (track, isPlaying = true) => {
       sticky: true,
       ongoing: true,
       priority: Notifications.AndroidNotificationPriority.HIGH,
-      android: {
-        largeIcon: track.album.images[0].url,
-        color: '#1DB954',
-        channelId: 'music-playback',
-      }
+      // android: {
+      //   largeIcon: track.album.images[0].url,
+      //   color: '#1DB954',
+      //   channelId: 'music-playback',
+      // }
     };
+
+    console.log('content', content)
 
     // Hiển thị notification
     currentNotificationId = await Notifications.scheduleNotificationAsync({
@@ -107,7 +114,7 @@ export const showMusicNotification = async (track, isPlaying = true) => {
     console.log('✅ Notification đã hiển thị:', currentNotificationId);
     return currentNotificationId;
   } catch (error) {
-    console.error('❌ Lỗi hiển thị notification:', error);
+    console.log('❌ Lỗi hiển thị notification:', error);
     return null;
   }
 };

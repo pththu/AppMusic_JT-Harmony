@@ -1,46 +1,45 @@
-import React, { useEffect, useState, useCallback } from "react";
+import CustomButton from "@/components/custom/CustomButton";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { useProfileSocialData } from "@/hooks/useProfileSocialData";
+import { FollowUser, UnfollowUser } from "@/services/followService";
+import useAuthStore from "@/store/authStore";
+import { useFollowStore } from "@/store/followStore";
+import { useNavigation } from "@react-navigation/native";
+import { useLocalSearchParams } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
-  Alert,
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Text,
-  TextInput,
-  View,
-  useColorScheme,
-  RefreshControl,
-  TouchableOpacity,
-  Pressable,
-  Modal,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    Modal,
+    RefreshControl,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    useColorScheme,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
-import { useNavigation } from "@react-navigation/native";
-import {
-  fetchCommentsByPostId,
-  createNewComment,
-  toggleCommentLike,
-  updatePost,
-  deletePost,
-  Post as PostType,
-  Comment,
-  sharePost
-} from "../../services/socialApi";
-import { Cover } from "../../services/coverService";
-import useAuthStore from "@/store/authStore";
-import PostItem from "../../components/items/PostItem";
 import CoverItem from "../../components/items/CoverItem";
+import PostItem from "../../components/items/PostItem";
 import CommentModal from "../../components/modals/CommentModal";
 import FollowListModal from "../../components/modals/FollowListModal";
 import LikeModal from "../../components/modals/LikeModal";
-import CustomButton from "@/components/custom/CustomButton";
 import { createOrGetPrivateConversation } from "../../services/chatApi";
-import { useNavigate } from "@/hooks/useNavigate";
-import { useFollowStore } from "@/store/followStore";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { FollowUser, UnfollowUser } from "@/services/followService";
-import { useLocalSearchParams } from "expo-router";
-import { useProfileSocialData } from "@/hooks/useProfileSocialData";
+import { Cover } from "../../services/coverService";
+import {
+    Comment,
+    createNewComment,
+    deletePost,
+    fetchCommentsByPostId,
+    Post as PostType,
+    sharePost,
+    toggleCommentLike,
+    updatePost
+} from "../../services/socialApi";
 
 export default function ProfileSocialScreen() {
   const params = useLocalSearchParams();
@@ -136,7 +135,7 @@ export default function ProfileSocialScreen() {
         },
       });
     } catch (err) {
-      console.error("Lỗi khi mở chat:", err);
+      console.log("Lỗi khi mở chat:", err);
       error("Lỗi", "Không thể mở chat. Vui lòng thử lại.");
     }
   }, [userId, profile, navigate]);
@@ -224,7 +223,7 @@ export default function ProfileSocialScreen() {
       handleCloseEditModal();
       success("Thành công", "Bài viết đã được cập nhật.");
     } catch (err) {
-      console.error("Lỗi khi cập nhật bài viết:", err);
+      console.log("Lỗi khi cập nhật bài viết:", err);
       error("Lỗi", "Không thể cập nhật bài viết.");
     }
   }, [editingPost, editContent, updatePost]);
@@ -245,7 +244,7 @@ export default function ProfileSocialScreen() {
           success("Thành công", "Bài viết đã được xóa.");
 
         } catch (err) {
-          console.error("Lỗi khi xóa bài viết:", err);
+          console.log("Lỗi khi xóa bài viết:", err);
           error("Lỗi", "Không thể xóa bài viết.");
         }
       },
@@ -274,7 +273,7 @@ export default function ProfileSocialScreen() {
       }
       setComments(fetchedComments);
     } catch (error) {
-      console.error("Lỗi khi tải bình luận:", error);
+      console.log("Lỗi khi tải bình luận:", error);
       // Alert.alert("Lỗi", "Không thể tải bình luận.");
       error("Lỗi", "Không thể tải bình luận.");
     }
@@ -311,7 +310,7 @@ export default function ProfileSocialScreen() {
         (prevCount: number) => prevCount + 1
       );
     } catch (error) {
-      console.error("Lỗi khi thêm bình luận:", error);
+      console.log("Lỗi khi thêm bình luận:", error);
       // Alert.alert("Lỗi", "Không thể thêm bình luận.");
       error("Lỗi", "Không thể thêm bình luận.");
     }
@@ -359,7 +358,7 @@ export default function ProfileSocialScreen() {
         })
       );
     } catch (err) {
-      console.error("Lỗi khi like bình luận:", err);
+      console.log("Lỗi khi like bình luận:", err);
       error("Lỗi", "Không thể cập nhật trạng thái like.");
     }
   };
@@ -468,7 +467,7 @@ export default function ProfileSocialScreen() {
         throw new Error(result.status === 'error' ? result.message : "Không thể chia sẻ bài viết");
       }
     } catch (error) {
-      console.error("Lỗi khi chia sẻ bài viết:", error);
+      console.log("Lỗi khi chia sẻ bài viết:", error);
       error("Lỗi", error.message || "Đã xảy ra lỗi khi chia sẻ bài viết");
     } finally {
       setIsSharing(false);

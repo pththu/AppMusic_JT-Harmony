@@ -1,5 +1,4 @@
 import axiosClient from "@/config/axiosClient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * Tìm kiếm tracks với các tham số linh hoạt
@@ -17,7 +16,7 @@ export const SearchTracks = async (payload) => {
     const response = await axiosClient.post(`/music/search-track`, payload);
     return response.data;
   } catch (error: any) {
-    console.error("SearchTracks error:", error.message);
+    console.log("SearchTracks error:", error.message);
     throw error;
   }
 };
@@ -31,7 +30,7 @@ export const SearchPlaylists = async (payload) => {
     const response = await axiosClient.post(`/music/search-playlist`, payload);
     return response.data;
   } catch (error: any) {
-    console.error("SearchPlaylists error:", error.message);
+    console.log("SearchPlaylists error:", error.message);
     throw error;
   }
 };
@@ -45,7 +44,7 @@ export const SearchAlbums = async (payload) => {
     const response = await axiosClient.post(`/music/search-album`, payload);
     return response.data;
   } catch (error: any) {
-    console.error("SearchAlbums error:", error.message);
+    console.log("SearchAlbums error:", error.message);
     throw error;
   }
 };
@@ -59,7 +58,7 @@ export const SearchArtists = async (payload) => {
     const response = await axiosClient.post(`/music/search-artist`, payload);
     return response.data;
   } catch (error: any) {
-    console.error("SearchArtists error:", error.message);
+    console.log("SearchArtists error:", error.message);
     throw error;
   }
 };
@@ -74,7 +73,7 @@ export const SearchUsers = async (payload) => {
     const response = await axiosClient.post(`/users/search-all`, payload);
     return response.data;
   } catch (error: any) {
-    console.error("SearchUsers error:", error.message);
+    console.log("SearchUsers error:", error.message);
     throw error;
   }
 };
@@ -102,7 +101,7 @@ export const SearchAll = async (query, limit = 10) => {
       users: users.status === "fulfilled" ? users.value.data : [],
     };
   } catch (error: any) {
-    console.error("SearchAll error:", error.message);
+    console.log("SearchAll error:", error.message);
     throw error;
   }
 };
@@ -118,7 +117,7 @@ export const GetSearchSuggestions = async (query: string) => {
     );
     return response.data;
   } catch (error: any) {
-    console.error("GetSearchSuggestions error:", error.message);
+    console.log("GetSearchSuggestions error:", error.message);
     return { data: [] };
   }
 };
@@ -132,7 +131,7 @@ export const SaveSearchHistory = async (query) => {
     const response = await axiosClient.post('/histories/search', { query });
     return response.data;
   } catch (error: any) {
-    console.error("SaveSearchHistory error:", error.message);
+    console.log("SaveSearchHistory error:", error.message);
     return { success: false };
   }
 };
@@ -148,7 +147,7 @@ export const GetCategoryContent = async (category: string) => {
     );
     return response.data;
   } catch (error: any) {
-    console.error("GetCategoryContent error:", error.message);
+    console.log("GetCategoryContent error:", error.message);
     throw error;
   }
 };
@@ -161,7 +160,7 @@ export const GetAllGenres = async () => {
     const response = await axiosClient.get(`/genres`);
     return response.data;
   } catch (error: any) {
-    console.error("GetAllGenres error:", error.message);
+    console.log("GetAllGenres error:", error.message);
     throw error;
   }
 };
