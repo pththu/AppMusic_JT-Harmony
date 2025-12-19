@@ -20,6 +20,7 @@ const initializeSocketIO = (server) => {
           "exp://10.172.55.251:8081",
           "https://admin-jt-harmony.vercel.app",
           "https://jt-harmony.vercel.app",
+          "https://appmusic-jt-harmony-087.onrender.com:443",
         ];
         if (allowedOrigins.includes(origin) || !origin) {
           return callback(null, true);
