@@ -7,17 +7,17 @@ import useAuthStore from "@/store/authStore";
 import * as DocumentPicker from "expo-document-picker";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    useColorScheme,
-    View
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useColorScheme,
+  View
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 

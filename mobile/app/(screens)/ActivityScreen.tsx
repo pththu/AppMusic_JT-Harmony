@@ -132,11 +132,6 @@ export default function ActivityScreen() {
       case 'like':
       case 'comment':
       case 'share':
-        if (notification.postId) {
-          navigate('Social');
-          return;
-        }
-        break;
       default:
         break;
     }
@@ -144,7 +139,7 @@ export default function ActivityScreen() {
 
   // Render Item
   const renderNotificationItem = ({ item }) => {
-    const timeAgo = formatDistanceToNowStrict(parseISO(item.createdAt), {
+    const timeAgo = formatDistanceToNowStrict(parseISO(item.createdAt || new Date().toISOString()), {
       addSuffix: true,
       locale: vi,
     });
@@ -161,14 +156,14 @@ export default function ActivityScreen() {
         <Image
           source={{
             uri:
-              item.Actor?.avatarUrl ||
+              item?.Actor?.avatarUrl || item?.actorAvatar ||
               'https://res.cloudinary.com/chaamz03/image/upload/v1756819623/default-avatar-icon-of-social-media-user-vector_t2fvta.jpg',
           }}
           className="w-12 h-12 rounded-full mr-3"
         />
         <View className="flex-1">
           <Text className="text-base font-semibold text-black dark:text-white" numberOfLines={2}>
-            {item.Actor?.fullName || item.Actor?.username ||item?.actorName || 'Ai đó'}
+            {item.Actor?.fullName || item.Actor?.username || item?.actorName || 'Ai đó'}
           </Text>
           <Text className="text-sm text-gray-700 dark:text-gray-300" numberOfLines={2}>
             {item.message || renderDefaultMessage(item)}
