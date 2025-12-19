@@ -1,6 +1,6 @@
-const { Post, User, Comment, CommentLike, Track, sequelize } = require('../models');
+const { Post, User, Comment, CommentLike, Track, sequelize, Notification } = require('../models');
 const { Op } = require('sequelize');
-const { emitNewNotification, emitNewComment } = require('../services/notificationService');
+const notificationService = require("../services/notificationService");
 const analysisService = require('../services/analysisService');
 
 exports.getAllComment = async (req, res) => {
@@ -399,33 +399,37 @@ exports.createComment = async (req, res) => {
 
         // ============ REAL-TIME SOCKET.IO ============
 
-        // 1. Gửi comment real-time đến tất cả người đang xem post
-        if (payload.postId) {
-            await emitNewComment(payload.postId, commentWithUser);
-        }
+
 
         // 2. Tạo notification cho chủ post (nếu không phải chính họ comment)
         if (targetPost && targetPost.userId && targetPost.userId !== payload.userId) {
             const actorName = user.fullName || user.username || "Someone";
+            const actorAvatar = user.avatarUrl || null;
+
+            console.log('actorName', actorName)
+            console.log('target: ', targetPost.userId)
 
             const notificationData = {
                 userId: targetPost.userId,
                 actorId: payload.userId,
+                actorName: actorName,
+                actorAvatar: actorAvatar,
                 postId: targetPost.id,
                 type: "comment",
-                message: `${actorName} bình luận về bài viết của bạn.`,
+                message: `${actorName} bình luận về bài viết của bạn: ${payload.content ? payload.content.slice(0, 100) : "[Media]"}`,
                 metadata: {
                     postId: targetPost.id,
                     commentId: newComment.id,
                     contentSnippet: payload.content
-                        ? payload.content.slice(0, 120)
+                        ? payload.content.slice(0, 100)
                         : "[Media]",
                 },
+                isRead: false,
             };
 
+            await Notification.create(notificationData);
             const userId = targetPost.userId;
-
-            await emitNewNotification(userId, notificationData);
+            notificationService.emitNewNotification(userId, notificationData);
         }
 
         res.status(201).json({

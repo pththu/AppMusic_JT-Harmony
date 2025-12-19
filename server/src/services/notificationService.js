@@ -3,7 +3,7 @@
 /**
  * Đăng ký các event handlers cho notification (Client -> Server)
  */
-const registerNotificationEvents = (io) => {  
+const registerNotificationEvents = (io) => {
   io.on("connection", (socket) => {
     const userId = socket.user.id;
 

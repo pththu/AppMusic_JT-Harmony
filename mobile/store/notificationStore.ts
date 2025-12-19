@@ -214,12 +214,16 @@ export const useNotificationStore = create<NotificationState>()(
       prependNotification: (item) =>
         set((state) => {
           // Kiểm tra duplicate
+
           const exists = state.notifications.some(
-            (n) => n.id === item.id
+            (n) => n.postId === item.postId && n.type === item.type
+              && n.userId === item.userId && n.metadata.commentId === item.metadata.commentId
           );
 
+          console.log('item', item)
+
           if (exists) {
-            console.warn(`⚠️ Notification ${item.id} already exists`);
+            console.warn(`⚠️ Notification ${item} already exists`);
             return state;
           }
 
