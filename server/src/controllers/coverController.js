@@ -285,6 +285,7 @@ exports.getAllCovers = async (req, res) => {
         "songId",
         "isCover",
         "originalSongId",
+        "flag",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")`

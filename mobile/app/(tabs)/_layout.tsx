@@ -1,16 +1,14 @@
+// app/(tabs)/_layout.tsx
 import { Redirect, Tabs } from "expo-router";
 import React, { useEffect } from "react";
 
 import TabBar from "@/components/tabBar/TabBar";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/colors";
-import useAuthStore from "@/store/authStore";
+import { useSocket } from "@/hooks/useSocket";
 import { fetchUnreadNotificationCount } from "@/services/notificationService";
-import {
-  connectNotificationSocket,
-  disconnectNotificationSocket,
-  subscribeToNotificationEvents,
-} from "@/services/notificationSocket";
+import * as SocketService from "@/services/UnifiedSocketService";
+import useAuthStore from "@/store/authStore";
 import { useNotificationStore } from "@/store/notificationStore";
 
 export default function TabLayout() {
@@ -18,25 +16,22 @@ export default function TabLayout() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
   const setUnreadCount = useNotificationStore((state) => state.setUnreadCount);
-  const incrementUnreadCount = useNotificationStore(
-    (state) => state.incrementUnreadCount,
-  );
-  const prependNotification = useNotificationStore(
-    (state) => state.prependNotification,
-  );
-  const clearNotifications = useNotificationStore(
-    (state) => state.clearNotifications,
-  );
+  const incrementUnreadCount = useNotificationStore((state) => state.incrementUnreadCount);
+  const prependNotification = useNotificationStore((state) => state.prependNotification);
+  const clearNotifications = useNotificationStore((state) => state.clearNotifications);
+
+  // ✅ Khởi tạo socket connection (chỉ một lần ở đây)
+  const { isConnected } = useSocket();
 
   useEffect(() => {
     if (!isLoggedIn) {
       clearNotifications();
-      disconnectNotificationSocket();
       return;
     }
 
     let isMounted = true;
 
+    // Fetch unread notification count
     (async () => {
       try {
         const count = await fetchUnreadNotificationCount();
@@ -48,10 +43,12 @@ export default function TabLayout() {
       }
     })();
 
-    connectNotificationSocket();
-    const unsubscribe = subscribeToNotificationEvents((notification) => {
-      prependNotification(notification);
-      incrementUnreadCount();
+    // Listen to new notifications
+    const unsubscribe = SocketService.on('notification:new', (notification) => {
+      if (isMounted) {
+        prependNotification(notification);
+        incrementUnreadCount();
+      }
     });
 
     return () => {

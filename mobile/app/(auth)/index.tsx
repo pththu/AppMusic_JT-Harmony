@@ -84,7 +84,7 @@ export default function AuthScreen() {
       if (typeof error === 'function') {
         error('Lỗi đăng nhập', errorMessage);
       } else {
-        console.error('LỖI CẤU HÌNH: Hàm showAlertError không phải là hàm.');
+        console.log('LỖI CẤU HÌNH: Hàm showAlertError không phải là hàm.');
       }
       await GoogleSignin.signOut();
     }

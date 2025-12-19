@@ -13,16 +13,16 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  Pressable,
-  Share,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-  View
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    Pressable,
+    Share,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    useColorScheme,
+    View
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
@@ -126,7 +126,7 @@ export default function LikedSongsScreen() {
             try {
               await RemoveFavoriteItem(favItem.id);
             } catch (apiErr) {
-              console.error('Lỗi khi xóa favorite trên server:', apiErr);
+              console.log('Lỗi khi xóa favorite trên server:', apiErr);
             }
           }
 
@@ -150,7 +150,7 @@ export default function LikedSongsScreen() {
 
           success(`Đã xóa ${itemsToRemove.length} bài hát khỏi danh sách yêu thích`);
         } catch (err) {
-          console.error('Lỗi khi xóa bài hát:', err);
+          console.log('Lỗi khi xóa bài hát:', err);
           error('Đã xảy ra lỗi khi xóa bài hát');
         } finally {
           setIsDeleting(false);

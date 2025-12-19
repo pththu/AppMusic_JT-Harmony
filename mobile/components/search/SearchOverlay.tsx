@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from '@/hooks/useNavigate';
+import { SaveSearchHistory, SearchUsers } from '@/services/searchService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  TextInput,
-  ActivityIndicator,
-  Animated,
-  Image,
-  Dimensions,
-  StatusBar,
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    FlatList,
+    Image,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import { useNavigate } from '@/hooks/useNavigate';
-import { SearchUsers, SaveSearchHistory } from '@/services/searchService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface User {
   id: string;
@@ -56,7 +56,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffs
         setSearchHistory(JSON.parse(history));
       }
     } catch (error) {
-      console.error('Error loading search history:', error);
+      console.log('Error loading search history:', error);
     }
   };
 
@@ -70,7 +70,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffs
       // Also save to server
       await SaveSearchHistory(query);
     } catch (error) {
-      console.error('Error saving search history:', error);
+      console.log('Error saving search history:', error);
     }
   };
 
@@ -142,7 +142,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffs
           setShowHistory(false);
         }
       } catch (error) {
-        console.error('SearchUsers error:', error);
+        console.log('SearchUsers error:', error);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
@@ -186,7 +186,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ visible, onClose, topOffs
       setSearchHistory([]);
       await AsyncStorage.removeItem('search_history');
     } catch (error) {
-      console.error('Error clearing search history:', error);
+      console.log('Error clearing search history:', error);
     }
   };
 

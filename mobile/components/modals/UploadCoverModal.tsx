@@ -1,29 +1,25 @@
-import React, { useState, useEffect } from "react";
-import {
-  Alert,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  FlatList,
-  useColorScheme,
-  ActivityIndicator,
-  TouchableWithoutFeedback,
-} from "react-native";
-import Icon from "react-native-vector-icons/Feather";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
+import CustomButton from "@/components/custom/CustomButton";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
 import { UploadMultipleFile } from "@/routes/ApiRouter";
 import { createNewCover } from "@/services/coverService";
 import { GetTracksForCover } from "@/services/musicService";
 import useAuthStore from "@/store/authStore";
-import CustomButton from "@/components/custom/CustomButton";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
+import * as DocumentPicker from "expo-document-picker";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    useColorScheme,
+    View
+} from "react-native";
+import Icon from "react-native-vector-icons/Feather";
 
 interface UploadCoverModalProps {
   visible: boolean;
@@ -69,7 +65,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         }
       }
     } catch (err) {
-      console.error("Error loading tracks:", err);
+      console.log("Error loading tracks:", err);
       showError("Không thể tải danh sách bài hát.");
       setTracks([]);
     }
@@ -120,7 +116,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
         setSelectedMedia(formattedAsset);
       }
     } catch (error) {
-      console.error("Error selecting media:", error);
+      console.log("Error selecting media:", error);
       showError("Lỗi", "Không thể chọn file media.");
     }
   };
@@ -197,7 +193,7 @@ const UploadCoverModal: React.FC<UploadCoverModalProps> = ({
       });
       
     } catch (error) {
-      console.error("Lỗi khi đăng cover:", error);
+      console.log("Lỗi khi đăng cover:", error);
       
       // Hiển thị thông báo lỗi chi tiết hơn
       let errorMessage = "Đã xảy ra lỗi khi đăng cover";

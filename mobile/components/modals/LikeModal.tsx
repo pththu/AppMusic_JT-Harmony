@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-  useColorScheme,
-  Image,
-  TouchableWithoutFeedback,
-} from "react-native";
-import { useNavigate } from "@/hooks/useNavigate";
-import Icon from "react-native-vector-icons/Feather";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Modal,
+    Text,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    useColorScheme,
+    View,
+} from "react-native";
+import Icon from "react-native-vector-icons/Feather";
 import { fetchLikesByPostId, UserInfo } from "../../services/socialApi";
 
 interface LikeModalProps {
@@ -93,7 +93,7 @@ export default function LikeModal({
       const fetchedUsers = await fetchLikesByPostId(postId);
       setData(fetchedUsers);
     } catch (error) {
-      console.error("Lỗi khi tải danh sách likes:", error);
+      console.log("Lỗi khi tải danh sách likes:", error);
       error("Lỗi", "Không thể tải danh sách người đã thích.");
     } finally {
       setLoading(false);

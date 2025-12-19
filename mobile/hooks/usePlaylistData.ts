@@ -41,7 +41,7 @@ export const usePlaylistData = (currentPlaylist) => {
         setListTrack([]);
       }
     } catch (e) {
-      console.error('Error fetching tracks:', e);
+      console.log('Error fetching tracks:', e);
       setListTrack([]);
     } finally {
       setIsLoading(false);

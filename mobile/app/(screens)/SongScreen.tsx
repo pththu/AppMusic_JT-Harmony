@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Dimensions,
-  Image,
-  Modal,
-  ScrollView,
-  Share,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-  View,
+    ActivityIndicator,
+    Dimensions,
+    Image,
+    Modal,
+    ScrollView,
+    Share,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    useColorScheme,
+    View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -183,7 +183,7 @@ export default function SongScreen() {
           const coversData = await fetchCoversBySongId(currentTrack.id);
           setCovers(coversData.slice(0, 3)); // Chỉ lấy top 3 covers
         } catch (error) {
-          console.error('Error loading covers:', error);
+          console.log('Error loading covers:', error);
         } finally {
           setLoadingCovers(false);
         }
@@ -207,7 +207,7 @@ export default function SongScreen() {
             router.back();
           }
         } catch (err) {
-          console.error('Lỗi khi tải bài hát:', err);
+          console.log('Lỗi khi tải bài hát:', err);
           error('Lỗi', 'Không thể tải bài hát.');
           router.back();
         } finally {

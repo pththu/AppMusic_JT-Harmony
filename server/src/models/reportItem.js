@@ -26,11 +26,11 @@ const ReportItem = sequelize.define(
       field: 'item_type'
     },
     reason: {
-      type: DataTypes.TEXT,
+      type: DataTypes.TEXT, // Mô tả lý do báo cáo: adult content, spam, hate speech, misinformation, self_harm, self_harm.
       allowNull: true
     },
     status: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING, // pending, reviewed, dismissed
       defaultValue: 'pending'
     },
     adminNotes: {

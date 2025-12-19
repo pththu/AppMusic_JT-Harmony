@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { View } from "react-native"; 
 import { useColorScheme } from "nativewind";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { View } from "react-native";
 
 // Khởi tạo Context
 export const ThemeContext = createContext({
@@ -31,7 +31,7 @@ export const ThemeProvider = ({ children }) => {
       setColorScheme(mode);
     } catch (e) {
       // 3. Khắc phục lỗi Linter cho console.warn
-      console.error("Lỗi khi lưu chế độ:", e); // Thay console.warn bằng console.error
+      console.log("Lỗi khi lưu chế độ:", e); // Thay console.warn bằng console.log
     }
   };
 
@@ -47,7 +47,7 @@ export const ThemeProvider = ({ children }) => {
       }
     } catch (e) {
       // 6. Khắc phục lỗi Linter
-      console.error("Lỗi khi tải chế độ:", e); // Thay console.warn bằng console.error
+      console.log("Lỗi khi tải chế độ:", e); // Thay console.warn bằng console.log
     } finally {
       // 7. React State Setter: Đảm bảo cú pháp đúng
       setIsThemeLoaded(true);

@@ -1,26 +1,25 @@
-import React, { useEffect, useState, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  useColorScheme,
-  ActivityIndicator,
-  Animated, // Import Animated
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useNavigate } from "@/hooks/useNavigate";
-import Icon from "react-native-vector-icons/Ionicons";
 import ArtistItem from "@/components/artists/ArtistItem";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
 import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
 import { GetCategoryContent } from "@/services/searchService";
-import { usePlayerStore } from "@/store/playerStore";
 import { useFollowStore } from "@/store/followStore";
 import { useHistoriesStore } from "@/store/historiesStore";
-import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import { usePlayerStore } from "@/store/playerStore";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/Ionicons";
 
 // Component hiển thị Playlist/Track/Album
 const ContentItem = ({ item, onPress }) => {
@@ -148,7 +147,7 @@ export default function CategoryScreen() {
         setError(response.message || "Tải nội dung thể loại thất bại");
       }
     } catch (err: any) {
-      console.error("Error fetching category data:", err);
+      console.log("Error fetching category data:", err);
       setError(err.message || "Đã xảy ra lỗi khi tải nội dung");
     } finally {
       setLoading(false);

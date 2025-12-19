@@ -47,35 +47,8 @@ const formatDuration = (milliseconds: number) => {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
-interface CoverItemProps {
-  id: string;
-  userId: number;
-  User: { username: string; avatarUrl: string; fullName: string };
-  uploadedAt: string;
-  content: string;
-  fileUrl: string[] | string;
-  heartCount: number;
-  isLiked: boolean;
-  originalSongId: number;
-  OriginalSong?: {
-    id: number;
-    name: string;
-    spotifyId: string;
-    artists?: { id: number; name: string }[];
-  };
-  onUserPress: (userId: number) => void;
-  onRefresh?: () => void;
-  onLikePress?: () => void;
-  onCommentPress?: () => void;
-  onSharePress?: () => void;
-  onVoteCountPress?: (coverId: string) => void;
-  likeCount?: number;
-  commentCount?: number;
-  shareCount?: number;
-  isLikedPost?: boolean;
-}
 
-const CoverItem: React.FC<CoverItemProps> = ({
+const CoverItem = ({
   id,
   userId,
   User,
@@ -86,12 +59,16 @@ const CoverItem: React.FC<CoverItemProps> = ({
   isLiked: initialIsLiked,
   originalSongId,
   OriginalSong,
+  flag,
   onUserPress,
   onCommentPress,
   onSharePress,
   onVoteCountPress,
   commentCount,
   shareCount,
+  onRefresh,
+  likeCount,
+  isLikedPost,
 }) => {
   const colorScheme = useColorScheme();
   const { navigate } = useNavigate();
@@ -99,7 +76,7 @@ const CoverItem: React.FC<CoverItemProps> = ({
 
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [heartCount, setHeartCount] = useState(initialHeartCount);
-  
+
   // State quản lý playback
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -140,13 +117,13 @@ const CoverItem: React.FC<CoverItemProps> = ({
       // 3. Cập nhật tiến trình (dùng setInterval nhẹ hơn là listener statusChange liên tục cho mỗi frame)
       const interval = setInterval(() => {
         if (videoPlayer.playing) { // Chỉ update khi đang chạy
-           setPosition(videoPlayer.currentTime * 1000);
-           // Duration video thường không đổi, set 1 lần hoặc check nếu cần
-           if (videoPlayer.duration > 0 && duration === 0) {
-              setDuration(videoPlayer.duration * 1000);
-           }
+          setPosition(videoPlayer.currentTime * 1000);
+          // Duration video thường không đổi, set 1 lần hoặc check nếu cần
+          if (videoPlayer.duration > 0 && duration === 0) {
+            setDuration(videoPlayer.duration * 1000);
+          }
         }
-      }, 500); 
+      }, 500);
 
       return () => {
         playingSubscription.remove();
@@ -167,14 +144,14 @@ const CoverItem: React.FC<CoverItemProps> = ({
       const interval = setInterval(() => {
         // Chỉ update position khi đang play để tối ưu
         if (audioPlayer.playing) {
-           setPosition(audioPlayer.currentTime * 1000);
+          setPosition(audioPlayer.currentTime * 1000);
         }
         // Đồng bộ lại trạng thái playing (fallback)
         if (audioPlayer.playing !== isPlaying) {
-           setIsPlaying(audioPlayer.playing);
+          setIsPlaying(audioPlayer.playing);
         }
       }, 500);
-      
+
       return () => clearInterval(interval);
     }
   }, [audioPlayer, mediaType, isPlaying]); // Thêm isPlaying vào dep để check diff
@@ -189,7 +166,7 @@ const CoverItem: React.FC<CoverItemProps> = ({
         videoPlayer.play();
         // Nếu video đã kết thúc, replay lại
         if (videoPlayer.currentTime >= videoPlayer.duration) {
-            videoPlayer.replay();
+          videoPlayer.replay();
         }
       }
     } else if (mediaType === "audio" && audioPlayer) {
@@ -223,10 +200,77 @@ const CoverItem: React.FC<CoverItemProps> = ({
 
   const heartColor = isLiked ? "rgb(239, 68, 68)" : colorScheme === "dark" ? "rgb(156, 163, 175)" : "rgb(107, 114, 128)";
 
+  const textFlag = useMemo(() => {
+    switch (flag) {
+      case 'toxic':
+        return 'Độc hại';
+      case 'safe':
+        return 'An toàn';
+      case 'threat':
+        return 'Đe dọa';
+      case 'adult_content':
+        return '18+';
+      case 'obscene':
+        return 'Từ ngữ gây khó chịu';
+      case 'insult':
+        return 'Lăng mạ';
+      case 'self_harm':
+        return 'Tự làm hại';
+      default:
+        return 'Không xác định';
+    }
+  }, [flag]);
+
+  const isDarkMode = colorScheme === 'dark' ? true : false;
+
+  const styleFlag = useMemo(() => {
+    switch (flag) {
+      case 'toxic':
+        return `${isDarkMode ? 'bg-red-500/20 border-red-200 text-red-400 ' : 'bg-red-500/10 text-red-600 border-red-700'}`;
+      case 'safe':
+        return `${isDarkMode ? 'bg-green-500/20 border-green-200' : 'bg-green-500/10 text-green-700 border-green-700'}`;
+      case 'threat':
+        return `${isDarkMode ? 'bg-orange-500/20 border-orange-200' : 'bg-orange-500/10 text-orange-600 border-orange-700'}`;
+      case 'adult_content':
+        return `${isDarkMode ? 'bg-purple-500/20 border-purple-200' : 'bg-purple-500/10 text-purple-600 border-purple-700'}`;
+      case 'obscene':
+        return `${isDarkMode ? 'bg-pink-500/20 border-pink-200' : 'bg-pink-500/10 text-pink-600 border-pink-700'}`;
+      case 'insult':
+        return `${isDarkMode ? 'bg-yellow-500/20 border-yellow-200' : 'bg-yellow-500/10 text-yellow-600 border-yellow-700'}`;
+      case 'self_harm':
+        return `${isDarkMode ? 'bg-teal-500/20 border-teal-200' : 'bg-teal-500/10 text-teal-600 border-teal-700'}`;
+      default:
+        return null;
+    }
+  }, [flag]);
+
+  const styleTextFlag = useMemo(() => {
+    switch (flag) {
+      case 'toxic':
+        return `${isDarkMode ? 'text-red-400' : 'text-red-600'}`;
+      case 'safe':
+        return `${isDarkMode ? 'text-green-400' : 'text-green-700'}`;
+      case 'threat':
+        return `${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`;
+      case 'adult_content':
+        return `${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`;
+      case 'obscene':
+        return `${isDarkMode ? 'text-pink-400' : 'text-pink-600'}`;
+      case 'insult':
+        return `${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`;
+      case 'self_harm':
+        return `${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`;
+      default:
+        return null;
+    }
+  }, [flag]);
+
+
+
   // --- RENDER ---
   return (
     <View className="bg-white dark:bg-[#171431] p-4 my-2 mx-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
-      
+
       {/* HEADER ... (Giữ nguyên) */}
       <View className="flex-row items-center mb-3">
         <TouchableOpacity onPress={() => onUserPress(userId)}>
@@ -238,6 +282,13 @@ const CoverItem: React.FC<CoverItemProps> = ({
         <View className="ml-3 flex-1">
           <Text className="font-bold text-lg text-black dark:text-white">{User?.fullName}</Text>
           <Text className="text-gray-500 dark:text-gray-400 text-xs">{formatTimeAgo(uploadedAt)}</Text>
+        </View>
+        <View className="mr-4">
+          {flag ? (
+            <View className={`ml-3 px-2 py-1 rounded-full border ${styleFlag}`}>
+              <Text className={`${styleTextFlag} text-xs font-medium`}>{textFlag}</Text>
+            </View>
+          ) : null}
         </View>
         <View className={`px-2 py-1 rounded-md flex-row items-center ${mediaType === 'video' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30'}`}>
           <Icon name={mediaType === 'video' ? 'video' : 'mic'} size={12} color={mediaType === 'video' ? '#3B82F6' : '#A855F7'} />
@@ -262,7 +313,7 @@ const CoverItem: React.FC<CoverItemProps> = ({
       {/* MEDIA PLAYER */}
       {mediaSource && (
         <View className="mb-4 rounded-xl overflow-hidden bg-black bg-opacity-5 dark:bg-black/20">
-          
+
           {/* ----- VIDEO ----- */}
           {mediaType === "video" ? (
             <View className="relative justify-center items-center bg-black">
@@ -273,7 +324,7 @@ const CoverItem: React.FC<CoverItemProps> = ({
                 allowsPictureInPicture
                 nativeControls={false} // QUAN TRỌNG: Tắt control gốc để dùng nút custom
               />
-              
+
               {/* Vùng Clickable Toàn Màn Hình */}
               <TouchableOpacity
                 className="absolute inset-0 w-full h-full justify-center items-center z-10"
@@ -289,11 +340,11 @@ const CoverItem: React.FC<CoverItemProps> = ({
               </TouchableOpacity>
 
               {/* (Optional) Play Icon nhỏ ở góc khi đang chạy để biết là video */}
-               {/* <View className="absolute top-2 right-2 z-0"> ... </View> */}
+              {/* <View className="absolute top-2 right-2 z-0"> ... </View> */}
             </View>
           ) : (
-            
-          /* ----- AUDIO ----- */
+
+            /* ----- AUDIO ----- */
             <View className="flex-row p-3 items-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 h-[160px]">
               <View className="relative justify-center items-center mr-4">
                 <View className={`w-24 h-24 rounded-full border-4 border-gray-800 dark:border-gray-900 overflow-hidden shadow-lg ${isPlaying ? 'animate-spin-slow' : ''}`}>
@@ -307,10 +358,10 @@ const CoverItem: React.FC<CoverItemProps> = ({
 
               <View className="flex-1 justify-center space-y-2">
                 <View>
-                    <Text className="font-semibold text-gray-800 dark:text-gray-100 text-base" numberOfLines={1}>Audio Clip</Text>
-                    <Text className="text-xs text-gray-500 dark:text-gray-400">{User?.fullName}</Text>
+                  <Text className="font-semibold text-gray-800 dark:text-gray-100 text-base" numberOfLines={1}>Audio Clip</Text>
+                  <Text className="text-xs text-gray-500 dark:text-gray-400">{User?.fullName}</Text>
                 </View>
-                
+
                 <View>
                   <View className="h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full w-full overflow-hidden">
                     <View className="h-full bg-emerald-500 rounded-full" style={{ width: duration > 0 ? `${(position / duration) * 100}%` : '0%' }} />

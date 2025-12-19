@@ -1,5 +1,4 @@
 const { Follow, User, sequelize, FollowArtist, Artist, FollowUser } = require('../models');
-const { createNotification } = require('../utils/notificationHelper');
 
 const Sequelize = require('sequelize'); // Import module gốc
 const spotify = require('../configs/spotify');

@@ -1,4 +1,7 @@
-import React, { use, forwardRef } from 'react';
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import useAuthStore from '@/store/authStore';
+import React, { forwardRef } from 'react';
 import {
     ActivityIndicator,
     Image,
@@ -10,9 +13,6 @@ import {
     useColorScheme
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import { useNavigate } from "@/hooks/useNavigate";
-import useAuthStore from '@/store/authStore';
-import { useCustomAlert } from "@/hooks/useCustomAlert";
 
 interface NewPostItemProps {
     user: { id: number; avatarUrl?: string };

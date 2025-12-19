@@ -1,42 +1,41 @@
-import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
+import CustomButton from "@/components/custom/CustomButton";
+import LocalCategoryItem from "@/components/items/LocalCategoryItem";
+import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
+import ResultSearchListSection from "@/components/section/ResultSearchListSection";
+import { BROWSE_CATEGORIES, FILTER_TYPES } from "@/constants/data";
+import { useCustomAlert } from "@/hooks/useCustomAlert";
+import { useNavigate } from "@/hooks/useNavigate";
+import { ClearSearchHistory, RemoveItemSearchHistory } from "@/services/historiesService";
 import {
-  Animated,
-  Keyboard,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useColorScheme,
-  ActivityIndicator,
-  ScrollView,
+    GetSearchSuggestions,
+    SaveSearchHistory,
+    SearchAlbums,
+    SearchAll,
+    SearchArtists,
+    SearchPlaylists,
+    SearchTracks,
+    SearchUsers,
+} from "@/services/searchService";
+import useAuthStore from "@/store/authStore";
+import { useFollowStore } from "@/store/followStore";
+import { useHistoriesStore } from "@/store/historiesStore";
+import { usePlayerStore } from "@/store/playerStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    ActivityIndicator,
+    Animated,
+    Keyboard,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useNavigate } from "@/hooks/useNavigate";
-import CustomButton from "@/components/custom/CustomButton";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MINI_PLAYER_HEIGHT } from "@/components/player/MiniPlayer";
-import { GetArtistsForYou } from "@/services/musicService";
-import {
-  SearchAll,
-  SearchTracks,
-  SearchPlaylists,
-  SearchAlbums,
-  SearchArtists,
-  GetSearchSuggestions,
-  SearchUsers,
-  SaveSearchHistory,
-} from "@/services/searchService";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { usePlayerStore } from "@/store/playerStore";
-import { useFollowStore } from "@/store/followStore";
-import useAuthStore from "@/store/authStore";
-import { useCustomAlert } from "@/hooks/useCustomAlert";
-import { ClearSearchHistory, RemoveItemSearchHistory, SaveToListeningHistory } from "@/services/historiesService";
-import { useHistoriesStore } from "@/store/historiesStore";
-import LocalCategoryItem from "@/components/items/LocalCategoryItem";
-import { BROWSE_CATEGORIES, FILTER_TYPES } from "@/constants/data";
-import ResultSearchListSection from "@/components/section/ResultSearchListSection";
 
 const ACTIVE_COLOR = "#22C55E";
 const SEARCH_HISTORY_KEY = "search_history";
@@ -157,7 +156,7 @@ export default function SearchScreen() {
         await performFilteredSearch(query, activeFilter);
       }
     } catch (error) {
-      console.error("Search failed:", error);
+      console.log("Search failed:", error);
     } finally {
       setLoading(false);
     }
@@ -201,7 +200,7 @@ export default function SearchScreen() {
 
       setSearchResults(results);
     } catch (error) {
-      console.error("Filtered search failed:", error);
+      console.log("Filtered search failed:", error);
     }
   };
 
@@ -248,7 +247,7 @@ export default function SearchScreen() {
 
       setQuerySuggestions(formatted.slice(0, 10));
     } catch (error) {
-      console.error("Failed to fetch suggestions:", error);
+      console.log("Failed to fetch suggestions:", error);
       setQuerySuggestions([]);
     } finally {
       setSuggestionsLoading(false);
@@ -291,7 +290,7 @@ export default function SearchScreen() {
       setRecentSearches(trimmedHistory);
       await AsyncStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(trimmedHistory));
     } catch (error) {
-      console.error("Failed to save search history:", error);
+      console.log("Failed to save search history:", error);
     }
   };
 
@@ -303,7 +302,7 @@ export default function SearchScreen() {
         console.log("Search history cleared.");
       }
     } catch (error) {
-      console.error("Failed to clear search history:", error);
+      console.log("Failed to clear search history:", error);
     }
   };
 
@@ -318,7 +317,7 @@ export default function SearchScreen() {
         await AsyncStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updatedHistory)); // Cập nhật AsyncStorage
       }
     } catch (error) {
-      console.error("Failed to remove search history item:", error);
+      console.log("Failed to remove search history item:", error);
     }
   };
 
@@ -375,7 +374,7 @@ export default function SearchScreen() {
         }]);
       }
     } catch (error) {
-      console.error("Failed to load search history:", error);
+      console.log("Failed to load search history:", error);
     }
   };
 
