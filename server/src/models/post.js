@@ -2,7 +2,8 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../configs/database')
 
 const Post = sequelize.define(
-    'Post', {
+    'Post',
+    {
         id: {
             type: DataTypes.INTEGER,
             allowNull: false,
@@ -59,10 +60,6 @@ const Post = sequelize.define(
             defaultValue: false,
             field: 'is_cover'
         },
-        // originalSongId: ID của bài hát gốc
-        // - Với cover (isCover = true): là bài hát gốc mà cover tham chiếu tới
-        // - Với bài đăng thường có gắn bài hát: dùng cùng ID để tạo quan hệ OriginalSong (Track)
-        //   giúp load đầy đủ thông tin bài hát (tên, nghệ sĩ) cho feed
         originalSongId: { // ID của bài hát gốc nếu là cover
             type: DataTypes.INTEGER,
             allowNull: true,
@@ -72,8 +69,14 @@ const Post = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: true,
             field: 'original_post_id'
+        },
+        flag: { // 
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: 'safe', // adult_content, spam, hate speech, misinformation, self_harm, self_harm.
         }
-    }, {
+    },
+    {
         tableName: 'posts',
         timestamps: true,
         underscored: false

@@ -5,21 +5,22 @@ import { useProfileSocialData } from "@/hooks/useProfileSocialData";
 import { FollowUser, UnfollowUser } from "@/services/followService";
 import useAuthStore from "@/store/authStore";
 import { useFollowStore } from "@/store/followStore";
+import useMessageStore from "@/store/messageStore";
 import { useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Image,
-    Modal,
-    RefreshControl,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    useColorScheme,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  RefreshControl,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
@@ -31,19 +32,20 @@ import LikeModal from "../../components/modals/LikeModal";
 import { createOrGetPrivateConversation } from "../../services/chatApi";
 import { Cover } from "../../services/coverService";
 import {
-    Comment,
-    createNewComment,
-    deletePost,
-    fetchCommentsByPostId,
-    Post as PostType,
-    sharePost,
-    toggleCommentLike,
-    updatePost
+  Comment,
+  createNewComment,
+  deletePost,
+  fetchCommentsByPostId,
+  Post as PostType,
+  sharePost,
+  toggleCommentLike,
+  updatePost
 } from "../../services/socialApi";
 
 export default function ProfileSocialScreen() {
   const params = useLocalSearchParams();
   const userId = params.userId ? JSON.parse(params.userId as string) : "";
+  const { setReceiver, setCurrentConversation } = useMessageStore();
   const { navigate, goBack } = useNavigate();
   const { success, error, info, confirm } = useCustomAlert();
 
@@ -125,15 +127,20 @@ export default function ProfileSocialScreen() {
       const { conversationId } = result as { conversationId: number };
 
       // Chuyển hướng đến màn hình Chat với ID vừa nhận
-      (navigation as any).navigate("ChatScreen", {
-        conversationId: conversationId,
-        // Truyền thông tin người chat cùng để hiển thị trên header
-        user: {
-          id: userId,
-          fullName: profile.fullName,
-          avatarUrl: profile.avatarUrl,
-        },
-      });
+      const user = {
+        id: profile.id,
+        fullName: profile.fullName,
+        avatarUrl: profile.avatarUrl,
+      }
+
+      const conversation = {
+        id: conversationId,
+      }
+
+      setReceiver(user);
+      setCurrentConversation(conversation);
+
+      navigate("ChatScreen");
     } catch (err) {
       console.log("Lỗi khi mở chat:", err);
       error("Lỗi", "Không thể mở chat. Vui lòng thử lại.");

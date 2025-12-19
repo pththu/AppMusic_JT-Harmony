@@ -1,20 +1,20 @@
 import { useCustomAlert } from "@/hooks/useCustomAlert";
 import useAuthStore from "@/store/authStore";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Keyboard,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    useColorScheme,
-    View
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useColorScheme,
+  View
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { Comment } from "../../services/socialApi";
@@ -124,7 +124,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
         setQuote(null);
       } catch (error) {
         // console.log("Lỗi khi gửi bình luận trong modal:", error);
-        
+
       } finally {
         setIsSending(false);
       }
@@ -163,12 +163,80 @@ const CommentModal: React.FC<CommentModalProps> = ({
     return total + count;
   }, 0);
 
+
+
   // Component hiển thị từng bình luận
   const CommentItem = ({ comment, isReply = false }) => {
     const isDark = colorScheme === "dark";
     const avatarSize = isReply ? 28 : 36;
     const textSize = isReply ? "text-xs" : "text-sm";
     const indent = isReply ? "ml-8" : "ml-0";
+    const flag = comment.flag;
+
+    const textFlag = useMemo(() => {
+      switch (flag) {
+        case 'toxic':
+          return 'Độc hại';
+        case 'safe':
+          return 'An toàn';
+        case 'threat':
+          return 'Đe dọa';
+        case 'adult_content':
+          return '18+';
+        case 'obscene':
+          return 'Từ ngữ gây khó chịu';
+        case 'insult':
+          return 'Lăng mạ';
+        case 'self_harm':
+          return 'Tự làm hại';
+        default:
+          return 'Không xác định';
+      }
+    }, [flag]);
+
+    const isDarkMode = colorScheme === 'dark' ? true : false;
+
+    const styleFlag = useMemo(() => {
+      switch (flag) {
+        case 'toxic':
+          return `${isDarkMode ? 'bg-red-500/20 border-red-200 text-red-400 ' : 'bg-red-500/10 text-red-600 border-red-700'}`;
+        case 'safe':
+          return `${isDarkMode ? 'bg-green-500/20 border-green-200' : 'bg-green-500/10 text-green-700 border-green-700'}`;
+        case 'threat':
+          return `${isDarkMode ? 'bg-orange-500/20 border-orange-200' : 'bg-orange-500/10 text-orange-600 border-orange-700'}`;
+        case 'adult_content':
+          return `${isDarkMode ? 'bg-purple-500/20 border-purple-200' : 'bg-purple-500/10 text-purple-600 border-purple-700'}`;
+        case 'obscene':
+          return `${isDarkMode ? 'bg-pink-500/20 border-pink-200' : 'bg-pink-500/10 text-pink-600 border-pink-700'}`;
+        case 'insult':
+          return `${isDarkMode ? 'bg-yellow-500/20 border-yellow-200' : 'bg-yellow-500/10 text-yellow-600 border-yellow-700'}`;
+        case 'self_harm':
+          return `${isDarkMode ? 'bg-teal-500/20 border-teal-200' : 'bg-teal-500/10 text-teal-600 border-teal-700'}`;
+        default:
+          return null;
+      }
+    }, [flag]);
+
+    const styleTextFlag = useMemo(() => {
+      switch (flag) {
+        case 'toxic':
+          return `${isDarkMode ? 'text-red-400' : 'text-red-600'}`;
+        case 'safe':
+          return `${isDarkMode ? 'text-green-400' : 'text-green-700'}`;
+        case 'threat':
+          return `${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`;
+        case 'adult_content':
+          return `${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`;
+        case 'obscene':
+          return `${isDarkMode ? 'text-pink-400' : 'text-pink-600'}`;
+        case 'insult':
+          return `${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`;
+        case 'self_harm':
+          return `${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`;
+        default:
+          return null;
+      }
+    }, [flag]);
 
     return (
       <View className={`mb-3 flex-row ${indent}`}>
@@ -192,7 +260,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
             <Text
               className={`font-extrabold ${textSize} ${isDark ? "text-white" : "text-black"}`}
             >
-              {comment.User?.username}
+              {comment.User?.fullName || "@" + comment.User?.username}
             </Text>
             <Text
               className={`text-xs ml-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}
@@ -201,6 +269,13 @@ const CommentModal: React.FC<CommentModalProps> = ({
                 ? formatTimeAgo(comment.commentedAt)
                 : comment.commentedAt}
             </Text>
+            <View className="mx-2">
+              {flag ? (
+                <View className={`ml-3 px-2 py-1 rounded-full border ${styleFlag}`}>
+                  <Text className={`${styleTextFlag} text-[10px] font-medium`}>{textFlag}</Text>
+                </View>
+              ) : null}
+            </View>
           </View>
 
           {/* Nội dung Trích dẫn (Quote) */}

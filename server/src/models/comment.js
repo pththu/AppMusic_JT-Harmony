@@ -1,11 +1,12 @@
 // models/comment.js
 const { DataTypes } = require('sequelize')
 const sequelize = require('../configs/database')
-    // const { sequelize } = require('../configs/database');
+// const { sequelize } = require('../configs/database');
 
 
 const Comment = sequelize.define(
-    'Comment', {
+    'Comment',
+    {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -53,9 +54,13 @@ const Comment = sequelize.define(
             field: 'commented_at',
             defaultValue: DataTypes.NOW
         },
-        // likeCount: {       type: DataTypes.INTEGER,       allowNull: false,       defaultValue: 0,       field: 'like_count' // Tên cột trong DB
-        //              }
-    }, {
+        flag: { // 
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: 'safe', // adult content, spam, hate speech, misinformation, self_harm, self_harm.
+        }
+    },
+    {
         tableName: 'comments',
         timestamps: true
     }

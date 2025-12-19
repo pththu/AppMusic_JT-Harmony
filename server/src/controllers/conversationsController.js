@@ -2,19 +2,19 @@ const { Conversation, Message, User, ConversationMember, MessageHide, sequelize 
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const {
-  isAdmin: isAdminReq,
-  buildDateRangeWhere,
-  buildAdminConversationsInclude,
-  formatPrivateChatTitle,
-  parsePagination,
-  buildMessageWhere,
+    isAdmin: isAdminReq,
+    buildDateRangeWhere,
+    buildAdminConversationsInclude,
+    formatPrivateChatTitle,
+    parsePagination,
+    buildMessageWhere,
 } = require('../utils/conversationUtils');
 
 // ==========================================================
 // 1. LẤY DANH SÁCH CONVERSATIONS CỦA USER HIỆN TẠI
 // [GET] /api/v1/conversations
 // ==========================================================
-exports.getConversations = async(req, res) => {
+const getConversations = async (req, res) => {
     const currentUserId = req.user.id;
     const isAdmin = isAdminReq(req);
 
@@ -158,7 +158,7 @@ exports.getConversations = async(req, res) => {
 // 1b. ADMIN: LẤY TOÀN BỘ TIN NHẮN (PHÂN TRANG)
 // [GET] /api/v1/conversations/messages?limit&offset
 // ==========================================================
-exports.getAllMessagesAdmin = async (req, res) => {
+const getAllMessagesAdmin = async (req, res) => {
     try {
         const isAdmin = isAdminReq(req);
         if (!isAdmin) {
@@ -198,7 +198,7 @@ exports.getAllMessagesAdmin = async (req, res) => {
 // 2. TẠO HOẶC LẤY PRIVATE CONVERSATION
 // [POST] /api/v1/conversations/user/:userId
 // ==========================================================
-exports.createOrGetPrivateConversation = async(req, res) => {
+const createOrGetPrivateConversation = async (req, res) => {
     // 1. Lấy ID người dùng
     const currentUserId = req.user.id;
     const targetUserId = parseInt(req.params.userId, 10); // Chuyển sang số nguyên
@@ -308,7 +308,7 @@ exports.createOrGetPrivateConversation = async(req, res) => {
 // 3. LẤY LỊCH SỬ TIN NHẮN
 // [GET] /api/v1/conversations/:conversationId/messages
 // ==========================================================
-exports.getConversationMessages = async(req, res) => {
+const getConversationMessages = async (req, res) => {
     const currentUserId = req.user.id;
     const conversationId = parseInt(req.params.conversationId);
     // Phân trang đơn giản (lấy 50 tin nhắn cuối cùng)
@@ -367,7 +367,7 @@ exports.getConversationMessages = async(req, res) => {
 // 4. XÓA TIN NHẮN
 // [DELETE] /api/v1/conversations/messages/:messageId
 // ==========================================================
-exports.deleteMessage = async(req, res) => {
+const deleteMessage = async (req, res) => {
     const currentUserId = req.user.id;
     const messageId = parseInt(req.params.messageId, 10);
 
@@ -404,7 +404,7 @@ exports.deleteMessage = async(req, res) => {
 // 5. ẨN TIN NHẮN
 // [POST] /api/v1/conversations/messages/:messageId/hide
 // ==========================================================
-exports.hideMessage = async(req, res) => {
+const hideMessage = async (req, res) => {
     const currentUserId = req.user.id;
     const messageId = parseInt(req.params.messageId, 10);
 
@@ -450,7 +450,7 @@ exports.hideMessage = async(req, res) => {
 // 6. XÓA CUỘC TRÒ CHUYỆN (CHỈ XÓA BÊN PHÍA NGƯỜI DÙNG HIỆN TẠI)
 // [DELETE] /api/v1/conversations/:conversationId
 // ==========================================================
-exports.deleteConversation = async(req, res) => {
+const deleteConversation = async (req, res) => {
     const currentUserId = req.user.id;
     const conversationId = parseInt(req.params.conversationId, 10);
 
@@ -539,4 +539,62 @@ exports.deleteConversation = async(req, res) => {
         console.error('Error deleting conversation:', error);
         res.status(500).json({ error: 'Failed to delete conversation.' });
     }
+};
+
+/**
+ * conversationId: currentConversation?.id,
+        content: trimmedMessage,
+        type: "text",
+        fileUrl: null,
+        replyToId: currentReplyingTo?.id || null,
+ */
+const sendMessage = async (req, res) => {
+    try {
+        const { conversationId, content, type, fileUrl, replyToId } = req.body;
+        const senderId = req.user.id;
+
+        const conversation = await Conversation.findByPk(conversationId);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Cuộc trò chuyện không tồn tại.' });
+        }
+
+        const isMemmber = await ConversationMember.findOne({
+            where: {
+                conversationId,
+                userId: senderId,
+            }
+        });
+
+        if (!isMemmber) {
+            return res.status(403).json({ error: 'Bạn không phải là thành viên của nhóm chat' });
+        }
+
+        const newMessage = await Message.create({
+            conversationId,
+            senderId,
+            content,
+            type,
+            fileUrl,
+            replyToId: replyToId || null,
+        });
+
+        return res.status(201).json({
+            message: 'Message sent successfully.',
+            data: newMessage,
+            success: true
+        })
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to send message.' });
+    }
+}
+
+module.exports = {
+    getConversations,
+    getAllMessagesAdmin,
+    createOrGetPrivateConversation,
+    deleteMessage,
+    hideMessage,
+    deleteConversation,
+    sendMessage,
+    getConversationMessages,
 };

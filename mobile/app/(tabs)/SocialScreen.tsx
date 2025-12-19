@@ -8,26 +8,24 @@ import { useFollowStore } from "@/store/followStore";
 import * as ImagePicker from "expo-image-picker";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Animated,
-    FlatList,
-    Image,
-    Keyboard,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    useColorScheme,
+  ActivityIndicator,
+  Animated,
+  FlatList,
+  Image,
+  Keyboard,
+  Modal,
+  RefreshControl,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Feather";
 import CoverItem from "../../components/items/CoverItem";
-import NewPostCreator from "../../components/items/NewPostItem";
+
+import NewPostModal from "@/components/modals/NewPostModal";
 import PostItem from "../../components/items/PostItem";
 import CommentModal from "../../components/modals/CommentModal";
 import LikeModal from "../../components/modals/LikeModal";
@@ -35,14 +33,14 @@ import UploadCoverModal from "../../components/modals/UploadCoverModal";
 import SearchOverlay from "../../components/search/SearchOverlay";
 import { fetchAllCovers } from "../../services/coverService";
 import {
-    createNewComment,
-    createNewPost,
-    deletePost,
-    fetchCommentsByPostId,
-    fetchPosts,
-    fetchPostsForGuest,
-    sharePost,
-    toggleCommentLike
+  createNewComment,
+  createNewPost,
+  deletePost,
+  fetchCommentsByPostId,
+  fetchPosts,
+  fetchPostsForGuest,
+  sharePost,
+  toggleCommentLike
 } from "../../services/socialApi";
 
 const SocialScreen = () => {
@@ -50,7 +48,6 @@ const SocialScreen = () => {
   const { navigate } = useNavigate();
   const { info, success, error, warning, confirm } = useCustomAlert();
   const user = useAuthStore((state) => state.user);
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const isGuest = useAuthStore((state) => state.isGuest);
   const userFollowers = useFollowStore((state) => state.userFollowers);
   const userFollowees = useFollowStore((state) => state.userFollowees);
@@ -64,6 +61,7 @@ const SocialScreen = () => {
   const fabScale = useRef(new Animated.Value(1)).current;
 
   const [posts, setPosts] = useState([]);
+  const [covers, setCovers] = useState([]);
   const [loading, setLoading] = useState(true);
   // State cho New Post Creator
   const [newPostText, setNewPostText] = useState("");
@@ -104,8 +102,9 @@ const SocialScreen = () => {
   const [isSharing, setIsSharing] = useState(false);
 
   // State cho danh sách covers
-  const [covers, setCovers] = useState<any[]>([]);
+
   const [coversLoading, setCoversLoading] = useState(true);
+
 
   const animateFABPress = () => {
     Animated.sequence([
@@ -188,6 +187,7 @@ const SocialScreen = () => {
       uploadedAt: apiPost.uploadedAt,
       content: apiPost.content,
       fileUrl: apiPost.fileUrl,
+      flag: apiPost.flag,
       heartCount: apiPost.heartCount,
       commentCount: apiPost.commentCount,
       shareCount: apiPost.shareCount,
@@ -281,7 +281,6 @@ const SocialScreen = () => {
           !Array.isArray(uploadResult.data.data)
         ) {
           error("Dữ liệu upload không hợp lệ từ server");
-
           return;
         }
         fileUrlsToSend = uploadResult.data.data.map((item: any) => item.url);
@@ -291,20 +290,25 @@ const SocialScreen = () => {
       const content = newPostText.trim();
       const songId = selectedSongId; // ID bài hát đính kèm (có thể là null)
 
-      // GỌI API TẠO BÀI ĐĂNG
-      const apiPost = await createNewPost(content, fileUrlsToSend, songId);
+      console.log('fileUrlsToSend', fileUrlsToSend)
 
-      // Kiểm tra lỗi từ API
-      if (!apiPost || (apiPost as any).status === 'error') {
-        throw new Error((apiPost as any)?.message || 'Không thể tạo bài đăng');
+      // GỌI API TẠO BÀI ĐĂNG
+      const payload = {
+        content,
+        fileUrls: fileUrlsToSend,
+        songId,
+      }
+      const response = await createNewPost(payload);
+
+      if (!response.success) {
+        error("Lỗi", response.message || "Không thể tạo bài đăng");
       }
 
       // Map bài đăng mới về format local (hàm async)
-      const newPost = await mapApiPostToLocal(apiPost);
+      const newPost = await mapApiPostToLocal(response.data);
       console.log("Mapped Post:", newPost);
 
-      // Cập nhật state: thêm bài mới lên đầu danh sách với dữ liệu thực từ server
-      setPosts(prevPosts => [newPost, ...prevPosts]);
+      setPosts(prevPosts => [newPost, ...prevPosts]); // Cập nhật state: thêm bài mới lên đầu danh sách với dữ liệu thực từ server
 
       // RESET INPUTS
       setNewPostText("");
@@ -312,12 +316,10 @@ const SocialScreen = () => {
       setSelectedSongId(null);
       Keyboard.dismiss();
 
-      // Đóng modal NewPostCreator
-      setNewPostModalVisible(false);
+      setNewPostModalVisible(false); // Đóng modal NewPostCreator
 
       // Thông báo thành công
       success("Thành công", "Bài viết của bạn đã được đăng thành công!");
-
     } catch (err) {
       console.log("Lỗi khi tạo bài đăng:", err);
       const errorMessage = err.response?.data?.error || err.message || "Không thể tạo bài đăng.";
@@ -443,29 +445,27 @@ const SocialScreen = () => {
   };
 
   // Hàm thêm comment
-  const addComment = async (text: string, parentId: string | null) => {
-    // Lấy thông tin người dùng hiện tại từ store
-    const currentUser = useAuthStore.getState().user;
-
-    if (!selectedPostId || !text.trim() || !currentUser) return;
+  const addComment = async (text, parentId) => {
+    if (!selectedPostId || !text.trim() || !user) return;
 
     console.log(text)
 
     // Khởi tạo một đối tượng comment tạm thởi để hiển thị ngay lập tức
     const optimisticComment = {
       id: Date.now().toString(),
-      userId: currentUser.id,
+      userId: user.id,
       postId: selectedPostId,
       content: text.trim(),
       parentId: parentId,
       commentedAt: new Date().toISOString(),
       likeCount: 0,
+      flag: 'safe',
       isLiked: false,
       User: {
-        id: currentUser.id,
-        username: currentUser.username,
-        avatarUrl: currentUser.avatarUrl,
-        fullName: currentUser.fullName,
+        id: user?.id,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        fullName: user.fullName,
       },
       Replies: [],
       quote: quote
@@ -510,33 +510,37 @@ const SocialScreen = () => {
     cancelReplyOrQuote();
 
     try {
-      // GỌI API TẠO COMMENT
-      const apiComment = await createNewComment(
-        selectedPostId,
-        text.trim(),
+      const payload = {
+        postId: selectedPostId,
+        content: text.trim(),
         parentId
-      );
+      }
+      // GỌI API TẠO COMMENT
+      const response = await createNewComment(payload);
 
-      // --- SỬA LẠI ĐOẠN NÀY ---
-      // Kiểm tra nếu object trả về có status là 'error' thì mới ném lỗi
-      // Hoặc kiểm tra nếu không có 'id' (vì comment thành công phải có id)
-      if ('status' in apiComment && apiComment.status === 'error') {
-        throw new Error(apiComment.message || "Lỗi không xác định");
+      console.log('response', response)
+
+      if (!response.success) {
+        error("Lỗi", response.message || "Không thể gửi bình luận.");
       }
       // ------------------------
 
+      console.log(1)
       // CẬP NHẬT LẠI ID CHÍNH THỨC VÀ DỮ LIỆU TỪ SERVER
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
+          console.log(selectedPostId, post.id)
           if (post.id === selectedPostId) {
             let updatedComments = [...(post.comments || [])];
+            console.log('updatedComments', updatedComments)
             const updateCommentArray = (arr) =>
               arr.map((c) => {
+                console.log('c', c)
                 if (c.id === optimisticComment.id) {
                   return {
-                    ...apiComment,
+                    ...response.data,
                     User: c.User,
-                    Replies: apiComment?.Replies || c.Replies,
+                    Replies: response.data?.Replies || c.Replies,
                   };
                 }
                 // Nếu là comment cha, tìm trong Replies của nó
@@ -545,6 +549,35 @@ const SocialScreen = () => {
                 }
                 return c;
               });
+
+            return {
+              ...post,
+              comments: updateCommentArray(updatedComments),
+            };
+          }
+          return post;
+        })
+      );
+      setCovers((prevCovers) =>
+        prevCovers.map((post) => {
+          if (post.id === selectedPostId) {
+            let updatedComments = [...(post.comments || [])];
+            const updateCommentArray = (arr) =>
+              arr.map((c) => {
+                if (c.id === optimisticComment.id) {
+                  return {
+                    ...response.data,
+                    User: c.User,
+                    Replies: response.data?.Replies || c.Replies,
+                  };
+                }
+                // Nếu là comment cha, tìm trong Replies của nó
+                if (c.Replies) {
+                  return { ...c, Replies: updateCommentArray(c.Replies) };
+                }
+                return c;
+              }
+              );
 
             return {
               ...post,
@@ -573,6 +606,27 @@ const SocialScreen = () => {
                   return c;
                 });
 
+            return {
+              ...post,
+              commentCount: (post.commentCount || 0) - 1,
+              comments: rollbackCommentArray(post.comments || []),
+            };
+          }
+          return post;
+        })
+      );
+      setCovers((prevCovers) =>
+        prevCovers.map((post) => {
+          if (post.id === selectedPostId) {
+            const rollbackCommentArray = (arr) =>
+              arr
+                .filter((c) => c.id !== optimisticComment.id)
+                .map((c) => {
+                  if (c.Replies) {
+                    return { ...c, Replies: rollbackCommentArray(c.Replies) };
+                  }
+                  return c;
+                });
             return {
               ...post,
               commentCount: (post.commentCount || 0) - 1,
@@ -772,19 +826,19 @@ const SocialScreen = () => {
 
   const loadPosts = useCallback(async () => {
     try {
-      let apiPosts;
+      let response;
       if (isGuest) {
-        apiPosts = await fetchPostsForGuest();
+        response = await fetchPostsForGuest();
       } else {
-        apiPosts = await fetchPosts();
+        response = await fetchPosts();
       }
 
-      if (apiPosts.success === false) {
-        error("Lỗi", apiPosts.message || "Không thể tải bài đăng từ server.");
+      if (response.success === false) {
+        error("Lỗi", response.message || "Không thể tải bài đăng từ server.");
         return;
       }
       const mappedPosts = await Promise.all(
-        apiPosts.map(mapApiPostToLocal)
+        response.data.map(mapApiPostToLocal)
       );
       setPosts(mappedPosts);
     } catch (err) {
@@ -850,17 +904,17 @@ const SocialScreen = () => {
       const response = await fetchAllCovers();
 
       // Kiểm tra nếu response có lỗi
-      if (response && typeof response === 'object' && 'success' in response && response.success === false) {
-        throw new Error((response as any).message || "Không thể tải covers");
+      if (!response.success) {
+        error("Lỗi", response.message || "Không thể tải danh sách covers.");
       }
 
       let allCovers;
-      if (Array.isArray(response)) {
-        allCovers = response;
+      if (Array.isArray(response.data)) {
+        allCovers = response.data;
       } else if (response && typeof response === 'object' && 'data' in response) {
         allCovers = (response as any).data;
       } else {
-        allCovers = response;
+        allCovers = response.data;
       }
       if (Array.isArray(allCovers) && allCovers.length > 0) {
         // Map covers về đúng định dạng như posts
@@ -1041,6 +1095,7 @@ const SocialScreen = () => {
                 fileUrl={item.fileUrl}
                 heartCount={item.heartCount}
                 isLiked={item.isLiked}
+                flag={item.flag || null}
                 originalSongId={item.originalSongId}
                 OriginalSong={item.OriginalSong}
                 onUserPress={handleUserPress}
@@ -1069,6 +1124,7 @@ const SocialScreen = () => {
                   isLiked={item.isLiked}
                   originalSongId={item.originalSongId}
                   OriginalSong={item.OriginalSong}
+                  flag={item.flag || null}
                   onUserPress={handleUserPress}
                   onRefresh={onRefresh}
                   onCommentPress={() => openCommentModal(item.id)}
@@ -1082,6 +1138,7 @@ const SocialScreen = () => {
               ) : (
                 <PostItem
                   {...item}
+                  flag={item.flag || null}
                   postId={item.id}
                   songId={item.songId}
                   onPostUpdate={(type, value) =>
@@ -1241,86 +1298,20 @@ const SocialScreen = () => {
       />
 
       {/* NewPostCreator Modal */}
-      <Modal
-        visible={newPostModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setNewPostModalVisible(false)}
-      >
-        {selectedMediaAssets.length > 0 ? (
-          <TouchableOpacity
-            className="flex-1 justify-end"
-            activeOpacity={1}
-            onPress={() => setNewPostModalVisible(false)}
-          >
-            <View className="bg-white dark:bg-gray-900 rounded-t-3xl">
-              <View className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4 mt-4" />
-              <View className="px-4 pb-4">
-                <Text className="text-lg font-bold text-black dark:text-white mb-4 text-center">
-                  Đăng bài viết mới
-                </Text>
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  style={{ maxHeight: '85%' }}
-
-                >
-                  <NewPostCreator
-                    user={user}
-                    newPostText={newPostText}
-                    setNewPostText={setNewPostText}
-                    selectedMediaAssets={selectedMediaAssets}
-                    setSelectedMediaAssets={setSelectedMediaAssets}
-                    selectedSongId={selectedSongId}
-                    setSelectedSongId={setSelectedSongId}
-                    isUploading={isUploading}
-                    handleSelectMedia={handleSelectMedia}
-                    addPost={addPost}
-                  />
-                </ScrollView>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ) : (
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={{ flex: 1 }}
-          >
-            <TouchableOpacity
-              className="flex-1 justify-end"
-              activeOpacity={1}
-              onPress={() => setNewPostModalVisible(false)}
-            >
-              <View className="bg-white dark:bg-gray-900 rounded-t-3xl">
-                <View className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4 mt-4" />
-                <View className="px-4 pb-4">
-                  <Text className="text-lg font-bold text-black dark:text-white mb-4 text-center">
-                    Đăng bài viết mới
-                  </Text>
-                  <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                    style={{ maxHeight: '75%' }}
-                  >
-                    <NewPostCreator
-                      user={user}
-                      newPostText={newPostText}
-                      setNewPostText={setNewPostText}
-                      selectedMediaAssets={selectedMediaAssets}
-                      setSelectedMediaAssets={setSelectedMediaAssets}
-                      selectedSongId={selectedSongId}
-                      setSelectedSongId={setSelectedSongId}
-                      isUploading={isUploading}
-                      handleSelectMedia={handleSelectMedia}
-                      addPost={addPost}
-                    />
-                  </ScrollView>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </KeyboardAvoidingView>
-        )}
-      </Modal>
+      <NewPostModal
+        newPostModalVisible={newPostModalVisible}
+        setNewPostModalVisible={setNewPostModalVisible}
+        user={user}
+        newPostText={newPostText}
+        setNewPostText={setNewPostText}
+        selectedMediaAssets={selectedMediaAssets}
+        setSelectedMediaAssets={setSelectedMediaAssets}
+        selectedSongId={selectedSongId}
+        setSelectedSongId={setSelectedSongId}
+        isUploading={isUploading}
+        handleSelectMedia={handleSelectMedia}
+        addPost={addPost}
+      />
 
       {/* Search Overlay */}
       <SearchOverlay

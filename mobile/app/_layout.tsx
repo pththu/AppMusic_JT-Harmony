@@ -12,19 +12,14 @@ import { useEffect } from "react";
 import { View } from "react-native";
 import "react-native-reanimated";
 
+import GlobalPlayer from "@/components/player/GlobalPlayer";
+import MiniPlayer from "@/components/player/MiniPlayer";
 import { ThemeProvider, useTheme } from "@/components/ThemeContext";
 import { AlertProvider } from "@/context/AlertContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import MiniPlayer from "@/components/player/MiniPlayer";
-import GlobalPlayer from "@/components/player/GlobalPlayer";
-import { usePlayerStore } from "@/store/playerStore";
-import { useFollowStore } from "@/store/followStore";
-import { useFavoritesStore } from "@/store/favoritesStore";
-import { useHistoriesStore } from "@/store/historiesStore";
 
-import { useGuestTriggers } from "@/hooks/useGuestTriggers";
 import LoginWall from "@/components/guest/LoginWall";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { useGuestTriggers } from "@/hooks/useGuestTriggers";
 
 export { ErrorBoundary } from "expo-router";
 

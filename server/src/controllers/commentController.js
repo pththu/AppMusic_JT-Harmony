@@ -1,6 +1,7 @@
 const { Post, User, Comment, CommentLike, Track, sequelize } = require('../models');
 const { Op } = require('sequelize');
-const { createNotification } = require('../utils/notificationHelper');
+const { emitNewNotification, emitNewComment } = require('../services/notificationService');
+const analysisService = require('../services/analysisService');
 
 exports.getAllComment = async (req, res) => {
     try {
@@ -150,7 +151,7 @@ exports.getCommentsByPostId = async (req, res) => {
             include: [{
                 model: User,
                 as: 'User',
-                attributes: ['id', 'username', 'avatarUrl']
+                attributes: ['id', 'username', 'avatarUrl', 'fullName']
             }, {
                 model: Comment,
                 as: 'Replies',
@@ -298,81 +299,142 @@ exports.getCommentById = async (req, res) => {
     }
 };
 
-// TẠO MỚI COMMENT
 exports.createComment = async (req, res) => {
     try {
         const payload = { ...req.body };
 
+        // Validate payload
         if (!payload) {
-            return res.status(400).json({ error: 'Payload not specified' });
+            return res.status(400).json({ error: "Payload not specified" });
         }
 
         let userId = req.user.id;
         const user = await User.findByPk(userId);
 
+        // Admin có thể comment thay người khác
         if (user.roleId === 1) {
             if (payload.userId) {
                 userId = payload.userId;
             } else {
-                return res.status(400).json({ error: 'UserId not specified for admin' });
+                return res
+                    .status(400)
+                    .json({ error: "UserId not specified for admin" });
             }
         } else {
             payload.userId = userId;
         }
 
-        // Chấp nhận postId HOẶC trackId hoặc spotifyId cho thread theo bài hát
+        // Validate: phải có postId HOẶC trackId/spotifyId
         if (!payload.postId && !payload.trackId && !payload.spotifyId) {
-            return res.status(400).json({ error: 'Post or Track not identified' });
+            return res
+                .status(400)
+                .json({ error: "Post or Track not identified" });
         }
 
+        // Validate: phải có content hoặc fileUrl
         if (!payload.content && !payload.fileUrl) {
-            return res.status(400).json({ error: 'Content and file not specified' });
+            return res
+                .status(400)
+                .json({ error: "Content or fileUrl is required" });
         }
 
+        // Xử lý spotifyId -> trackId
         if (payload.spotifyId && !payload.trackId) {
-    const track = await Track.findOne({ where: { spotifyId: payload.spotifyId } });
-    if (!track) {
-        return res.status(404).json({ error: 'Track not found' });
-    }
-    payload.trackId = track.id;
-}
+            const track = await Track.findOne({
+                where: { spotifyId: payload.spotifyId },
+            });
+            if (!track) {
+                return res.status(404).json({ error: "Track not found" });
+            }
+            payload.trackId = track.id;
+        }
 
+        // Tìm post (nếu comment vào post)
         let targetPost = null;
         if (payload.postId) {
             targetPost = await Post.findByPk(payload.postId);
             if (!targetPost) {
-                return res.status(404).json({ error: 'Post not found' });
+                return res.status(404).json({ error: "Post not found" });
             }
         }
 
-        const row = await Comment.create(payload);
+        let collectedFlags = new Set();
 
+        try {
+            console.log("🤖 Đang phân tích cảnh báo nội dung...");
+            // 1. Phân tích Text
+            if (payload.content) {
+                const textResult = await analysisService.analyzeText(payload.content);
+                if (textResult.hasWarning) {
+                    textResult.flags.forEach(f => collectedFlags.add(f));
+                }
+            }
+
+        } catch (e) {
+            console.error("AI Error:", e);
+
+        }
+        // ================= END AI =================
+
+        // Chuyển Set thành mảng để lưu DB
+        const warningTags = Array.from(collectedFlags); // VD: ['toxic', 'adult']
+        console.log("⚠️ Các cảnh báo được gắn:", warningTags);
+        let flag = warningTags.length > 0 ? warningTags[0] : 'safe';
+        payload.flag = flag;
+
+        // Tạo comment
+        const newComment = await Comment.create(payload);
+
+
+        // Lấy comment với thông tin user
+        const commentWithUser = await Comment.findByPk(newComment.id, {
+            include: [
+                {
+                    model: User,
+                    as: "User",
+                    attributes: ["id", "username", "fullName", "avatarUrl"],
+                },
+            ],
+        });
+
+        // ============ REAL-TIME SOCKET.IO ============
+
+        // 1. Gửi comment real-time đến tất cả người đang xem post
+        if (payload.postId) {
+            await emitNewComment(payload.postId, commentWithUser);
+        }
+
+        // 2. Tạo notification cho chủ post (nếu không phải chính họ comment)
         if (targetPost && targetPost.userId && targetPost.userId !== payload.userId) {
-            const actorName =
-                (req.user && (req.user.fullName || req.user.username)) ||
-                'Một người dùng';
-            await createNotification({
+            const actorName = user.fullName || user.username || "Someone";
+
+            const notificationData = {
                 userId: targetPost.userId,
                 actorId: payload.userId,
                 postId: targetPost.id,
-                type: 'comment',
-                message: `${actorName} đã bình luận về bài viết của bạn`,
+                type: "comment",
+                message: `${actorName} bình luận về bài viết của bạn.`,
                 metadata: {
                     postId: targetPost.id,
-                    commentId: row.id,
-                    contentSnippet: payload.content ? payload.content.slice(0, 120) : '',
+                    commentId: newComment.id,
+                    contentSnippet: payload.content
+                        ? payload.content.slice(0, 120)
+                        : "[Media]",
                 },
-            });
+            };
+
+            const userId = targetPost.userId;
+
+            await emitNewNotification(userId, notificationData);
         }
 
         res.status(201).json({
-            message: 'Comment created successfully',
-            data: row,
-            success: true
+            message: "Comment created successfully",
+            data: commentWithUser,
+            success: true,
         });
-
     } catch (err) {
-        console.error('Error creating comment:', err);
+        console.error("❌ Error creating comment:", err);
         res.status(500).json({ error: err.message });
     }
 };

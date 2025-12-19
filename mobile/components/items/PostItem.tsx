@@ -58,6 +58,7 @@ const PostItem = ({
     uploadedAt,
     content,
     images,
+    flag,
     musicLink = null,
     songId = null,
     heartCount,
@@ -94,22 +95,23 @@ const PostItem = ({
         return [];
     }, [originalPost]);
 
-    // Theo dõi chỉ số ảnh hiện tại cho Indicator
-    const [activeIndex, setActiveIndex] = useState(0);
-
-    // State cho modal options
-    const [optionsModalVisible, setOptionsModalVisible] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(0); // Theo dõi chỉ số ảnh hiện tại cho Indicator
+    const [optionsModalVisible, setOptionsModalVisible] = useState(false); // State cho modal options
+    const [reportModalVisible, setReportModalVisible] = useState(false); // State cho report modal
+    const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false); // State cho ẩn bài viết tạm thời với undo
+    const [undoTimer, setUndoTimer] = useState<number | null>(null);
+    const [isEditing, setIsEditing] = useState(false); // State cho inline editing
+    const [editContent, setEditContent] = useState(content);
+    const likeIconColor = isLiked ? '#ef4444' : (colorScheme === 'dark' ? '#a1a1aa' : '#000000');
 
     // Xử lý khi nhấn vào music link để chuyển đến SongScreen
     const handleMusicPress = async () => {
         if (!songId) return;
-        
+
         try {
-            // Tìm thông tin bài hát theo ID
-            const response = await FindTrackById(songId);
+            const response = await FindTrackById(songId); // Tìm thông tin bài hát theo ID
             if (response.success && response.data) {
-                // Chuyển đến SongScreen với thông tin bài hát
-                navigate('SongScreen', { songId: songId });
+                navigate('SongScreen', { songId: songId }); // Chuyển đến SongScreen với thông tin bài hát
             } else {
                 error('Lỗi', 'Không tìm thấy thông tin bài hát.');
             }
@@ -118,31 +120,6 @@ const PostItem = ({
             error('Lỗi', 'Không thể mở bài hát.');
         }
     };
-
-    // State cho report modal
-    const [reportModalVisible, setReportModalVisible] = useState(false);
-
-    // State cho ẩn bài viết tạm thời với undo
-    const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false);
-    const [undoTimer, setUndoTimer] = useState<number | null>(null);
-    // State cho inline editing
-    const [isEditing, setIsEditing] = useState(false);
-    const [editContent, setEditContent] = useState(content);
-    const likeIconColor = isLiked ? '#ef4444' : (colorScheme === 'dark' ? '#a1a1aa' : '#000000');
-
-    // Đồng bộ editContent khi content prop thay đổi
-    useEffect(() => {
-        setEditContent(content);
-    }, [content]);
-
-    // Đồng bộ state nội bộ khi props thay đổi
-    useEffect(() => {
-        setIsLiked(initialIsLiked);
-    }, [initialIsLiked]);
-
-    useEffect(() => {
-        setCurrentLikeCount(heartCount);
-    }, [heartCount]);
 
     // Xử lý nút Tim
     const handleLike = async () => {
@@ -201,8 +178,7 @@ const PostItem = ({
     // HÀM XỬ LÝ SỰ KIỆN CUỘN CHO INDICATOR
     const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const contentOffsetX = event.nativeEvent.contentOffset.x;
-        // Tính toán index dựa trên vị trí cuộn (chia cho kích thước ảnh)
-        const index = Math.round(contentOffsetX / IMAGE_WIDTH);
+        const index = Math.round(contentOffsetX / IMAGE_WIDTH); // Tính toán index dựa trên vị trí cuộn (chia cho kích thước ảnh)
         setActiveIndex(index);
     };
 
@@ -217,7 +193,7 @@ const PostItem = ({
     };
 
     // Hàm xử lý gửi báo cáo cuối cùng
-    const handleFinalReport = async (postId: number, reason: string) => {
+    const handleFinalReport = async (postId, reason) => {
         if (isGuest) {
             info("Hãy đăng nhập để sử dụng tính năng này.");
             return;
@@ -318,7 +294,87 @@ const PostItem = ({
         setIsEditing(false);
     };
 
+    // Đồng bộ editContent khi content prop thay đổi
+    useEffect(() => {
+        setEditContent(content);
+    }, [content]);
+
+    // Đồng bộ state nội bộ khi props thay đổi
+    useEffect(() => {
+        setIsLiked(initialIsLiked);
+    }, [initialIsLiked]);
+
+    useEffect(() => {
+        setCurrentLikeCount(heartCount);
+    }, [heartCount]);
+
     const displayTime = formatTimeAgo(uploadedAt);
+
+    const textFlag = useMemo(() => {
+        switch (flag) {
+            case 'toxic':
+                return 'Độc hại';
+            case 'safe':
+                return 'An toàn';
+            case 'threat':
+                return 'Đe dọa';
+            case 'adult_content':
+                return '18+';
+            case 'obscene':
+                return 'Từ ngữ gây khó chịu';
+            case 'insult':
+                return 'Lăng mạ';
+            case 'self_harm':
+                return 'Tự làm hại';
+            default:
+                return 'Không xác định';
+        }
+    }, [flag]);
+
+    const isDarkMode = colorScheme === 'dark' ? true : false;
+
+    const styleFlag = useMemo(() => {
+        switch (flag) {
+            case 'toxic':
+                return `${isDarkMode ? 'bg-red-500/20 border-red-200 text-red-400 ' : 'bg-red-500/10 text-red-600 border-red-700'}`;
+            case 'safe':
+                return `${isDarkMode ? 'bg-green-500/20 border-green-200' : 'bg-green-500/10 text-green-700 border-green-700'}`;
+            case 'threat':
+                return `${isDarkMode ? 'bg-orange-500/20 border-orange-200' : 'bg-orange-500/10 text-orange-600 border-orange-700'}`;
+            case 'adult_content':
+                return `${isDarkMode ? 'bg-purple-500/20 border-purple-200' : 'bg-purple-500/10 text-purple-600 border-purple-700'}`;
+            case 'obscene':
+                return `${isDarkMode ? 'bg-pink-500/20 border-pink-200' : 'bg-pink-500/10 text-pink-600 border-pink-700'}`;
+            case 'insult':
+                return `${isDarkMode ? 'bg-yellow-500/20 border-yellow-200' : 'bg-yellow-500/10 text-yellow-600 border-yellow-700'}`;
+            case 'self_harm':
+                return `${isDarkMode ? 'bg-teal-500/20 border-teal-200' : 'bg-teal-500/10 text-teal-600 border-teal-700'}`;
+            default:
+                return null;
+        }
+    }, [flag]);
+
+    const styleTextFlag = useMemo(() => {
+        switch (flag) {
+            case 'toxic':
+                return `${isDarkMode ? 'text-red-400' : 'text-red-600'}`;
+            case 'safe':
+                return `${isDarkMode ? 'text-green-400' : 'text-green-700'}`;
+            case 'threat':
+                return `${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`;
+            case 'adult_content':
+                return `${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`;
+            case 'obscene':
+                return `${isDarkMode ? 'text-pink-400' : 'text-pink-600'}`;
+            case 'insult':
+                return `${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`;
+            case 'self_harm':
+                return `${isDarkMode ? 'text-teal-400' : 'text-teal-600'}`;
+            default:
+                return null;
+        }
+    }, [flag]);
+
 
     // Nếu bài viết đang bị ẩn tạm thời, hiển thị banner undo
     if (isTemporarilyHidden) {
@@ -342,28 +398,39 @@ const PostItem = ({
     return (
         <View className="bg-white dark:bg-[#171431] p-4 mb-3 rounded-xl shadow-md shadow-gray-400 dark:shadow-black">
             {/* Header  */}
-            <View className="flex-row items-center mb-3">
-                <TouchableOpacity
-                    onPress={() => onUserPress(userId)}
-                    className="flex-row items-center"
-                >
-                    <Image
-                        source={{ uri: User?.avatarUrl || 'https://via.placeholder.com/150' }}
-                        className="w-10 h-10 rounded-full border-2 border-emerald-400"
-                    />
-                </TouchableOpacity>
+            <View className="flex-row items-center justify-between mb-3">
+                <View className="flex-row items-center flex-1">
+                    <TouchableOpacity
+                        onPress={() => onUserPress(userId)}
+                        className="flex-row items-center"
+                    >
+                        <Image
+                            source={{ uri: User?.avatarUrl || 'https://via.placeholder.com/150' }}
+                            className="w-10 h-10 rounded-full border-2 border-emerald-400"
+                        />
+                    </TouchableOpacity>
 
-                <View className="ml-3 flex-col">
-                    <Text className="font-extrabold text-base text-black dark:text-white">{User?.fullName}</Text>
-                    <Text className="text-gray-500 dark:text-gray-400 text-xs">{displayTime}</Text>
+                    <View className="ml-3 flex-col">
+                        <Text className="font-extrabold text-base text-black dark:text-white">{User?.fullName}</Text>
+                        <Text className="text-gray-500 dark:text-gray-400 text-xs">{displayTime}</Text>
+                    </View>
                 </View>
 
-                <TouchableOpacity
-                    className="ml-auto p-1"
-                    onPress={() => setOptionsModalVisible(true)}
-                >
-                    <Icon name="more-horizontal" size={20} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
-                </TouchableOpacity>
+                <View className="flex-row">
+                    <View className="mr-4">
+                        {flag ? (
+                            <View className={`ml-3 px-2 py-1 rounded-full border ${styleFlag}`}>
+                                <Text className={`${styleTextFlag} text-xs font-medium`}>{textFlag}</Text>
+                            </View>
+                        ) : null}
+                    </View>
+                    <TouchableOpacity
+                        className="ml-auto p-1"
+                        onPress={() => setOptionsModalVisible(true)}
+                    >
+                        <Icon name="more-horizontal" size={20} color={colorScheme === "dark" ? "#9ca3af" : "#000000"} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {/* Content Text or Edit Input */}

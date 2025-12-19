@@ -11,15 +11,34 @@ const {
   Artist,
 } = require("../models");
 const { Op } = require('sequelize');
-const { createNotification } = require("../utils/notificationHelper");
+const analysisService = require("../services/analysisService");
 
 function isAdmin(req) {
   const u = (req && (req.currentUser || req.user)) || {};
   return u.roleId === 1 || u.role_id === 1;
 }
 
+// Hàm này kiểm tra xem người dùng đã thích bài đăng cụ thể chưa
+async function checkIsLiked(userId, postId) {
+  if (!userId) {
+    return false;
+  }
+  try {
+    const like = await Like.findOne({
+      where: {
+        userId: userId,
+        postId: postId,
+      },
+    });
+    return !!like; // Trả về true nếu tìm thấy, false nếu không
+  } catch (e) {
+    console.error("Lỗi khi kiểm tra isLiked:", e.message);
+    return false;
+  }
+}
+
 // === ADMIN: DANH SÁCH TẤT CẢ LIKE VỚI FILTER/PAGINATION ===
-exports.getAllLikesAdmin = async (req, res) => {
+const getAllLikesAdmin = async (req, res) => {
   try {
     const { postId, userId, dateFrom, dateTo } = req.query;
     const limit = parseInt(req.query.limit, 10) || 50;
@@ -65,7 +84,7 @@ exports.getAllLikesAdmin = async (req, res) => {
 };
 
 // --- HÀM CHIA SẺ LẠI BÀI ĐĂNG (RE-SHARE) ---
-exports.sharePost = async (req, res) => {
+const sharePost = async (req, res) => {
   try {
     const userId = req.user && req.user.id;
     if (!userId) {
@@ -257,7 +276,7 @@ exports.sharePost = async (req, res) => {
 };
 
 // --- ADMIN: DANH SÁCH BÀI ĐĂNG VỚI FILTER/PAGINATION ---
-exports.getPostsAdmin = async (req, res) => {
+const getPostsAdmin = async (req, res) => {
   try {
     const { q, userId, isCover, dateFrom, dateTo } = req.query;
     const limit = parseInt(req.query.limit, 10) || 50;
@@ -352,7 +371,7 @@ exports.getPostsAdmin = async (req, res) => {
 };
 
 // === ADMIN: DANH SÁCH BÁO CÁO BÀI ĐĂNG ===
-exports.getPostReportsAdmin = async (req, res) => {
+const getPostReportsAdmin = async (req, res) => {
   try {
     const { status, postId, reporterId, dateFrom, dateTo } = req.query;
     const where = {};
@@ -385,7 +404,7 @@ exports.getPostReportsAdmin = async (req, res) => {
 };
 
 // === ADMIN: CẬP NHẬT TRẠNG THÁI BÁO CÁO ===
-exports.updatePostReportAdmin = async (req, res) => {
+const updatePostReportAdmin = async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { status, adminNotes } = req.body;
@@ -408,7 +427,7 @@ exports.updatePostReportAdmin = async (req, res) => {
 };
 
 // === ADMIN: XÓA LIKE CỦA USER KHỎI BÀI ĐĂNG ===
-exports.removeLikeAdmin = async (req, res) => {
+const removeLikeAdmin = async (req, res) => {
   try {
     const postId = parseInt(req.params.id, 10);
     const userId = parseInt(req.params.userId, 10);
@@ -426,27 +445,10 @@ exports.removeLikeAdmin = async (req, res) => {
   }
 };
 
-// Hàm này kiểm tra xem người dùng đã thích bài đăng cụ thể chưa
-async function checkIsLiked(userId, postId) {
-  if (!userId) {
-    return false;
-  }
-  try {
-    const like = await Like.findOne({
-      where: {
-        userId: userId,
-        postId: postId,
-      },
-    });
-    return !!like; // Trả về true nếu tìm thấy, false nếu không
-  } catch (e) {
-    console.error("Lỗi khi kiểm tra isLiked:", e.message);
-    return false;
-  }
-}
+
 
 // --- HÀM LẤY TẤT CẢ BÀI ĐĂNG ---
-exports.getAllPost = async (req, res) => {
+const getAllPost = async (req, res) => {
   //  Kiểm tra xác thực
   const userId = req.user && req.user.id;
   if (!userId) {
@@ -510,6 +512,7 @@ exports.getAllPost = async (req, res) => {
         "songId",
         "isCover",
         "originalSongId",
+        "flag",
         [
           sequelize.literal(
             `(SELECT COUNT(*) FROM comments AS c WHERE c.post_id = "Post"."id")`
@@ -536,6 +539,7 @@ exports.getAllPost = async (req, res) => {
             "uploadedAt",
             "commentCount",
             "songId",
+            "flag",
           ],
           include: [
             {
@@ -632,7 +636,7 @@ exports.getAllPost = async (req, res) => {
   }
 };
 
-exports.getAllPostForGuest = async (req, res) => {
+const getAllPostForGuest = async (req, res) => {
   console.log('Lấy danh sách bài đăng cho Guest (Khách)');
 
   try {
@@ -677,22 +681,17 @@ exports.getAllPostForGuest = async (req, res) => {
 };
 
 
-exports.createPost = async (req, res) => {
-  console.log("createPost called with body:", req.body);
+const createPost = async (req, res) => {
   try {
-    //  Kiểm tra xác thực
     let userId = req.user && req.user.id;
-    const user = await User.findByPk(userId);
+
     if (!userId) {
-      return res
-        .status(401)
-        .json({ error: "User not authenticated or missing ID" });
+      return res.status(401).json({ error: "User not authenticated or missing ID" });
     }
 
-    if (user.roleId === 1) {
-      userId = req.body.userId;
-    }
+    const user = await User.findByPk(userId);
 
+    if (user.roleId === 1) userId = req.body.userId;
     console.log("Tạo bài đăng: User ID từ token:", userId);
 
     const { content, fileUrls, isCover, trackSpotifyId } = req.body;
@@ -706,65 +705,38 @@ exports.createPost = async (req, res) => {
       originalSongId,
     });
 
-    const hasContent =
-      content && typeof content === "string" && content.trim().length > 0;
+    const hasContent = content && typeof content === "string" && content.trim().length > 0;
     const hasFile = Array.isArray(fileUrls) && fileUrls.length > 0;
-    console.log(1)
 
     if (!hasContent && !hasFile) {
-      console.log(2)
-      return res.status(400).json({
-        message: "Nội dung bài đăng không hợp lệ.",
-        error: "Bài đăng phải có ít nhất Văn bản hoặc Ảnh/Video đính kèm.",
-      });
+      return res.status(400).json({ message: "Bài đăng phải có ít nhất Văn bản hoặc Ảnh/Video đính kèm." });
     }
 
-    console.log(3)
     // Chuyển đổi và kiểm tra ID (nếu client gửi songId/originalSongId là số)
     if (songId) songId = parseInt(songId, 10);
     if (originalSongId) originalSongId = parseInt(originalSongId, 10);
 
-    console.log(4)
-    // Kiểm tra originalSongId nếu là cover
     if (isCover) {
-      console.log(5)
       if (!originalSongId || isNaN(originalSongId)) {
-        console.log(6)
-        return res.status(400).json({
-          message: "ID bài hát gốc không hợp lệ.",
-          error: "Cover phải có originalSongId là một số hợp lệ.",
-        });
+        return res.status(400).json({ message: "ID bài hát gốc không hợp lệ." });
       }
-      
+
       console.log(`Checking for track with tempId: ${originalSongId}`);
-      
-      // Tìm track theo tempId (đây là ID thực từ database được gửi làm tempId)
-      const track = await Track.findByPk(originalSongId);
-      console.log(`Track found:`, track ? `ID=${track.id}, Name=${track.name}` : 'NULL');
-      
+      const track = await Track.findByPk(originalSongId); // Tìm track theo tempId (đây là ID thực từ database được gửi làm tempId)
+
       if (!track) {
-        // Nếu không tìm thấy theo tempId, thử tìm theo id (trường hợp client gửi id thật)
-        console.log(`Trying to find track with actual ID: ${originalSongId}`);
-        const trackByRealId = await Track.findByPk(originalSongId);
+        const trackByRealId = await Track.findByPk(originalSongId); // Nếu không tìm thấy theo tempId, thử tìm theo id (trường hợp client gửi id thật)
         if (!trackByRealId) {
-          return res.status(400).json({
-            message: "Bài hát gốc không tồn tại.",
-            error: `Không thể tạo cover cho bài hát có ID ${originalSongId} vì không tìm thấy trong database.`,
-          });
+          return res.status(400).json({ message: "Không thể tạo cover cho bài hát có ID ${originalSongId} vì không tìm thấy trong database." });
         }
       }
-      console.log(8)
       songId = null; // Đảm bảo songId là null cho cover
     } else {
       // Không phải cover: cố gắng resolve bài hát theo songId hoặc trackSpotifyId
-      console.log(9)
       let track = null;
-
       if (trackSpotifyId) {
-        // Ưu tiên tìm theo spotifyId nếu được cung cấp
-        track = await Track.findOne({ where: { spotifyId: trackSpotifyId } });
+        track = await Track.findOne({ where: { spotifyId: trackSpotifyId } }); // Ưu tiên tìm theo spotifyId nếu được cung cấp
       } else if (songId) {
-        // Fallback: nếu client gửi songId và đó trùng với id trong DB
         track = await Track.findByPk(songId);
       }
 
@@ -776,9 +748,32 @@ exports.createPost = async (req, res) => {
       }
     }
 
-    //  Tạo bài đăng
+    // ========== Gắn cờ ==============
+    let collectedFlags = new Set();
 
+    try {
+      console.log("🤖 Đang phân tích cảnh báo nội dung...");
+      // 1. Phân tích Text
+      if (hasContent) {
+        const textResult = await analysisService.analyzeText(content);
+        if (textResult.hasWarning) {
+          textResult.flags.forEach(f => collectedFlags.add(f));
+        }
+      }
+
+    } catch (e) {
+      console.error("AI Error:", e);
+
+    }
+    // ================= END AI =================
+
+    // Chuyển Set thành mảng để lưu DB
+    const warningTags = Array.from(collectedFlags); // VD: ['toxic', 'adult']
+    console.log("⚠️ Các cảnh báo được gắn:", warningTags);
+
+    //  Tạo bài đăng
     let post;
+    let flag = warningTags.length > 0 ? warningTags[0] : null; // Lấy cảnh báo đầu tiên làm flag chính
 
     try {
       post = await Post.create({
@@ -789,13 +784,16 @@ exports.createPost = async (req, res) => {
         songId: songId || null,
         isCover: isCover || false,
         originalSongId: originalSongId || null,
+        flag: flag,
       });
+
+
     } catch (dbError) {
       console.error("Database error during Post.create:", dbError);
       console.error("Database error stack:", dbError.stack);
       console.error("Original error:", dbError.original);
       return res.status(500).json({
-        error: "Lỗi khi lưu vào cơ sở dữ liệu.",
+        message: "Lỗi khi lưu vào cơ sở dữ liệu.",
         details: dbError.message,
         original_error: dbError.original ? dbError.original.message : null,
       });
@@ -813,6 +811,7 @@ exports.createPost = async (req, res) => {
         "uploadedAt",
         "commentCount",
         "songId",
+        "flag"
       ],
       include: [
         {
@@ -827,10 +826,9 @@ exports.createPost = async (req, res) => {
     let returnedPost = postWithUser.toJSON();
     try {
       if (returnedPost.fileUrl) {
-        // Tự parse JSON trước khi trả về client
-        returnedPost.fileUrl = JSON.parse(returnedPost.fileUrl);
-        // Fallback nếu không phải mảng
-        if (!Array.isArray(returnedPost.fileUrl)) {
+        returnedPost.fileUrl = JSON.parse(returnedPost.fileUrl); // Tự parse JSON trước khi trả về client
+
+        if (!Array.isArray(returnedPost.fileUrl)) { // Fallback nếu không phải mảng
           returnedPost.fileUrl = [returnedPost.fileUrl];
         }
       } else {
@@ -849,14 +847,14 @@ exports.createPost = async (req, res) => {
     console.error("Lỗi khi tạo bài đăng:", error.message || error.toString());
     console.error("Full error:", error.stack);
     return res.status(500).json({
-      error: "Tạo bài đăng thất bại",
+      message: "Tạo bài đăng thất bại: " + error.message,
       details: error.message || error.toString(),
     });
   }
 };
 
 // --- HÀM LẤY BÀI ĐĂNG THEO ID ---
-exports.getPostById = async (req, res) => {
+const getPostById = async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -935,7 +933,7 @@ exports.getPostById = async (req, res) => {
 };
 
 // --- HÀM LẤY BÀI ĐĂNG CỦA CHÍNH MÌNH ---
-exports.getPostsByMe = async (req, res) => {
+const getPostsByMe = async (req, res) => {
   try {
     const posts = await Post.findAll({ where: { userId: req.user.id } });
     //  Lặp qua và parse JSON cho fileUrl
@@ -963,7 +961,7 @@ exports.getPostsByMe = async (req, res) => {
 };
 
 // --- HÀM LẤY BÀI ĐĂNG THEO USER ID ---
-exports.getPostsByUserId = async (req, res) => {
+const getPostsByUserId = async (req, res) => {
   // 1. Xác định User ID của người dùng hiện tại (cho việc kiểm tra isLiked)
   let currentUserId = null;
   if (req.user && req.user.id) {
@@ -1073,7 +1071,7 @@ exports.getPostsByUserId = async (req, res) => {
 };
 
 // --- HÀM CẬP NHẬT BÀI ĐĂNG ---
-exports.updatePost = async (req, res) => {
+const updatePost = async (req, res) => {
   try {
     const postId = parseInt(req.params.id, 10);
     const post = await Post.findByPk(postId);
@@ -1115,7 +1113,7 @@ exports.updatePost = async (req, res) => {
 };
 
 // --- HÀM XÓA BÀI ĐĂNG ---
-exports.deletePost = async (req, res) => {
+const deletePost = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
     if (!user) return res.status(401).json({ error: "User not found" });
@@ -1148,7 +1146,7 @@ exports.deletePost = async (req, res) => {
 };
 
 // --- HÀM THÍCH / BỎ THÍCH BÀI ĐĂNG ---
-exports.toggleLike = async (req, res) => {
+const toggleLike = async (req, res) => {
   const userId = req.user.id;
   const postId = parseInt(req.params.id, 10);
 
@@ -1226,7 +1224,7 @@ exports.toggleLike = async (req, res) => {
 };
 
 // --- HÀM LẤY DANH SÁCH NGƯỜI ĐÃ THÍCH BÀI ĐĂNG (HỖ TRỢ FILTER/PAGINATION) ---
-exports.getLikesByPostId = async (req, res) => {
+const getLikesByPostId = async (req, res) => {
   const postId = parseInt(req.params.id, 10);
   const { userId, dateFrom, dateTo } = req.query;
   const limit = parseInt(req.query.limit, 10) || undefined;
@@ -1285,7 +1283,7 @@ exports.getLikesByPostId = async (req, res) => {
 };
 
 // --- HÀM BÁO CÁO BÀI ĐĂNG ---
-exports.reportPost = async (req, res) => {
+const reportPost = async (req, res) => {
   const userId = req.user.id;
   const postId = req.params.id;
   const { reason } = req.body;
@@ -1302,7 +1300,7 @@ exports.reportPost = async (req, res) => {
       "adult_content",
       "self_harm",
       "misinformation",
-      "unwanted_content",
+      "c",
     ];
     if (!validReasons.includes(reason)) {
       return res.status(400).json({ message: "Lý do báo cáo không hợp lệ." });
@@ -1341,7 +1339,7 @@ exports.reportPost = async (req, res) => {
 };
 
 // --- HÀM ẨN BÀI ĐĂNG ---
-exports.hidePost = async (req, res) => {
+const hidePost = async (req, res) => {
   const currentUserId = req.user.id;
   const postId = parseInt(req.params.id, 10); // Chuyển postId sang kiểu số nguyên
 
@@ -1383,7 +1381,7 @@ exports.hidePost = async (req, res) => {
   }
 };
 
-exports.GetAllPost = async (req, res) => {
+const GetAllPost = async (req, res) => {
   try {
     const posts = await Post.findAll();
     res.status(200).json({
@@ -1395,3 +1393,26 @@ exports.GetAllPost = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }
+
+module.exports = {
+  getAllPost,
+  getPostById,
+  createPost,
+  getPostsByMe,
+  getPostsByUserId,
+  updatePost,
+  deletePost,
+  toggleLike,
+  getLikesByPostId,
+  reportPost,
+  hidePost,
+  getAllPostForGuest,
+  GetAllPost,
+  // Admin functions
+  getPostReportsAdmin,
+  updatePostReportAdmin,
+  removeLikeAdmin,
+  getAllLikesAdmin,
+  sharePost,
+  getPostsAdmin
+};
