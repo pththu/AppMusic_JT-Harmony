@@ -773,7 +773,7 @@ const createPost = async (req, res) => {
 
     //  Tạo bài đăng
     let post;
-    let flag = warningTags.length > 0 ? warningTags[0] : null; // Lấy cảnh báo đầu tiên làm flag chính
+    let flag = warningTags.length > 0 ? warningTags[0] : 'safe'; // Lấy cảnh báo đầu tiên làm flag chính
 
     try {
       post = await Post.create({
